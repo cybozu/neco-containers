@@ -14,7 +14,8 @@ jobs:
       - run:
           name: Check TAG files
           command: |
-            for d in bird chrony etcd lldpd; do
+            for tag in */TAG; do
+                d=$(dirname $tag)
                 c="$(./tag_exists $d)"
                 if [ "$c" = ng ]; then
                     echo $d >> BUILDS
