@@ -9,7 +9,7 @@ sources, and based on our Ubuntu base image.
 
 See also: [github.com/cybozu/ubuntu-base](https://github.com/cybozu/ubuntu-base).
 
-Build images can be pulled from [quay.io/cybozu](https://quay.io/organization/cybozu).
+Built images can be pulled from [quay.io/cybozu](https://quay.io/organization/cybozu).
 
 License
 -------
