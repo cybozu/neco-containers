@@ -54,9 +54,3 @@ jobs:
                     docker push quay.io/cybozu/${d}:$BRANCH
                 fi
             done
-
-workflows:
-  version: 2
-  build_push:
-    jobs:
-      - build
