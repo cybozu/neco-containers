@@ -1,4 +1,3 @@
-[![CircleCI](https://circleci.com/gh/cybozu/etcd-container.svg?style=svg)](https://circleci.com/gh/cybozu/etcd-container)
 [![Docker Repository on Quay](https://quay.io/repository/cybozu/etcd/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/etcd)
 
 etcd-container
@@ -23,8 +22,3 @@ To use `etcdctl` by `docker run`:
 
 Note that `etcdctl` runs also in the container.  If `--endpoints` is not set,
 `etcdctl` try to connects `localhost` in the container.
-
-Lisence
--------
-
-MIT
