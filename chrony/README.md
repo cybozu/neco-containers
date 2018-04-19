@@ -1,11 +1,18 @@
-# chrony-container
-Build Docker container image for Chrony NTP server/client
+[![Docker Repository on Quay](https://quay.io/repository/cybozu/chrony/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/chrony)
 
-## Features
+Chrony container
+================
+
+Build Docker container image for Chrony NTP server/client.
+
+Features
+--------
+
 - Chrony 3.3 based on Ubuntu 18.04.
 - Multi-stage build to minimize the container size.
 
-## Usage
+Usage
+-----
 
 ### Start `chronyd`
 
@@ -25,14 +32,6 @@ Build Docker container image for Chrony NTP server/client
 
 ### Use `chronyc`
 
-- Let `chronyd` running at `10.0.0.3`.
-- Let settings are written in `chrony.conf` to allow access from the endpoint to run `chronyc`.(only localhost is allowed in default)
-
-1. Run the container
-    ```console
-     $  docker exec -it chrony chronyc tracking -h 10.0.0.3
-    ```
-
-## LICENSE
-
-MIT
+```console
+$ docker exec -it chrony chronyc tracking
+```

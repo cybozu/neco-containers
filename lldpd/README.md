@@ -1,4 +1,3 @@
-[![CircleCI](https://circleci.com/gh/cybozu/lldpd-container.svg?style=svg)](https://circleci.com/gh/cybozu/lldpd-container)
 [![Docker Repository on Quay](https://quay.io/repository/cybozu/lldpd/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/lldpd)
 
 lldpd container
@@ -68,8 +67,3 @@ Interface:    eth0, via: LLDP, RID: 1, Time: 0 day, 00:01:02
     TTL:          120
 -------------------------------------------------------------------------------
 ```
-
-License
--------
-
-MIT

@@ -1,0 +1,57 @@
+version: 2
+jobs:
+  build:
+    working_directory: /app
+    docker:
+      - image: docker:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Install tools
+          command: |
+            apk add --no-cache curl jq
+      - run:
+          name: Check TAG files
+          command: |
+            for tag in */TAG; do
+                d=$(dirname $tag)
+                c="$(./tag_exists $d)"
+                if [ "$c" = ng ]; then
+                    echo $d >> BUILDS
+                fi
+            done
+      - run:
+          name: Build images
+          command: |
+            if [ ! -f BUILDS ]; then
+                echo "nothing to build."
+                exit 0
+            fi
+            for d in $(cat BUILDS); do
+                echo
+                echo "building $d ..."
+                docker build -t quay.io/cybozu/${d}:latest $d
+            done
+      - deploy:
+          name: Push Docker image to Quay.io
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            for d in $(cat BUILDS); do
+                echo
+                echo "pushing $d ..."
+                TAG=$(cat $d/TAG)
+                docker tag quay.io/cybozu/${d}:latest quay.io/cybozu/${d}:$TAG
+                docker push quay.io/cybozu/${d}:$TAG
+                if [ -f $d/BRANCH ]; then
+                    BRANCH=$(cat $d/BRANCH)
+                    docker tag quay.io/cybozu/${d}:$TAG quay.io/cybozu/${d}:$BRANCH
+                    docker push quay.io/cybozu/${d}:$BRANCH
+                fi
+            done

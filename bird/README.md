@@ -1,10 +1,9 @@
-[![CircleCI](https://circleci.com/gh/cybozu/bird-container.svg?style=svg)](https://circleci.com/gh/cybozu/bird-container)
 [![Docker Repository on Quay](https://quay.io/repository/cybozu/bird/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/bird)
 
 BIRD container
 ==============
 
-This repository provides a Dockerfile to build a Docker container
+This directory provides a Dockerfile to build a Docker container
 that runs up-to-date BIRD internet routing daemon.
 
 Features
@@ -84,8 +83,3 @@ Last reboot on 2018-04-12 13:23:57.909
 Last reconfiguration on 2018-04-12 13:23:57.909
 Daemon is up and running
 ```
-
-License
--------
-
-MIT
