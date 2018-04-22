@@ -23,7 +23,7 @@ RUN ./configure \
       --prefix=/usr/local/bird \
       --sysconfdir=/etc/bird \
       --with-runtimedir=/run/bird \
-      --with-protocols=bgp,bfd,static \
+      --with-protocols=bgp,bfd,pipe,static \
     && make \
     && make install
 
