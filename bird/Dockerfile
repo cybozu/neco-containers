@@ -12,6 +12,7 @@ RUN apt-get update \
        flex \
        bison \
        libncurses5-dev \
+       libssh-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -s -O ftp://bird.network.cz/pub/bird/bird-${BIRD_VERSION}.tar.gz && \
@@ -23,7 +24,7 @@ RUN ./configure \
       --prefix=/usr/local/bird \
       --sysconfdir=/etc/bird \
       --with-runtimedir=/run/bird \
-      --with-protocols=bgp,bfd,static \
+      --with-protocols=bgp,rpki,bfd,pipe,static \
     && make \
     && make install
 
@@ -32,6 +33,11 @@ COPY bird-copyright /usr/local/bird/copyright
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
+
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends \
+       libssh-4 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/local/bird /usr/local/bird/
 COPY --from=build /etc/bird /etc/bird/
