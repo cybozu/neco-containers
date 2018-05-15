@@ -11,4 +11,6 @@ RUN apt-get update \
 
 EXPOSE 67/udp
 
+VOLUME /var/lib/misc
+
 ENTRYPOINT ["/usr/sbin/dnsmasq"]
