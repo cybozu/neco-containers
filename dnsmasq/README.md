@@ -10,6 +10,6 @@ Usage
 
 To launch `dnsmasq` by `docker run`:
 
-    $ docker run --rm --cap-add=NET_ADMIN --net=host quay.io/coreos/dnsmasq \
+    $ docker run --rm --cap-add=NET_ADMIN --net=host quay.io/cybozu/dnsmasq \
          -d -q \
          --dhcp-range=192.168.1.3,192.168.1.254
