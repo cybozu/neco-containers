@@ -1,9 +1,9 @@
 # etcd container
 
 # Stage1: build from source
-FROM circleci/golang:1.10-stretch AS build
+FROM quay.io/cybozu/golang:1.10-bionic AS build
 
-ARG ETCD_VERSION=3.2.18
+ARG ETCD_VERSION=3.3.5
 
 RUN mkdir -p /go/src/github.com/coreos/ && \
     curl -sSLf https://github.com/coreos/etcd/releases/download/v${ETCD_VERSION}/v${ETCD_VERSION}.tar.gz | \
