@@ -12,13 +12,13 @@ Usage
 
 To launch `etcd` by `docker run`:
 
-    $ docker run -p 2379:2379 -p 2380:2380 --name etcd-1 quay.io/cybozu/etcd:3.2 \
+    $ docker run -p 2379:2379 -p 2380:2380 --name etcd-1 quay.io/cybozu/etcd:3.3 \
         --name etcd-1 \
         --advertise-client-urls http://0.0.0.0:2379 --listen-client-urls http://0.0.0.0:2379
 
 To use `etcdctl` by `docker run`:
 
-    $ docker run --rm -it --entrypoint etcdctl etcd:3.2 --endpoints ${ETCD_ENDPOINTS} get /
+    $ docker run --rm -it --entrypoint etcdctl etcd:3.3 --endpoints ${ETCD_ENDPOINTS} get /
 
 Note that `etcdctl` runs also in the container.  If `--endpoints` is not set,
 `etcdctl` try to connects `localhost` in the container.
