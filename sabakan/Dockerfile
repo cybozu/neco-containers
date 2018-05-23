@@ -19,9 +19,4 @@ COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/co
 
 ENV PATH=/usr/local/sabakan/bin:"$PATH"
 
-# DHCP and HTTP
-EXPOSE 10067 10080
-
-USER 10000:10000
-
-ENTRYPOINT ["/usr/local/sabakan/bin/sabakan", "-url-port", "80"]
+ENTRYPOINT ["/usr/local/sabakan/bin/sabakan", "-dhcp-bind", "0.0.0.0:67", "-logformat", "json"]

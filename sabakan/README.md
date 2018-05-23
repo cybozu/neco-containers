@@ -13,14 +13,14 @@ Usage
 
 For docker:
 ```
-$ docker run -d --read-only --name sabakan \
-    -p 67:10067 -p 80:10080 \
+$ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
+    --network host --name sabakan \
     quay.io/cybozu/sabakan:0 -etcd-servers http://foo.bar:2379,http://zot.bar:2379
 ```
 
 ### Use client tools
 
-`sabactl` is an interactive client:
+`sabactl` can be used to control sabakan:
 
 ```
 $ docker exec -it sabakan sabactl -h
