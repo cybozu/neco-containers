@@ -17,6 +17,7 @@ COPY --from=build /go/src/github.com/cybozu-go/sabakan/LICENSE /usr/local/sabaka
 COPY --from=build /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/copyright
 
+VOLUME /var/lib/sabakan
 ENV PATH=/usr/local/sabakan/bin:"$PATH"
 
 ENTRYPOINT ["/usr/local/sabakan/bin/sabakan", "-dhcp-bind", "0.0.0.0:67", "-logformat", "json"]
