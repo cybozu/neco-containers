@@ -14,6 +14,7 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /go/bin /usr/local/sabakan/bin
 COPY --from=build /go/src/github.com/cybozu-go/sabakan/LICENSE /usr/local/sabakan/LICENSE
+COPY --from=build /go/src/github.com/cybozu-go/sabakan/cmd/sabactl/sabactl_completion.bash /usr/local/sabakan/sabactl_completion.bash
 COPY --from=build /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/copyright
 
