@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.10-bionic AS build
 
-ARG SABAKAN_VERSION=0.13
+ARG SABAKAN_VERSION=0.14
 
 RUN mkdir -p /go/src/github.com/cybozu-go/sabakan
 WORKDIR /go/src/github.com/cybozu-go/sabakan
