@@ -15,6 +15,7 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
     && mkdir -p /go/src \
     && GOBIN=/usr/local/bin go get golang.org/x/tools/cmd/goimports \
     && GOBIN=/usr/local/bin go get golang.org/x/lint/golint \
+    && GOBIN=/usr/local/bin go get github.com/tcnksm/ghr \
     && rm -rf /go/src \
     && mkdir -p /go/src
 
