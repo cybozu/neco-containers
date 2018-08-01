@@ -26,7 +26,7 @@ COPY --from=build /go/src/github.com/cybozu-go/sabakan/LICENSE /usr/local/sabaka
 COPY --from=build /go/src/github.com/cybozu-go/sabakan/cmd/sabactl/sabactl_completion.bash /usr/local/sabakan/sabactl_completion.bash
 COPY --from=build /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/copyright
-COPY install /usr/local/sabakan/install
+COPY install-tools /usr/local/sabakan/install-tools
 
 VOLUME /var/lib/sabakan
 ENV PATH=/usr/local/sabakan/bin:"$PATH"
