@@ -20,8 +20,6 @@ COPY --from=build /go/src/github.com/hashicorp/vault/LICENSE /usr/local/vault/LI
 
 ENV PATH=/usr/local/vault/bin:"$PATH"
 
-EXPOSE 8200
-
-RUN mkdir -p /vault/config
+EXPOSE 8200 8201
 
 ENTRYPOINT ["/usr/local/vault/bin/vault"]

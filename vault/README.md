@@ -19,7 +19,6 @@ listener "tcp" {
   address     = "127.0.0.1:8200"
   tls_disable = 1
 }
-disable_mlock = true
 ```
 
 To launch vault server by `docker run`:
@@ -28,7 +27,8 @@ To launch vault server by `docker run`:
        --name vault-1 \
        --mount type=bind,source=/your/config.hcl,target=/vault/config/config.hcl \
        --mount type=bind,source=/your/files,target=/vault/files \
-       -p 8200:8200 \
+       -p 8200:8200 -p 8201:8201 \
+       --cap-add=IPC_LOCK \
        quay.io/cybozu/vault:0.10.4 \
          server -config=/vault/config/config.hcl
 
@@ -37,4 +37,4 @@ To use vault cli by `docker run`:
     $ docker run --rm -it \
         --env VAULT_ADDR="http://127.0.0.1:8200" \
         quay.io/cybozu/vault:0.10.4 \
-          list /
+          list secret/
