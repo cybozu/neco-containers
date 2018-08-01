@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+cp /usr/local/sabakan/bin/sabakan-cryptsetup /host/usr/local/bin/sabakan-cryptsetup
+cp /usr/local/sabakan/bin/sabactl /host/usr/local/bin/sabactl
+cp /usr/local/sabakan/sabactl_completion.bash /host/etc/bash_completion.d/sabactl_completion.bash
