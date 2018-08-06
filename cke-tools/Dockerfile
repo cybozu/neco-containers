@@ -20,7 +20,4 @@ FROM quay.io/cybozu/ubuntu:18.04
 COPY --from=build /go/bin /usr/local/cke-tools/bin
 COPY --from=build /go/src/github.com/cybozu-go/cke-tools/LICENSE /usr/local/cke-tools/LICENSE
 
-ENTRYPOINT [ \
-  "/usr/bin/printf", \
-  "/usr/local/cke-tools/bin/rivers    An TCP reverse proxy\n" \
-]
+ENTRYPOINT [ "/bin/bash" ]
