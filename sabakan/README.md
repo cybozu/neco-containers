@@ -21,7 +21,7 @@ $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
     --network host --name sabakan \
     --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan \
     quay.io/cybozu/sabakan:0 \
-    -etcd-servers http://foo.bar:2379,http://zot.bar:2379 \
+    -etcd-endpoints http://foo.bar:2379,http://zot.bar:2379 \
     -advertise-url http://12.34.56.78:10080
 ```
 
@@ -38,7 +38,7 @@ $ sudo rkt run \
     --caps-retain=CAP_NET_BIND_SERVICE \
     --mount volume=data,target=/var/lib/sabakan \
     -- \
-    -etcd-servers http://foo.bar:2379,http://zot.bar:2379 \
+    -etcd-endpoints http://foo.bar:2379,http://zot.bar:2379 \
     -advertise-url http://12.34.56.78:10080
 ```
 
