@@ -17,7 +17,7 @@ To launch `apiserver` by `docker run`:
         --insecure-bind-address=0.0.0.0 \
         --insecure-port=8080 \
         --enable-bootstrap-token-auth=true \
-        --etcd-servers=http://192.168.1.101:2379,http:/192.168.1.102:2379,http:/192.168.1.103:2379 \
+        --etcd-servers=http://192.168.1.101:2379,http://192.168.1.102:2379,http://192.168.1.103:2379 \
         --storage-backend=etcd3
 
 To use `kubectl` by `docker run`:
