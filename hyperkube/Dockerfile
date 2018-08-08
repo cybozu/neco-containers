@@ -25,7 +25,6 @@ RUN apt-get update \
     && apt-get -y install --no-install-recommends \
     ceph-common \
     conntrack \
-    e2fsprogs \
     ebtables \
     git \
     ipset \
@@ -35,7 +34,6 @@ RUN apt-get update \
     openssh-client \
     socat \
     udev \
-    util-linux \
     xfsprogs \
     && rm -rf /var/lib/apt/lists/*
 
