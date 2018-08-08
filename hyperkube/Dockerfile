@@ -30,6 +30,7 @@ RUN apt-get update \
     git \
     ipset \
     iptables \
+    ipvsadm \
     kmod \
     openssh-client \
     socat \
