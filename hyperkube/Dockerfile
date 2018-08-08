@@ -23,6 +23,7 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
+    btrfs-progs \
     ceph-common \
     conntrack \
     ebtables \
