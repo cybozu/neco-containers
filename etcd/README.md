@@ -12,13 +12,20 @@ Usage
 
 To launch `etcd` by `docker run`:
 
-    $ docker run -p 2379:2379 -p 2380:2380 --name etcd-1 quay.io/cybozu/etcd:3.3 \
-        --name etcd-1 \
-        --advertise-client-urls http://0.0.0.0:2379 --listen-client-urls http://0.0.0.0:2379
+    $ docker volume create etcd
+    $ docker run -p 2379:2379 -p 2380:2380 --name etcd-1 \
+      --mount type=volume,src=etcd,target=/var/lib/etcd \
+      quay.io/cybozu/etcd:3.3 \
+        --advertise-client-urls http://0.0.0.0:2379 \
+        --listen-client-urls http://0.0.0.0:2379
 
-To use `etcdctl` by `docker run`:
+To use `etcdctl`, first install it in a host directory `DIR`:
 
-    $ docker run --rm -it --entrypoint etcdctl etcd:3.3 --endpoints ${ETCD_ENDPOINTS} get /
+    $ docker run --rm -u root:root \
+      --entrypoint /usr/local/etcd/install-tools \
+      --mount type=bind,src=DIR,target=/host \
+      quay.io/cybozu/etcd:3.3
 
-Note that `etcdctl` runs also in the container.  If `--endpoints` is not set,
-`etcdctl` try to connects `localhost` in the container.
+Then run `etcdctl` as follows:
+
+    $ DIR/etcdctl get /

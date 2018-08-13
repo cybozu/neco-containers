@@ -4,7 +4,8 @@ vault-container
 ===============
 
 [Vault](https://www.vaultproject.io) is a tool for managing secrets provided by HashiCorp.
-This repository provides a Dockerfile which contains `vault` binary.
+
+This repository provides a Dockerfile to build a container image for Vault.
 
 Usage
 -----
@@ -12,9 +13,7 @@ Usage
 Prepare the following [Vault Configuration file](https://www.vaultproject.io/docs/configuration/index.html)
 
 ```
-storage "file" {
-  path = "/vault/files"
-}
+storage "inmem" {}
 listener "tcp" {
   address     = "127.0.0.1:8200"
   tls_disable = 1
@@ -23,18 +22,20 @@ listener "tcp" {
 
 To launch vault server by `docker run`:
 
-    $ docker run -d --read-only \
-       --name vault-1 \
+    $ docker run -d --rm --read-only --name vault \
+       --ulimit memlock=-1 \
        --mount type=bind,source=/your/config.hcl,target=/vault/config/config.hcl \
-       --mount type=bind,source=/your/files,target=/vault/files \
        -p 8200:8200 -p 8201:8201 \
-       --cap-add=IPC_LOCK \
-       quay.io/cybozu/vault:0.10.4 \
+       quay.io/cybozu/vault:0.10 \
          server -config=/vault/config/config.hcl
 
-To use vault cli by `docker run`:
+To use vault cli, first install it in a host OS directory `DIR`:
 
-    $ docker run --rm -it \
-        --env VAULT_ADDR="http://127.0.0.1:8200" \
-        quay.io/cybozu/vault:0.10.4 \
-          list secret/
+    $ docker run --rm -u root:root \
+      --entrypoint /usr/local/vault/install-tools \
+      --mount type=bind,source=DIR,target=/host \
+      quay.io/cybozu/vault:0.10
+
+Then run `vault` as follows:
+
+    $ DIR/vault status
