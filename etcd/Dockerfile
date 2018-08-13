@@ -18,6 +18,7 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /go/src/github.com/coreos/etcd/bin /usr/local/etcd/bin
 COPY --from=build /go/src/github.com/coreos/etcd/LICENSE /usr/local/etcd/LICENSE
+COPY install-tools /usr/local/etcd/install-tools
 
 ENV PATH=/usr/local/etcd/bin:"$PATH"
 ENV ETCDCTL_API=3
