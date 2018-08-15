@@ -20,4 +20,4 @@ FROM quay.io/cybozu/ubuntu:18.04
 COPY --from=build /go/bin /usr/local/cke-tools/bin
 COPY --from=build /go/src/github.com/cybozu-go/cke-tools/LICENSE /usr/local/cke-tools/LICENSE
 
-ENTRYPOINT [ "/bin/bash" ]
+ENV PATH=/usr/local/cke-tools/bin:"$PATH"
