@@ -3,12 +3,12 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.10-bionic AS build
 
-ARG CKE_TOOLS_VERSION=0.1
+ARG CKE_VERSION=0.1
 
 RUN mkdir -p /go/src/github.com/cybozu-go/cke
 WORKDIR /go/src/github.com/cybozu-go/cke
 
-RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_TOOLS_VERSION}.tar.gz \
+RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
     && go get -d -t ./... \
@@ -22,5 +22,7 @@ COPY --from=build /go/src/github.com/cybozu-go/cke/LICENSE /usr/local/cke/LICENS
 COPY install-tools /usr/local/cke/install-tools
 
 ENV PATH=/usr/local/cke/bin:"$PATH"
+
+USER 10000:10000
 
 ENTRYPOINT ["usr/local/cke/bin/cke"]
