@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+DEST=/host
+
+cp /usr/local/cke/bin/ckecli $DEST/ckecli
+chmod 755 $DEST/ckecli
