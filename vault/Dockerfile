@@ -10,6 +10,10 @@ RUN mkdir -p /go/src/github.com/hashicorp/ && \
         https://github.com/hashicorp/vault.git /go/src/github.com/hashicorp/vault
 
 WORKDIR /go/src/github.com/hashicorp/vault
+
+COPY disable-etcd-version-detection.patch .
+RUN patch -p1 < disable-etcd-version-detection.patch
+
 RUN make bootstrap && \
     make
 
