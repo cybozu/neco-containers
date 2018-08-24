@@ -12,6 +12,8 @@ RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VER
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
     && go get -d -t ./... \
+    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9) \
+    && go get -d -t ./... \
     && go install ./...
 
 # Stage2: setup runtime container
