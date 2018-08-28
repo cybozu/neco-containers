@@ -17,7 +17,7 @@ RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/master/LICENSE
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM scratch
 
 COPY --from=build /work/pause /pause
 COPY --from=build /work/LICENSE /LICENSE
