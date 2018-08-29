@@ -8,11 +8,12 @@ ARG CKE_VERSION=0.2
 RUN mkdir -p /go/src/github.com/cybozu-go/cke
 WORKDIR /go/src/github.com/cybozu-go/cke
 
+RUN git clone https://github.com/coreos/etcd /go/src/github.com/coreos/etcd \
+    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9)
+
 RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
-    && go get -d -t ./... \
-    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9) \
     && go get -d -t ./... \
     && go install ./...
 
