@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.10-bionic AS build
 
-ARG K8S_VERSION=1.11.1
+ARG K8S_VERSION=1.11.2
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
@@ -28,6 +28,7 @@ RUN apt-get update \
     conntrack \
     ebtables \
     git \
+    iproute2 \
     ipset \
     iptables \
     ipvsadm \

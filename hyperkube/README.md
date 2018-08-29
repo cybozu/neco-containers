@@ -11,7 +11,7 @@ Usage
 To launch `apiserver` by `docker run`:
 
     $ docker run --restart=always --net=host --name apiserver -d \
-        quay.io/cybozu/hyperkube:v1.11.1 apiserver \
+        quay.io/cybozu/hyperkube:1.11.2-1 apiserver \
         --advertise-address=192.168.1.101 \
         --allow-privileged=false \
         --insecure-bind-address=0.0.0.0 \
@@ -22,4 +22,4 @@ To launch `apiserver` by `docker run`:
 
 To use `kubectl` by `docker run`:
 
-    $ docker run --rm -it quay.io/cybozu/hyperkube:v1.11.1 kubectl cluster-info
+    $ docker run --rm -it quay.io/cybozu/hyperkube:1.11.2-1 kubectl cluster-info
