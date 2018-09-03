@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.10-bionic AS build
 
-ARG SABAKAN_VERSION=0.19
+ARG SABAKAN_VERSION=0.20
 
 RUN mkdir -p /go/src/github.com/cybozu-go/sabakan
 WORKDIR /go/src/github.com/cybozu-go/sabakan
@@ -11,6 +11,8 @@ WORKDIR /go/src/github.com/cybozu-go/sabakan
 RUN curl -fsSL -o sabakan.tar.gz https://github.com/cybozu-go/sabakan/archive/v${SABAKAN_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f sabakan.tar.gz \
     && rm -f sabakan.tar.gz \
+    && go get -d -t ./... \
+    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9) \
     && go get -d -t ./... \
     && go install ./...
 
