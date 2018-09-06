@@ -1,9 +1,9 @@
 [![Docker Repository on Quay](https://quay.io/repository/cybozu/chrony/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/chrony)
 
-Chrony container
+[Chrony][] container
 ================
 
-Build Docker container image for Chrony NTP server/client.
+Build Docker container image for [Chrony][] NTP server/client.
 
 Features
 --------
@@ -35,3 +35,5 @@ Usage
 ```console
 $ docker exec -it chrony chronyc tracking
 ```
+
+[Chrony]: https://chrony.tuxfamily.org/
