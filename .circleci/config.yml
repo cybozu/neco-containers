@@ -1,5 +1,13 @@
 version: 2
 jobs:
+  lint:
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:18.04
+    steps:
+    - checkout
+    - run: apt-get update
+    - run: make setup SUDO=""
+    - run: make lint
   build:
     working_directory: /app
     docker:
@@ -55,3 +63,10 @@ jobs:
                     docker push quay.io/cybozu/${d}:$BRANCH
                 fi
             done
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - lint
+      - build
