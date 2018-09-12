@@ -6,10 +6,10 @@ import json
 import ipaddress
 
 # Constants
-OMSA_JSON_TMPL = '/host/extras/setup/omsa.json.template'
-CLUSTER = '/host/etc/neco/cluster'
-RACK = '/host/etc/neco/rack'
-OMSA_JSON = '/host/etc/neco/omsa.json'
+OMSA_JSON_TMPL = '/extras/setup/omsa.json.template'
+CLUSTER = '/etc/neco/cluster'
+RACK = '/etc/neco/rack'
+OMSA_JSON = '/etc/neco/omsa.json'
 
 
 def load_rack(filename: str) -> int:

@@ -8,13 +8,15 @@ This directory provides a Dockerfile to build a Docker container that runs [Dell
 Usage
 -----
 
-### Generate omsa.json if template exists
+### Generate omsa.json if a template exists
 
 ```console
 $ sudo rkt run \
-    --volume=host,kind=host,source=/ \
-    --mount=volume=host,target=/host \
-    quay.io/cybozu/omsa:v18.08.00-1 \
+    --volume=setup,kind=host,source=/extras/setup,readOnly=true \
+    --mount=volume=setup,target=/extras/setup \
+    --volume neco,kind=host,source=/etc/neco \
+    --mount volume=neco,target=/etc/neco"
+    quay.io/cybozu/omsa:latest \
     --exec install-tools
 ```
 
@@ -27,9 +29,9 @@ $ sudo rkt run \
   --mount volume=modules,target=/lib/modules/$(uname -r) \
   --volume dev,kind=host,source=/dev \
   --mount volume=dev,target=/dev \
-  --mount volume=neco,target=/etc/neco"
   --volume neco,kind=host,source=/etc/neco,readOnly=true \
-  quay.io/cybozu/omsa:v18.08.00-1 \
+  --mount volume=neco,target=/etc/neco"
+  quay.io/cybozu/omsa:latest \
   --name omsa
 ```
 
