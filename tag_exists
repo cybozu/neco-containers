@@ -5,11 +5,12 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
-API=https://quay.io/api/v1/repository/cybozu
+API=https://quay.io/v2
 NAME="$1"
 TAG=$(cat "$NAME"/TAG)
+TOKEN=$(curl -s -H 'Accept-Encoding: application/json' -u "$QUAY_USER:$QUAY_PASSWORD" "$API/auth?service=quay.io&scope=repository:cybozu/$NAME:pull" | jq -r .token)
 
-for t in $(curl -s -H 'Accept-Encoding: application/json' $API/"$NAME" | jq -r '.tags[]|.name'); do
+for t in $(curl -s -H 'Accept-Encoding: application/json' -H "Authorization: Bearer $TOKEN" "$API/cybozu/$NAME/tags/list" | jq -r '.tags[]'); do
     if [ "$t" = "$TAG" ]; then
         echo "ok"
         exit 0

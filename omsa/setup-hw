@@ -1,0 +1,361 @@
+#!/usr/bin/python3.6
+# -*- mode: python -*-
+
+import argparse
+from configparser import ConfigParser, MissingSectionHeaderError
+import os
+from subprocess import call, check_output, DEVNULL, run, PIPE
+import sys
+import time
+import json
+import ipaddress
+
+# Constants
+IDRACADM = '/opt/dell/srvadmin/bin/idracadm7'
+RACK = 'etc/neco/rack'
+OMSA_JSON = 'etc/neco/omsa.json'
+BMC_NETMASK = '255.255.240.0'
+
+# Globals
+OK = True
+GENERATION = None
+ENQUEUE = False
+
+
+def load_rack(filename: str) -> int:
+    with open(filename) as f:
+        return int(f.read())
+
+
+def load_omsa(filename: str) -> int:
+    with open(filename) as f:
+        return json.load(f)
+
+
+def get_user_hash(omsa_users: dict, name: str) -> str:
+    for user in omsa_users:
+        if user['user'] == name:
+            return user['hash']
+    return ''
+
+
+def get_user_salt(omsa_users: dict, name: str) -> str:
+    for user in omsa_users:
+        if user['user'] == name:
+            return user['salt']
+    return ''
+
+
+def log(*args):
+    print(*args, file=sys.stderr, flush=True)
+
+
+# Implementation
+def log_failure(*args):
+    global OK
+    OK = False
+    log(*args)
+
+
+def generation() -> int:
+    global GENERATION
+    if GENERATION is not None:
+        return GENERATION
+
+    gen = get_idrac_config('iDRAC.Info.ServerGen')
+    GENERATION = {'14G': 14}.get(gen)
+    if GENERATION is None:
+        raise RuntimeError('Unknown system: {}'.format(gen))
+    return GENERATION
+
+
+def retry_call(args, **kwargs):
+    for _ in range(5):
+        ret = call(args, **kwargs)
+        if ret == 0:
+            time.sleep(1)
+            return
+        time.sleep(10)
+    raise RuntimeError('Failed to execute {}'.format(' '.join(args)))
+
+
+def log_call(args, mask_index=None, **kwargs):
+    retry_call(args, **kwargs)
+    if mask_index is not None:
+        args[mask_index] = 'XXXXXX'
+    log('Executed:', *args)
+
+
+def config_power_supply(check_only: bool):
+    set_idrac_config('System.ServerPwr.PSRapidOn', 'Disabled', check_only,
+                     'System power supply is not active-active.')
+
+
+def config_performance(check_only: bool):
+    enqueue_idrac_config('BIOS.SysProfileSettings.SysProfile',
+                         'PerfPerWattOptimizedOs', check_only,
+                         'Power profile need to be adjusted.')
+
+    # skip disabling C State; this was suggested by Dell many years ago
+    # enqueue_idrac_config('BIOS.SysProfileSettings.ProcCStates', 'Disabled', check_only,
+    #                  '...')
+
+
+def config_processor(check_only: bool):
+    enqueue_idrac_config('BIOS.ProcSettings.LogicalProc', 'Disabled',
+                         check_only, 'Hyper Threading is not disabled.')
+
+
+def config_fan_speed(check_only: bool):
+    profile = 'system.thermalsettings.FanSpeedOffset'
+    fan_speed = get_idrac_config(profile)
+    if fan_speed == 'Low':
+        return
+    if check_only:
+        log_failure('FanSpeedOffset is not Low')
+        return
+    log_call([IDRACADM, 'set', profile, '0'])
+
+
+def config_bios(check_only: bool):
+    config_performance(check_only)
+    config_processor(check_only)
+    if ENQUEUE:
+        call([IDRACADM, 'jobqueue', 'create', 'BIOS.Setup.1-1'])
+
+
+def config_system(check_only: bool):
+    config_power_supply(check_only)
+    config_fan_speed(check_only)
+
+
+def get_idrac_config(key: str) -> str:
+    """
+    Return a character string corresponding to the idrac key.
+    In many cases 'idracadm get KEY' return INI format output,
+    but in some cases return only the value not conforming to INI format.
+
+    # output example
+    ## case1: conform to INI format
+    $ sudo idracadm7 get iDRAC.SNMP.AgentEnable
+    [Key=iDRAC.Embedded.1#SNMP.1]
+    AgentEnable=Enabled
+
+    ## case2: not conform to INI format. return only value.
+    $ sudo idracadm7 get System.ServerPwr.PSRapidOn
+    Enabled
+
+    """
+    o = check_output([IDRACADM, 'get', key]).decode('ascii')
+    cp = ConfigParser()
+    try:
+        cp.read_string(o)
+        if cp.sections() == '':
+            return ''
+        return cp.items(cp.sections()[0])[0][1]
+    except MissingSectionHeaderError:
+        return o.rstrip('\n')
+
+
+def set_idrac_config(key: str, value: str, check_only: bool, msg: str):
+    cur = get_idrac_config(key)
+    if cur == value:
+        return
+    if check_only:
+        log_failure(msg)
+        return
+    log_call([IDRACADM, 'set', key, value])
+
+
+def enqueue_idrac_config(key: str, value: str, check_only: bool, msg: str):
+    cur = get_idrac_config(key)
+    if cur == value:
+        return
+    if check_only:
+        log_failure(msg)
+        return
+    log_call([IDRACADM, 'set', key, value])
+    global ENQUEUE
+    ENQUEUE = True
+
+
+def config_idrac_alert(check_only: bool, ome_ip: str):
+    set_idrac_config('iDRAC.SNMP.AgentEnable', 'Enabled', check_only,
+                     'SNMP agent not enabled.')
+    set_idrac_config('iDRAC.SNMPAlert.1.Destination', ome_ip, check_only,
+                     'OME IP not installed.')
+    set_idrac_config('iDRAC.SNMPAlert.1.State', 'Enabled', check_only,
+                     'SNMP Alert not enabled')
+    set_idrac_config('iDRAC.IPMILan.AlertEnable', 'Enabled', check_only,
+                     'IPMI Lan alert not enabled.')
+    if not check_only:
+        # Allow all event alert with snmp.
+        # This command always fails. Because some items can not be activated.
+        # So ignore the failure return code.
+        cmd = [
+            IDRACADM, 'eventfilters', 'set', '-c', 'idrac.alert.all', '-a',
+            'none', '-n', 'snmp'
+        ]
+        log('Executed:', *cmd)
+        call(cmd, stdout=DEVNULL)
+
+
+def config_idrac_nic(check_only: bool, rac_name: str, idrac_ip: str,
+                     idrac_netmask: str, gateway_ip: str):
+    set_idrac_config('iDRAC.NIC.Selection', 'Dedicated', check_only,
+                     'iDRAC NIC is not dedicated.')
+    set_idrac_config('iDRAC.IPv4.DHCPEnable', 'Disabled', check_only,
+                     'DHCP is enabled for iDRAC.')
+    set_idrac_config('iDRAC.IPv4.Address', idrac_ip, check_only,
+                     'iDRAC IP is wrong.')
+    set_idrac_config('iDRAC.IPv4.Gateway', gateway_ip, check_only,
+                     'iDRAC gateway is wrong.')
+    set_idrac_config('iDRAC.IPv4.Netmask', idrac_netmask, check_only,
+                     'iDRAC netmask is wrong.')
+    set_idrac_config('iDRAC.NIC.DNSRacName', rac_name, check_only,
+                     'DNSRacName is wrong.')
+
+
+def config_idrac_ipmi(check_only: bool):
+    set_idrac_config('iDRAC.IPMILan.PrivLimit', '3', check_only,
+                     'IPMI over LAN privilege limit is not operator(3).')
+
+    profile = 'iDRAC.IPMILan.Enable'
+    ipmi = get_idrac_config(profile)
+    if ipmi == 'Enabled':
+        return
+    if check_only:
+        log_failure('IPMI over LAN is not enabled')
+        return
+    log_call([IDRACADM, 'set', profile, '1'])
+
+
+# pylint: disable=too-many-arguments
+def config_idrac_user(check_only: bool, idx: int, name: str, privilege: str,
+                      ipmipriv: str, hashed_passwd: str, salt: str):
+    '''
+    ipmipriv:
+    - 1 Callback level
+    - 2 User level
+    - 3 Operator level
+    - 4 Administrator level
+    - 5 OEM Proprietary level
+    - 15 No access
+    '''
+
+    p = 'iDRAC.Users.{}.'.format(idx)
+    set_idrac_config(p + 'UserName', name, check_only,
+                     '{} is not configured.'.format(name))
+    if not check_only:
+        log_call([IDRACADM, 'set', p + 'SHA256Password', hashed_passwd])
+        log_call([IDRACADM, 'set', p + 'SHA256PasswordSalt', salt])
+    set_idrac_config(p + 'Privilege', privilege, check_only,
+                     'Privilege for {} is not configured.'.format(name))
+    set_idrac_config(
+        p + 'IpmiLanPrivilege', ipmipriv, check_only,
+        'IPMI Lan privilege for {} is not configured.'.format(name))
+    set_idrac_config(
+        p + 'IpmiSerialPrivilege', ipmipriv, check_only,
+        'IPMI serial privilege for {} is not configured.'.format(name))
+    set_idrac_config(p + 'Enable', 'Enabled', check_only,
+                     '{} is not enabled.'.format(name))
+
+
+def config_idrac_root(check_only: bool, hashed_passwd: str, salt: str):
+    config_idrac_user(check_only, 2, 'root', '0x1ff', '4', hashed_passwd, salt)
+
+
+def config_idrac_support(check_only: bool, hashed_passwd: str, salt: str):
+    config_idrac_user(check_only, 3, 'support', '0x11', '15', hashed_passwd,
+                      salt)
+
+
+def config_idrac_cybozu(check_only: bool, hashed_passwd: str, salt: str,
+                        ssh_keys_path: str):
+    config_idrac_user(check_only, 4, 'cybozu', '0x11', '3', hashed_passwd,
+                      salt)
+    if check_only:
+        return
+    with open(ssh_keys_path) as f:
+        for i, k in enumerate(f, 1):
+            log_call([IDRACADM, 'sshpkauth', '-i', '4', '-k', str(i), '-t', k])
+
+
+def config_idrac(check_only: bool, config: dict):
+    config_idrac_alert(check_only, config['ome_ip'])
+    config_idrac_nic(check_only, config['rac_name'], config['idrac_ip'], config['idrac_netmask'], config['gateway_ip'])
+    config_idrac_ipmi(check_only)
+    config_idrac_root(check_only, config['root_hash'], config['root_salt'])
+    config_idrac_cybozu(check_only, config['cybozu_hash'], config['cybozu_salt'], config['ssh_keys_path'])
+    config_idrac_support(check_only, config['support_hash'], config['support_salt'])
+
+
+def main():
+    rack = load_rack(RACK)
+    omsa = load_omsa(OMSA_JSON)
+
+    p = argparse.ArgumentParser(
+        description='Edit BIOS/iDRAC/RAID parameters.', )
+    p.add_argument(
+        '-c',
+        '--check-only',
+        action='store_true',
+        dest='check',
+        help='only check parameter values.')
+    p.add_argument(
+        '--rac-name',
+        dest='rac_name',
+        default="rack{}-boot-idrac".format(rack),
+        help='iDRAC DNS host name')
+    ns = p.parse_args()
+
+    while True:
+        resp = run([IDRACADM, 'get', 'iDRAC.Info.Name'], stdout=PIPE)  # ignore error
+        if 'Name=iDRAC' in resp.stdout.decode():
+            break
+        print("setup-hw: retrying...", file=sys.stderr)
+        time.sleep(1)
+
+    resp = run([IDRACADM, 'jobqueue', 'view'], check=True, stdout=PIPE)
+    if 'Status=Scheduled' in resp.stdout.decode():
+        print('Current Jobs are queued', file=sys.stderr)
+        sys.exit(1)
+
+    idrac = {
+        'ome_ip': omsa['bmc_address'],
+        'rac_name': ns.rac_name,
+        'idrac_ip': omsa['bmc_address'],
+        'idrac_netmask': BMC_NETMASK,
+        'gateway_ip': ipaddress.IPv4Address(
+            int(ipaddress.IPv4Address(omsa['bmc_address'])) &
+            int(ipaddress.IPv4Address(BMC_NETMASK)) + 1
+        ),
+        'root_hash': get_user_hash(omsa['idrac_users'], 'root'),
+        'root_salt': get_user_salt(omsa['idrac_users'], 'root'),
+        'cybozu_hash': get_user_hash(omsa['idrac_users'], 'cybozu'),
+        'cybozu_salt': get_user_salt(omsa['idrac_users'], 'cybozu'),
+        'support_hash': get_user_hash(omsa['idrac_users'], 'support'),
+        'support_salt': get_user_salt(omsa['idrac_users'], 'support'),
+        'ssh_keys_path': '/dev/null',
+    }
+    for k, v in idrac.items():
+        if v == '':
+            sys.exit('{} is empty.'.format(k))
+
+    if os.getuid() != 0:
+        sys.exit('Run as root.')
+
+    # just check machine generation
+    generation()
+    config_bios(ns.check)
+    config_system(ns.check)
+    config_idrac(ns.check, idrac)
+    if not OK:
+        sys.exit(1)
+    if ENQUEUE:
+        print('There are pending jobs. Please reboot now.')
+
+
+# Main
+if __name__ == '__main__':
+    main()

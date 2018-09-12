@@ -1,0 +1,51 @@
+#!/usr/bin/python3.6
+# -*- mode: python -*-
+
+import os
+import json
+import ipaddress
+
+# Constants
+OMSA_JSON_TMPL = '/extras/setup/omsa.json.template'
+CLUSTER = '/etc/neco/cluster'
+RACK = '/etc/neco/rack'
+OMSA_JSON = '/etc/neco/omsa.json'
+
+
+def load_rack(filename: str) -> int:
+    with open(filename) as f:
+        return int(f.read())
+
+
+def load_cluster(filename: str) -> str:
+    with open(filename) as f:
+        return f.read().strip()
+
+
+def load_omsa(filename: str) -> int:
+    with open(filename) as f:
+        return json.load(f)
+
+
+def bmc_address(rack: int, base: ipaddress.IPv4Address) -> str:
+    return str(ipaddress.IPv4Address(base) + 32 * rack + 3)
+
+
+def dump_omsa_json(data: dict):
+    with open(OMSA_JSON, 'w') as f:
+        json.dump(data, f, indent=4)
+        f.flush()
+        os.fsync(f.fileno())
+
+
+def main():
+    rack = load_rack(RACK)
+    cluster = load_cluster(CLUSTER)
+    omsa = load_omsa(OMSA_JSON_TMPL)
+    bmc_network = ipaddress.IPv4Address(omsa['bmc_network'][cluster])
+    omsa['bmc_address'] = bmc_address(rack, bmc_network)
+    dump_omsa_json(omsa)
+
+
+if __name__ == '__main__':
+    main()
