@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_VERSION=0.4
+ARG CKE_VERSION=0.5
 
 RUN mkdir -p /go/src/github.com/cybozu-go/cke
 WORKDIR /go/src/github.com/cybozu-go/cke
