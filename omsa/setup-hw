@@ -326,10 +326,10 @@ def main():
         'rac_name': ns.rac_name,
         'idrac_ip': omsa['bmc_address'],
         'idrac_netmask': BMC_NETMASK,
-        'gateway_ip': ipaddress.IPv4Address(
+        'gateway_ip': str(ipaddress.IPv4Address(
             int(ipaddress.IPv4Address(omsa['bmc_address'])) &
             int(ipaddress.IPv4Address(BMC_NETMASK)) + 1
-        ),
+        )),
         'root_hash': get_user_hash(omsa['idrac_users'], 'root'),
         'root_salt': get_user_salt(omsa['idrac_users'], 'root'),
         'cybozu_hash': get_user_hash(omsa['idrac_users'], 'cybozu'),
