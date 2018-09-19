@@ -4,12 +4,12 @@ CKE container
 =============
 
 This directory provides a Dockerfile to build a Docker container
-that runs [cke](https://github.com/cybozu-go/cke).
+that runs [CKE](https://github.com/cybozu-go/cke).
 
 Usage
 -----
 
-### Run rivers: an TCP reverse proxy
+### Run CKE
 
 For docker:
 ```console

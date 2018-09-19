@@ -3,25 +3,20 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_VERSION=0.5
+ARG CKE_VERSION=0.6
 
-RUN mkdir -p /go/src/github.com/cybozu-go/cke
-WORKDIR /go/src/github.com/cybozu-go/cke
-
-RUN git clone https://github.com/coreos/etcd /go/src/github.com/coreos/etcd \
-    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9)
+WORKDIR /work
 
 RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
-    && go get -d -t ./... \
-    && go install ./...
+    && go install -mod=vendor ./...
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /go/bin /usr/local/cke/bin
-COPY --from=build /go/src/github.com/cybozu-go/cke/LICENSE /usr/local/cke/LICENSE
+COPY --from=build /work/LICENSE /usr/local/cke/LICENSE
 COPY install-tools /usr/local/cke/install-tools
 
 ENV PATH=/usr/local/cke/bin:"$PATH"
