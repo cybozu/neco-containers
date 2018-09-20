@@ -1,6 +1,6 @@
 # Makefile to lint python scripts
 
-PYTHON3_FILES := $(shell find . -type f | xargs -n 1 awk '{if ($$0 ~ /python3\.?/) print FILENAME; exit}')
+PYTHON3_FILES := omsa/setup-hw omsa/install-tools
 PYTHON3_DEPS:=pylint3 pycodestyle python3-requests
 PYLINT3=/usr/bin/pylint3
 PYCODESTYLE3=/usr/bin/pycodestyle
