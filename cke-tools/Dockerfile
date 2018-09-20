@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_TOOLS_VERSION=1.1.1
+ARG CKE_TOOLS_VERSION=1.2.0
 ARG CNI_PLUGIN_VERSION=0.7.1
 
 WORKDIR /work
@@ -27,7 +27,7 @@ ARG PLUGINDIR=/go/src/github.com/containernetworking/plugins
 
 COPY --from=build /go/bin /usr/local/cke-tools/bin
 COPY --from=build /work/LICENSE /usr/local/cke-tools/LICENSE
-COPY --from=build /work/scripts/write_file /usr/local/cke-tools/bin
+COPY --from=build /work/scripts/write_files /usr/local/cke-tools/bin
 COPY --from=build /work/scripts/make_directories /usr/local/cke-tools/bin
 COPY --from=build /work/scripts/install-cni /usr/local/cke-tools/bin
 COPY --from=build $PLUGINDIR/bin $CNIDIR/bin
