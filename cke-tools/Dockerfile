@@ -25,8 +25,6 @@ FROM quay.io/cybozu/ubuntu:18.04
 ARG CNIDIR=/usr/local/cni
 ARG PLUGINDIR=/go/src/github.com/containernetworking/plugins
 
-RUN mkdir -p $CNIDIR/bin $CNIDIR/etc/cni/net.d
-
 COPY --from=build /go/bin /usr/local/cke-tools/bin
 COPY --from=build /work/LICENSE /usr/local/cke-tools/LICENSE
 COPY --from=build /work/scripts/write_file /usr/local/cke-tools/bin
@@ -35,5 +33,9 @@ COPY --from=build /work/scripts/install-cni /usr/local/cke-tools/bin
 COPY --from=build $PLUGINDIR/bin $CNIDIR/bin
 COPY --from=build $PLUGINDIR/LICENSE $CNIDIR/LICENSE
 COPY ./99-loopback.conf $CNIDIR/etc/cni/net.d/99-loopback.conf
+
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends python3 \
+    && rm -rf /var/lib/apt/lists/*
 
 ENV PATH=/usr/local/cke-tools/bin:"$PATH"
