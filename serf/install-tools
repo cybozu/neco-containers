@@ -2,5 +2,5 @@
 
 DEST=/host
 
-cp /usr/local/serf/bin/serf $DEST/serf
-chmod 755 $DEST/serf
+cp /usr/local/serf/bin/serf $DEST/usr/local/bin/serf
+chmod 755 $DEST/usr/local/bin/serf
