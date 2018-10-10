@@ -17,6 +17,12 @@ RUN go install ./...
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
 
+RUN apt-get update \
+  && apt-get -y install --no-install-recommends \
+  python3 \
+  python3-requests \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY --from=build /go/bin /usr/local/serf/bin
 COPY --from=build /go/src/github.com/hashicorp/serf/LICENSE /usr/local/serf/LICENSE
 COPY install-tools /usr/local/serf/install-tools
