@@ -1,19 +1,16 @@
 # sabakan container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.10-bionic AS build
+FROM quay.io/cybozu/golang:1.11-bionic AS build
 
 ARG SABAKAN_VERSION=0.22
 
-RUN mkdir -p /go/src/github.com/cybozu-go/sabakan
-WORKDIR /go/src/github.com/cybozu-go/sabakan
+WORKDIR /work
 
 RUN curl -fsSL -o sabakan.tar.gz https://github.com/cybozu-go/sabakan/archive/v${SABAKAN_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f sabakan.tar.gz \
     && rm -f sabakan.tar.gz \
-    && go get -d -t ./... \
-    && (cd /go/src/github.com/coreos/etcd; git checkout v3.3.9) \
-    && go get -d -t ./... \
+    && go get -d ./... \
     && go install ./...
 
 RUN apt-get update \
@@ -24,8 +21,8 @@ RUN apt-get update \
 FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /go/bin /usr/local/sabakan/bin
-COPY --from=build /go/src/github.com/cybozu-go/sabakan/LICENSE /usr/local/sabakan/LICENSE
-COPY --from=build /go/src/github.com/cybozu-go/sabakan/cmd/sabactl/sabactl_completion.bash /usr/local/sabakan/sabactl_completion.bash
+COPY --from=build /work/LICENSE /usr/local/sabakan/LICENSE
+COPY --from=build /work/cmd/sabactl/sabactl_completion.bash /usr/local/sabakan/sabactl_completion.bash
 COPY --from=build /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/copyright
 COPY install-tools /usr/local/sabakan/install-tools

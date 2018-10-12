@@ -1,7 +1,7 @@
 # vault container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.10-bionic AS build
+FROM quay.io/cybozu/golang:1.11-bionic AS build
 
 ARG VAULT_VERSION=0.11.0
 
@@ -14,7 +14,8 @@ WORKDIR /go/src/github.com/hashicorp/vault
 COPY disable-etcd-version-detection.patch .
 RUN patch -p1 < disable-etcd-version-detection.patch
 
-RUN make bootstrap && \
+RUN make fmt && \
+    make bootstrap && \
     make
 
 # Stage2: setup runtime container
