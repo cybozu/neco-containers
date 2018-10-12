@@ -10,7 +10,7 @@ WORKDIR /work
 RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
-    && go install -mod=vendor ./...
+    && GO111MODULE=on go install -mod=vendor ./...
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
