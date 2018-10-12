@@ -14,7 +14,8 @@ WORKDIR /go/src/github.com/hashicorp/vault
 COPY disable-etcd-version-detection.patch .
 RUN patch -p1 < disable-etcd-version-detection.patch
 
-RUN make bootstrap && \
+RUN make fmt && \
+    make bootstrap && \
     make
 
 # Stage2: setup runtime container
