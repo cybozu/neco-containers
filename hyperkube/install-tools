@@ -1,0 +1,6 @@
+#!/bin/sh -e
+
+DEST=/host
+
+cp /usr/local/kubernetes/bin/kubectl $DEST/kubectl
+chmod 755 $DEST/kubectl

@@ -41,6 +41,7 @@ RUN apt-get update \
 
 COPY --from=build /go/src/k8s.io/kubernetes/_output/bin/hyperkube /usr/local/kubernetes/bin/hyperkube
 COPY --from=build /go/src/k8s.io/kubernetes/LICENSE /usr/local/kubernetes/LICENSE
+COPY install-tools /usr/local/kubernetes/install-tools
 
 RUN ln -s /usr/local/kubernetes/bin/hyperkube /usr/local/kubernetes/bin/kube-apiserver \
  && ln -s /usr/local/kubernetes/bin/hyperkube /usr/local/kubernetes/bin/apiserver \
