@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG SABAKAN_VERSION=0.22
+ARG SABAKAN_VERSION=0.24
 
 WORKDIR /work
 
