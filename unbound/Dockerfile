@@ -16,8 +16,6 @@ RUN mkdir -p /usr/local/unbound \
 
 FROM quay.io/cybozu/ubuntu:18.04
 
-RUN rm -rf /var/lib/apt/lists/*
-
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
 COPY --from=build /usr/local/unbound/sbin/unbound /usr/local/unbound/sbin/unbound
 COPY --from=build /usr/local/unbound/sbin/unbound-anchor /usr/local/unbound/sbin/unbound-anchor
