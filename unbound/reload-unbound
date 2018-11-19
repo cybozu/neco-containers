@@ -1,0 +1,14 @@
+#!/bin/sh
+
+FILE=/etc/unbound/unbound.conf
+
+OLD=$(cat $FILE)
+
+while true; do
+    NEW=$(cat $FILE)
+    if [ "$OLD" != "$NEW" ]; then
+        OLD="$NEW"
+        /usr/local/unbound/sbin/unbound-control -c $FILE reload
+    fi
+    sleep 1
+done

@@ -16,14 +16,10 @@ RUN mkdir -p /usr/local/unbound \
 
 FROM quay.io/cybozu/ubuntu:18.04
 
+COPY reload-unbound /usr/local/bin/reload-unbound
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
-COPY --from=build /usr/local/unbound/sbin/unbound /usr/local/unbound/sbin/unbound
-COPY --from=build /usr/local/unbound/sbin/unbound-anchor /usr/local/unbound/sbin/unbound-anchor
-COPY --from=build /usr/local/unbound/sbin/unbound-checkconf /usr/local/unbound/sbin/unbound-checkconf
-COPY --from=build /usr/local/unbound/sbin/unbound-control /usr/local/unbound/sbin/unbound-control
-COPY --from=build /usr/local/unbound/sbin/unbound-control-setup /usr/local/unbound/sbin/unbound-control-setup
-COPY --from=build /usr/local/unbound/sbin/unbound-host /usr/local/unbound/sbin/unbound-host
+COPY --from=build /usr/local/unbound/sbin /usr/local/unbound/sbin
 
-ENV PATH=/usr/local/unbound/sbin:"$PATH"
+ENV PATH=/usr/local/unbound/sbin:/usr/local/bin:"$PATH"
 EXPOSE 53 53/udp
-ENTRYPOINT ["unbound", "-d"]
+ENTRYPOINT ["unbound", "-d", "-p"]
