@@ -2,5 +2,5 @@
 
 DEST=/host
 
-cp /usr/local/etcd/bin/etcdctl $DEST/etcdctl
+cp --remove-destination /usr/local/etcd/bin/etcdctl $DEST/etcdctl
 chmod 755 $DEST/etcdctl

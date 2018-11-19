@@ -2,5 +2,5 @@
 
 DEST=/host
 
-cp /usr/local/kubernetes/bin/kubectl $DEST/kubectl
+cp --remove-destination /usr/local/kubernetes/bin/kubectl $DEST/kubectl
 chmod 755 $DEST/kubectl

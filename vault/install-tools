@@ -2,5 +2,5 @@
 
 DEST=/host
 
-cp /usr/local/vault/bin/vault $DEST/vault
+cp --remove-destination /usr/local/vault/bin/vault $DEST/vault
 chmod 755 $DEST/vault
