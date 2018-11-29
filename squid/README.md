@@ -10,5 +10,8 @@
 
 Prepare configuration file `squid.conf` at working directory, then execute following command.
 
-    $  docker run -it --mount type=bind,source="$(pwd)"/squid.conf,target=/etc/squid/squid.conf \
+    $  mkdir -m 777 /tmp/squid
+    $  docker run -it \
+        --mount type=bind,source=/tmp/squid,target=/var/log/squid \
+        --mount type=bind,source="$(pwd)"/squid.conf,target=/etc/squid/squid.conf \
         quay.io/cybozu/squid:3.5.27-1-1

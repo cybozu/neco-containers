@@ -9,12 +9,10 @@ RUN apt-get update \
 squid=${SQUID_VERSION}* \
 && rm -rf /var/lib/apt/lists/*
 
-RUN chown 10000:10000 /var/spool/squid /var/log/squid
-
 COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 3128
-USER 10000:10000
 VOLUME /var/spool/squid
+VOLUME /var/log/squid
 
 ENTRYPOINT ["/entrypoint.sh"]
