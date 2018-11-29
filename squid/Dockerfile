@@ -7,13 +7,14 @@ ARG SQUID_VERSION=3.5.27-1
 RUN apt-get update \
 && apt-get -y install --no-install-recommends \
 squid=${SQUID_VERSION}* \
-&& rm -rf /var/lib/apt/lists/* \
-&& ln -sf /dev/stdout /var/log/squid/access.log \
-&& ln -sf /dev/stdout /var/log/squid/store.log \
-&& ln -sf /dev/stdout /var/log/squid/cache.log
+&& rm -rf /var/lib/apt/lists/*
+
+RUN chown 10000:10000 /var/spool/squid /var/log/squid
 
 COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 3128
+USER 10000:10000
+VOLUME /var/spool/squid
 
 ENTRYPOINT ["/entrypoint.sh"]
