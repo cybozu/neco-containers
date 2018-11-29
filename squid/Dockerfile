@@ -12,7 +12,7 @@ squid=${SQUID_VERSION}* \
 && ln -sf /dev/stdout /var/log/squid/store.log \
 && ln -sf /dev/stdout /var/log/squid/cache.log
 
-ADD entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 
 EXPOSE 3128
 
