@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
-ARG CHRONY_VERSION=3.3
+ARG CHRONY_VERSION=3.4
 
 RUN mkdir /work \
     && curl -sSLf https://download.tuxfamily.org/chrony/chrony-${CHRONY_VERSION}.tar.gz | \
