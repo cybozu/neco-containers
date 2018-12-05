@@ -1,6 +1,6 @@
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG COREDNS_VERSION=1.2.5
+ARG COREDNS_VERSION=1.2.6
 RUN update-ca-certificates
 
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \

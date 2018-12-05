@@ -2,7 +2,7 @@ FROM centos:centos7
 
 ENV PATH $PATH:/opt/dell/srvadmin/bin:/opt/dell/srvadmin/sbin
 
-ARG OMSA_VERSION=18.08.00
+ARG OMSA_VERSION=18.11.01
 
 RUN rpm --import https://linux.dell.com/repo/hardware/DSU_${OMSA_VERSION}/public.key && \
 rpm --import https://linux.dell.com/repo/hardware/DSU_${OMSA_VERSION}/public_gpg3.key
