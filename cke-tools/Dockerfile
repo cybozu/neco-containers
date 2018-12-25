@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_TOOLS_VERSION=1.2.1
+ARG CKE_TOOLS_VERSION=1.3.0
 ARG CNI_PLUGIN_VERSION=0.7.1
 
 WORKDIR /work
@@ -11,8 +11,7 @@ WORKDIR /work
 RUN curl -fsSL -o cke-tools.tar.gz https://github.com/cybozu-go/cke-tools/archive/v${CKE_TOOLS_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke-tools.tar.gz \
     && rm -f cke-tools.tar.gz \
-    && go get -d -t ./... \
-    && go install ./...
+    && go install -mod=vendor ./...
 
 WORKDIR /go/src/github.com/containernetworking/plugins
 
