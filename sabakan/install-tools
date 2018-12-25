@@ -2,4 +2,3 @@
 
 cp --remove-destination /usr/local/sabakan/bin/sabakan-cryptsetup /host/usr/local/bin/sabakan-cryptsetup
 cp --remove-destination /usr/local/sabakan/bin/sabactl /host/usr/local/bin/sabactl
-cp --remove-destination /usr/local/sabakan/sabactl_completion.bash /host/etc/bash_completion.d/sabactl_completion.bash

@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG SABAKAN_VERSION=0.30
+ARG SABAKAN_VERSION=0.31
 
 WORKDIR /work
 
@@ -22,7 +22,6 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /go/bin /usr/local/sabakan/bin
 COPY --from=build /work/LICENSE /usr/local/sabakan/LICENSE
-COPY --from=build /work/cmd/sabactl/sabactl_completion.bash /usr/local/sabakan/sabactl_completion.bash
 COPY --from=build /boot/ipxe.efi /usr/lib/ipxe/ipxe.efi
 COPY --from=build /usr/share/doc/grub-ipxe/copyright /usr/share/doc/grub-ipxe/copyright
 COPY install-tools /usr/local/sabakan/install-tools
