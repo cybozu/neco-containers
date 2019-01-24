@@ -55,7 +55,7 @@ RUN cd ${GOPATH}/src/dummy && \
     rmdir vendor
 
 RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
-        tar zxf - -C /work/ \
+    tar zxf - -C /work/ \
     && mkdir -p ${GOPATH}/src/github.com/argoproj/ \
     && mv argo-cd-${ARGOCD_VERSION} ${GOPATH}/src/${PACKAGE}
 
@@ -72,7 +72,11 @@ FROM quay.io/cybozu/ubuntu:18.04
 RUN groupadd -g 999 argocd && \
     useradd -r -u 999 -g argocd argocd && \
     mkdir -p /home/argocd && \
-    chown argocd:argocd /home/argocd
+    chown argocd:argocd /home/argocd && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=builder /usr/local/bin/ks /usr/local/bin/ks
 COPY --from=builder /usr/local/bin/kubectl /usr/local/argocd/bin/kubectl
