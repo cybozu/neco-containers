@@ -293,7 +293,7 @@ spec:
         - "20"
         - --operation-processors
         - "10"
-        image: quay.io/cybozu/argocd:0.11.1
+        image: quay.io/cybozu/argocd:0.11
         imagePullPolicy: Always
         name: argocd-application-controller
         ports:
@@ -322,7 +322,7 @@ spec:
       containers:
       - command:
         - argocd-repo-server
-        image: quay.io/cybozu/argocd:0.11.1
+        image: quay.io/cybozu/argocd:0.11
         imagePullPolicy: Always
         name: argocd-repo-server
         ports:
@@ -349,7 +349,7 @@ spec:
       containers:
       - command:
         - argocd-server
-        image: quay.io/cybozu/argocd:0.11.1
+        image: quay.io/cybozu/argocd:0.11
         imagePullPolicy: Always
         name: argocd-server
         ports:

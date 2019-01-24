@@ -25,8 +25,8 @@ RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kube
 
 # Install ksonnet
 ENV KSONNET_VERSION=0.13.1
-RUN wget https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_VERSION}/ks_${KSONNET_VERSION}_linux_amd64.tar.gz && \
-    tar -C /tmp/ -xf ks_${KSONNET_VERSION}_linux_amd64.tar.gz && \
+RUN curl -sSLf https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_VERSION}/ks_${KSONNET_VERSION}_linux_amd64.tar.gz | \
+    tar zxf - -C /tmp/ && \
     mv /tmp/ks_${KSONNET_VERSION}_linux_amd64/ks /usr/local/bin/ks
 
 # Install kustomize
@@ -45,8 +45,9 @@ COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
 
 # A dummy directory is created under $GOPATH/src/dummy so we are able to use dep
 # to install all the packages of our dep lock file
-COPY Gopkg.toml ${GOPATH}/src/dummy/Gopkg.toml
-COPY Gopkg.lock ${GOPATH}/src/dummy/Gopkg.lock
+RUN mkdir -p ${GOPATH}/src/dummy \
+    && curl -sSLf -o ${GOPATH}/src/dummy/Gopkg.toml https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml \
+    && curl -sSLf -o ${GOPATH}/src/dummy/Gopkg.lock https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock
 
 RUN cd ${GOPATH}/src/dummy && \
     dep ensure -vendor-only && \

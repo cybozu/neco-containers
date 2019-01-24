@@ -11,12 +11,12 @@ that runs [argoproj/argo-cd](https://github.com/argoproj/argo-cd).
 
 ```console
 $ docker run --rm -u root:root \
-    --entrypoint /usr/local/argocd/install-tools \
+    --entrypoint /usr/local/argocd/bin/install-tools \
     --mount type=bind,src=DIR,target=/host \
     quay.io/cybozu/argocd:0
 ```
 
-### Deploy argocd-application-controller, repo-server and argocd-server on k8s 
+### Deploy argocd-application-controller, argocd-repo-server and argocd-server on k8s
 
 ```console
 $ kubectl apply -f install.yml
