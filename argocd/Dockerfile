@@ -23,6 +23,12 @@ ENV KUBECTL_VERSION=1.12.4
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
+# Install ksonnet
+ENV KSONNET_VERSION=0.13.1
+RUN wget https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_VERSION}/ks_${KSONNET_VERSION}_linux_amd64.tar.gz && \
+    tar -C /tmp/ -xf ks_${KSONNET_VERSION}_linux_amd64.tar.gz && \
+    mv /tmp/ks_${KSONNET_VERSION}_linux_amd64/ks /usr/local/bin/ks
+
 # Install kustomize
 ENV KUSTOMIZE_VERSION=1.0.11
 RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
@@ -67,6 +73,7 @@ RUN groupadd -g 999 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd
 
+COPY --from=builder /usr/local/bin/ks /usr/local/bin/ks
 COPY --from=builder /usr/local/bin/kubectl /usr/local/argocd/bin/kubectl
 COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
 
