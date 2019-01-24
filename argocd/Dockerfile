@@ -34,11 +34,6 @@ FROM quay.io/cybozu/golang:1.11-bionic AS argocd-build
 ENV ARGOCD_VERSION=0.11.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
-RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
-        tar zxf - -C /work/ \
-    && mkdir -p ${GOPATH}/src/github.com/argoproj/ \
-    && mv argo-cd-${ARGOCD_VERSION} ${GOPATH}/src/${PACKAGE}
-
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
 
@@ -52,9 +47,13 @@ RUN cd ${GOPATH}/src/dummy && \
     mv vendor/* ${GOPATH}/src/ && \
     rmdir vendor
 
+RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
+        tar zxf - -C /work/ \
+    && mkdir -p ${GOPATH}/src/github.com/argoproj/ \
+    && mv argo-cd-${ARGOCD_VERSION} ${GOPATH}/src/${PACKAGE}
+
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-COPY Makefile .
 RUN make cli server controller repo-server argocd-util
 
 
