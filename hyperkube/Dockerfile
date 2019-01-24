@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG K8S_VERSION=1.13.0
+ARG K8S_VERSION=1.13.2
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \

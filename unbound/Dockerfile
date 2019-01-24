@@ -1,6 +1,6 @@
 FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
 
-ARG UNBOUND_VERSION=1.8.2
+ARG UNBOUND_VERSION=1.8.3
 
 WORKDIR /work
 RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev
