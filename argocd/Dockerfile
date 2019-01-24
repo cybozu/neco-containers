@@ -65,7 +65,7 @@ RUN	packr build -i -o ./dist/argocd ./cmd/argocd
 RUN	packr build -i -o ./dist/argocd-server ./cmd/argocd-server
 RUN	go build -i -o ./dist/argocd-repo-server ./cmd/argocd-repo-server
 RUN	packr build -i -o ./dist/argocd-application-controller ./cmd/argocd-application-controller
-RUN	CGO_ENABLED=0 go build -v -i -o ./dist/argocd-util ./cmd/argocd-util
+RUN	CGO_ENABLED=0 go build -i -o ./dist/argocd-util ./cmd/argocd-util
 
 # Final image
 FROM quay.io/cybozu/ubuntu:18.04
@@ -83,7 +83,7 @@ ENV USER=argocd
 
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
 
-COPY install-tools /usr/local/argocd/bin/install-tools
+COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
 
 USER argocd

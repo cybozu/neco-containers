@@ -11,7 +11,7 @@ that runs [argoproj/argo-cd](https://github.com/argoproj/argo-cd).
 
 ```console
 $ docker run --rm -u root:root \
-    --entrypoint /usr/local/argocd/bin/install-tools \
+    --entrypoint /usr/local/argocd/install-tools \
     --mount type=bind,src=DIR,target=/host \
     quay.io/cybozu/argocd:0
 ```
