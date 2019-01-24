@@ -1,3 +1,4 @@
-BRANCH
-TAG
-README.md
+*
+!install-tools
+!Gopkg.lock
+!Gopkg.toml
