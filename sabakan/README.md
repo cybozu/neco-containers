@@ -20,7 +20,7 @@ $ sudo mkdir -p /var/lib/sabakan
 $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
     --network host --name sabakan \
     --mount type=bind,source=/var/lib/sabakan,target=/var/lib/sabakan \
-    quay.io/cybozu/sabakan:0 \
+    quay.io/cybozu/sabakan:1.0 \
     -etcd-endpoints http://foo.bar:2379,http://zot.bar:2379 \
     -advertise-url http://12.34.56.78:10080
 ```
@@ -33,7 +33,7 @@ $ sudo mkdir -p /var/lib/sabakan
 $ sudo rkt run \
     --volume data,kind=host,source=/var/lib/sabakan \
     --net=host --dns=host \
-  docker://quay.io/cybozu/sabakan:0 \
+  docker://quay.io/cybozu/sabakan:1.0 \
     --name sabakan --readonly-rootfs=true \
     --caps-retain=CAP_NET_BIND_SERVICE \
     --mount volume=data,target=/var/lib/sabakan \
