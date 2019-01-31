@@ -19,3 +19,9 @@ $ docker run -d \
     quay.io/cybozu/node-exporter:0.17.0-1 \
     --path.rootfs /host
 ```
+
+Then, get metrics from node-exporter:
+
+```console
+$ curl localhost:9100/metrics
+```
