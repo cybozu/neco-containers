@@ -10,12 +10,13 @@ RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.ta
 
 RUN make build-go
 
-RUN apt-get update && apt-get install -y gnupg
-RUN curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+RUN apt-get update && \
+    apt-get install -y gnupg && \
+    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
     apt-get install -y nodejs
 
-RUN npm install -g yarn
-RUN yarn install --pure-lockfile --no-progress
+RUN npm install -g yarn && \
+    yarn install --pure-lockfile --no-progress
 ENV NODE_ENV production
 RUN ./node_modules/.bin/grunt build
 
@@ -36,7 +37,9 @@ ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 WORKDIR $GF_PATHS_HOME
 
 RUN apt-get update && apt-get upgrade -y && \
-    apt-get install -qq -y libfontconfig ca-certificates && \
+    apt-get install -qq -y \
+    libfontconfig \
+    ca-certificates && \
     apt-get autoremove -y && \
     rm -rf /var/lib/apt/lists/*
 
