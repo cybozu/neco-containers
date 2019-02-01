@@ -44,8 +44,6 @@ ENV PATH=/usr/local/prometheus/bin:"$PATH"
 ENV PATH=/usr/local/alertmanager/bin:"$PATH"
 ENV PATH=/usr/local/pushgateway/bin:"$PATH"
 
-COPY install-tools /usr/local/prometheus/install-tools
-
 USER 10000:10000
 
 # Prometheus

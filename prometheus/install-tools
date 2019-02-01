@@ -1,6 +1,0 @@
-#!/bin/sh -e
-
-DEST=/host
-
-cp --remove-destination /usr/local/prometheus/bin/promtool $DEST/promtool
-chmod 755 $DEST/promtool
