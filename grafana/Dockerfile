@@ -20,6 +20,7 @@ ENV NODE_ENV production
 RUN ./node_modules/.bin/grunt build
 
 # Stage2: setup runtime container
+# refer to : https://github.com/grafana/grafana/blob/653918056c594d7f56a65771b2c9681bdf8a3b9a/Dockerfile#L37-L83
 FROM quay.io/cybozu/ubuntu:18.04
 ARG GF_UID="472"
 ARG GF_GID="472"
@@ -41,8 +42,7 @@ RUN apt-get update && apt-get upgrade -y && \
 
 COPY --from=build /go/src/github.com/grafana/grafana/conf ./conf
 
-RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
-    groupadd -r -g $GF_GID grafana && \
+RUN groupadd -r -g $GF_GID grafana && \
     useradd -r -u $GF_UID -g grafana grafana && \
     mkdir -p "$GF_PATHS_PROVISIONING/datasources" \
              "$GF_PATHS_PROVISIONING/dashboards" \
@@ -51,8 +51,8 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
              "$GF_PATHS_DATA" && \
     cp "$GF_PATHS_HOME/conf/sample.ini" "$GF_PATHS_CONFIG" && \
     cp "$GF_PATHS_HOME/conf/ldap.toml" /etc/grafana/ldap.toml && \
-    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
-    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_HOME/.aws" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
+    chown -R grafana:grafana "$GF_PATHS_DATA" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
+    chmod 777 "$GF_PATHS_DATA" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
 
 COPY --from=build /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-server /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-cli ./bin/
 COPY --from=build /go/src/github.com/grafana/grafana/public ./public
