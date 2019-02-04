@@ -17,7 +17,7 @@ RUN curl -fsSL -o prometheus.tar.gz https://github.com/prometheus/prometheus/arc
     && make PREFIX=$GOPATH/bin/prometheus build
 
 WORKDIR /go/src/github.com/prometheus/alertmanager
-RUN mkdir /data
+RUN mkdir -m 755 /data
 RUN curl -fsSL -o alertmanager.tar.gz https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f alertmanager.tar.gz \
     && rm -f alertmanager.tar.gz \
@@ -40,9 +40,7 @@ COPY --from=build /go/src/github.com/prometheus/prometheus/LICENSE /usr/local/pr
 COPY --from=build /go/src/github.com/prometheus/alertmanager/LICENSE /usr/local/alertmanager/LICENSE
 COPY --from=build /go/src/github.com/prometheus/pushgateway/LICENSE /usr/local/pushgateway/LICENSE
 
-ENV PATH=/usr/local/prometheus/bin:"$PATH"
-ENV PATH=/usr/local/alertmanager/bin:"$PATH"
-ENV PATH=/usr/local/pushgateway/bin:"$PATH"
+ENV PATH=/usr/local/prometheus/bin:/usr/local/alertmanager/bin:/usr/local/pushgateway/bin:"$PATH"
 
 USER 10000:10000
 
