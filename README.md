@@ -32,6 +32,32 @@ CircleCI does the following each time commits are pushed to a branch.
         1. Tag the built image with tag in `BRANCH` file.
         1. Push the tagged image to quay.io.
 
+Tag naming
+----------
+
+If the image is built for an upstream version X.Y.Z, the first image tag _must_ be X.Y.Z.1.
+The last version indicates the container image version and _must_ be incremented when some
+changes are introduced to the image.
+
+If the upstream version has no patch version (X.Y), fill the patch version with 0 then
+add the container image version A (X.Y.0.A).
+
+If the upstream version is a Debian package as X.Y.Z-PACKAGE (note that -PACKAGE
+should not be confused as pre-release as in semver), use "X.Y.Z.PACKAGE" as the
+upstream version and add the container image version as the fifth version.
+
+The container image version _must_ be reset to 1 when the upstream version is changed.
+
+### Example
+
+If the upstream version is "1.2.0-beta.3", the image tag must begin with "1.2.0-beta.3.1".
+
+Branch naming
+-------------
+
+If the image is built for an upstream version X.Y.Z, the branch name _should_ be X.Y
+for X > 0, or "0" for X == 0.
+
 License
 -------
 
