@@ -33,9 +33,9 @@ RUN curl -fsSL -o pushgateway.tar.gz https://github.com/prometheus/pushgateway/a
 FROM scratch
 
 COPY --from=build --chown=10000:10000 /data /data
-COPY --from=build --chown=10000:10000 /go/bin/prometheus /usr/local/prometheus/bin
-COPY --from=build --chown=10000:10000 /go/bin/alertmanager /usr/local/alertmanager/bin
-COPY --from=build --chown=10000:10000 /go/bin/pushgateway /usr/local/pushgateway/bin
+COPY --from=build /go/bin/prometheus /usr/local/prometheus/bin
+COPY --from=build /go/bin/alertmanager /usr/local/alertmanager/bin
+COPY --from=build /go/bin/pushgateway /usr/local/pushgateway/bin
 COPY --from=build /go/src/github.com/prometheus/prometheus/LICENSE /usr/local/prometheus/LICENSE
 COPY --from=build /go/src/github.com/prometheus/alertmanager/LICENSE /usr/local/alertmanager/LICENSE
 COPY --from=build /go/src/github.com/prometheus/pushgateway/LICENSE /usr/local/pushgateway/LICENSE
