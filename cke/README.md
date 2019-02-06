@@ -15,14 +15,14 @@ For docker:
 ```console
 $ docker run -d --read-only \
     --network host --name cke \
-    quay.io/cybozu/cke:0 [options...]
+    quay.io/cybozu/cke:1.13 [options...]
 ```
 
 For rkt:
 ```console
 $ sudo rkt run \
     --net=host --dns=host \
-  docker://quay.io/cybozu/cke:0 \
+  docker://quay.io/cybozu/cke:1.13 \
     --name cke --readonly-rootfs=true \
     -- [options...]
 ```
@@ -34,7 +34,7 @@ For docker:
 $ docker run --rm -u root:root \
     --entrypoint /usr/local/cke/install-tools \
     --mount type=bind,src=DIR,target=/host \
-    quay.io/cybozu/cke:0
+    quay.io/cybozu/cke:1.13
 ```
 
 For rkt:
@@ -43,5 +43,5 @@ $ sudo rkt run \
     --volume host,kind=host,source=DIR \
     --mount volume=host,target=/host \
     --exec /usr/local/cke/install-tools \
-    quay.io/cybozu/cke:0
+    quay.io/cybozu/cke:1.13
 ```
