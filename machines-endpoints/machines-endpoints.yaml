@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: machines-endpoints
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: machines-endpoints
+rules:
+- apiGroups: [""]
+  resources:
+  - services
+  - endpoints
+  verbs: ["get", "update", "create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: machines-endpoints
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: machines-endpoints
+subjects:
+- kind: ServiceAccount
+  name: machines-endpoints
+  namespace: default
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: machines-endpoints-cronjob
+  labels:
+    cronjob: machines-endpoints-cronjob
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: machines-endpoints
+            image: quay.io/cybozu/machines-endpoints:0
+            imagePullPolicy: IfNotPresent
+          hostNetwork: true
+          restartPolicy: OnFailure
+          serviceAccountName: machines-endpoints
