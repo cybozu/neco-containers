@@ -23,3 +23,23 @@ subjects:
 - kind: ServiceAccount
   name: default
   namespace: monitoring
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: machines-endpoints-cronjob
+  labels:
+    cronjob: machines-endpoints-cronjob
+  namespace: monitoring
+spec:
+  schedule: "*/1 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: machines-endpoints
+            image: quay.io/cybozu/machines-endpoints:0.1
+            imagePullPolicy: IfNotPresent
+          hostNetwork: true
+          restartPolicy: OnFailure
