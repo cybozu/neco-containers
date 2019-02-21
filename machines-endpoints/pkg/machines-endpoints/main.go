@@ -31,8 +31,8 @@ const (
 )
 
 const graphQLQuery = `
-query search($having: MachineParams = null, $notHaving: MachineParams = null) {
-  searchMachines(having: $having, notHaving: $notHaving) {
+query search() {
+  searchMachines(having: null, notHaving: null) {
     spec {
       ipv4
     }
