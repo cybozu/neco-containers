@@ -22,7 +22,6 @@ import (
 )
 
 const (
-	monitoringNamespace  = "monitoring"
 	targetEndpointsName  = "prometheus-node-targets"
 	nodeExporterPortName = "http-node-exporter"
 	nodeExporterPort     = 9100
@@ -125,7 +124,7 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 }
 
 func (c client) updateTargetEndpoints(machines []Machine) error {
-	services := c.k8s.CoreV1().Services(monitoringNamespace)
+	services := c.k8s.CoreV1().Services("")
 	_, err := services.Get(targetEndpointsName, metav1.GetOptions{})
 	switch {
 	case err == nil:
@@ -158,7 +157,7 @@ func (c client) updateTargetEndpoints(machines []Machine) error {
 		subset.Addresses[i].IP = machine.Spec.IPv4[0]
 	}
 
-	_, err = c.k8s.CoreV1().Endpoints(monitoringNamespace).Update(&corev1.Endpoints{
+	_, err = c.k8s.CoreV1().Endpoints("").Update(&corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: targetEndpointsName,
 		},

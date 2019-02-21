@@ -1,12 +1,4 @@
 apiVersion: v1
-kind: Namespace
-metadata:
-  name: monitoring
-spec:
-  finalizers:
-    - kubernetes
----
-apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: machines-endpoints
@@ -15,7 +7,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: machines-endpoints
-  namespace: monitoring
 rules:
 - apiGroups: [""]
   resources:
@@ -27,7 +18,6 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: machines-endpoints
-  namespace: monitoring
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -35,7 +25,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: machines-endpoints
-  namespace: monitoring
+  namespace: default
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -43,7 +33,6 @@ metadata:
   name: machines-endpoints-cronjob
   labels:
     cronjob: machines-endpoints-cronjob
-  namespace: monitoring
 spec:
   schedule: "*/1 * * * *"
   jobTemplate:
