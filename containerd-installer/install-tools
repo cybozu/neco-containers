@@ -1,0 +1,8 @@
+#!/bin/sh -e
+
+DEST=/host
+
+cp --remove-destination /usr/local/containerd-installer/bin/ctr $DEST/ctr
+cp --remove-destination /usr/local/containerd-installer/bin/containerd $DEST/containerd
+cp --remove-destination /usr/local/containerd-installer/bin/containerd-shim $DEST/containerd-shim
+cp --remove-destination /usr/local/containerd-installer/bin/crictl $DEST/crictl
