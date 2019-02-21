@@ -1,8 +1,10 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net"
 	"net/http"
 	"net/url"
@@ -10,7 +12,6 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	"github.com/cybozu-go/sabakan"
 	serfclient "github.com/hashicorp/serf/client"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -29,6 +30,23 @@ const (
 	ckeEtcdPort          = 2381
 )
 
+const graphQLQuery = `
+query search($having: MachineParams = null, $notHaving: MachineParams = null) {
+  searchMachines(having: $having, notHaving: $notHaving) {
+    spec {
+      ipv4
+    }
+  }
+}
+`
+
+// Machine represents a machine registered with sabakan.
+type Machine struct {
+	Spec struct {
+		IPv4 []string `json:"ipv4"`
+	}
+}
+
 type member struct {
 	name string
 	addr net.IP
@@ -41,54 +59,72 @@ type client struct {
 	serf *serfclient.RPCClient
 }
 
-func (c client) getMachinesFromSabakan(bootservers []net.IP) (*[]sabakan.Machine, error) {
+func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
 	if len(bootservers) == 0 {
 		return nil, errors.New("no bootservers")
 	}
 
-	var machines *[]sabakan.Machine
+	var machines []Machine
 	var err error
 	for _, boot := range bootservers {
-		machines, err = func() (*[]sabakan.Machine, error) {
-			machines := new([]sabakan.Machine)
+		machines, err = func() ([]Machine, error) {
 			addr := net.JoinHostPort(boot.String(), "10080")
-			base, err := url.Parse("http://" + addr)
+			queryURL, err := url.Parse("http://" + addr)
 			if err != nil {
-				log.Error("invalid sabakan server address", map[string]interface{}{
-					"sabakanaddr": addr,
-					log.FnError:   err,
-				})
 				return nil, err
 			}
 
-			base.Path = path.Join(base.Path, "/api/v1/machines")
-			req, err := http.NewRequest(http.MethodGet, base.String(), nil)
+			queryURL.Path = path.Join(queryURL.Path, "/graphql")
+			body := struct {
+				Query string `json:"query"`
+			}{
+				graphQLQuery,
+			}
+			data, err := json.Marshal(body)
+			if err != nil {
+				return nil, err
+			}
+
+			req, err := http.NewRequest(http.MethodPost, queryURL.String(), bytes.NewReader(data))
 			if err != nil {
 				return nil, err
 			}
 			resp, err := c.http.Do(req)
 			if err != nil {
-				log.Error("failed to get machines from sabakan server", map[string]interface{}{
-					"sabakanaddr": req.URL.String(),
-					log.FnError:   err,
-				})
 				return nil, err
 			}
 			defer resp.Body.Close()
-			err = json.NewDecoder(resp.Body).Decode(machines)
+
+			var result struct {
+				Data struct {
+					Machines []Machine `json:"searchMachines"`
+				} `json:"data"`
+				Errors []struct {
+					Message string `json:"message"`
+				} `json:"errors"`
+			}
+			err = json.NewDecoder(resp.Body).Decode(&result)
 			if err != nil {
 				return nil, err
 			}
-			return machines, nil
+			if len(result.Errors) > 0 {
+				return nil, fmt.Errorf("sabakan returned error: %v", result.Errors)
+			}
+
+			return result.Data.Machines, nil
 		}()
-		if machines != nil {
-			break
+		if err == nil {
+			return machines, nil
 		}
+		log.Error("failed to get machiens from sabakan", map[string]interface{}{
+			"bootserver": boot.String(),
+			log.FnError:  err,
+		})
 	}
-	return machines, err
+	return nil, err
 }
 
-func (c client) updateTargetEndpoints(machines *[]sabakan.Machine) error {
+func (c client) updateTargetEndpoints(machines []Machine) error {
 	services := c.k8s.CoreV1().Services(monitoringNamespace)
 	_, err := services.Get(targetEndpointsName, metav1.GetOptions{})
 	switch {
@@ -113,12 +149,12 @@ func (c client) updateTargetEndpoints(machines *[]sabakan.Machine) error {
 	}
 
 	subset := corev1.EndpointSubset{
-		Addresses: make([]corev1.EndpointAddress, len(*machines)),
+		Addresses: make([]corev1.EndpointAddress, len(machines)),
 		Ports: []corev1.EndpointPort{
 			{Port: nodeExporterPort, Name: nodeExporterPortName},
 			{Port: ckeEtcdPort, Name: ckeEtcdPortName}},
 	}
-	for i, machine := range *machines {
+	for i, machine := range machines {
 		subset.Addresses[i].IP = machine.Spec.IPv4[0]
 	}
 
