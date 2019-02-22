@@ -18,7 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -53,9 +53,10 @@ type member struct {
 }
 
 type client struct {
-	http *http.Client
-	k8s  *kubernetes.Clientset
-	serf *serfclient.RPCClient
+	http       *http.Client
+	k8s        *kubernetes.Clientset
+	kubeConfig clientcmd.ClientConfig
+	serf       *serfclient.RPCClient
 }
 
 func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
@@ -124,8 +125,13 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 }
 
 func (c client) updateTargetEndpoints(machines []Machine) error {
-	services := c.k8s.CoreV1().Services("")
-	_, err := services.Get(targetEndpointsName, metav1.GetOptions{})
+	ns, _, err := c.kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+
+	services := c.k8s.CoreV1().Services(ns)
+	_, err = services.Get(targetEndpointsName, metav1.GetOptions{})
 	switch {
 	case err == nil:
 	case k8serrors.IsNotFound(err):
@@ -157,7 +163,7 @@ func (c client) updateTargetEndpoints(machines []Machine) error {
 		subset.Addresses[i].IP = machine.Spec.IPv4[0]
 	}
 
-	_, err = c.k8s.CoreV1().Endpoints("").Update(&corev1.Endpoints{
+	_, err = c.k8s.CoreV1().Endpoints(ns).Update(&corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: targetEndpointsName,
 		},
@@ -215,7 +221,10 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	config, err := rest.InClusterConfig()
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	config, err := kubeConfig.ClientConfig()
 	if err != nil {
 		log.ErrorExit(err)
 	}
@@ -224,7 +233,7 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
-	client := client{http: localHTTPClient(), k8s: k8sClientSet, serf: serfc}
+	client := client{http: localHTTPClient(), k8s: k8sClientSet, serf: serfc, kubeConfig: kubeConfig}
 
 	members, err := client.GetMembers()
 	if err != nil {

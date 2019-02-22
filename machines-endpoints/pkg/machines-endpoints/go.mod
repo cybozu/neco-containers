@@ -8,6 +8,7 @@ require (
 	github.com/googleapis/gnostic v0.2.0 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190212212710-3befbb6ad0cc // indirect
 	github.com/hashicorp/serf v0.8.2
+	github.com/imdario/mergo v0.3.7 // indirect
 	github.com/json-iterator/go v1.1.5 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
