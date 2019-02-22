@@ -18,7 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const (
@@ -215,7 +215,14 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	config, err := rest.InClusterConfig()
+	//config, err := rest.InClusterConfig()
+	//if err != nil {
+	//	log.ErrorExit(err)
+	//}
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	configOverrides := &clientcmd.ConfigOverrides{}
+	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
+	config, err := kubeConfig.ClientConfig()
 	if err != nil {
 		log.ErrorExit(err)
 	}
