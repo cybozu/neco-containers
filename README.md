@@ -28,6 +28,7 @@ CircleCI does the following each time commits are pushed to a branch.
 1. If the branch is `master`, for each directory with a built image:
     1. Tag the built image with tag in `TAG` file.
     1. Push the tagged image to quay.io.
+    1. If `TAG` represents a pre-release such as `1.2-rc.1`, continue to the  next directory.
     1. If the directory contains `BRANCH` file:
         1. Tag the built image with tag in `BRANCH` file.
         1. Push the tagged image to quay.io.
