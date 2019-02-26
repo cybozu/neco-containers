@@ -17,7 +17,6 @@ RUN curl -fsSL -o prometheus.tar.gz https://github.com/prometheus/prometheus/arc
     && make PREFIX=$GOPATH/bin/prometheus build
 
 WORKDIR /go/src/github.com/prometheus/alertmanager
-RUN mkdir -m 755 /data
 RUN curl -fsSL -o alertmanager.tar.gz https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f alertmanager.tar.gz \
     && rm -f alertmanager.tar.gz \
@@ -30,9 +29,9 @@ RUN curl -fsSL -o pushgateway.tar.gz https://github.com/prometheus/pushgateway/a
     && make PREFIX=$GOPATH/bin/pushgateway build
 
 # Stage2: setup runtime container
-FROM scratch
+FROM quay.io/cybozu/ubuntu:18.04
 
-COPY --from=build --chown=10000:10000 /data /data
+RUN mkdir -m 755 /data && chown 10000:10000 /data
 COPY --from=build /go/bin/prometheus /usr/local/prometheus/bin
 COPY --from=build /go/bin/alertmanager /usr/local/alertmanager/bin
 COPY --from=build /go/bin/pushgateway /usr/local/pushgateway/bin
