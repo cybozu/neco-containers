@@ -49,7 +49,7 @@ jobs:
                 TAG=$(cat $d/TAG)
                 docker tag quay.io/cybozu/${d}:latest quay.io/cybozu/${d}:$TAG
                 docker push quay.io/cybozu/${d}:$TAG
-                if ! echo $TAG | grep -q -e - ; then
+                if echo $TAG | grep -q -e - ; then
                     echo ===== Skip pushing branch tags for pre-release $TAG =====
                     continue
                 fi
