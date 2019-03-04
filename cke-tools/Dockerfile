@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_TOOLS_VERSION=1.3.0
+ARG CKE_TOOLS_VERSION=1.4.0
 ARG CNI_PLUGIN_VERSION=0.7.1
 
 WORKDIR /work
@@ -31,7 +31,6 @@ COPY --from=build /work/scripts/make_directories /usr/local/cke-tools/bin
 COPY --from=build /work/scripts/install-cni /usr/local/cke-tools/bin
 COPY --from=build $PLUGINDIR/bin $CNIDIR/bin
 COPY --from=build $PLUGINDIR/LICENSE $CNIDIR/LICENSE
-COPY ./99-loopback.conf $CNIDIR/etc/cni/net.d/99-loopback.conf
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends python3 \
