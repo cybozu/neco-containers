@@ -25,8 +25,6 @@ const (
 	targetEndpointsName  = "prometheus-node-targets"
 	nodeExporterPortName = "http-node-exporter"
 	nodeExporterPort     = 9100
-	ckeEtcdPortName      = "http-cke-etcd"
-	ckeEtcdPort          = 2381
 )
 
 const graphQLQuery = `
@@ -116,7 +114,7 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 		if err == nil {
 			return machines, nil
 		}
-		log.Error("failed to get machiens from sabakan", map[string]interface{}{
+		log.Error("failed to get machines from sabakan", map[string]interface{}{
 			"bootserver": boot.String(),
 			log.FnError:  err,
 		})
@@ -142,7 +140,7 @@ func (c client) updateTargetEndpoints(machines []Machine) error {
 			Spec: corev1.ServiceSpec{
 				Ports: []corev1.ServicePort{
 					{Port: nodeExporterPort, TargetPort: intstr.FromInt(nodeExporterPort), Name: nodeExporterPortName},
-					{Port: ckeEtcdPort, TargetPort: intstr.FromInt(ckeEtcdPort), Name: ckeEtcdPortName}},
+				},
 				ClusterIP: "None",
 			},
 		})
@@ -157,7 +155,7 @@ func (c client) updateTargetEndpoints(machines []Machine) error {
 		Addresses: make([]corev1.EndpointAddress, len(machines)),
 		Ports: []corev1.EndpointPort{
 			{Port: nodeExporterPort, Name: nodeExporterPortName},
-			{Port: ckeEtcdPort, Name: ckeEtcdPortName}},
+		},
 	}
 	for i, machine := range machines {
 		subset.Addresses[i].IP = machine.Spec.IPv4[0]
