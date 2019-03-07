@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG K8S_VERSION=1.13.2
+ARG K8S_VERSION=1.13.4
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
@@ -15,8 +15,11 @@ RUN mkdir -p /go/src/k8s.io/ && \
       tar zxf - -C /go/src/k8s.io/ && \
     mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
 
+COPY 72432.patch /go/src/k8s.io/kubernetes
+
 WORKDIR /go/src/k8s.io/kubernetes
-RUN make WHAT=cmd/hyperkube GOLDFLAGS="-w -s"
+RUN patch -p1 < 72432.patch && \
+    make WHAT=cmd/hyperkube GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
