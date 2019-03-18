@@ -2,7 +2,7 @@
 # Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.11.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/golang:1.11-bionic AS builder
+FROM quay.io/cybozu/golang:1.12-bionic AS builder
 WORKDIR /tmp
 
 # Install dep
@@ -36,7 +36,7 @@ RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/ku
 
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.11-bionic AS argocd-build
+FROM quay.io/cybozu/golang:1.12-bionic AS argocd-build
 ENV ARGOCD_VERSION=0.11.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 

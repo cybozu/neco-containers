@@ -1,7 +1,7 @@
 # vault container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.11-bionic AS build
+FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG VAULT_VERSION=1.0.3
 

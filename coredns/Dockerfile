@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.11-bionic AS build
+FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG COREDNS_VERSION=1.3.1
 RUN update-ca-certificates
