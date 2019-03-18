@@ -18,5 +18,6 @@ COPY --from=build /go/src/github.com/coredns/coredns/LICENSE /usr/local/coredns/
 COPY --from=build /go/src/github.com/coredns/coredns/coredns /usr/local/coredns/bin/coredns
 ENV PATH=/usr/local/coredns/bin:"$PATH"
 
-EXPOSE 53 53/udp
+USER 10000:10000
+EXPOSE 1053 1053/udp
 ENTRYPOINT ["coredns"]
