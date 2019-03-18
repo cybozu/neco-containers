@@ -3,14 +3,14 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.11-bionic AS build
 
-ARG CKE_VERSION=1.13.9
+ARG CKE_VERSION=1.13.10
 
 WORKDIR /work
 
 RUN curl -fsSL -o cke.tar.gz https://github.com/cybozu-go/cke/archive/v${CKE_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f cke.tar.gz \
     && rm -f cke.tar.gz \
-    && go install -mod=vendor ./...
+    && go install -mod=vendor ./pkg/cke ./pkg/ckecli
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
