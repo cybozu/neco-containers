@@ -8,5 +8,5 @@
 
 To launch server with specific config file.
 
-    $ docker run quay.io/cybozu/coredns:1.2 -v Corefile:/etc/coredns/Corefile -- \
+    $ docker run quay.io/cybozu/coredns:1.3 -v Corefile:/etc/coredns/Corefile -- \
         -conf /etc/coredns/Corefile
