@@ -1,7 +1,7 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.11-bionic AS build
+FROM quay.io/cybozu/golang:1.12-bionic AS build
 ARG GRAFANA_VERSION=5.4.3
 
 WORKDIR /go/src/github.com/grafana/grafana

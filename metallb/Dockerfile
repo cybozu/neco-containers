@@ -1,7 +1,7 @@
 # metallb container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.11-bionic AS build
+FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG METALLB_VERSION=0.7.3
 

@@ -1,7 +1,7 @@
 # Prometheus container (prometheus, alertmanager, pushgateway)
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.11-bionic AS build
+FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG PROMETHEUS_VERSION=2.7.1
 ARG ALERTMANAGER_VERSION=0.16.1
