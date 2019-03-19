@@ -19,4 +19,6 @@ COPY --from=build /go/bin/speaker /speaker
 COPY --from=build /go/bin/controller /controller
 COPY --from=build /go/src/go.universe.tf/metallb/LICENSE /LICENSE
 
+USER 10000:10000
+
 ENTRYPOINT ["/speaker"]
