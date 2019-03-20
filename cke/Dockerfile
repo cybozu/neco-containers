@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG CKE_VERSION=1.13.11
+ARG CKE_VERSION=1.13.12
 
 WORKDIR /work
 
