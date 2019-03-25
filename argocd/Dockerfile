@@ -69,8 +69,8 @@ RUN	CGO_ENABLED=0 go build -i -o ./dist/argocd-util ./cmd/argocd-util
 
 # Final image
 FROM quay.io/cybozu/ubuntu:18.04
-RUN groupadd -g 999 argocd && \
-    useradd -r -u 999 -g argocd argocd && \
+RUN groupadd -g 10000 argocd && \
+    useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
@@ -90,6 +90,6 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/a
 COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
 
-USER argocd
+USER 10000:10000
 
 WORKDIR /home/argocd
