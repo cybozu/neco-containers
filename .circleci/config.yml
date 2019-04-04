@@ -1,6 +1,10 @@
-version: 2
+version: 2.1
 jobs:
   build:
+    parameters:
+      container-image:
+        type: string
+    description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
       - image: docker:stable
@@ -14,25 +18,20 @@ jobs:
       - run:
           name: Check TAG files
           command: |
-            for tag in */TAG; do
-                d=$(dirname $tag)
-                c="$(./tag_exists $d)"
-                if [ "$c" = ng ]; then
-                    echo $d >> BUILDS
-                fi
-            done
+            c="$(./tag_exists << parameters.container-image >>)"
+            if [ "$c" = ng ]; then
+                echo << parameters.container-image >> > BUILDS
+            fi
       - run:
           name: Build images
           command: |
             if [ ! -f BUILDS ]; then
-                echo "nothing to build."
+                echo "no need to build << parameters.container-image >>."
                 exit 0
             fi
-            for d in $(cat BUILDS); do
-                echo
-                echo "building $d ..."
-                docker build -t quay.io/cybozu/${d}:latest $d
-            done
+            echo
+            echo "building << parameters.container-image >> ..."
+            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest << parameters.container-image >>
       - deploy:
           name: Push Docker image to Quay.io
           command: |
@@ -43,25 +42,88 @@ jobs:
                 exit 0
             fi
             docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
-            for d in $(cat BUILDS); do
-                echo
-                echo "pushing $d ..."
-                TAG=$(cat $d/TAG)
-                docker tag quay.io/cybozu/${d}:latest quay.io/cybozu/${d}:$TAG
-                docker push quay.io/cybozu/${d}:$TAG
-                if echo $TAG | grep -q -e - ; then
-                    echo ===== Skip pushing branch tags for pre-release $TAG =====
-                    continue
-                fi
-                if [ -f $d/BRANCH ]; then
-                    BRANCH=$(cat $d/BRANCH)
-                    docker tag quay.io/cybozu/${d}:$TAG quay.io/cybozu/${d}:$BRANCH
-                    docker push quay.io/cybozu/${d}:$BRANCH
-                fi
-            done
+            echo
+            echo "pushing << parameters.container-image >> ..."
+            TAG=$(cat << parameters.container-image >>/TAG)
+            docker tag quay.io/cybozu/<< parameters.container-image >>:latest quay.io/cybozu/<< parameters.container-image >>:$TAG
+            docker push quay.io/cybozu/<< parameters.container-image >>:$TAG
+            if echo $TAG | grep -q -e - ; then
+                echo ===== Skip pushing branch tags for pre-release $TAG =====
+                continue
+            fi
+            if [ -f << parameters.container-image >>/BRANCH ]; then
+                BRANCH=$(cat << parameters.container-image >>/BRANCH)
+                docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
+                docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
+            fi
 
 workflows:
   version: 2
   main:
     jobs:
-      - build
+      - build:
+          name: argocd
+          container-image: argocd
+      - build:
+          name: bird
+          container-image: bird
+      - build:
+          name: chrony
+          container-image: chrony
+      - build:
+          name: cke
+          container-image: cke
+      - build:
+          name: cke-tools
+          container-image: cke-tools
+      - build:
+          name: coil
+          container-image: coil
+      - build:
+          name: coredns
+          container-image: coredns
+      - build:
+          name: dnsmasq
+          container-image: dnsmasq
+      - build:
+          name: etcd
+          container-image: etcd
+      - build:
+          name: golang
+          container-image: golang
+      - build:
+          name: grafana
+          container-image: grafana
+      - build:
+          name: hyperkube
+          container-image: hyperkube
+      - build:
+          name: kube-state-metrics
+          container-image: kube-state-metrics
+      - build:
+          name: machines-endpoints
+          container-image: machines-endpoints
+      - build:
+          name: metallb
+          container-image: metallb
+      - build:
+          name: pause
+          container-image: pause
+      - build:
+          name: prometheus
+          container-image: prometheus
+      - build:
+          name: sabakan
+          container-image: sabakan
+      - build:
+          name: serf
+          container-image: serf
+      - build:
+          name: squid
+          container-image: squid
+      - build:
+          name: unbound
+          container-image: unbound
+      - build:
+          name: vault
+          container-image: vault
