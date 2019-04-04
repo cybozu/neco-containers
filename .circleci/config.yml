@@ -49,7 +49,7 @@ jobs:
             docker push quay.io/cybozu/<< parameters.container-image >>:$TAG
             if echo $TAG | grep -q -e - ; then
                 echo ===== Skip pushing branch tags for pre-release $TAG =====
-                continue
+                exit 0
             fi
             if [ -f << parameters.container-image >>/BRANCH ]; then
                 BRANCH=$(cat << parameters.container-image >>/BRANCH)
