@@ -71,9 +71,6 @@ workflows:
           name: chrony
           container-image: chrony
       - build:
-          name: cke
-          container-image: cke
-      - build:
           name: cke-tools
           container-image: cke-tools
       - build:
