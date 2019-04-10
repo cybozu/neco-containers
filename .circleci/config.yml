@@ -107,9 +107,6 @@ workflows:
           name: prometheus
           container-image: prometheus
       - build:
-          name: sabakan
-          container-image: sabakan
-      - build:
           name: serf
           container-image: serf
       - build:
