@@ -74,9 +74,6 @@ workflows:
           name: cke-tools
           container-image: cke-tools
       - build:
-          name: coil
-          container-image: coil
-      - build:
           name: coredns
           container-image: coredns
       - build:
