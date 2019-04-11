@@ -78,6 +78,7 @@ jobs:
       - checkout
       - run: apt-get update
       - run: cd cke-tools/src/scripts; make setup SUDO=
+      - run: cd cke-tools/src/scripts; make
 
 workflows:
   version: 2
