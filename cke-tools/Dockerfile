@@ -2,19 +2,13 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
-
-ARG CKE_TOOLS_VERSION=1.5.1
 ARG CNI_PLUGIN_VERSION=0.7.1
 
-WORKDIR /work
-
-RUN curl -fsSL -o cke-tools.tar.gz https://github.com/cybozu-go/cke-tools/archive/v${CKE_TOOLS_VERSION}.tar.gz \
-    && tar -x -z --strip-components 1 -f cke-tools.tar.gz \
-    && rm -f cke-tools.tar.gz \
-    && go install -mod=vendor ./...
+COPY src /work/src
+WORKDIR /work/src
+RUN go install -mod=vendor ./...
 
 WORKDIR /go/src/github.com/containernetworking/plugins
-
 RUN curl -fsSL https://github.com/containernetworking/plugins/archive/v${CNI_PLUGIN_VERSION}.tar.gz | tar zxf - --strip-components 1 \
     && ./build.sh
 
@@ -25,11 +19,11 @@ ARG CNIDIR=/usr/local/cni
 ARG PLUGINDIR=/go/src/github.com/containernetworking/plugins
 
 COPY --from=build /go/bin /usr/local/cke-tools/bin
-COPY --from=build /work/LICENSE /usr/local/cke-tools/LICENSE
-COPY --from=build /work/scripts/write_files /usr/local/cke-tools/bin
-COPY --from=build /work/scripts/make_directories /usr/local/cke-tools/bin
-COPY --from=build /work/scripts/install-cni /usr/local/cke-tools/bin
-COPY --from=build /work/scripts/empty-dir /usr/local/cke-tools/bin
+COPY --from=build /work/src/LICENSE /usr/local/cke-tools/LICENSE
+COPY --from=build /work/src/scripts/write_files /usr/local/cke-tools/bin
+COPY --from=build /work/src/scripts/make_directories /usr/local/cke-tools/bin
+COPY --from=build /work/src/scripts/install-cni /usr/local/cke-tools/bin
+COPY --from=build /work/src/scripts/empty-dir /usr/local/cke-tools/bin
 COPY --from=build $PLUGINDIR/bin $CNIDIR/bin
 COPY --from=build $PLUGINDIR/LICENSE $CNIDIR/LICENSE
 

@@ -56,6 +56,29 @@ jobs:
                 docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
                 docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
             fi
+  build-cke-tools:
+    docker:
+      - image: quay.io/cybozu/golang:1.11-bionic
+      - image: quay.io/coreos/etcd:v3.3
+    working_directory: /work
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd cke-tools/src
+            test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
+            golint -set_exit_status $(go list -mod=vendor ./... | grep -v /vendor/)
+            go build -mod=vendor ./...
+            go test -mod=vendor -race -v ./...
+            go vet -mod=vendor ./...
+  scripts-cke-tools:
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:18.04
+    steps:
+      - checkout
+      - run: apt-get update
+      - run: cd cke-tools/src/scripts; make setup SUDO=
+      - run: cd cke-tools/src/scripts; make
 
 workflows:
   version: 2
@@ -73,6 +96,8 @@ workflows:
       - build:
           name: cke-tools
           container-image: cke-tools
+      - build-cke-tools
+      - scripts-cke-tools
       - build:
           name: coredns
           container-image: coredns
