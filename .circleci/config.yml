@@ -114,6 +114,9 @@ workflows:
           name: grafana
           container-image: grafana
       - build:
+          name: httpd
+          container-image: httpd
+      - build:
           name: hyperkube
           container-image: hyperkube
       - build:

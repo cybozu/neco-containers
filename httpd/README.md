@@ -3,7 +3,8 @@
 httpd container
 ===============
 
-This directory provides container image `httpd` and its source code.  
+This directory provides container image `httpd` and contains its source code.
+
 `httpd` is a simple HTTP server for testing (*not for production*)
 in Kubernetes cluster which is enabled PodSecurityPolicy admission plugin.
 
