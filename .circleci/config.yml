@@ -56,7 +56,11 @@ jobs:
                 docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
                 docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
             fi
-  build-cke-tools:
+  build-go-sources:
+    parameters:
+      directory:
+        type: string
+    description: "build Go sources at << parameters.directory >>"
     docker:
       - image: quay.io/cybozu/golang:1.11-bionic
       - image: quay.io/coreos/etcd:v3.3
@@ -65,7 +69,7 @@ jobs:
       - checkout
       - run:
           command: |
-            cd cke-tools/src
+            cd << parameters.directory >>
             test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
             golint -set_exit_status $(go list -mod=vendor ./... | grep -v /vendor/)
             go build -mod=vendor ./...
@@ -84,6 +88,13 @@ workflows:
   version: 2
   main:
     jobs:
+      - scripts-cke-tools
+      - build-go-sources:
+          directory: cke-tools/src
+      - build-go-sources:
+          directory: httpd/src
+      - build-go-sources:
+          directory: machines-endpoints/pkg/machines-endpoints
       - build:
           name: argocd
           container-image: argocd
@@ -96,8 +107,6 @@ workflows:
       - build:
           name: cke-tools
           container-image: cke-tools
-      - build-cke-tools
-      - scripts-cke-tools
       - build:
           name: coredns
           container-image: coredns
