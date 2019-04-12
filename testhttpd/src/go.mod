@@ -1,4 +1,4 @@
-module github.com/cybozu/neco-containers/httpd/src
+module github.com/cybozu/neco-containers/testhttpd/src
 
 go 1.12
 

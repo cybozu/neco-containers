@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"io"
 	"net/http"
 
@@ -11,8 +10,7 @@ import (
 )
 
 var (
-	flagPort    = flag.Int("p", 8000, "Listen port")
-	flagAddress = flag.String("a", "0.0.0.0", "Listen address")
+	flagListen = flag.String("listen", "0.0.0.0:8000", "Listen address and port")
 )
 
 func main() {
@@ -21,15 +19,14 @@ func main() {
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "Hello")
 	})
-	addr := fmt.Sprintf("%s:%d", *flagAddress, *flagPort)
 	s := &well.HTTPServer{
 		Server: &http.Server{
-			Addr:    addr,
+			Addr:    *flagListen,
 			Handler: mux,
 		},
 	}
 	log.Info("Start listening", map[string]interface{}{
-		log.FnHTTPHost: addr,
+		log.FnHTTPHost: *flagListen,
 	})
 
 	err := s.ListenAndServe()

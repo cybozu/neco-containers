@@ -93,8 +93,8 @@ workflows:
           name: build sources of cke-tools
           directory: cke-tools/src
       - build-go-sources:
-          name: build sources of httpd
-          directory: httpd/src
+          name: build sources of testhttpd
+          directory: testhttpd/src
       - build-go-sources:
           name: build sources of machines-endpoints
           directory: machines-endpoints/pkg/machines-endpoints
@@ -126,8 +126,8 @@ workflows:
           name: grafana
           container-image: grafana
       - build:
-          name: httpd
-          container-image: httpd
+          name: testhttpd
+          container-image: testhttpd
       - build:
           name: hyperkube
           container-image: hyperkube
