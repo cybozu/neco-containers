@@ -18,7 +18,7 @@ const (
 	copyBufferSize = 64 << 10
 )
 
-// Config presends TCP servers
+// Config presents TCP servers
 type Config struct {
 	ShutdownTimeout time.Duration
 	Logger          *log.Logger
