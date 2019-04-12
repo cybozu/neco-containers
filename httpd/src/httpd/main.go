@@ -12,7 +12,7 @@ import (
 
 var (
 	flagPort    = flag.Int("p", 8000, "Listen port")
-	flagAddress = flag.String("a", "localhost", "Listen address")
+	flagAddress = flag.String("a", "0.0.0.0", "Listen address")
 )
 
 func main() {
