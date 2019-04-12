@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	flagListen = flag.String("listen", "0.0.0.0:8000", "Listen address and port")
+	flagListen = flag.String("listen", ":8000", "Listen address and port")
 )
 
 func main() {

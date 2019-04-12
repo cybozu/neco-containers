@@ -11,4 +11,4 @@ FROM scratch
 COPY --from=build /go/bin /
 USER 10000:10000
 EXPOSE 8000
-ENTRYPOINT ["/testhttpd", "-listen", "0.0.0.0:8000"]
+ENTRYPOINT ["/testhttpd", "-listen", ":8000"]
