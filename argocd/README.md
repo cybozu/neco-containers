@@ -13,7 +13,7 @@ that runs [argoproj/argo-cd](https://github.com/argoproj/argo-cd).
 $ docker run --rm -u root:root \
     --entrypoint /usr/local/argocd/install-tools \
     --mount type=bind,src=DIR,target=/host \
-    quay.io/cybozu/argocd:0
+    quay.io/cybozu/argocd:0.12
 ```
 
 ### Deploy argocd-application-controller, argocd-repo-server and argocd-server on k8s

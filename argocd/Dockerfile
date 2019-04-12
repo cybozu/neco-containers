@@ -1,5 +1,5 @@
 # Argo CD container
-# Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.11.1/Dockerfile
+# Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
 FROM quay.io/cybozu/golang:1.12-bionic AS builder
@@ -18,8 +18,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-# Keep version at 1.12.X until https://github.com/argoproj/argo-cd/issues/1012 is resolved
-ENV KUBECTL_VERSION=1.12.4
+ENV KUBECTL_VERSION=1.13.4
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
@@ -30,7 +29,7 @@ RUN curl -sSLf https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_V
     mv /tmp/ks_${KSONNET_VERSION}_linux_amd64/ks /usr/local/bin/ks
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=1.0.11
+ENV KUSTOMIZE_VERSION=2.0.3
 RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
     chmod +x /usr/local/bin/kustomize
 
