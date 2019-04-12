@@ -72,7 +72,7 @@ jobs:
             cd << parameters.directory >>
             test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
             golint -set_exit_status $(go list -mod=vendor ./... | grep -v /vendor/)
-            go build -mod=vendor ./...
+            go build -mod=vendor -o /dev/null ./...
             go test -mod=vendor -race -v ./...
             go vet -mod=vendor ./...
   scripts-cke-tools:
@@ -90,10 +90,13 @@ workflows:
     jobs:
       - scripts-cke-tools
       - build-go-sources:
+          name: build sources of cke-tools
           directory: cke-tools/src
       - build-go-sources:
+          name: build sources of httpd
           directory: httpd/src
       - build-go-sources:
+          name: build sources of machines-endpoints
           directory: machines-endpoints/pkg/machines-endpoints
       - build:
           name: argocd
