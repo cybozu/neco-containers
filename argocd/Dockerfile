@@ -60,11 +60,7 @@ RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN	packr build -i -o ./dist/argocd ./cmd/argocd
-RUN	packr build -i -o ./dist/argocd-server ./cmd/argocd-server
-RUN	go build -i -o ./dist/argocd-repo-server ./cmd/argocd-repo-server
-RUN	packr build -i -o ./dist/argocd-application-controller ./cmd/argocd-application-controller
-RUN	CGO_ENABLED=0 go build -i -o ./dist/argocd-util ./cmd/argocd-util
+RUN make cli server controller repo-server argocd-util
 
 # Final image
 FROM quay.io/cybozu/ubuntu:18.04
