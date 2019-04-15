@@ -1,5 +1,5 @@
 # Argo CD container
-# Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.11.1/Dockerfile
+# Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
 FROM quay.io/cybozu/golang:1.12-bionic AS builder
@@ -18,8 +18,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-# Keep version at 1.12.X until https://github.com/argoproj/argo-cd/issues/1012 is resolved
-ENV KUBECTL_VERSION=1.12.4
+ENV KUBECTL_VERSION=1.13.4
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
@@ -30,14 +29,14 @@ RUN curl -sSLf https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_V
     mv /tmp/ks_${KSONNET_VERSION}_linux_amd64/ks /usr/local/bin/ks
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=1.0.11
+ENV KUSTOMIZE_VERSION=2.0.3
 RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
     chmod +x /usr/local/bin/kustomize
 
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.12-bionic AS argocd-build
-ENV ARGOCD_VERSION=0.11.2
+ENV ARGOCD_VERSION=0.12.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
@@ -61,11 +60,7 @@ RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN	packr build -i -o ./dist/argocd ./cmd/argocd
-RUN	packr build -i -o ./dist/argocd-server ./cmd/argocd-server
-RUN	go build -i -o ./dist/argocd-repo-server ./cmd/argocd-repo-server
-RUN	packr build -i -o ./dist/argocd-application-controller ./cmd/argocd-application-controller
-RUN	CGO_ENABLED=0 go build -i -o ./dist/argocd-util ./cmd/argocd-util
+RUN make cli server controller repo-server argocd-util
 
 # Final image
 FROM quay.io/cybozu/ubuntu:18.04
