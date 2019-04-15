@@ -158,3 +158,6 @@ workflows:
       - build:
           name: vault
           container-image: vault
+      - build:
+          name: redis
+          container-image: redis
