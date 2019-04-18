@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
-ARG CNI_PLUGIN_VERSION=0.7.1
+ARG CNI_PLUGIN_VERSION=0.7.5
 
 COPY src /work/src
 WORKDIR /work/src

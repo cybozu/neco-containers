@@ -1,7 +1,6 @@
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG COREDNS_VERSION=1.4.0
-RUN update-ca-certificates
+ARG COREDNS_VERSION=1.5.0
 
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
         tar zxf - -C /work/ \
@@ -9,7 +8,7 @@ RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.ta
     && mv coredns-${COREDNS_VERSION} /go/src/github.com/coredns/coredns
 
 WORKDIR /go/src/github.com/coredns/coredns/
-RUN make 
+RUN make
 
 FROM scratch
 
