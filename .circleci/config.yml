@@ -117,6 +117,9 @@ workflows:
           name: dnsmasq
           container-image: dnsmasq
       - build:
+          name: envoy
+          container-image: envoy
+      - build:
           name: etcd
           container-image: etcd
       - build:
@@ -147,6 +150,9 @@ workflows:
           name: prometheus
           container-image: prometheus
       - build:
+          name: redis
+          container-image: redis
+      - build:
           name: serf
           container-image: serf
       - build:
@@ -158,6 +164,3 @@ workflows:
       - build:
           name: vault
           container-image: vault
-      - build:
-          name: redis
-          container-image: redis
