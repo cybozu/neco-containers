@@ -111,6 +111,9 @@ workflows:
           name: cke-tools
           container-image: cke-tools
       - build:
+          name: contour
+          container-image: contour
+      - build:
           name: coredns
           container-image: coredns
       - build:
