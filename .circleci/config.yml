@@ -98,6 +98,9 @@ workflows:
       - build-go-sources:
           name: build sources of machines-endpoints
           directory: machines-endpoints/pkg/machines-endpoints
+      - build-go-sources:
+          name: build sources of restrictpkg
+          directory: golang/restrictpkg
       - build:
           name: argocd
           container-image: argocd
