@@ -14,7 +14,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=contour \
-    quay.io/cybozu/contour:0 serve --incluster
+    quay.io/cybozu/contour:0.11 serve
 ```
 
 [Contour]: https://github.com/heptio/contour
