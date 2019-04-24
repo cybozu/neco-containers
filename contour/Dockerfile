@@ -11,8 +11,6 @@ RUN curl -sSLf https://github.com/heptio/contour/archive/v${CONTOUR_VERSION}.tar
 
 WORKDIR /work/contour/
 
-ENV GOPROXY=https://gocenter.io
-RUN go mod download
 RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOFLAGS=-ldflags=-w go build -o /go/bin/contour -ldflags=-s -v github.com/heptio/contour/cmd/contour
 
 # Stage2: setup runtime container
