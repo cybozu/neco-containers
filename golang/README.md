@@ -10,5 +10,7 @@ tools:
 * [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
 * [golint](https://github.com/golang/lint)
 * [ghr](https://github.com/tcnksm/ghr)
+* [nilerr](https://github.com/gostaticanalysis/nilerr)
+* [restrictpkg](./restrictpkg/README.md)
 
-This contaier is based on [quay.io/cybozu/ubuntu-dev](https://quay.io/repository/cybozu/ubuntu-dev).
+This container is based on [quay.io/cybozu/ubuntu-dev](https://quay.io/repository/cybozu/ubuntu-dev).
