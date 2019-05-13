@@ -129,14 +129,14 @@ workflows:
           name: etcd
           container-image: etcd
       - build:
+          name: external-dns
+          container-image: external-dns
+      - build:
           name: golang
           container-image: golang
       - build:
           name: grafana
           container-image: grafana
-      - build:
-          name: testhttpd
-          container-image: testhttpd
       - build:
           name: hyperkube
           container-image: hyperkube
@@ -164,6 +164,9 @@ workflows:
       - build:
           name: squid
           container-image: squid
+      - build:
+          name: testhttpd
+          container-image: testhttpd
       - build:
           name: unbound
           container-image: unbound
