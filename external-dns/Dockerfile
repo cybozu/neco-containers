@@ -17,7 +17,7 @@ RUN apt-get update \
     && make build
 
 # Stage2: setup runtime container
-FROM scratch
+FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /work/external-dns/build/external-dns /usr/local/external-dns/bin/external-dns
 COPY --from=build /work/external-dns/LICENSE  /usr/local/external-dns/LICENSE
