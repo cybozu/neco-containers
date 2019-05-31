@@ -62,7 +62,7 @@ jobs:
         type: string
     description: "build Go sources at << parameters.directory >>"
     docker:
-      - image: quay.io/cybozu/golang:1.11-bionic
+      - image: quay.io/cybozu/golang:1.12-bionic
       - image: quay.io/coreos/etcd:v3.3
     working_directory: /work
     steps:
