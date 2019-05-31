@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG ETCD_VERSION=3.3.12
+ARG ETCD_VERSION=3.3.13
 
 RUN mkdir -p /go/src/github.com/coreos/ && \
     curl -sSLf https://github.com/coreos/etcd/archive/v${ETCD_VERSION}.tar.gz | \
