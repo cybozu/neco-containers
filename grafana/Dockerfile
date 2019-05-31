@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
-ARG GRAFANA_VERSION=5.4.3
+ARG GRAFANA_VERSION=6.2.1
 
 WORKDIR /go/src/github.com/grafana/grafana
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
