@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG SERF_VERSION=0.8.1
+ARG SERF_VERSION=0.8.3
 
 
 RUN mkdir -p /go/src/github.com/hashicorp/serf \

@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG EXTERNALDNS_VERSION=0.5.13
+ARG EXTERNALDNS_VERSION=0.5.14
 
 RUN curl -sSLf https://github.com/kubernetes-incubator/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
         tar zxf - -C /work/ \

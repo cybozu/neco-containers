@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG CONTOUR_VERSION=0.11.0
+ARG CONTOUR_VERSION=0.12.0
 
 RUN curl -sSLf https://github.com/heptio/contour/archive/v${CONTOUR_VERSION}.tar.gz | \
         tar zxf - -C /work/ \

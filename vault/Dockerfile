@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG VAULT_VERSION=1.0.3
+ARG VAULT_VERSION=1.1.2
 
 RUN mkdir -p /go/src/github.com/hashicorp/ && \
     git clone --depth=1 -b v${VAULT_VERSION} \

@@ -5,6 +5,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.6.1] - 2019-05-31
+
+### Changed
+
+- Update containers for bionic-20190515 (#193).
+
+## [1.6.0] - 2019-04-18
+
+### Changed
+
+- Update containers for Kubernetes 1.14 (#184).
+
 ## [1.5.1] - 2019-03-07
 
 ### Changed
@@ -70,7 +82,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add rivers: an TCP reverse proxy for kubernetes apiservers (#1).
 
-[Unreleased]: https://github.com/cybozu-go/cke-tools/compare/v1.5.1...HEAD
+[Unreleased]: https://github.com/cybozu/neco-containers/compare/update-20190531...HEAD
+[1.6.1]: https://github.com/cybozu/neco-containers/pull/193
+[1.6.0]: https://github.com/cybozu/neco-containers/pull/184
 [1.5.1]: https://github.com/cybozu-go/cke-tools/compare/v1.5.0...v1.5.1
 [1.5.0]: https://github.com/cybozu-go/cke-tools/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/cybozu-go/cke-tools/compare/v1.3.0...v1.4.0
