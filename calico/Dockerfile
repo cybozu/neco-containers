@@ -44,8 +44,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy in the calico-node binary
-COPY --from=build /go/bin/calico-felix /bin/calico-felix
-COPY --from=build /go/bin/calico-typha /bin/calico-typha
+COPY --from=build /go/bin/calico-felix /usr/bin/calico-felix
+COPY --from=build /go/bin/calico-typha /usr/bin/calico-typha
 
 # For typha
 COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/typha.cfg /etc/calico/typha.cfg
