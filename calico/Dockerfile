@@ -1,23 +1,39 @@
-# calico container
+# Copyright (c) 2015-2016 Tigera, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-# Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG CALICO_VERSION=3.7.2
 
 RUN mkdir -p /go/src/github.com/projectcalico && \
-    curl -sSLf https://github.com/projectcalico/felix/archive/v${CALICO_VERSION}.tar.gz | \
+    curl -sSLf https://github.com/projectcalico/node/archive/v${CALICO_VERSION}.tar.gz | \
       tar zxf - -C /go/src/github.com/projectcalico/ && \
-    mv /go/src/github.com/projectcalico/felix-${CALICO_VERSION} /go/src/github.com/projectcalico/felix && \
+    mv /go/src/github.com/projectcalico/node-${CALICO_VERSION} /go/src/github.com/projectcalico/node && \
     curl -sSLf https://github.com/projectcalico/typha/archive/v${CALICO_VERSION}.tar.gz | \
       tar zxf - -C /go/src/github.com/projectcalico/ && \
     mv /go/src/github.com/projectcalico/typha-${CALICO_VERSION} /go/src/github.com/projectcalico/typha
 
-WORKDIR /go/src/github.com/projectcalico/felix
-RUN GO111MODULE=on CGO_ENABLED=0 go install ./cmd/calico-felix
+RUN mkdir -p /go/bin
+RUN curl https://glide.sh/get | sh
+
+WORKDIR /go/src/github.com/projectcalico/node
+RUN glide install -strip-vendor
+RUN GO111MODULE=on CGO_ENABLED=0 go install -mod=vendor ./cmd/calico-node
 
 WORKDIR /go/src/github.com/projectcalico/typha
 RUN GO111MODULE=on CGO_ENABLED=0 go install ./cmd/calico-typha
+
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
@@ -43,21 +59,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy in the filesystem - this contains felix, calico-bgp-daemon etc...
+COPY --from=build /go/src/github.com/projectcalico/node/filesystem/ /
+
 # Copy in the calico-node binary
-COPY --from=build /go/bin/calico-felix /usr/bin/calico-felix
-COPY --from=build /go/bin/calico-typha /usr/bin/calico-typha
+COPY --from=build /go/bin/calico-node /usr/local/calico/bin/calico-node
+COPY --from=build /go/bin/calico-typha /usr/local/calico/bin/calico-typha
+COPY --from=build /go/src/github.com/projectcalico/node/LICENSE /usr/local/calico/LICENSE
 
 # For typha
 COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/typha.cfg /etc/calico/typha.cfg
 
-# For felix
-COPY --from=build /go/src/github.com/projectcalico/felix/docker-image/calico-felix-wrapper /usr/bin/calico-felix-wrapper
-
 # Since our binary isn't designed to run as PID 1, run it via the tini init daemon.
 ENV TINI_VERSION v0.18.0
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /sbin/tini
-RUN chmod +x /sbin/tini
-ENTRYPOINT ["/sbin/tini", "--"]
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /usr/local/calico/bin/tini
+RUN chmod +x /usr/local/calico/bin/tini
 
-#CMD ["/usr/bin/calico-felix-wrapper"]
-#CMD ["/usr/bin/calico-typha"]
+ENV PATH=/usr/local/calico/bin:"$PATH"
+USER 10000:10000
