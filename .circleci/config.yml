@@ -108,6 +108,9 @@ workflows:
           name: bird
           container-image: bird
       - build:
+          name: calico
+          container-image: calico
+      - build:
           name: cert-manager
           container-image: cert-manager
       - build:
