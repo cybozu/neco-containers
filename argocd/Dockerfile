@@ -18,7 +18,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.13.4
+ENV KUBECTL_VERSION=1.14.3
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
@@ -36,7 +36,7 @@ RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/ku
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.12-bionic AS argocd-build
-ENV ARGOCD_VERSION=0.12.1
+ENV ARGOCD_VERSION=1.0.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
