@@ -126,6 +126,9 @@ workflows:
           name: coredns
           container-image: coredns
       - build:
+          name: csi-sidecar
+          container-image: csi-sidecar
+      - build:
           name: dnsmasq
           container-image: dnsmasq
       - build:
