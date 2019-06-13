@@ -27,7 +27,7 @@ RUN for pkg in external-provisioner node-driver-registrar external-attacher; do 
 FROM scratch
 
 COPY --from=build /go/src/github.com/kubernetes-csi/external-provisioner/bin/csi-provisioner /usr/local/csi-sidecar/bin/csi-provisioner
-COPY --from=build /go/src/github.com/kubernetes-csi/external-provisioner/LICENSE  /usr/local/csi-sidecar/bin/LICENSE
+COPY --from=build /go/src/github.com/kubernetes-csi/external-provisioner/LICENSE  /usr/local/csi-sidecar/LICENSE
 
 COPY --from=build /go/src/github.com/kubernetes-csi/node-driver-registrar/bin/csi-node-driver-registrar /usr/local/csi-sidecar/bin/csi-node-driver-registrar
 
