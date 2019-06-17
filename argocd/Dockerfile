@@ -36,7 +36,7 @@ RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/ku
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.12-bionic AS argocd-build
-ENV ARGOCD_VERSION=1.0.1
+ENV ARGOCD_VERSION=1.1.0-rc1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
