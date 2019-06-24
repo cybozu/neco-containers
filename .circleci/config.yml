@@ -1,15 +1,25 @@
 version: 2.1
 jobs:
   build:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
     parameters:
       container-image:
         type: string
+      attach:
+        type: boolean
+        default: false
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
       - image: docker:stable
     steps:
       - checkout
+      - when:
+          condition: << parameters.attach >>
+          steps:
+            - attach_workspace:
+                at: /app/<< parameters.container-image >>/workspace
       - setup_remote_docker
       - run:
           name: Install tools
@@ -83,102 +93,135 @@ jobs:
       - run: apt-get update
       - run: cd cke-tools/src/scripts; make setup SUDO=
       - run: cd cke-tools/src/scripts; make
+  build-envoy:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/golang:1.12-bionic
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists envoy)"
+            if [ "$c" = ng ]; then
+                echo envoy > BUILDS
+            fi
+      - run:
+          name: Install dependency packages
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            apt-get -y install default-jdk gpg libtool cmake clang-format-6.0 \
+                automake autoconf ninja-build zip unzip pkg-config virtualenv \
+                zlib1g-dev bash-completion python
+            ln -s /usr/lib/jvm/default-java /usr/local/java
+      - run:
+          name: Install buildifier
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            go get -u github.com/bazelbuild/buildtools/buildifier
+      - run:
+          name: Install Bazel
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            # the latest version (0.27) does not work
+            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_0.22.0_amd64.deb
+            dpkg -i /tmp/bazel.deb
+            rm -f /tmp/bazel.deb
+      - run:
+          name: Build envoy
+          command: |
+            mkdir -p src/workspace
+            if [ ! -f BUILDS ]; then
+                # fake for the next step
+                cd src
+                touch envoy LICENSE docker-entrypoint.sh
+                exit 0
+            fi
+            cd src
+            git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
+            cd envoy
+            bazel build --jobs 8 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
+            strip --strip-debug bazel-bin/source/exe/envoy-static
+            mv bazel-bin/source/exe/envoy-static ../workspace/envoy
+            mv LICENSE ../workspace
+            mv ci/docker-entrypoint.sh ../workspace
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
 
 workflows:
-  version: 2
   main:
     jobs:
       - scripts-cke-tools
       - build-go-sources:
-          name: build sources of cke-tools
           directory: cke-tools/src
       - build-go-sources:
-          name: build sources of testhttpd
           directory: testhttpd/src
       - build-go-sources:
-          name: build sources of machines-endpoints
           directory: machines-endpoints/pkg/machines-endpoints
       - build-go-sources:
-          name: build sources of restrictpkg
           directory: golang/restrictpkg
       - build:
-          name: argocd
           container-image: argocd
       - build:
-          name: bird
           container-image: bird
       - build:
-          name: calico
           container-image: calico
       - build:
-          name: cert-manager
           container-image: cert-manager
       - build:
-          name: chrony
           container-image: chrony
       - build:
-          name: cke-tools
           container-image: cke-tools
       - build:
-          name: contour
           container-image: contour
       - build:
-          name: coredns
           container-image: coredns
       - build:
-          name: csi-sidecar
           container-image: csi-sidecar
       - build:
-          name: dnsmasq
           container-image: dnsmasq
+      - build-envoy:
+          version: 1.10.0
       - build:
-          name: envoy
           container-image: envoy
+          attach: true
+          requires:
+            - build-envoy
       - build:
-          name: etcd
           container-image: etcd
       - build:
-          name: external-dns
           container-image: external-dns
       - build:
-          name: golang
           container-image: golang
       - build:
-          name: grafana
           container-image: grafana
       - build:
-          name: hyperkube
           container-image: hyperkube
       - build:
-          name: kube-state-metrics
           container-image: kube-state-metrics
       - build:
-          name: machines-endpoints
           container-image: machines-endpoints
       - build:
-          name: metallb
           container-image: metallb
       - build:
-          name: pause
           container-image: pause
       - build:
-          name: prometheus
           container-image: prometheus
       - build:
-          name: redis
           container-image: redis
       - build:
-          name: serf
           container-image: serf
       - build:
-          name: squid
           container-image: squid
       - build:
-          name: testhttpd
           container-image: testhttpd
       - build:
-          name: unbound
           container-image: unbound
       - build:
-          name: vault
           container-image: vault
