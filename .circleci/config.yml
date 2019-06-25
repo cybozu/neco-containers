@@ -137,7 +137,7 @@ jobs:
             mkdir -p src/workspace
             if [ ! -f BUILDS ]; then
                 # fake for the next step
-                cd src
+                cd src/workspace
                 touch envoy LICENSE docker-entrypoint.sh
                 exit 0
             fi
