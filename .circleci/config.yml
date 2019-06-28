@@ -210,6 +210,8 @@ workflows:
       - build:
           container-image: metallb
       - build:
+          container-image: open-policy-agent
+      - build:
           container-image: pause
       - build:
           container-image: prometheus
