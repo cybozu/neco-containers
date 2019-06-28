@@ -23,7 +23,7 @@ RUN curl -sSLf https://github.com/open-policy-agent/kube-mgmt/archive/v${KUBE_MG
 FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /usr/local/bin/opa /usr/local/open-policy-agent/bin/opa
-COPY --from=build /usr/local/bin/LICENSE-opa /usr/local/open-policy-agent/bin//LICENSE-opa
+COPY --from=build /usr/local/bin/LICENSE-opa /usr/local/open-policy-agent/bin/LICENSE-opa
 COPY --from=build /go/bin/kube-mgmt /usr/local/open-policy-agent/bin/kube-mgmt
 COPY --from=build /go/bin/LICENSE-kube-mgmt /usr/local/open-policy-agent/bin/LICENSE-kube-mgmt
 
