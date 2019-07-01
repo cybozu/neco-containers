@@ -5,6 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG CALICO_VERSION=3.7.2
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
     curl -sSLf https://github.com/projectcalico/node/archive/v${CALICO_VERSION}.tar.gz | \
       tar zxf - -C /go/src/github.com/projectcalico/ && \

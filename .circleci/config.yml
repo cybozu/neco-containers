@@ -34,7 +34,7 @@ jobs:
             fi
       - run:
           name: Lint Dockerfile
-          command: docker run --rm -i hadolint/hadolint < << parameters.container-image >>/Dockerfile
+          command: docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < << parameters.container-image >>/Dockerfile
       - run:
           name: Build images
           command: |

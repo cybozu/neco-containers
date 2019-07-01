@@ -11,22 +11,22 @@ ARG PUSHGATEWAY_VERSION=0.8.0
 ENV USER=root
 
 WORKDIR /go/src/github.com/prometheus/prometheus
-RUN curl -fsSL -o prometheus.tar.gz https://github.com/prometheus/prometheus/archive/v${PROMETHEUS_VERSION}.tar.gz \
+RUN curl -fsSL -o prometheus.tar.gz "https://github.com/prometheus/prometheus/archive/v${PROMETHEUS_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f prometheus.tar.gz \
     && rm -f prometheus.tar.gz \
-    && make PREFIX=$GOPATH/bin/prometheus build
+    && make "PREFIX=$GOPATH/bin/prometheus" build
 
 WORKDIR /go/src/github.com/prometheus/alertmanager
-RUN curl -fsSL -o alertmanager.tar.gz https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz \
+RUN curl -fsSL -o alertmanager.tar.gz "https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f alertmanager.tar.gz \
     && rm -f alertmanager.tar.gz \
-    && make PREFIX=$GOPATH/bin/alertmanager build
+    && make "PREFIX=$GOPATH/bin/alertmanager" build
 
 WORKDIR /go/src/github.com/prometheus/pushgateway
-RUN curl -fsSL -o pushgateway.tar.gz https://github.com/prometheus/pushgateway/archive/v${PUSHGATEWAY_VERSION}.tar.gz \
+RUN curl -fsSL -o pushgateway.tar.gz "https://github.com/prometheus/pushgateway/archive/v${PUSHGATEWAY_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f pushgateway.tar.gz \
     && rm -f pushgateway.tar.gz \
-    && make PREFIX=$GOPATH/bin/pushgateway build
+    && make "PREFIX=$GOPATH/bin/pushgateway" build
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04

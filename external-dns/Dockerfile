@@ -5,6 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG EXTERNALDNS_VERSION=0.5.14
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-incubator/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
         tar zxf - -C /work/ \
     && mv external-dns-${EXTERNALDNS_VERSION} /work/external-dns

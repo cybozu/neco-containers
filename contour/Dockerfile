@@ -5,6 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG CONTOUR_VERSION=0.12.0
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/heptio/contour/archive/v${CONTOUR_VERSION}.tar.gz | \
         tar zxf - -C /work/ \
     && mv contour-${CONTOUR_VERSION} /work/contour
