@@ -33,13 +33,15 @@ jobs:
                 echo << parameters.container-image >> > BUILDS
             fi
       - run:
+          name: Lint Dockerfile
+          command: docker run --rm -i hadolint/hadolint < << parameters.container-image >>/Dockerfile
+      - run:
           name: Build images
           command: |
             if [ ! -f BUILDS ]; then
                 echo "no need to build << parameters.container-image >>."
                 exit 0
             fi
-            echo
             echo "building << parameters.container-image >> ..."
             docker build -t quay.io/cybozu/<< parameters.container-image >>:latest << parameters.container-image >>
       - deploy:
@@ -182,8 +184,6 @@ workflows:
           container-image: contour
       - build:
           container-image: coredns
-      - build:
-          container-image: csi-sidecar
       - build:
           container-image: dnsmasq
       - build-envoy:
