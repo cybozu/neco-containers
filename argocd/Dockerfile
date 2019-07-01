@@ -48,14 +48,15 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # A dummy directory is created under $GOPATH/src/dummy so we are able to use dep
 # to install all the packages of our dep lock file
 RUN mkdir -p "${GOPATH}/src/dummy" \
-    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.toml https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml" \
-    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.lock https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock"
+    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.toml" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml" \
+    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.lock" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock"
 
 WORKDIR ${GOPATH}/src/dummy
 RUN dep ensure -vendor-only && \
     mv vendor/* "${GOPATH}/src/" && \
     rmdir vendor
 
+WORKDIR /work
 RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
     tar zxf - -C /work/ \
     && mkdir -p "${GOPATH}/src/github.com/argoproj/" \
