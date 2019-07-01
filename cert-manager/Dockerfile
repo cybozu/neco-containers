@@ -5,6 +5,8 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 ARG CERT_MANAGER_VERSION=0.8.0
 
 WORKDIR /go/src/github.com/jetstack/cert-manager
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/jetstack/cert-manager/archive/v${CERT_MANAGER_VERSION}.tar.gz | tar zxf - --strip-components 1 && \
     GO111MODULE=on go install -mod=vendor ./cmd/webhook/ ./cmd/cainjector ./cmd/controller
 
@@ -19,4 +21,3 @@ EXPOSE 9402
 USER 10000:10000
 
 ENV PATH=/usr/local/cert-manager/bin:"$PATH"
-

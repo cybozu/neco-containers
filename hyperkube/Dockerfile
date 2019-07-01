@@ -5,6 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG K8S_VERSION=1.14.1
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
     rsync \

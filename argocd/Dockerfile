@@ -5,6 +5,7 @@
 FROM quay.io/cybozu/golang:1.12-bionic AS builder
 WORKDIR /tmp
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Install dep
 ENV DEP_VERSION=0.5.0
 RUN curl -sSLf https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o /usr/local/bin/dep && \
@@ -42,21 +43,24 @@ ENV PACKAGE=github.com/argoproj/argo-cd
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 # A dummy directory is created under $GOPATH/src/dummy so we are able to use dep
 # to install all the packages of our dep lock file
-RUN mkdir -p ${GOPATH}/src/dummy \
-    && curl -sSLf -o ${GOPATH}/src/dummy/Gopkg.toml https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml \
-    && curl -sSLf -o ${GOPATH}/src/dummy/Gopkg.lock https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock
+RUN mkdir -p "${GOPATH}/src/dummy" \
+    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.toml" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml" \
+    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.lock" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock"
 
-RUN cd ${GOPATH}/src/dummy && \
-    dep ensure -vendor-only && \
-    mv vendor/* ${GOPATH}/src/ && \
+WORKDIR ${GOPATH}/src/dummy
+RUN dep ensure -vendor-only && \
+    mv vendor/* "${GOPATH}/src/" && \
     rmdir vendor
 
-RUN curl -sSLf https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz | \
+WORKDIR /work
+RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
     tar zxf - -C /work/ \
-    && mkdir -p ${GOPATH}/src/github.com/argoproj/ \
-    && mv argo-cd-${ARGOCD_VERSION} ${GOPATH}/src/${PACKAGE}
+    && mkdir -p "${GOPATH}/src/github.com/argoproj/" \
+    && mv "argo-cd-${ARGOCD_VERSION}" "${GOPATH}/src/${PACKAGE}"
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd

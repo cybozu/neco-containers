@@ -5,6 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG ETCD_VERSION=3.3.13
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/coreos/ && \
     curl -sSLf https://github.com/coreos/etcd/archive/v${ETCD_VERSION}.tar.gz | \
       tar zxf - -C /go/src/github.com/coreos/ && \

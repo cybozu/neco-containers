@@ -21,8 +21,8 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
     && mkdir -p /go/src
 
 COPY ./restrictpkg /work/restrictpkg
-RUN cd restrictpkg \
-    && GOBIN=/usr/local/bin go install -mod=vendor ./cmd/restrictpkg/ \
+WORKDIR /work/restrictpkg
+RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/restrictpkg/ \
     && rm -r /work/restrictpkg
 
 CMD ["/bin/bash"]

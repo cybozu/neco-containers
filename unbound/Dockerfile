@@ -3,6 +3,7 @@ FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
 ARG UNBOUND_VERSION=1.9.1
 
 WORKDIR /work
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev
 RUN curl -sSLf https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz | \
     tar zxf - -C /work/

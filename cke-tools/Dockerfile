@@ -9,6 +9,7 @@ WORKDIR /work/src
 RUN go install -mod=vendor ./...
 
 WORKDIR /go/src/github.com/containernetworking/plugins
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/containernetworking/plugins/archive/v${CNI_PLUGIN_VERSION}.tar.gz | tar zxf - --strip-components 1 \
     && ./build.sh
 

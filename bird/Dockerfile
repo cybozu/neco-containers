@@ -18,7 +18,7 @@ RUN apt-get update \
 RUN curl -s -O ftp://bird.network.cz/pub/bird/bird-${BIRD_VERSION}.tar.gz && \
     tar xzf bird-${BIRD_VERSION}.tar.gz
 
-WORKDIR bird-${BIRD_VERSION}
+WORKDIR /work/bird-${BIRD_VERSION}
 
 RUN ./configure \
       --prefix=/usr/local/bird \

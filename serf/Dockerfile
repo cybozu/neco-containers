@@ -5,7 +5,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 
 ARG SERF_VERSION=0.8.3
 
-
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/hashicorp/serf \
 && curl -fsSL https://github.com/hashicorp/serf/archive/v${SERF_VERSION}.tar.gz | \
 tar -x -z -f - --strip-components 1 -C /go/src/github.com/hashicorp/serf

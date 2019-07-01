@@ -14,6 +14,7 @@ RUN curl -sSLf -o /usr/local/bin/opa https://github.com/open-policy-agent/opa/re
 
 # Install kube-mgmt sidecar container
 WORKDIR /go/src/${KUBE_MGMT_PKG}
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/open-policy-agent/kube-mgmt/archive/v${KUBE_MGMT_VERSION}.tar.gz | \
         tar -x -z -f - --strip-components 1 && \
     GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -mod=vendor -ldflags="-w -s -X ${KUBE_MGMT_PKG}/pkg/version.Version=${KUBE_MGMT_VERSION}" -v ./cmd/kube-mgmt/... && \
