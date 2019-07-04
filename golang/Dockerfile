@@ -22,7 +22,8 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
 
 COPY ./restrictpkg /work/restrictpkg
 WORKDIR /work/restrictpkg
-RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/restrictpkg/ \
-    && rm -r /work/restrictpkg
+RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/restrictpkg/
+WORKDIR /work
+RUN rm -r /work/restrictpkg
 
 CMD ["/bin/bash"]
