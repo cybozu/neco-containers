@@ -9,12 +9,16 @@ This program works in kubernetes pods.
 
 Usage
 -----
+
 1. Prepare [dctest](https://github.com/cybozu-go/neco/blob/master/docs/dctest.md) environment.
 2. Deploy RBAC and CronJob resources for `machines-endpoints`.
+
    ```console
-   $ kubectl apply -f machines-endpoints.yaml
+   kubectl apply -f machines-endpoints.yaml
    ```
+
 3. Check `prometheus-node-targets`.
+
    ```console
-   $ kubectl get endpoints prometheus-node-targets
+   kubectl get endpoints prometheus-node-targets
    ```
