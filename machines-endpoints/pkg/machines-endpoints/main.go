@@ -13,6 +13,7 @@ import (
 
 	"github.com/cybozu-go/log"
 	serfclient "github.com/hashicorp/serf/client"
+	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,9 +23,15 @@ import (
 )
 
 const (
-	targetEndpointsName  = "prometheus-node-targets"
-	nodeExporterPortName = "http-node-exporter"
-	nodeExporterPort     = 9100
+	// node-exporter
+	targetEndpointsName     = "prometheus-node-targets"
+	nodeExporterPortName    = "http-node-exporter"
+	defaultNodeExporterPort = 9100
+
+	// etcd metrics
+	targetEtcdMetricsEndpointsName = "bootserver-etcd-metrics"
+	etcdMetricsPortName            = "http-etcd-metrics"
+	defaultEtcdMetricsPort         = 2381
 )
 
 const graphQLQuery = `
@@ -36,6 +43,11 @@ query search() {
   }
 }
 `
+
+var (
+	flgNodeExporterPort = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
+	flgEtcdMetricsPort  = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
+)
 
 // Machine represents a machine registered with sabakan.
 type Machine struct {
@@ -57,15 +69,15 @@ type client struct {
 	serf       *serfclient.RPCClient
 }
 
-func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
+func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
 	if len(bootservers) == 0 {
 		return nil, errors.New("no bootservers")
 	}
 
-	var machines []Machine
+	var machineIPs []net.IP
 	var err error
 	for _, boot := range bootservers {
-		machines, err = func() ([]Machine, error) {
+		machineIPs, err = func() ([]net.IP, error) {
 			addr := net.JoinHostPort(boot.String(), "10080")
 			queryURL, err := url.Parse("http://" + addr)
 			if err != nil {
@@ -109,10 +121,19 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 				return nil, fmt.Errorf("sabakan returned error: %v", result.Errors)
 			}
 
-			return result.Data.Machines, nil
+			for _, machine := range result.Data.Machines {
+				if machine.Spec.IPv4 == nil {
+					continue
+				}
+				if len(machine.Spec.IPv4) == 0 {
+					continue
+				}
+				machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
+			}
+			return machineIPs, nil
 		}()
 		if err == nil {
-			return machines, nil
+			return machineIPs, nil
 		}
 		log.Error("failed to get machines from sabakan", map[string]interface{}{
 			"bootserver": boot.String(),
@@ -122,24 +143,24 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 	return nil, err
 }
 
-func (c client) updateTargetEndpoints(machines []Machine) error {
+func (c client) updateTargetEndpoints(targetIPs []net.IP, target, portName string, port int32) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
 		return err
 	}
 
 	services := c.k8s.CoreV1().Services(ns)
-	_, err = services.Get(targetEndpointsName, metav1.GetOptions{})
+	_, err = services.Get(target, metav1.GetOptions{})
 	switch {
 	case err == nil:
 	case k8serrors.IsNotFound(err):
 		_, err = services.Create(&corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: targetEndpointsName,
+				Name: target,
 			},
 			Spec: corev1.ServiceSpec{
 				Ports: []corev1.ServicePort{
-					{Port: nodeExporterPort, TargetPort: intstr.FromInt(nodeExporterPort), Name: nodeExporterPortName},
+					{Port: port, TargetPort: intstr.FromInt(int(port)), Name: portName},
 				},
 				ClusterIP: "None",
 			},
@@ -152,18 +173,18 @@ func (c client) updateTargetEndpoints(machines []Machine) error {
 	}
 
 	subset := corev1.EndpointSubset{
-		Addresses: make([]corev1.EndpointAddress, len(machines)),
+		Addresses: make([]corev1.EndpointAddress, len(targetIPs)),
 		Ports: []corev1.EndpointPort{
-			{Port: nodeExporterPort, Name: nodeExporterPortName},
+			{Port: port, Name: portName},
 		},
 	}
-	for i, machine := range machines {
-		subset.Addresses[i].IP = machine.Spec.IPv4[0]
+	for i, ip := range targetIPs {
+		subset.Addresses[i].IP = ip.String()
 	}
 
 	_, err = c.k8s.CoreV1().Endpoints(ns).Update(&corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: targetEndpointsName,
+			Name: target,
 		},
 		Subsets: []corev1.EndpointSubset{subset},
 	})
@@ -214,6 +235,8 @@ func localHTTPClient() *http.Client {
 }
 
 func main() {
+	pflag.Parse()
+
 	serfc, err := serfclient.NewRPCClient("127.0.0.1:7373")
 	if err != nil {
 		log.ErrorExit(err)
@@ -240,12 +263,19 @@ func main() {
 
 	bootservers := getBootServers(&members)
 
-	machines, err := client.getMachinesFromSabakan(bootservers)
+	// create etcd metrics endpoints on boot servers
+	err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
-	err = client.updateTargetEndpoints(machines)
+	// create node-exporter endpoints on all servers
+	machineIPs, err := client.getMachinesFromSabakan(bootservers)
+	if err != nil {
+		log.ErrorExit(err)
+	}
+
+	err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
 	if err != nil {
 		log.ErrorExit(err)
 	}
