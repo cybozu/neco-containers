@@ -17,7 +17,14 @@ RUN git checkout v${TELEPORT_VERSION} && \
 # Stage2: final image
 FROM quay.io/cybozu/ubuntu:18.04
 
-RUN mkdir -p /usr/local/teleport/bin/teleport
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install --no-install-recommends -y \
+    dumb-init \
+    ca-certificates \
+    && update-ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /usr/local/teleport/bin/teleport
+
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tctl /usr/local/teleport/bin/teleport/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/teleport /usr/local/teleport/bin/teleport/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tsh /usr/local/teleport/bin/teleport/
@@ -27,4 +34,4 @@ RUN mkdir -p /var/lib/teleport && \
 
 USER 10000:10000
 
-ENTRYPOINT ["teleport"]
+ENTRYPOINT ["/usr/bin/dumb-init", "teleport", "start", "-c", "/etc/teleport/teleport.yaml"]
