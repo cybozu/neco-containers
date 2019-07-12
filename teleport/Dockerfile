@@ -25,6 +25,7 @@ RUN apt-get update && apt-get upgrade -y && \
     && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /usr/local/teleport/bin/teleport
 
+COPY --from=build /go/src/github.com/gravitational/teleport/LICENSE /usr/local/teleport/bin/teleport/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tctl /usr/local/teleport/bin/teleport/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/teleport /usr/local/teleport/bin/teleport/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tsh /usr/local/teleport/bin/teleport/

@@ -1,7 +1,7 @@
 [![Docker Repository on Quay](https://quay.io/repository/cybozu/teleport/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/teleport)
 
 Teleport container
-=====================
+==================
 
 Build Docker container image for [Teleport][], which  is a modern security gateway for remotely accessing.
 
