@@ -14,7 +14,8 @@ Usage
 Run the container
 
 ```console
-$ docker run -d --read-only --name=teleport \
+$ docker run -p 3022:3022 -p 3023:3023 -p 3024:3024 -p 3025:3025 -p 3026:3026 -p 3080:3080 \
+    -d --read-only --name=teleport \
     quay.io/cybozu/teleport:4.0.2 \
     start ...
 ```

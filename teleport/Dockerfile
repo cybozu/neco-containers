@@ -34,5 +34,18 @@ VOLUME /var/lib/teleport
 
 USER 10000:10000
 
+# ssh port
+EXPOSE 3022
+# proxy ssh
+EXPOSE 3023
+# proxy tunnel:
+EXPOSE 3024
+# auth ssh
+EXPOSE 3025
+# proxy kubernetes
+EXPOSE 3026
+# proxy web
+EXPOSE 3080
+
 ENTRYPOINT ["/usr/bin/dumb-init", "teleport"]
 CMD ["start", "-c", "/etc/teleport/teleport.yaml"]
