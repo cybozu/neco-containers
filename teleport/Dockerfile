@@ -23,10 +23,12 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     mkdir -p /usr/local/teleport/bin/
 
-COPY --from=build /go/src/github.com/gravitational/teleport/LICENSE /usr/local/teleport/bin/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tctl /usr/local/teleport/bin/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /go/src/github.com/gravitational/teleport/build/tsh /usr/local/teleport/bin/
+COPY --from=build /go/src/github.com/gravitational/teleport/LICENSE /usr/local/teleport/LICENSE
+COPY install-tools /usr/local/teleport/install-tools
+
 ENV PATH=/usr/local/teleport/bin/:"$PATH"
 RUN mkdir -p /var/lib/teleport && \
     chown 10000:10000 -R /var/lib/teleport
