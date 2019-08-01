@@ -9,6 +9,7 @@ tools:
 
 * [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
 * [golint](https://github.com/golang/lint)
+* [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
 * [nilerr](https://github.com/gostaticanalysis/nilerr)
 * [restrictpkg](./restrictpkg/README.md)
