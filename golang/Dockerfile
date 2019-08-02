@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:18.04
 
-ARG GO_VERSION=1.12.5
+ARG GO_VERSION=1.12.7
 WORKDIR /work
 
 ENV GOPATH=/go
@@ -15,6 +15,7 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
     && mkdir -p /go/src \
     && GOBIN=/usr/local/bin go get golang.org/x/tools/cmd/goimports \
     && GOBIN=/usr/local/bin go get golang.org/x/lint/golint \
+    && GOBIN=/usr/local/bin go get github.com/gordonklaus/ineffassign \
     && GOBIN=/usr/local/bin go get github.com/tcnksm/ghr \
     && GOBIN=/usr/local/bin go get github.com/gostaticanalysis/nilerr/cmd/nilerr \
     && rm -rf /go/src \
