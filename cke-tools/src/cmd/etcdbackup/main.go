@@ -3,14 +3,14 @@ package main
 import (
 	"errors"
 	"flag"
+	"io/ioutil"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/cybozu-go/cke-tools/etcdbackup"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 )
 
 var flgConfig = flag.String("config", "", "path to configuration file")
@@ -23,12 +23,12 @@ func main() {
 		log.ErrorExit(errors.New("usage: etcdbackup -config=<CONFIGFILE>"))
 	}
 
-	f, err := os.Open(*flgConfig)
+	b, err := ioutil.ReadFile(*flgConfig)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 	cfg := etcdbackup.NewConfig()
-	err = yaml.NewDecoder(f).Decode(cfg)
+	err = yaml.Unmarshal(b, cfg)
 	if err != nil {
 		log.ErrorExit(err)
 	}
