@@ -20,8 +20,8 @@ func NewConfig() *Config {
 
 // Config is configuration parameters
 type Config struct {
-	BackupDir string           `yaml:"backup-dir,omitempty"`
-	Listen    string           `yaml:"listen,omitempty"`
-	Rotate    int              `yaml:"rotate,omitempty"`
-	Etcd      *etcdutil.Config `yaml:"etcd"`
+	BackupDir string           `json:"backup-dir,omitempty"`
+	Listen    string           `json:"listen,omitempty"`
+	Rotate    int              `json:"rotate,omitempty"`
+	Etcd      *etcdutil.Config `json:"etcd"`
 }

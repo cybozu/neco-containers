@@ -24,5 +24,6 @@ require (
 	golang.org/x/time v0.0.0-20181108054448-85acf8d2951c // indirect
 	google.golang.org/genproto v0.0.0-20181221010529-a1fde7408246 // indirect
 	google.golang.org/grpc v1.17.0 // indirect
-	gopkg.in/yaml.v2 v2.2.2
+	gopkg.in/yaml.v2 v2.2.2 // indirect
+	sigs.k8s.io/yaml v1.1.0
 )
