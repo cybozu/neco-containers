@@ -5,6 +5,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.6.2] - 2019-08-15
+
+### Changed
+
+- Update CNI Plugins to v0.8.1 (#xxx).
+
 ## [1.6.1] - 2019-05-31
 
 ### Changed
