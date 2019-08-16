@@ -199,6 +199,8 @@ workflows:
       - build:
           container-image: external-dns
       - build:
+          container-image: gatekeeper
+      - build:
           container-image: golang
       - build:
           container-image: grafana
