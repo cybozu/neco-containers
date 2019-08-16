@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [1.6.2] - 2019-08-16
+
+### Changed
+
+- Replace yaml library (#212).
 
 ## [1.6.1] - 2019-05-31
 
@@ -82,7 +86,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add rivers: an TCP reverse proxy for kubernetes apiservers (#1).
 
-[Unreleased]: https://github.com/cybozu/neco-containers/compare/update-20190531...HEAD
+[1.6.2]: https://github.com/cybozu/neco-containers/pull/212
 [1.6.1]: https://github.com/cybozu/neco-containers/pull/193
 [1.6.0]: https://github.com/cybozu/neco-containers/pull/184
 [1.5.1]: https://github.com/cybozu-go/cke-tools/compare/v1.5.0...v1.5.1
