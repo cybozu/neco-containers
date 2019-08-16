@@ -18,7 +18,7 @@ RUN GO111MODULE=off CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o manager
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM scratch
 
 EXPOSE 8443
 USER 10000:10000
