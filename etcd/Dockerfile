@@ -3,22 +3,20 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG ETCD_VERSION=3.3.13
+ARG ETCD_VERSION=3.3.14
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN mkdir -p /go/src/github.com/coreos/ && \
-    curl -sSLf https://github.com/coreos/etcd/archive/v${ETCD_VERSION}.tar.gz | \
-      tar zxf - -C /go/src/github.com/coreos/ && \
-    mv /go/src/github.com/coreos/etcd-${ETCD_VERSION} /go/src/github.com/coreos/etcd
+RUN curl -sSLf https://github.com/coreos/etcd/archive/v${ETCD_VERSION}.tar.gz | tar zxf - && \
+    mv etcd-${ETCD_VERSION} etcd
 
-WORKDIR /go/src/github.com/coreos/etcd
-RUN ./build
+WORKDIR /work/etcd
+RUN GO_BUILD_FLAGS=-mod=vendor ./build
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
 
-COPY --from=build /go/src/github.com/coreos/etcd/bin /usr/local/etcd/bin
-COPY --from=build /go/src/github.com/coreos/etcd/LICENSE /usr/local/etcd/LICENSE
+COPY --from=build /work/etcd/bin /usr/local/etcd/bin
+COPY --from=build /work/etcd/LICENSE /usr/local/etcd/LICENSE
 COPY install-tools /usr/local/etcd/install-tools
 
 ENV PATH=/usr/local/etcd/bin:"$PATH"
