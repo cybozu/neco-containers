@@ -99,6 +99,8 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
 			if err != nil {
 				return nil, err
 			}
+			// gqlgen 0.9+ requires application/json content-type header.
+			req.Header.Set("Content-Type", "application/json")
 			resp, err := c.http.Do(req)
 			if err != nil {
 				return nil, err
