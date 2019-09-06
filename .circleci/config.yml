@@ -207,6 +207,8 @@ workflows:
       - build:
           container-image: hyperkube
       - build:
+          container-image: kind-node
+      - build:
           container-image: kube-state-metrics
       - build:
           container-image: machines-endpoints
