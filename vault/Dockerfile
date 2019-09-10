@@ -11,13 +11,13 @@ WORKDIR /work/vault
 
 RUN make fmt && \
     make bootstrap && \
-    make
+    GOFLAGS=-mod=vendor make
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
 
-COPY --from=build /go/src/github.com/hashicorp/vault/bin /usr/local/vault/bin
-COPY --from=build /go/src/github.com/hashicorp/vault/LICENSE /usr/local/vault/LICENSE
+COPY --from=build /work/vault/bin /usr/local/vault/bin
+COPY --from=build /work/vault/LICENSE /usr/local/vault/LICENSE
 COPY install-tools /usr/local/vault/install-tools
 
 ENV PATH=/usr/local/vault/bin:"$PATH"
