@@ -3,7 +3,7 @@
 # Stage1: Build gatekeeper
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG GATEKEEPER_VERSION=3.0.4-beta.0
+ARG GATEKEEPER_VERSION=3.0.4-beta.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/open-policy-agent/gatekeeper/archive/v${GATEKEEPER_VERSION}.tar.gz | \
