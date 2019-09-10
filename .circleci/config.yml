@@ -130,8 +130,7 @@ jobs:
           name: Install Bazel
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            # the latest version (0.27) does not work
-            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_0.22.0_amd64.deb
+            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_0.28.1_amd64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -188,7 +187,7 @@ workflows:
       - build:
           container-image: dnsmasq
       - build-envoy:
-          version: 1.10.0
+          version: 1.11.1
       - build:
           container-image: envoy
           attach: true
@@ -214,8 +213,6 @@ workflows:
           container-image: machines-endpoints
       - build:
           container-image: metallb
-      - build:
-          container-image: open-policy-agent
       - build:
           container-image: pause
       - build:

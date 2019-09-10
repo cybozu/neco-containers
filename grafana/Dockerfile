@@ -2,18 +2,18 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
-ARG GRAFANA_VERSION=6.2.5
+ARG GRAFANA_VERSION=6.3.5
 
-WORKDIR /go/src/github.com/grafana/grafana
+WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
-    tar zxf - --strip-components 1 -C /go/src/github.com/grafana/grafana
+    tar zxf - --strip-components 1 -C /work/grafana
 
-RUN make build-go
+RUN GOFLAGS=-mod=vendor make build-go
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gnupg && \
-    curl -sL https://deb.nodesource.com/setup_8.x | bash - && \
+    curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt-get install -y --no-install-recommends nodejs
 
 RUN npm install -g yarn && \
@@ -41,7 +41,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -qq -y \
     libfontconfig && \
     rm -rf /var/lib/apt/lists/*
-COPY --from=build /go/src/github.com/grafana/grafana/conf ./conf
+COPY --from=build /work/grafana/conf ./conf
 
 RUN groupadd -r -g $GF_GID grafana && \
     useradd -r -u $GF_UID -g grafana grafana && \
@@ -55,13 +55,13 @@ RUN groupadd -r -g $GF_GID grafana && \
     chown -R 10000:10000 "$GF_PATHS_DATA" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS" && \
     chmod 755 "$GF_PATHS_DATA" "$GF_PATHS_LOGS" "$GF_PATHS_PLUGINS"
 
-COPY --from=build /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-server /go/src/github.com/grafana/grafana/bin/linux-amd64/grafana-cli ./bin/
-COPY --from=build /go/src/github.com/grafana/grafana/public ./public
-COPY --from=build /go/src/github.com/grafana/grafana/tools ./tools
+COPY --from=build /work/grafana/bin/linux-amd64/grafana-server /work/grafana/bin/linux-amd64/grafana-cli ./bin/
+COPY --from=build /work/grafana/public ./public
+COPY --from=build /work/grafana/tools ./tools
 
 EXPOSE 3000
 
-COPY --from=build /go/src/github.com/grafana/grafana/packaging/docker/run.sh /run.sh
+COPY --from=build /work/grafana/packaging/docker/run.sh /run.sh
 
 USER 10000:10000
 ENTRYPOINT [ "/run.sh" ]
