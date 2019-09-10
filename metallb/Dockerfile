@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ARG METALLB_VERSION=0.7.3
+ARG METALLB_VERSION=0.8.1
 
 WORKDIR /go/src/go.universe.tf/metallb
 
