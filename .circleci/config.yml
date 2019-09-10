@@ -188,7 +188,7 @@ workflows:
       - build:
           container-image: dnsmasq
       - build-envoy:
-          version: 1.10.0
+          version: 1.11.1
       - build:
           container-image: envoy
           attach: true
