@@ -224,6 +224,8 @@ workflows:
       - build:
           container-image: squid
       - build:
+          container-image: teleport
+      - build:
           container-image: testhttpd
       - build:
           container-image: unbound
