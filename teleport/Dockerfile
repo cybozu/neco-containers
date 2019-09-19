@@ -3,7 +3,7 @@
 # Stage1: build teleport
 FROM quay.io/cybozu/golang:1.12-bionic AS build
 
-ENV TELEPORT_VERSION=4.0.2
+ENV TELEPORT_VERSION=4.0.9
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && \
     apt-get install -y --no-install-recommends zip && \ 
