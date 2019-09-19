@@ -1,0 +1,10 @@
+#!/bin/sh -e
+
+DEST=/host
+
+cp --remove-destination /usr/local/teleport/bin/teleport $DEST/teleport
+cp --remove-destination /usr/local/teleport/bin/tsh $DEST/tsh
+cp --remove-destination /usr/local/teleport/bin/tctl $DEST/tctl
+chmod 755 $DEST/teleport
+chmod 755 $DEST/tsh
+chmod 755 $DEST/tctl
