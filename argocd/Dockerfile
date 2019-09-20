@@ -19,25 +19,19 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.15.3
+ENV KUBECTL_VERSION=1.15.4
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
-# Install ksonnet
-ENV KSONNET_VERSION=0.13.1
-RUN curl -sSLf https://github.com/ksonnet/ksonnet/releases/download/v${KSONNET_VERSION}/ks_${KSONNET_VERSION}_linux_amd64.tar.gz | \
-    tar zxf - -C /tmp/ && \
-    mv /tmp/ks_${KSONNET_VERSION}_linux_amd64/ks /usr/local/bin/ks
-
 # Install kustomize
-ENV KUSTOMIZE_VERSION=3.1.0
+ENV KUSTOMIZE_VERSION=3.2.0
 RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
     chmod +x /usr/local/bin/kustomize
 
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.12-bionic AS argocd-build
-ENV ARGOCD_VERSION=1.2.0-rc2
+ENV ARGOCD_VERSION=1.2.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
@@ -77,7 +71,6 @@ RUN groupadd -g 10000 argocd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=builder /usr/local/bin/ks /usr/local/bin/ks
 COPY --from=builder /usr/local/bin/kubectl /usr/local/argocd/bin/kubectl
 COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
 
