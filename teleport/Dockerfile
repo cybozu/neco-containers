@@ -6,7 +6,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 ENV TELEPORT_VERSION=4.0.9
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends zip && \ 
+    apt-get install -y --no-install-recommends zip libpam0g-dev && \
     mkdir -p /go/src/github.com/gravitational
 WORKDIR /go/src/github.com/gravitational/
 RUN git clone https://github.com/gravitational/teleport.git
