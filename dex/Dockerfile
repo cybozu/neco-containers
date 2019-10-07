@@ -6,6 +6,7 @@ FROM quay.io/cybozu/golang:1.12-bionic AS build
 ARG DEX_VERSION=2.19.0
 
 WORKDIR /work/dex/
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/dexidp/dex/archive/v${DEX_VERSION}.tar.gz | \
         tar zxf - -C /work/dex --strip-components 1
 
