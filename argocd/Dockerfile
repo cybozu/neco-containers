@@ -78,6 +78,7 @@ COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
 ENV USER=argocd
 
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
 
 COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
