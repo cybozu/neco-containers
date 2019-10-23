@@ -1,7 +1,7 @@
 # cert-manager container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.12-bionic AS build
+FROM quay.io/cybozu/golang:1.13-bionic AS build
 ARG CERT_MANAGER_VERSION=0.10.1
 
 WORKDIR /go/src/github.com/jetstack/cert-manager

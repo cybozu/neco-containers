@@ -1,7 +1,7 @@
 # Teleport container image
 
 # Stage1: build teleport
-FROM quay.io/cybozu/golang:1.12-bionic AS build
+FROM quay.io/cybozu/golang:1.13-bionic AS build
 
 ENV TELEPORT_VERSION=4.0.9
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
