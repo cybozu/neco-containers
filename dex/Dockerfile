@@ -1,7 +1,7 @@
 # dex container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.12-bionic AS build
+FROM quay.io/cybozu/golang:1.13-bionic AS build
 
 ARG DEX_VERSION=2.19.0
 
