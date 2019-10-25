@@ -6,6 +6,9 @@ jobs:
     parameters:
       container-image:
         type: string
+      dir:
+        type: string
+        default: ""
       attach:
         type: boolean
         default: false
@@ -19,7 +22,7 @@ jobs:
           condition: << parameters.attach >>
           steps:
             - attach_workspace:
-                at: /app/<< parameters.container-image >>/workspace
+                at: /app/<< parameters.dir >>/workspace
       - setup_remote_docker
       - run:
           name: Install tools
@@ -28,13 +31,16 @@ jobs:
       - run:
           name: Check TAG files
           command: |
-            c="$(./tag_exists << parameters.container-image >>)"
+            c="$(./tag_exists << parameters.container-image >> << parameters.dir >>)"
             if [ "$c" = ng ]; then
                 echo << parameters.container-image >> > BUILDS
             fi
       - run:
           name: Lint Dockerfile
-          command: docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < << parameters.container-image >>/Dockerfile
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < $dir/Dockerfile
       - run:
           name: Build images
           command: |
@@ -43,7 +49,9 @@ jobs:
                 exit 0
             fi
             echo "building << parameters.container-image >> ..."
-            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest << parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest $dir
       - deploy:
           name: Push Docker image to Quay.io
           command: |
@@ -56,15 +64,17 @@ jobs:
             docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
             echo
             echo "pushing << parameters.container-image >> ..."
-            TAG=$(cat << parameters.container-image >>/TAG)
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            TAG=$(cat $dir/TAG)
             docker tag quay.io/cybozu/<< parameters.container-image >>:latest quay.io/cybozu/<< parameters.container-image >>:$TAG
             docker push quay.io/cybozu/<< parameters.container-image >>:$TAG
             if echo $TAG | grep -q -e - ; then
                 echo ===== Skip pushing branch tags for pre-release $TAG =====
                 exit 0
             fi
-            if [ -f << parameters.container-image >>/BRANCH ]; then
-                BRANCH=$(cat << parameters.container-image >>/BRANCH)
+            if [ -f $dir/BRANCH ]; then
+                BRANCH=$(cat $dir/BRANCH)
                 docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
                 docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
             fi
@@ -155,6 +165,18 @@ jobs:
           root: src/workspace
           paths:
             - "*"
+  build-admission:
+    docker:
+      - image: quay.io/cybozu/golang:1.13-bionic
+    steps:
+      - checkout
+      - run: cd admission; make setup SUDO=
+      - run: cd admission; make test
+      - run: cd admission; make build
+      - persist_to_workspace:
+          root: admission/bin
+          paths:
+            - neco-admission
 
 workflows:
   main:
@@ -208,6 +230,7 @@ workflows:
           name: build-envoy-container
           container-image: envoy
           attach: true
+          dir: envoy
           requires:
             - build-envoy
       - build:
@@ -264,6 +287,11 @@ workflows:
       - build:
           name: build-unbound
           container-image: unbound
+      - build-admission
       - build:
-          name: build-vault
-          container-image: vault
+          name: build-admission-image
+          container-image: neco-admission
+          dir: admission
+          attach: true
+          requires:
+            - build-admission

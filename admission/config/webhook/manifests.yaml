@@ -1,0 +1,26 @@
+
+---
+apiVersion: admissionregistration.k8s.io/v1beta1
+kind: ValidatingWebhookConfiguration
+metadata:
+  creationTimestamp: null
+  name: validating-webhook-configuration
+webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-projectcalico-org-networkpolicy
+  failurePolicy: Fail
+  name: vnetworkpolicy.kb.io
+  rules:
+  - apiGroups:
+    - crd.projectcalico.org
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - networkpolicies
