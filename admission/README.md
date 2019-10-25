@@ -1,4 +1,4 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/neco-admissoin/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/neco-admission)
+[![Docker Repository on Quay](https://quay.io/repository/cybozu/neco-admission/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/neco-admission)
 
 neco-admission
 ==============
