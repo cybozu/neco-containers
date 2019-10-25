@@ -1,6 +1,6 @@
 FROM scratch
 
-COPY bin/neco-admission /neco-admission
+COPY workspace/neco-admission /neco-admission
 
 USER 10000:10000
 

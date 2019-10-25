@@ -1,13 +1,18 @@
 #!/bin/sh -e
 
-if [ $# -ne 1 ]; then
+if [ $# -eq 0 ]; then
     echo "Usage: tag_exists NAME"
     exit 1
 fi
 
 API=https://quay.io/api/v1
 NAME="$1"
-TAG=$(cat "$NAME"/TAG)
+if [ $# -eq 2 ]; then
+    DIR="$2"
+else
+    DIR="$NAME"
+fi
+TAG=$(cat "$DIR"/TAG)
 STATUS=$(curl -s "$API/repository/cybozu/$NAME/tag/$TAG/images" -o /dev/null -w '%{http_code}\n')
 
 if [ "$STATUS" = "200" ]; then
