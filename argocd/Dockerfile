@@ -60,6 +60,18 @@ RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
 WORKDIR /go/src/github.com/argoproj/argo-cd
 RUN make cli server controller repo-server argocd-util
 
+# Install yarn for building Web UI
+RUN apt-get update && apt-get install -y --no-install-recommends npm \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm -g install yarn
+
+WORKDIR /go/src/github.com/argoproj/argo-cd/ui
+RUN yarn install
+
+ENV ARGO_VERSION=$ARGOCD_VERSION
+RUN NODE_ENV='production' yarn build
+
+
 # Final image
 FROM quay.io/cybozu/ubuntu:18.04
 RUN groupadd -g 10000 argocd && \
@@ -78,6 +90,7 @@ COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
 ENV USER=argocd
 
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app/* /shared/argocd/app/
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
 
 COPY install-tools /usr/local/argocd/install-tools
