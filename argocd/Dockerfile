@@ -7,7 +7,7 @@ WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Install dep
-ENV DEP_VERSION=0.5.0
+ENV DEP_VERSION=0.5.3
 RUN curl -sSLf https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o /usr/local/bin/dep && \
     chmod +x /usr/local/bin/dep
 
@@ -31,7 +31,7 @@ RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/ku
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.13-bionic AS argocd-build
-ENV ARGOCD_VERSION=1.2.2
+ENV ARGOCD_VERSION=1.2.5
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
