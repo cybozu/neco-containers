@@ -17,6 +17,7 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /work/dex/bin/dex /usr/local/bin/dex
 COPY --from=build /work/dex/LICENSE /usr/local/share/doc/dex/LICENSE
+COPY --from=build /work/dex/web /web
 
 USER 10000:10000
 
