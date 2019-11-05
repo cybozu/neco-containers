@@ -295,3 +295,6 @@ workflows:
           attach: true
           requires:
             - build-admission
+      - build:
+          name: build-gorush
+          container-image: gorush
