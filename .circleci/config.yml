@@ -165,6 +165,56 @@ jobs:
           root: src/workspace
           paths:
             - "*"
+  build-cert-manager:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/golang:1.13-bionic
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists cert-manager)"
+            if [ "$c" = ng ]; then
+                echo cert-manager > BUILDS
+            fi
+      - run:
+          name: Install dependency packages
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            apt-get -y install unzip pkg-config zlib1g-dev python
+      - run:
+          name: Install Bazel
+          environment:
+            BAZEL_VERSION: 1.1.0
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+            dpkg -i /tmp/bazel.deb
+            rm -f /tmp/bazel.deb
+      - run:
+          name: Build cert-manager
+          command: |
+            mkdir -p src/workspace
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            cd src
+            git clone --depth 1 --branch v<< parameters.version >> https://github.com/jetstack/cert-manager
+            cd cert-manager
+            make cainjector controller webhook
+            mv bazel-bin/cmd/cainjector/linux_amd64_pure_stripped/cainjector ../workspace
+            mv bazel-bin/cmd/controller/linux_amd64_pure_stripped/controller ../workspace
+            mv bazel-bin/cmd/webhook/linux_amd64_pure_stripped/webhook ../workspace
+            mv LICENSE ../workspace
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
   build-admission:
     docker:
       - image: quay.io/cybozu/golang:1.13-bionic
@@ -203,9 +253,15 @@ workflows:
       - build:
           name: build-calico
           container-image: calico
+      - build-cert-manager:
+          version: 0.11.0
       - build:
-          name: build-cert-manager
+          name: build-cert-manager-container
           container-image: cert-manager
+          attach: true
+          dir: cert-manager
+          requires:
+            - build-cert-manager
       - build:
           name: build-chrony
           container-image: chrony
