@@ -2,10 +2,10 @@
 
 FROM quay.io/cybozu/ubuntu:18.04
 
-COPY webhook /usr/local/bin/webhook
-COPY cainjector /usr/local/bin/cainjector
-COPY controller /usr/local/bin/controller
-COPY LICENSE /usr/local/share/doc/cert-manager/LICENSE
+COPY workspace/webhook /usr/local/bin/webhook
+COPY workspace/cainjector /usr/local/bin/cainjector
+COPY workspace/controller /usr/local/bin/controller
+COPY workspace/LICENSE /usr/local/share/doc/cert-manager/LICENSE
 
 EXPOSE 9402
 
