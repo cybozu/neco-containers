@@ -201,6 +201,9 @@ jobs:
           command: |
             mkdir -p src/workspace
             if [ ! -f BUILDS ]; then
+                # fake for the next step
+                cd src/workspace
+                touch cainjector controller webhook LICENSE
                 exit 0
             fi
             cd src
