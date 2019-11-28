@@ -45,8 +45,10 @@ query search() {
 `
 
 var (
-	flgNodeExporterPort = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
-	flgEtcdMetricsPort  = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
+	flgMonitoringEndpoints = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
+	flgBMCConfigMap        = pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
+	flgNodeExporterPort    = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
+	flgEtcdMetricsPort     = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
 
 // Machine represents a machine registered with sabakan.
@@ -69,15 +71,19 @@ type client struct {
 	serf       *serfclient.RPCClient
 }
 
-func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
+type machineInfo struct {
+	ip net.IP
+}
+
+func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]machineInfo, error) {
 	if len(bootservers) == 0 {
 		return nil, errors.New("no bootservers")
 	}
 
-	var machineIPs []net.IP
+	var machines []machineInfo
 	var err error
 	for _, boot := range bootservers {
-		machineIPs, err = func() ([]net.IP, error) {
+		machines, err = func() ([]machineInfo, error) {
 			addr := net.JoinHostPort(boot.String(), "10080")
 			queryURL, err := url.Parse("http://" + addr)
 			if err != nil {
@@ -130,12 +136,13 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
 				if len(machine.Spec.IPv4) == 0 {
 					continue
 				}
-				machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
+				machines = append(machines, machineInfo{
+					ip: net.ParseIP(machine.Spec.IPv4[0])})
 			}
-			return machineIPs, nil
+			return machines, nil
 		}()
 		if err == nil {
-			return machineIPs, nil
+			return machines, nil
 		}
 		log.Error("failed to get machines from sabakan", map[string]interface{}{
 			"bootserver": boot.String(),
@@ -264,21 +271,30 @@ func main() {
 	}
 
 	bootservers := getBootServers(&members)
-
-	// create etcd metrics endpoints on boot servers
-	err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+	machines, err := client.getMachinesFromSabakan(bootservers)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
-	// create node-exporter endpoints on all servers
-	machineIPs, err := client.getMachinesFromSabakan(bootservers)
-	if err != nil {
-		log.ErrorExit(err)
+	if *flgMonitoringEndpoints {
+		// create etcd metrics endpoints on boot servers
+		err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+
+		machineIPs := make([]net.IP, len(machines))
+		for idx, machine := range machines {
+			machineIPs[idx] = machine.ip
+		}
+
+		// create node-exporter endpoints on all servers
+		err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
 
-	err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
-	if err != nil {
-		log.ErrorExit(err)
+	if *flgBMCConfigMap {
 	}
 }
