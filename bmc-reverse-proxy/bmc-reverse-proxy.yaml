@@ -1,0 +1,101 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: bmc-reverse-proxy
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: bmc-reverse-proxy
+rules:
+  - apiGroups: [""]
+    resources:
+      - configmaps
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: bmc-reverse-proxy
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: bmc-reverse-proxy
+subjects:
+  - kind: ServiceAccount
+    name: bmc-reverse-proxy
+    namespace: default
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bmc-reverse-proxy
+  labels:
+    app.kubernetes.io/name: bmc-reverse-proxy
+  annotations:
+    metallb.universe.tf/address-pool: internet
+spec:
+  type: LoadBalancer
+  externalTrafficPolicy: Local
+  ports:
+    - name: web
+      port: 443
+      protocol: TCP
+      targetPort: 8443
+    - name: virtual-console
+      port: 5900
+      protocol: TCP
+      targetPort: 5900
+  selector:
+    app.kubernetes.io/name: bmc-reverse-proxy
+---
+apiVersion: cert-manager.io/v1alpha2
+kind: Certificate
+metadata:
+  name: bmc-reverse-proxy-tls
+spec:
+  secretName: bmc-reverse-proxy-tls
+  issuerRef:
+    kind: ClusterIssuer
+    name: clouddns
+  commonName: "*.bmc.gcp0.dev-ne.co"
+  dnsNames:
+    - "*.bmc.gcp0.dev-ne.co"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bmc-reverse-proxy
+  labels:
+    app.kubernetes.io/name: bmc-reverse-proxy
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bmc-reverse-proxy
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: bmc-reverse-proxy
+    spec:
+      containers:
+      - image: quay.io/cybozu/bmc-reverse-proxy:0
+        name: bmc-reverse-proxy
+        volumeMounts:
+        - name: secret-fs
+          mountPath: "/etc/bmc-reverse-proxy"
+          readOnly: true
+        ports:
+        - name: web
+          containerPort: 8443
+          protocol: TCP
+        - name: virtual-console
+          containerPort: 5900
+          protocol: TCP
+      volumes:
+      - name: secret-fs
+        secret:
+          secretName: bmc-reverse-proxy-tls
+      serviceAccountName: bmc-reverse-proxy

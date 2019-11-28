@@ -254,6 +254,9 @@ workflows:
           name: build-bird
           container-image: bird
       - build:
+          name: build-bmc-reverse-proxy
+          container-image: bmc-reverse-proxy
+      - build:
           name: build-calico
           container-image: calico
       - build-cert-manager:
