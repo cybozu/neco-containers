@@ -257,7 +257,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-cert-manager:
-          version: 0.11.0
+          version: 0.11.1
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
