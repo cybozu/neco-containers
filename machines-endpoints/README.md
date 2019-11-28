@@ -1,9 +1,9 @@
 machines-endpoints-container
 ============================
 
-`machines-endpoints` is one shot program to create kubernetes endpoints from sabakan on bootservers.
+`machines-endpoints` is one shot program to create kubernetes endpoints and configmap from sabakan on bootservers.
 
-This program is for prometheus to discover services on host machines.
+This program is (1) for prometheus to discover services on host machines and (2) for BMC proxy to resolve BMC hostnames to IP addresses.
 
 This program works in kubernetes pods.
 
@@ -17,8 +17,10 @@ Usage
    kubectl apply -f machines-endpoints.yaml
    ```
 
-3. Check `prometheus-node-targets`.
+3. Check `prometheus-node-targets` endpoints, `bootserver-etcd-metrics` endpoints, and `bmc-proxy` configmap.
 
    ```console
    kubectl get endpoints prometheus-node-targets
+   kubectl get endpoints bootserver-etcd-metrics
+   kubectl get configmap bmc-proxy
    ```

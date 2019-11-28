@@ -18,3 +18,5 @@ require (
 	k8s.io/client-go v0.0.0-20190805141520-2fe0317bcee0
 	k8s.io/utils v0.0.0-20190308190857-21c4ce38f2a7 // indirect
 )
+
+go 1.13

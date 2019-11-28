@@ -12,6 +12,7 @@ rules:
   resources:
   - services
   - endpoints
+  - configmaps
   verbs: ["get", "update", "create"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
