@@ -35,7 +35,7 @@ const (
 	defaultEtcdMetricsPort         = 2381
 
 	// BMC Proxy ConfigMap
-	bmcProxyConfigMapName = "bmc-proxy"
+	bmcProxyConfigMapName = "bmc-reverse-proxy"
 )
 
 const graphQLQuery = `
