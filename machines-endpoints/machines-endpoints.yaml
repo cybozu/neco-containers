@@ -8,11 +8,16 @@ kind: Role
 metadata:
   name: machines-endpoints
 rules:
-- apiGroups: [""]
-  resources:
-  - services
-  - endpoints
-  verbs: ["get", "update", "create"]
+  - apiGroups: [""]
+    resources:
+      - services
+      - endpoints
+      - configmaps
+    verbs: ["get", "update", "create"]
+  - apiGroups: ["policy"]
+    resources: ["podsecuritypolicies"]
+    verbs: ["use"]
+    resourceNames: ["machines-endpoints"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
@@ -23,9 +28,56 @@ roleRef:
   kind: Role
   name: machines-endpoints
 subjects:
-- kind: ServiceAccount
+  - kind: ServiceAccount
+    name: machines-endpoints
+    namespace: default
+---
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
   name: machines-endpoints
-  namespace: default
+  annotations:
+    seccomp.security.alpha.kubernetes.io/allowedProfileNames: 'docker/default'
+    seccomp.security.alpha.kubernetes.io/defaultProfileName:  'docker/default'
+spec:
+  privileged: false
+  # Required to prevent escalations to root.
+  allowPrivilegeEscalation: false
+  # This is redundant with non-root + disallow privilege escalation,
+  # but we can provide it for defense in depth.
+  requiredDropCapabilities:
+    - ALL
+  # Allow core volume types.
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    # Assume that persistentVolumes set up by the cluster admin are safe to use.
+    - 'persistentVolumeClaim'
+  hostNetwork: true
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    # Require the container to run without root privileges.
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    # This policy assumes the nodes are using AppArmor rather than SELinux.
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      # Forbid adding the root group.
+      - min: 1
+        max: 65535
+  readOnlyRootFilesystem: true
 ---
 apiVersion: batch/v1beta1
 kind: CronJob
@@ -40,9 +92,12 @@ spec:
       template:
         spec:
           containers:
-          - name: machines-endpoints
-            image: quay.io/cybozu/machines-endpoints:0
-            imagePullPolicy: IfNotPresent
+            - name: machines-endpoints
+              image: quay.io/cybozu/machines-endpoints:0.4.0
+              imagePullPolicy: IfNotPresent
+              args:
+                - --monitoring-endpoints
+                - --bmc-configmap
           hostNetwork: true
           restartPolicy: OnFailure
           serviceAccountName: machines-endpoints

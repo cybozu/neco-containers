@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -32,6 +33,9 @@ const (
 	targetEtcdMetricsEndpointsName = "bootserver-etcd-metrics"
 	etcdMetricsPortName            = "http-etcd-metrics"
 	defaultEtcdMetricsPort         = 2381
+
+	// BMC Proxy ConfigMap
+	bmcProxyConfigMapName = "bmc-reverse-proxy"
 )
 
 const graphQLQuery = `
@@ -39,20 +43,36 @@ query search() {
   searchMachines(having: null, notHaving: null) {
     spec {
       ipv4
+      serial
+      rack
+      indexInRack
+      role
+      bmc {
+        ipv4
+      }
     }
   }
 }
 `
 
 var (
-	flgNodeExporterPort = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
-	flgEtcdMetricsPort  = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
+	flgMonitoringEndpoints = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
+	flgBMCConfigMap        = pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
+	flgNodeExporterPort    = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
+	flgEtcdMetricsPort     = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
 
 // Machine represents a machine registered with sabakan.
 type Machine struct {
 	Spec struct {
-		IPv4 []string `json:"ipv4"`
+		IPv4        []string `json:"ipv4"`
+		Serial      string   `json:"serial"`
+		Rack        int      `json:"rack"`
+		IndexInRack int      `json:"indexInRack"`
+		Role        string   `json:"role"`
+		BMC         struct {
+			IPv4 string `json:"ipv4"`
+		}
 	}
 }
 
@@ -69,15 +89,15 @@ type client struct {
 	serf       *serfclient.RPCClient
 }
 
-func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
+func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
 	if len(bootservers) == 0 {
 		return nil, errors.New("no bootservers")
 	}
 
-	var machineIPs []net.IP
+	var machines []Machine
 	var err error
 	for _, boot := range bootservers {
-		machineIPs, err = func() ([]net.IP, error) {
+		machines, err = func() ([]Machine, error) {
 			addr := net.JoinHostPort(boot.String(), "10080")
 			queryURL, err := url.Parse("http://" + addr)
 			if err != nil {
@@ -123,19 +143,10 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]net.IP, error) {
 				return nil, fmt.Errorf("sabakan returned error: %v", result.Errors)
 			}
 
-			for _, machine := range result.Data.Machines {
-				if machine.Spec.IPv4 == nil {
-					continue
-				}
-				if len(machine.Spec.IPv4) == 0 {
-					continue
-				}
-				machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
-			}
-			return machineIPs, nil
+			return result.Data.Machines, nil
 		}()
 		if err == nil {
-			return machineIPs, nil
+			return machines, nil
 		}
 		log.Error("failed to get machines from sabakan", map[string]interface{}{
 			"bootserver": boot.String(),
@@ -190,6 +201,55 @@ func (c client) updateTargetEndpoints(targetIPs []net.IP, target, portName strin
 		},
 		Subsets: []corev1.EndpointSubset{subset},
 	})
+	return err
+}
+
+func (c client) updateBMCProxyConfigMap(machines []Machine) error {
+	ns, _, err := c.kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+
+	addresses := make(map[string]string)
+	for _, machine := range machines {
+		if machine.Spec.BMC.IPv4 == "" {
+			continue
+		}
+
+		var hostname string
+		if machine.Spec.Role == "boot" {
+			// Though full hostname is like "stage0-boot-0",
+			// the part of "stage0-" is insignificant in a cluster while it is hard to get.
+			// So use "boot-0" for resolving.
+			hostname = fmt.Sprintf("boot-%d", machine.Spec.Rack)
+		} else {
+			hostname = fmt.Sprintf("rack%d-%s%d", machine.Spec.Rack, machine.Spec.Role, machine.Spec.IndexInRack)
+		}
+		addresses[hostname] = machine.Spec.BMC.IPv4
+
+		// "a.b.c.d" does not match the wildcard in "*.bmc.<cluster>.<base>".  "a-b-c-d" does match.
+		addresses[strings.ReplaceAll(machine.Spec.IPv4[0], ".", "-")] = machine.Spec.BMC.IPv4
+
+		addresses[machine.Spec.Serial] = machine.Spec.BMC.IPv4
+	}
+
+	configMap := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bmcProxyConfigMapName,
+		},
+		Data: addresses,
+	}
+
+	cms := c.k8s.CoreV1().ConfigMaps(ns)
+	_, err = cms.Get(bmcProxyConfigMapName, metav1.GetOptions{})
+	switch {
+	case err == nil:
+		_, err := cms.Update(&configMap)
+		return err
+	case k8serrors.IsNotFound(err):
+		_, err := cms.Create(&configMap)
+		return err
+	}
 	return err
 }
 
@@ -264,21 +324,41 @@ func main() {
 	}
 
 	bootservers := getBootServers(&members)
-
-	// create etcd metrics endpoints on boot servers
-	err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+	machines, err := client.getMachinesFromSabakan(bootservers)
 	if err != nil {
 		log.ErrorExit(err)
 	}
 
-	// create node-exporter endpoints on all servers
-	machineIPs, err := client.getMachinesFromSabakan(bootservers)
-	if err != nil {
-		log.ErrorExit(err)
+	if *flgMonitoringEndpoints {
+		// create etcd metrics endpoints on boot servers
+		err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+
+		machineIPs := make([]net.IP, 0, len(machines))
+		for _, machine := range machines {
+			if machine.Spec.IPv4 == nil {
+				continue
+			}
+			if len(machine.Spec.IPv4) == 0 {
+				continue
+			}
+			machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
+		}
+
+		// create node-exporter endpoints on all servers
+		err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
 
-	err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
-	if err != nil {
-		log.ErrorExit(err)
+	if *flgBMCConfigMap {
+		// create bmc-proxy configmap on all servers
+		err = client.updateBMCProxyConfigMap(machines)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
 }
