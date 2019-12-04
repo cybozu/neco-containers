@@ -243,7 +243,7 @@ workflows:
           directory: testhttpd/src
       - build-go-sources:
           name: build-go-sources-machines-endpoints
-          directory: machines-endpoints/pkg/machines-endpoints
+          directory: machines-endpoints
       - build-go-sources:
           name: build-go-sources-restrictpkg
           directory: golang/restrictpkg

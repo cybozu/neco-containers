@@ -14,6 +14,7 @@ Usage
 2. Deploy RBAC and CronJob resources for `machines-endpoints`.
 
    ```console
+   vi machines-endpoints.yaml  # adjust tag of container image to the latest one
    kubectl apply -f machines-endpoints.yaml
    ```
 

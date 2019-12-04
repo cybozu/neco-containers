@@ -1,4 +1,4 @@
-module github.com/cybozu/neco-containers/machines-endpoints/pkg/machines-endpoints
+module github.com/cybozu/neco-containers/machines-endpoints
 
 require (
 	github.com/cybozu-go/log v1.5.0
