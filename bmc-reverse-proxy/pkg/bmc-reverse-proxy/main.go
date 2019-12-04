@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	updateCacheInterval = 60
+	updateCacheInterval = 60 * time.Second
 	certFileName        = "/etc/bmc-reverse-proxy/tls.crt"
 	keyFileName         = "/etc/bmc-reverse-proxy/tls.key"
 	// BMC Proxy ConfigMap
@@ -169,7 +169,7 @@ func main() {
 	}
 
 	well.Go(func(ctx context.Context) error {
-		ticker := time.NewTicker(updateCacheInterval * time.Second)
+		ticker := time.NewTicker(updateCacheInterval)
 		defer ticker.Stop()
 
 		for {
