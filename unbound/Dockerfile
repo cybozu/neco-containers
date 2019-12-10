@@ -1,6 +1,6 @@
 FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
 
-ARG UNBOUND_VERSION=1.9.3
+ARG UNBOUND_VERSION=1.9.5
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
