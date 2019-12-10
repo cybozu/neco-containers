@@ -20,3 +20,5 @@ require (
 	google.golang.org/genproto v0.0.0-20181221010529-a1fde7408246 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )
+
+go 1.13
