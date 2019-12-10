@@ -1,7 +1,7 @@
 # Makefile for custom Kubernetes admission controllers
 
-KUBEBUILDER_VERSION = 2.0.1
-CTRLTOOLS_VERSION = 0.2.2
+KUBEBUILDER_VERSION = 2.2.0
+CTRLTOOLS_VERSION = 0.2.4
 CALICO_VERSION = 3.10
 
 SUDO=sudo
