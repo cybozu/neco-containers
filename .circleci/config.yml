@@ -140,7 +140,7 @@ jobs:
           name: Install Bazel
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_0.28.1_amd64.deb
+            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_1.0.0_amd64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -287,7 +287,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.11.1
+          version: 1.12.2
       - build:
           name: build-envoy-container
           container-image: envoy
