@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.4] - 2019-12-12
+
+### Changed
+
+- Update CNI plugin version to 0.8.3.
+
+### Changed
+
+- Update etcd to 3.3.15 and etcdutil to 1.3.3 (#223).
+
 ## [1.6.3] - 2019-08-23
 
 ### Changed
@@ -92,6 +102,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add rivers: an TCP reverse proxy for kubernetes apiservers (#1).
 
+[1.6.4]: https://github.com/cybozu/neco-containers/pull/265
 [1.6.3]: https://github.com/cybozu/neco-containers/pull/223
 [1.6.2]: https://github.com/cybozu/neco-containers/pull/212
 [1.6.1]: https://github.com/cybozu/neco-containers/pull/193
