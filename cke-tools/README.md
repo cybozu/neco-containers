@@ -4,7 +4,7 @@ cke-tools container
 ===================
 
 This directory provides a Dockerfile to build a Docker container
-that runs [cke-tools](https://github.com/cybozu-go/cke-tools).
+that runs cke-tools.
 
 Usage
 -----
@@ -16,7 +16,7 @@ For docker:
 $ docker run -d --read-only \
     --network host --name rivers \
     --entrypoint /usr/local/cke-tools/bin/rivers \
-    quay.io/cybozu/cke-tools:0 \
+    quay.io/cybozu/cke-tools:1.6 \
       --listen localhost:6443 \
       --upstreams 10.0.0.100:6443,10.0.0.101:6443,10.0.0.102:6443 
 ```
@@ -25,7 +25,7 @@ For rkt:
 ```console
 $ sudo rkt run \
     --net=host --dns=host \
-  docker://quay.io/cybozu/cke-tools:0 \
+  docker://quay.io/cybozu/cke-tools:1.6 \
     --name rivers --readonly-rootfs=true \
     --exec /usr/local/cke-tools/bin/rivers \
     -- \
@@ -42,6 +42,6 @@ $ docker run -d --read-only \
     -p 8080:8080 \
     -v /config:/config \
     -v /etcd-backup:/etcd-backup \
-    quay.io/cybozu/cke-tools:0 \
+    quay.io/cybozu/cke-tools:1.6 \
       -config /config/config.yml
 ```
