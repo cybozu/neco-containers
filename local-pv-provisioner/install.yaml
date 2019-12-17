@@ -1,0 +1,104 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-pv-provisioner
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-pv-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: local-pv-provisioner
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-pv-provisioner
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - nodes
+    verbs:
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - nodes/status
+    verbs:
+      - get
+      - patch
+      - update
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes
+    verbs:
+      - create
+      - delete
+      - get
+      - list
+      - patch
+      - update
+      - watch
+  - apiGroups:
+      - ""
+    resources:
+      - persistentvolumes/status
+    verbs:
+      - get
+      - patch
+      - update
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: local-pv-provisioner
+  labels:
+    app.kubernetes.io/name: local-pv-provisioner
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: local-pv-provisioner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: local-pv-provisioner
+    spec:
+      containers:
+        - name: local-pv-provisioner
+          image: quay.io/cybozu/local-pv-provisioner:dev
+          imagePullPolicy: Never
+          args:
+            - --node-name=$(NODE_NAME)
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - name: by-path
+              mountPath: /dev/disk/by-path
+      serviceAccountName: local-pv-provisioner
+      volumes:
+        - name: by-path
+          hostPath:
+            path: /dev/disk/by-path
