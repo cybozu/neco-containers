@@ -1,0 +1,3 @@
+domain: cybozu.com
+repo: github.com/cybozu/neco-containers/local-pv-creator
+version: "2"
