@@ -5,5 +5,5 @@ WORKDIR /work/src
 RUN CGO_ENABLED=0 go install -mod=vendor ./ptp
 
 # Stage2: setup runtime container
-FROM kindest/node:v1.15.3
+FROM kindest/node:v1.16.3
 COPY --from=build /go/bin/ptp /opt/cni/bin/ptp

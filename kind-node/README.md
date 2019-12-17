@@ -10,5 +10,5 @@ Usage
 -----
 
 ```console
-$ kind create cluster --image=quay.io/cybozu/kind-node:1.15
+$ kind create cluster --image=quay.io/cybozu/kind-node:1.16
 ```
