@@ -21,7 +21,6 @@ webhooks:
     - v1
     operations:
     - CREATE
-    - UPDATE
     resources:
     - httpproxies
 
@@ -32,6 +31,24 @@ metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-projectcontour-io-httpproxy
+  failurePolicy: Fail
+  name: vhttpproxy.kb.io
+  rules:
+  - apiGroups:
+    - projectcontour.io
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - httpproxies
 - clientConfig:
     caBundle: Cg==
     service:

@@ -61,9 +61,32 @@ func setupCommonResources() {
 					},
 				},
 			},
+			{
+				Name:          "vhttpproxy.kb.io",
+				FailurePolicy: &failPolicy,
+				SideEffects:   &sideEffect,
+				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+					CABundle: caBundle,
+					URL:      strPtr("https://127.0.0.1:8443/validate-projectcontour-io-httpproxy"),
+				},
+				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+					{
+						Operations: []admissionregistrationv1beta1.OperationType{
+							admissionregistrationv1beta1.Create,
+							admissionregistrationv1beta1.Update,
+						},
+						Rule: admissionregistrationv1beta1.Rule{
+							APIGroups:   []string{"projectcontour.io"},
+							APIVersions: []string{"v1"},
+							Resources:   []string{"httpproxies"},
+						},
+					},
+				},
+			},
 		}
 		return nil
 	})
+	Expect(err).ShouldNot(HaveOccurred())
 
 	mwh := &admissionregistrationv1beta1.MutatingWebhookConfiguration{}
 	mwh.Name = "neco-admission"

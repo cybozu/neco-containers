@@ -17,7 +17,7 @@ const (
 	annotationIngressClassDefault    = "forest"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,groups=projectcontour.io,resources=httpproxies,versions=v1,name=mhttpproxy.kb.io
+// +kubebuilder:webhook:verbs=create,path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,groups=projectcontour.io,resources=httpproxies,versions=v1,name=mhttpproxy.kb.io
 
 type contourHTTPProxyMutator struct {
 	client  client.Client

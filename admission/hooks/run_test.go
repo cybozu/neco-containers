@@ -52,6 +52,7 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPo
 	wh := mgr.GetWebhookServer()
 	wh.Register("/validate-projectcalico-org-networkpolicy", NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	wh.Register("/mutate-projectcontour-io-httpproxy", NewContourHTTPProxyMutator(mgr.GetClient(), dec))
+	wh.Register("/validate-projectcontour-io-httpproxy", NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 
 	if err := mgr.Start(stopCh); err != nil {
 		return err

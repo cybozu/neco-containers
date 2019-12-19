@@ -25,19 +25,19 @@ func testHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPPr
 
 var _ = Describe("mutate HTTPProxy webhook", func() {
 	It("should have default annotation", func() {
-		hp := testHTTPProxy("hp1", map[string]string{})
+		hp := testHTTPProxy("mhp1", map[string]string{})
 		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, annotationIngressClassDefault))
 		Expect(hp.Annotations).ToNot(HaveKey(annotationContourIngressClass))
 	})
 
 	It("should not mutate annotations", func() {
-		hp := testHTTPProxy("hp2", map[string]string{annotationKubernetesIngressClass: "global"})
+		hp := testHTTPProxy("mhp2", map[string]string{annotationKubernetesIngressClass: "global"})
 		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, "global"))
 		Expect(hp.Annotations).ToNot(HaveKey(annotationContourIngressClass))
 	})
 
 	It("should not mutate annotations with projectcontour.io/ingress.class", func() {
-		hp := testHTTPProxy("hp3", map[string]string{annotationContourIngressClass: "global"})
+		hp := testHTTPProxy("mhp3", map[string]string{annotationContourIngressClass: "global"})
 		Expect(hp.Annotations).To(HaveKeyWithValue(annotationContourIngressClass, "global"))
 		Expect(hp.Annotations).ToNot(HaveKey(annotationKubernetesIngressClass))
 	})
