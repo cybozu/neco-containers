@@ -16,6 +16,8 @@ var config struct {
 	webhookAddr string
 	certDir     string
 	development bool
+
+	httpProxyDefaultClass string
 }
 
 var rootCmd = &cobra.Command{
@@ -50,6 +52,7 @@ func init() {
 	fs.StringVar(&config.webhookAddr, "webhook-addr", ":8443", "Listen address for the webhook endpoint")
 	fs.StringVar(&config.certDir, "cert-dir", "", "certificate directory")
 	fs.BoolVar(&config.development, "development", false, "Use development logger config")
+	fs.StringVar(&config.httpProxyDefaultClass, "httpproxy-default-class", "", "Default Ingress class of HTTPProxy")
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)

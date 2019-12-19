@@ -33,12 +33,12 @@ func modePtr(m storagev1.VolumeBindingMode) *storagev1.VolumeBindingMode { retur
 func setupCommonResources() {
 	caBundle, err := ioutil.ReadFile("testdata/ca.crt")
 	Expect(err).ShouldNot(HaveOccurred())
-	wh := &admissionregistrationv1beta1.ValidatingWebhookConfiguration{}
-	wh.Name = "neco-admission"
-	_, err = ctrl.CreateOrUpdate(testCtx, k8sClient, wh, func() error {
+	vwh := &admissionregistrationv1beta1.ValidatingWebhookConfiguration{}
+	vwh.Name = "neco-admission"
+	_, err = ctrl.CreateOrUpdate(testCtx, k8sClient, vwh, func() error {
 		failPolicy := admissionregistrationv1beta1.Fail
 		sideEffect := admissionregistrationv1beta1.SideEffectClassNone
-		wh.Webhooks = []admissionregistrationv1beta1.ValidatingWebhook{
+		vwh.Webhooks = []admissionregistrationv1beta1.ValidatingWebhook{
 			{
 				Name:          "vnetworkpolicy.kb.io",
 				FailurePolicy: &failPolicy,
@@ -57,6 +57,58 @@ func setupCommonResources() {
 							APIGroups:   []string{"crd.projectcalico.org"},
 							APIVersions: []string{"v1"},
 							Resources:   []string{"networkpolicies"},
+						},
+					},
+				},
+			},
+			{
+				Name:          "vhttpproxy.kb.io",
+				FailurePolicy: &failPolicy,
+				SideEffects:   &sideEffect,
+				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+					CABundle: caBundle,
+					URL:      strPtr("https://127.0.0.1:8443/validate-projectcontour-io-httpproxy"),
+				},
+				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+					{
+						Operations: []admissionregistrationv1beta1.OperationType{
+							admissionregistrationv1beta1.Create,
+							admissionregistrationv1beta1.Update,
+						},
+						Rule: admissionregistrationv1beta1.Rule{
+							APIGroups:   []string{"projectcontour.io"},
+							APIVersions: []string{"v1"},
+							Resources:   []string{"httpproxies"},
+						},
+					},
+				},
+			},
+		}
+		return nil
+	})
+	Expect(err).ShouldNot(HaveOccurred())
+
+	mwh := &admissionregistrationv1beta1.MutatingWebhookConfiguration{}
+	mwh.Name = "neco-admission"
+	_, err = ctrl.CreateOrUpdate(testCtx, k8sClient, mwh, func() error {
+		failPolicy := admissionregistrationv1beta1.Fail
+		mwh.Webhooks = []admissionregistrationv1beta1.MutatingWebhook{
+			{
+				Name:          "mhttpproxy.kb.io",
+				FailurePolicy: &failPolicy,
+				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+					CABundle: caBundle,
+					URL:      strPtr("https://127.0.0.1:8443/mutate-projectcontour-io-httpproxy"),
+				},
+				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+					{
+						Operations: []admissionregistrationv1beta1.OperationType{
+							admissionregistrationv1beta1.Create,
+						},
+						Rule: admissionregistrationv1beta1.Rule{
+							APIGroups:   []string{"projectcontour.io"},
+							APIVersions: []string{"v1"},
+							Resources:   []string{"httpproxies"},
 						},
 					},
 				},

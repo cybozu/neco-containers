@@ -24,3 +24,26 @@ changed per namespace by adding `admission.cybozu.com/min-policy-order`
 annotation to the namespace.
 
 NetworkPolicies w/o order field are permitted because they are applied last.
+
+ContourHTTPProxyMutator / ContourHTTPProxyValidator
+---------------------------------------------------
+
+Contour's [HTTPProxy resource](https://projectcontour.io/docs/master/httpproxy/) and
+[IngressRoute resource](https://projectcontour.io/docs/master/ingressroute/) can specify
+the Ingress class that should interpret and serve the Ingress.
+The [annotations](https://projectcontour.io/docs/master/annotations/)
+`kubernetes.io/ingress.class` and `projectcontour.io/ingress.class` are used
+for this specification.
+
+Though the Contour documentation says that all Ingress controllers serve
+the Ingress if the annotations are not set, this default behavior is dangerous.
+It may cause unexpected disclosure of services which are intended only for
+limited network.
+
+The mutating webhook enforces a default annotation of `kubernetes.io/ingress.class: <configured value>`
+for `HTTPProxy` to prevent such accidents.
+The default value can be configured through the `--httpproxy-default-class`
+option for `neco-admission`.
+The validating webhook prevents creating or updating `HTTPProxy` without the annotations.
+
+`neco-admission` does not watch `IngressRoute` because it is deprecated.

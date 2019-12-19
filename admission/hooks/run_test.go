@@ -4,6 +4,7 @@ import (
 	"path/filepath"
 
 	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
+	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -23,6 +24,8 @@ func init() {
 	gv := schema.GroupVersion{Group: "crd.projectcalico.org", Version: "v1"}
 	scheme.AddKnownTypes(gv, &calicov3.NetworkPolicy{})
 	metav1.AddToGroupVersion(scheme, gv)
+
+	_ = contourv1.AddToScheme(scheme)
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPort int) error {
@@ -48,6 +51,8 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPo
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
 	wh.Register("/validate-projectcalico-org-networkpolicy", NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
+	wh.Register("/mutate-projectcontour-io-httpproxy", NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
+	wh.Register("/validate-projectcontour-io-httpproxy", NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 
 	if err := mgr.Start(stopCh); err != nil {
 		return err
