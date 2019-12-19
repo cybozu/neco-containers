@@ -25,7 +25,7 @@ func init() {
 	scheme.AddKnownTypes(gv, &calicov3.NetworkPolicy{})
 	metav1.AddToGroupVersion(scheme, gv)
 
-	contourv1.AddToScheme(scheme)
+	_ = contourv1.AddToScheme(scheme)
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPort int) error {

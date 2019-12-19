@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/cybozu/neco-containers/admission/hooks"
+	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -19,6 +20,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	// +kubebuilder:scaffold:scheme
+	_ = contourv1.AddToScheme(scheme)
 }
 
 func run(addr string, port int) error {
