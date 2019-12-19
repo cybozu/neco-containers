@@ -26,7 +26,7 @@ func testHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPPr
 var _ = Describe("mutate HTTPProxy webhook", func() {
 	It("should have default annotation", func() {
 		hp := testHTTPProxy("mhp1", map[string]string{})
-		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, annotationIngressClassDefault))
+		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, "secured"))
 		Expect(hp.Annotations).ToNot(HaveKey(annotationContourIngressClass))
 	})
 

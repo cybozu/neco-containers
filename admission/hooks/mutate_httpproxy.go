@@ -14,24 +14,24 @@ import (
 const (
 	annotationKubernetesIngressClass = "kubernetes.io/ingress.class"
 	annotationContourIngressClass    = "projectcontour.io/ingress.class"
-	annotationIngressClassDefault    = "forest"
 )
 
 // +kubebuilder:webhook:verbs=create,path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,groups=projectcontour.io,resources=httpproxies,versions=v1,name=mhttpproxy.kb.io
 
 type contourHTTPProxyMutator struct {
-	client  client.Client
-	decoder *admission.Decoder
+	client       client.Client
+	decoder      *admission.Decoder
+	defaultClass string
 }
 
 // NewContourHTTPProxyMutator creates a webhook handler for Contour HTTPProxy.
-func NewContourHTTPProxyMutator(c client.Client, dec *admission.Decoder) http.Handler {
-	return &webhook.Admission{Handler: &contourHTTPProxyMutator{c, dec}}
+func NewContourHTTPProxyMutator(c client.Client, dec *admission.Decoder, defaultClass string) http.Handler {
+	return &webhook.Admission{Handler: &contourHTTPProxyMutator{c, dec, defaultClass}}
 }
 
-func (v *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Request) admission.Response {
+func (m *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Request) admission.Response {
 	hp := &contourv1.HTTPProxy{}
-	err := v.decoder.Decode(req, hp)
+	err := m.decoder.Decode(req, hp)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
@@ -48,7 +48,7 @@ func (v *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Requ
 	if hpPatched.Annotations == nil {
 		hpPatched.Annotations = make(map[string]string)
 	}
-	hpPatched.Annotations[annotationKubernetesIngressClass] = annotationIngressClassDefault
+	hpPatched.Annotations[annotationKubernetesIngressClass] = m.defaultClass
 
 	marshaled, err := json.Marshal(hpPatched)
 	if err != nil {

@@ -44,7 +44,9 @@ func run(addr string, port int) error {
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
 	wh.Register("/validate-projectcalico-org-networkpolicy", hooks.NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
-	wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec))
+	if config.httpProxyDefaultClass != "" {
+		wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass))
+	}
 	wh.Register("/validate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 
 	// +kubebuilder:scaffold:builder

@@ -38,5 +38,5 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 		return admission.Allowed("ok")
 	}
 
-	return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set in %s/%s", annotationKubernetesIngressClass, annotationContourIngressClass, hp.Namespace, hp.Name))
+	return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set in %s/%s", annotationKubernetesIngressClass, annotationContourIngressClass, req.Namespace, req.Name))
 }
