@@ -27,10 +27,14 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should deny updating httproxy with no annotation", func() {
+	It("should deny updating httproxy with empty or no annotation", func() {
 		hp := fillHTTPProxy("vhp3", map[string]string{annotationKubernetesIngressClass: "global"})
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
+
+		hp.Annotations[annotationKubernetesIngressClass] = ""
+		err = k8sClient.Update(testCtx, hp)
+		Expect(err).To(HaveOccurred())
 
 		delete(hp.Annotations, annotationKubernetesIngressClass)
 		err = k8sClient.Update(testCtx, hp)

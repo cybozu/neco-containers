@@ -36,11 +36,10 @@ func (m *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Requ
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	// Note: An empty class name is not safe if the implementation of Ingress controller considers it as "not specified" and starts serving.
-	if hp.Annotations[annotationKubernetesIngressClass] != "" {
+	if _, ok := hp.Annotations[annotationKubernetesIngressClass]; ok {
 		return admission.Allowed("ok")
 	}
-	if hp.Annotations[annotationContourIngressClass] != "" {
+	if _, ok := hp.Annotations[annotationContourIngressClass]; ok {
 		return admission.Allowed("ok")
 	}
 
