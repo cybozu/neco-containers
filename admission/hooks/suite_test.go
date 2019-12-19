@@ -104,7 +104,6 @@ func setupCommonResources() {
 					{
 						Operations: []admissionregistrationv1beta1.OperationType{
 							admissionregistrationv1beta1.Create,
-							admissionregistrationv1beta1.Update,
 						},
 						Rule: admissionregistrationv1beta1.Rule{
 							APIGroups:   []string{"projectcontour.io"},

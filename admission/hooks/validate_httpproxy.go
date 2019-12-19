@@ -27,16 +27,13 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 	hp := &contourv1.HTTPProxy{}
 	err := v.decoder.Decode(req, hp)
 	if err != nil {
-		fmt.Println("Errored(http.StatusBadRequest, err)")
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if _, ok := hp.Annotations[annotationKubernetesIngressClass]; ok {
-		fmt.Println("annotationKubernetesIngressClass: admission.Allowed")
+	if hp.Annotations[annotationKubernetesIngressClass] != "" {
 		return admission.Allowed("ok")
 	}
-	if _, ok := hp.Annotations[annotationContourIngressClass]; ok {
-		fmt.Println("annotationContourIngressClass: admission.Allowed")
+	if hp.Annotations[annotationContourIngressClass] != "" {
 		return admission.Allowed("ok")
 	}
 

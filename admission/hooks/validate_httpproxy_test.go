@@ -4,7 +4,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
-	"k8s.io/apimachinery/pkg/types"
 )
 
 func fillHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPProxy {
@@ -33,11 +32,8 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		hp2 := &contourv1.HTTPProxy{}
-		err = k8sClient.Get(testCtx, types.NamespacedName{Namespace: "default", Name: "vhp3"}, hp2)
-		Expect(err).NotTo(HaveOccurred())
-		delete(hp2.Annotations, annotationKubernetesIngressClass)
-		err = k8sClient.Update(testCtx, hp2)
+		delete(hp.Annotations, annotationKubernetesIngressClass)
+		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
 	})
 })

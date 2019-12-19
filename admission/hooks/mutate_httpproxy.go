@@ -36,10 +36,10 @@ func (v *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Requ
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if _, ok := hp.Annotations[annotationKubernetesIngressClass]; ok {
+	if hp.Annotations[annotationKubernetesIngressClass] != "" {
 		return admission.Allowed("ok")
 	}
-	if _, ok := hp.Annotations[annotationContourIngressClass]; ok {
+	if hp.Annotations[annotationContourIngressClass] != "" {
 		return admission.Allowed("ok")
 	}
 
