@@ -3,6 +3,7 @@
 KUBEBUILDER_VERSION = 2.2.0
 CTRLTOOLS_VERSION = 0.2.4
 CALICO_VERSION = 3.10
+CONTOUR_VERSION = 1.0.1
 
 SUDO=sudo
 GOOS := $(shell go env GOOS)
@@ -45,6 +46,7 @@ setup:
 crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
+	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 
 clean:
 	rm -rf bin
