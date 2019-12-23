@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG KUBE_STATE_METRICS_VERSION=1.7.2
+ARG KUBE_STATE_METRICS_VERSION=1.9.0
 WORKDIR /go/src/k8s.io/kube-state-metrics
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/kubernetes/kube-state-metrics/archive/v${KUBE_STATE_METRICS_VERSION}.tar.gz | \
