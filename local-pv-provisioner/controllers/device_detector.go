@@ -28,9 +28,10 @@ func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, 
 	return &DeviceDetector{client, log, deviceDir, deviceNameFilter, nodeName, interval, scheme}
 }
 
-type device struct {
-	name          string
-	capacityBytes int64
+// Device is containing information of a device.
+type Device struct {
+	Path          string
+	CapacityBytes int64
 }
 
 type DeviceDetector struct {
@@ -95,11 +96,12 @@ func (dd *DeviceDetector) do() error {
 		return err
 	}
 
-	devices, err := dd.listLocalDevices(ctx)
+	devices, err := dd.listLocalDevices()
 	if err != nil {
 		log.Error(err, "unable to list local devices")
 		return err
 	}
+	log.Info("local devices", "devices", devices)
 
 	nodeRef := &metav1.OwnerReference{
 		APIVersion: nodeGVK.GroupVersion().String(),

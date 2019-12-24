@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/ubuntu:18.04
+FROM scratch
 
 COPY bin/local-pv-provisioner /local-pv-provisioner
 

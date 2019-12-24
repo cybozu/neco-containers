@@ -14,38 +14,21 @@ kubeadmConfigPatches:
   apiServer:
     extraArgs:
       "enable-admission-plugins": "NamespaceLifecycle,LimitRanger,ServiceAccount,Priority,DefaultTolerationSeconds,DefaultStorageClass,PersistentVolumeClaimResize,MutatingAdmissionWebhook,ValidatingAdmissionWebhook,ResourceQuota,NodeRestriction"
-  scheduler:
-    extraVolumes:
-      - name: "config"
-        hostPath: /mnt/host/scheduler
-        mountPath: /var/lib/scheduler
-        readOnly: true
-    extraArgs:
-      config: /var/lib/scheduler/scheduler-config.yaml
 
-# 1 control plane node and 3 workers
 nodes:
-# the control plane node config
 - role: control-plane
   extraMounts:
     - containerPath: /mnt/host/scheduler
       hostPath: /tmp/kindtest/scheduler
-# the three workers
 - role: worker
   extraMounts:
     - containerPath: /run/topolvm
       hostPath: /tmp/kindtest/lvmd
-    - containerPath: /dev/disk/by-path
-      hostPath: /dev/disk/by-path
+    - containerPath: /dev
+      hostPath: /dev
 - role: worker
   extraMounts:
     - containerPath: /run/topolvm
       hostPath: /tmp/kindtest/lvmd
-    - containerPath: /dev/disk/by-path
-      hostPath: /dev/disk/by-path
-- role: worker
-  extraMounts:
-    - containerPath: /run/topolvm
-      hostPath: /tmp/kindtest/lvmd
-    - containerPath: /dev/disk/by-path
-      hostPath: /dev/disk/by-path
+    - containerPath: /dev
+      hostPath: /dev

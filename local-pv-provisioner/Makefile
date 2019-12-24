@@ -6,8 +6,8 @@ KUBEBUILDER_VERSION = 2.2.0
 CTRLTOOLS_VERSION = 0.2.4
 KIND_VERSION = 0.6.1
 KIND_NODE_VERSION = 1.16
-KIND_NAME = local-pv-provisioner-test
-KUBERNETES_VERSION= 1.16.1
+KIND_NAME = lpp-test
+KUBERNETES_VERSION= 1.16.3
 
 SUDO=sudo
 GOOS := $(shell go env GOOS)
@@ -46,11 +46,11 @@ launch-kind:
 	sed s/@KUBERNETES_VERSION@/$(KUBERNETES_VERSION)/ cluster.yaml > /tmp/local-pv-provisioner/cluster.yaml
 	env KUBECONFIG= kind create cluster --config /tmp/local-pv-provisioner/cluster.yaml --image quay.io/cybozu/kind-node:$(KIND_NODE_VERSION) --name=$(KIND_NAME) --wait=300s
 
-load-image-to-kind: launch-kind
+load-image-to-kind:
 	kind load docker-image $(IMAGE_TAG) -q --name=$(KIND_NAME)
 
 shutdown-kind:
-	kind delete cluster --name=local-pv-provisioner-test || true
+	kind delete cluster --name=$(KIND_NAME) || true
 
 setup:
 	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
@@ -59,9 +59,14 @@ setup:
 	$(SUDO) curl -o /usr/local/kubebuilder/bin/kustomize -sL https://go.kubebuilder.io/kustomize/$(GOOS)/$(GOARCH)
 	$(SUDO) chmod a+x /usr/local/kubebuilder/bin/kustomize
 	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
-	cd /tmp; GO111MODULE=on go get sigs.k8s.io/kind@v$(KIND_VERSION)
+	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/kind@v$(KIND_VERSION)
+	go install github.com/onsi/ginkgo/ginkgo
+
+kindtest:
+	ginkgo -v ./kind
 
 clean:
 	rm -rf bin
+	rm /tmp/local-pv-provisioner/
 
-.PHONY: all test build manifests generate clean docker launch-kind load-image-to-kind shutdown-kind setup
+.PHONY: all test build manifests generate clean docker launch-kind load-image-to-kind shutdown-kind setup kindtest

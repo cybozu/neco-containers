@@ -89,16 +89,21 @@ spec:
           imagePullPolicy: Never
           args:
             - --node-name=$(NODE_NAME)
+            - --device-dir=/dev/crypt/disk/by-path
           env:
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            - name: by-path
-              mountPath: /dev/disk/by-path
+            - name: dev
+              mountPath: /dev
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
       serviceAccountName: local-pv-provisioner
       volumes:
-        - name: by-path
+        - name: dev
           hostPath:
-            path: /dev/disk/by-path
+            path: /dev

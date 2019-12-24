@@ -52,7 +52,7 @@ spec:
 
 | Flag               | Env name              | Default              | Description                                                                                         |
 | ------------------ | --------------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
-| metrics-addr       | LP_METRICS_ADDR       | `:8180`              | Bind address for the metrics endpoint.                                                              |
+| metrics-addr       | LP_METRICS_ADDR       | `:8080`              | Bind address for the metrics endpoint.                                                              |
 | device-dir         | LP_DEVICE_DIR         | `/dev/disk/by-path/` | Path to the directory that stores the devices for which PersistentVolumes are created.              |
 | device-name-filter | LP_DEVICE_NAME_FILTER | `.*`                 | A regular expression that allows selection of devices on device-idr to be created PersistentVolume. |
 | node-name          | LP_NODE_NAME          | `"`                  | The name of Node on which this program is running.                                                  |

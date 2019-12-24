@@ -1,34 +1,34 @@
 package controllers
 
 import (
-	"context"
+	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
-	"strconv"
 )
 
-func (dd *DeviceDetector) listLocalDevices(ctx context.Context) ([]device, error) {
+func (dd *DeviceDetector) listLocalDevices() ([]Device, error) {
 	log := dd.log.WithValues("node", dd.nodeName)
-	var devs []device
+	var devs []Device
 
 	err := filepath.Walk(dd.deviceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Error(err, "prevent panic by handling failure accessing", "path", path)
 			return err
 		}
+		log.Info("walk path", "path", path)
 
 		if info.IsDir() {
-			return filepath.SkipDir
+			return nil
 		}
 
 		if dd.deviceNameFilter.MatchString(filepath.Base(path)) {
-			capacityBytes, err := dd.getCapacityBytes(ctx, path)
+			capacityBytes, err := dd.getCapacityBytes(path)
 			if err != nil {
 				log.Error(err, "unable to get capacity", "path", path)
 				return err
 			}
-			devs = append(devs, device{name: path, capacityBytes: capacityBytes})
+			log.Info("get capacity", "path", path, "capacity", capacityBytes)
+			devs = append(devs, Device{Path: path, CapacityBytes: capacityBytes})
 		}
 		return nil
 	})
@@ -39,14 +39,15 @@ func (dd *DeviceDetector) listLocalDevices(ctx context.Context) ([]device, error
 	return devs, nil
 }
 
-func (dd *DeviceDetector) getCapacityBytes(ctx context.Context, path string) (int64, error) {
-	out, err := exec.CommandContext(ctx, "lsblk", path, "--bytes", "--output=SIZE", "--noheadings").Output()
+func (dd *DeviceDetector) getCapacityBytes(path string) (int64, error) {
+	file, err := os.Open(path)
 	if err != nil {
 		return 0, err
 	}
-	capacity, err := strconv.ParseInt(string(out), 10, 64)
+	defer file.Close()
+	pos, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
 		return 0, err
 	}
-	return capacity, nil
+	return pos, nil
 }
