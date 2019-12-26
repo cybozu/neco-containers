@@ -25,7 +25,7 @@ test:
 	test -z "$$(restrictpkg -packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	ineffassign .
 	go vet ./...
-	go test -race -v ./controllers/...
+	go test -race -v ./...
 
 # Build manager binary
 build:
@@ -42,31 +42,14 @@ generate:
 docker: build
 	docker build . -t $(IMAGE_TAG)
 
-launch-kind:
-	sed s/@KUBERNETES_VERSION@/$(KUBERNETES_VERSION)/ cluster.yaml > /tmp/local-pv-provisioner/cluster.yaml
-	env KUBECONFIG= kind create cluster --config /tmp/local-pv-provisioner/cluster.yaml --image quay.io/cybozu/kind-node:$(KIND_NODE_VERSION) --name=$(KIND_NAME) --wait=300s
-
-load-image-to-kind:
-	kind load docker-image $(IMAGE_TAG) -q --name=$(KIND_NAME)
-
-shutdown-kind:
-	kind delete cluster --name=$(KIND_NAME) || true
-
 setup:
 	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
 	$(SUDO) rm -rf /usr/local/kubebuilder
 	$(SUDO) mv /tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH) /usr/local/kubebuilder
-	$(SUDO) curl -o /usr/local/kubebuilder/bin/kustomize -sL https://go.kubebuilder.io/kustomize/$(GOOS)/$(GOARCH)
-	$(SUDO) chmod a+x /usr/local/kubebuilder/bin/kustomize
 	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
-	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/kind@v$(KIND_VERSION)
 	go install github.com/onsi/ginkgo/ginkgo
-
-kindtest:
-	ginkgo -v ./kind
 
 clean:
 	rm -rf bin
-	rm /tmp/local-pv-provisioner/
 
-.PHONY: all test build manifests generate clean docker launch-kind load-image-to-kind shutdown-kind setup kindtest
+.PHONY: all test build manifests generate clean docker setup
