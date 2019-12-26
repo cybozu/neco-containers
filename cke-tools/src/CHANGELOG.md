@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.5] - 2019-12-26
+
+### Changed
+
+- Rebuild
+
 ## [1.6.4] - 2019-12-12
 
 ### Changed
@@ -102,6 +108,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Added
 - Add rivers: an TCP reverse proxy for kubernetes apiservers (#1).
 
+[1.6.5]: https://github.com/cybozu/neco-containers/pull/271
 [1.6.4]: https://github.com/cybozu/neco-containers/pull/265
 [1.6.3]: https://github.com/cybozu/neco-containers/pull/223
 [1.6.2]: https://github.com/cybozu/neco-containers/pull/212
