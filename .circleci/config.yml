@@ -78,11 +78,11 @@ jobs:
                 docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
                 docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
             fi
-  build-go-sources:
+  test-go-sources:
     parameters:
       directory:
         type: string
-    description: "build Go sources at << parameters.directory >>"
+    description: "test Go sources at << parameters.directory >>"
     docker:
       - image: quay.io/cybozu/golang:1.13-bionic
       - image: quay.io/coreos/etcd:v3.3
@@ -235,18 +235,21 @@ workflows:
   main:
     jobs:
       - scripts-cke-tools
-      - build-go-sources:
-          name: build-go-sources-cke-tools
+      - test-go-sources:
+          name: test-go-sources-cke-tools
           directory: cke-tools/src
-      - build-go-sources:
-          name: build-go-sources-testhttpd
+      - test-go-sources:
+          name: test-go-sources-testhttpd
           directory: testhttpd/src
-      - build-go-sources:
-          name: build-go-sources-machines-endpoints
+      - test-go-sources:
+          name: test-go-sources-machines-endpoints
           directory: machines-endpoints
-      - build-go-sources:
-          name: build-go-sources-restrictpkg
+      - test-go-sources:
+          name: test-go-sources-restrictpkg
           directory: golang/restrictpkg
+      - test-go-sources:
+          name: test-go-local-pv-provisioner
+          directory: local-pv-provisioner
       - build:
           name: build-argocd
           container-image: argocd
@@ -319,6 +322,9 @@ workflows:
       - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
+      - build:
+          name: build-local-pv-provisioner
+          container-image: local-pv-provisioner
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
