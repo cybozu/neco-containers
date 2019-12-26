@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG METALLB_VERSION=0.8.1
+ARG METALLB_VERSION=0.8.3
 
 WORKDIR /work/metallb
 
