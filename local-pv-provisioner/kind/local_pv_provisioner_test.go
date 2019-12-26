@@ -17,8 +17,8 @@ import (
 )
 
 const (
-	countNode = 2
-	deviceSymlinkPath = "/dev/crypt/disk/by-path/"
+	countNode         = 2
+	deviceSymlinkPath = "/dev/crypt-disk/by-path/"
 )
 
 var cleanupTargetDevice []string
@@ -33,8 +33,6 @@ func setupDevice(devices []controllers.Device) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to mkdir %w", err)
 	}
-
-	exec.Command("sudo", "mkdir", "-p", deviceSymlinkPath).Run()
 
 	var loopDevices []string
 	for _, device := range devices {
@@ -71,11 +69,11 @@ var _ = Describe("test local-pv-provisioner", func() {
 		By("setup devices")
 		devices := []controllers.Device{
 			{
-				Path:          filepath.Join(deviceSymlinkPath,"crypt-dev-01"),
+				Path:          filepath.Join(deviceSymlinkPath, "crypt-dev-01"),
 				CapacityBytes: 512,
 			},
 			{
-				Path:          filepath.Join(deviceSymlinkPath,"crypt-dev-02"),
+				Path:          filepath.Join(deviceSymlinkPath, "crypt-dev-02"),
 				CapacityBytes: 512,
 			},
 		}

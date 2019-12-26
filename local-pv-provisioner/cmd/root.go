@@ -17,6 +17,7 @@ var config struct {
 	deviceDir        string
 	deviceNameFilter string
 	development      bool
+	pollingInterval  int
 }
 
 var rootCmd = &cobra.Command{
@@ -25,6 +26,12 @@ var rootCmd = &cobra.Command{
 	Long:  `Controller to create local PersistentVolume from device infos.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.SilenceUsage = true
+		config.metricsAddr = viper.GetString("metrics-addr")
+		config.development = viper.GetBool("development")
+		config.deviceDir = viper.GetString("device-dir")
+		config.deviceNameFilter = viper.GetString("device-name-filter")
+		config.nodeName = viper.GetString("node-name")
+		config.pollingInterval = viper.GetInt("polling-interval")
 		return run()
 	},
 }
@@ -39,11 +46,12 @@ func Execute() {
 
 func init() {
 	fs := rootCmd.Flags()
-	fs.StringVar(&config.metricsAddr, "metrics-addr", ":8080", "Listen address for metrics")
-	fs.BoolVar(&config.development, "development", false, "Use development logger config")
-	fs.StringVar(&config.deviceDir, "device-dir", "/dev/disk/by-path/", "Path to the directory that stores the devices for which PersistentVolumes are created.")
-	fs.StringVar(&config.deviceNameFilter, "device-name-filter", ".*", "A regular expression that allows selection of devices on device-idr to be created PersistentVolume.")
-	fs.StringVar(&config.nodeName, "node-name", "", "The name of Node on which this program is running")
+	fs.String("metrics-addr", ":8080", "Listen address for metrics")
+	fs.Bool("development", false, "Use development logger config")
+	fs.String("device-dir", "/dev/disk/by-path/", "Path to the directory that stores the devices for which PersistentVolumes are created.")
+	fs.String("device-name-filter", ".*", "A regular expression that allows selection of devices on device-idr to be created PersistentVolume.")
+	fs.String("node-name", "", "The name of Node on which this program is running")
+	fs.Uint("polling-interval", 10, "Polling interval to check devices. It is set by a second.")
 
 	if err := viper.BindPFlags(fs); err != nil {
 		panic(err)

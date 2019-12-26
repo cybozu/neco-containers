@@ -88,10 +88,9 @@ spec:
           image: quay.io/cybozu/local-pv-provisioner:dev
           imagePullPolicy: Never
           args:
-            - --node-name=$(NODE_NAME)
-            - --device-dir=/dev/crypt/disk/by-path
+            - --device-dir=/dev/crypt-disk/by-path
           env:
-            - name: NODE_NAME
+            - name: LP_NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName

@@ -56,6 +56,8 @@ spec:
 | device-dir         | LP_DEVICE_DIR         | `/dev/disk/by-path/` | Path to the directory that stores the devices for which PersistentVolumes are created.              |
 | device-name-filter | LP_DEVICE_NAME_FILTER | `.*`                 | A regular expression that allows selection of devices on device-idr to be created PersistentVolume. |
 | node-name          | LP_NODE_NAME          | `"`                  | The name of Node on which this program is running.                                                  |
+| polling-interval   | LP_POLLING_INTERVAL   | `10`                 | Polling interval to check devices. It is set by a second.                                           |
+| development        | LP_DEVELOPMENT        | `false`              | Use development logger config.                                                                      |
 
 ## How to decide the size of PV
 
