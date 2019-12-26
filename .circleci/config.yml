@@ -302,9 +302,6 @@ workflows:
           name: build-external-dns
           container-image: external-dns
       - build:
-          name: build-gatekeeper
-          container-image: gatekeeper
-      - build:
           name: build-golang
           container-image: golang
       - build:
