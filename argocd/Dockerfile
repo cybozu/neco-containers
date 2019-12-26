@@ -25,9 +25,8 @@ RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kube
 
 # Install kustomize
 ENV KUSTOMIZE_VERSION=3.5.3
-RUN curl -sSLf -o /usr/local/bin/kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/v${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64 && \
-    chmod +x /usr/local/bin/kustomize
-
+RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
+    tar zxf - -C /usr/local/bin
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.13-bionic AS argocd-build
