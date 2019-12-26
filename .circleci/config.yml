@@ -236,11 +236,14 @@ workflows:
     jobs:
       - scripts-cke-tools
       - test-go-sources:
+          name: test-go-sources-bmc-reverse-proxy
+          directory: bmc-reverse-proxy
+      - test-go-sources:
           name: test-go-sources-cke-tools
           directory: cke-tools/src
       - test-go-sources:
-          name: test-go-sources-testhttpd
-          directory: testhttpd/src
+          name: test-go-sources-local-pv-provisioner
+          directory: local-pv-provisioner
       - test-go-sources:
           name: test-go-sources-machines-endpoints
           directory: machines-endpoints
@@ -248,8 +251,8 @@ workflows:
           name: test-go-sources-restrictpkg
           directory: golang/restrictpkg
       - test-go-sources:
-          name: test-go-local-pv-provisioner
-          directory: local-pv-provisioner
+          name: test-go-sources-testhttpd
+          directory: testhttpd/src
       - build:
           name: build-argocd
           container-image: argocd
