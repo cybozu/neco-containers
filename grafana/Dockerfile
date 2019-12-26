@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.12-bionic AS build
-ARG GRAFANA_VERSION=6.3.6
+FROM quay.io/cybozu/golang:1.13-bionic AS build
+ARG GRAFANA_VERSION=6.5.2
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

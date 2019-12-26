@@ -43,6 +43,7 @@ jobs:
             docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < $dir/Dockerfile
       - run:
           name: Build images
+          no_output_timeout: 20m
           command: |
             if [ ! -f BUILDS ]; then
                 echo "no need to build << parameters.container-image >>."
@@ -260,7 +261,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-cert-manager:
-          version: 0.11.1
+          version: 0.12.0
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
@@ -301,9 +302,6 @@ workflows:
       - build:
           name: build-external-dns
           container-image: external-dns
-      - build:
-          name: build-gatekeeper
-          container-image: gatekeeper
       - build:
           name: build-golang
           container-image: golang

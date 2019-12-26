@@ -1,9 +1,9 @@
 # calico container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.12-bionic AS build
+FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG CALICO_VERSION=3.8.2
+ARG CALICO_VERSION=3.11.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
@@ -14,16 +14,11 @@ RUN mkdir -p /go/src/github.com/projectcalico && \
       tar zxf - -C /go/src/github.com/projectcalico/ && \
     mv /go/src/github.com/projectcalico/typha-${CALICO_VERSION} /go/src/github.com/projectcalico/typha
 
-RUN mkdir -p /go/bin
-RUN curl https://glide.sh/get | sh
-
 WORKDIR /go/src/github.com/projectcalico/node
-RUN glide install -strip-vendor
-RUN GO111MODULE=on CGO_ENABLED=0 go install -mod=vendor ./cmd/calico-node
+RUN GO111MODULE=on CGO_ENABLED=0 go install ./cmd/calico-node
 
 WORKDIR /go/src/github.com/projectcalico/typha
-RUN glide install -strip-vendor
-RUN GO111MODULE=on CGO_ENABLED=0 go install -mod=vendor ./cmd/calico-typha
+RUN GO111MODULE=on CGO_ENABLED=0 go install ./cmd/calico-typha
 
 
 # Stage2: setup runtime container
