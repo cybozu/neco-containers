@@ -43,6 +43,7 @@ jobs:
             docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < $dir/Dockerfile
       - run:
           name: Build images
+          no_output_timeout: 20m
           command: |
             if [ ! -f BUILDS ]; then
                 echo "no need to build << parameters.container-image >>."
