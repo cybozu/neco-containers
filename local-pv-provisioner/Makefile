@@ -24,8 +24,8 @@ test:
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
 	test -z "$$(restrictpkg -packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	ineffassign .
-	go test -race -v ./...
 	go vet ./...
+	go test -race -v ./controllers/...
 
 # Build manager binary
 build:
