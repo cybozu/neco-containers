@@ -20,11 +20,8 @@ import (
 
 const nodeNameLabel = "cybozu.com/node-name"
 
-type Checker interface {
-	manager.Runnable
-}
-
-func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme) Checker {
+// NewDeviceDetector creates a new DeviceDetector.
+func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme) manager.Runnable {
 	return &DeviceDetector{client, log, deviceDir, deviceNameFilter, nodeName, interval, scheme}
 }
 
@@ -34,6 +31,7 @@ type Device struct {
 	CapacityBytes int64
 }
 
+// DeviceDetector monitors local devices.
 type DeviceDetector struct {
 	client.Client
 	log              logr.Logger
