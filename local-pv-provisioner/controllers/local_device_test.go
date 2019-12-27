@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"testing"
 
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
@@ -55,17 +54,13 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDirName, err := ioutil.TempDir("", "list-local-devices-device-")
-			if err != nil {
-				t.Fatal(err)
-			}
-			defer os.RemoveAll(tempDirName)
-			loopDevices := setupDevice(t, tempDirName, tt.inputDevices)
-			defer cleanupDevice(t, loopDevices)
+			dummyFileDir, symlinkDir := setupDummyDevice(t, tt.inputDevices)
+			defer os.RemoveAll(dummyFileDir)
+			defer os.RemoveAll(symlinkDir)
 
 			dd := &DeviceDetector{
 				log:              log,
-				deviceDir:        tempDirName,
+				deviceDir:        symlinkDir,
 				deviceNameFilter: regexp.MustCompile(tt.deviceNameFilter),
 				nodeName:         "test-node-name",
 			}
@@ -88,48 +83,30 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 	}
 }
 
-func setupDevice(t *testing.T, tempDirName string, devices []Device) []string {
-	td, err := ioutil.TempDir("", "list-local-devices-dummy-")
+func setupDummyDevice(t *testing.T, devices []Device) (string, string) {
+	dummyFileDir, err := ioutil.TempDir("", "list-local-devices-dummy-")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var loopDevices []string
+	symlinkDir, err := ioutil.TempDir("", "list-local-devices-symlink-")
+	if err != nil {
+		t.Fatal(err)
+	}
+
 	for _, device := range devices {
-		dummyFileName := filepath.Join(td, device.Path+".dummy")
+		dummyDeviceName := filepath.Join(dummyFileDir, device.Path+".dummy")
+		dummyDeviceSymlink := filepath.Join(symlinkDir, device.Path)
 
-		err := exec.Command("fallocate", "-l", fmt.Sprintf("%d", device.CapacityBytes), dummyFileName).Run()
+		err := exec.Command("fallocate", "-l", fmt.Sprintf("%d", device.CapacityBytes), dummyDeviceName).Run()
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		out, err := exec.Command("losetup", "-f", dummyFileName, "--show").Output()
+		err = exec.Command("ln", "-s", dummyDeviceName, dummyDeviceSymlink).Run()
 		if err != nil {
 			t.Fatal(err)
-		}
-
-		loopDevicePath := strings.TrimSpace(string(out))
-		loopDeviceSymlink := filepath.Join(tempDirName, device.Path)
-		err = exec.Command("ln", "-s", loopDevicePath, loopDeviceSymlink).Run()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		err = exec.Command("chmod", "755", loopDeviceSymlink).Run()
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		loopDevices = append(loopDevices, loopDevicePath)
-	}
-	return loopDevices
-}
-
-func cleanupDevice(t *testing.T, loopDevices []string) {
-	for _, loopDevice := range loopDevices {
-		err := exec.Command("losetup", "-d", loopDevice).Run()
-		if err != nil {
-			t.Error(err)
 		}
 	}
+	return dummyFileDir, symlinkDir
 }
