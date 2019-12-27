@@ -98,7 +98,7 @@ jobs:
             go test -mod=vendor -race -v ./...
             go vet -mod=vendor ./...
             ineffassign .
-  scripts-cke-tools:
+  test-cke-tools-scripts:
     docker:
       - image: quay.io/cybozu/ubuntu-dev:18.04
     steps:
@@ -106,6 +106,13 @@ jobs:
       - run: apt-get update
       - run: cd cke-tools/src/scripts; make setup SUDO=
       - run: cd cke-tools/src/scripts; make
+  test-local-pv-provisioner:
+    docker:
+      - image: quay.io/cybozu/golang:1.13-bionic
+    steps:
+      - checkout
+      - run: cd local-pv-provisioner; make setup SUDO=
+      - run: cd local-pv-provisioner; make test
   build-envoy:
     parameters:
       version:
@@ -234,16 +241,14 @@ jobs:
 workflows:
   main:
     jobs:
-      - scripts-cke-tools
+      - test-cke-tools-scripts
       - test-go-sources:
           name: test-go-sources-bmc-reverse-proxy
           directory: bmc-reverse-proxy
       - test-go-sources:
           name: test-go-sources-cke-tools
           directory: cke-tools/src
-      - test-go-sources:
-          name: test-go-sources-local-pv-provisioner
-          directory: local-pv-provisioner
+      - test-local-pv-provisioner
       - test-go-sources:
           name: test-go-sources-machines-endpoints
           directory: machines-endpoints
@@ -328,6 +333,8 @@ workflows:
       - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
+          requires:
+            - test-local-pv-provisioner
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
