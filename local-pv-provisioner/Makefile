@@ -9,7 +9,8 @@ KIND_NODE_VERSION = 1.16
 KIND_NAME = lpp-test
 KUBERNETES_VERSION= 1.16.3
 
-SUDO=sudo
+SUDO = sudo
+SUDO_GO = $(SUDO) $(shell which go)
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
 GOFLAGS = -mod=vendor
@@ -25,7 +26,7 @@ test:
 	test -z "$$(restrictpkg -packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	ineffassign .
 	go vet ./...
-	go test -race -v ./...
+	$(SUDO_GO) test -race -v ./...
 
 # Build manager binary
 build:

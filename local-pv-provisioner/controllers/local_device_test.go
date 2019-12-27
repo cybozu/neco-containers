@@ -103,7 +103,7 @@ func setupDevice(t *testing.T, tempDirName string, devices []Device) []string {
 			t.Fatal(err)
 		}
 
-		out, err := exec.Command("sudo", "losetup", "-f", dummyFileName, "--show").Output()
+		out, err := exec.Command("losetup", "-f", dummyFileName, "--show").Output()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -115,7 +115,7 @@ func setupDevice(t *testing.T, tempDirName string, devices []Device) []string {
 			t.Fatal(err)
 		}
 
-		err = exec.Command("sudo", "chmod", "755", loopDeviceSymlink).Run()
+		err = exec.Command("chmod", "755", loopDeviceSymlink).Run()
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -127,7 +127,7 @@ func setupDevice(t *testing.T, tempDirName string, devices []Device) []string {
 
 func cleanupDevice(t *testing.T, loopDevices []string) {
 	for _, loopDevice := range loopDevices {
-		err := exec.Command("sudo", "losetup", "-d", loopDevice).Run()
+		err := exec.Command("losetup", "-d", loopDevice).Run()
 		if err != nil {
 			t.Error(err)
 		}
