@@ -9,12 +9,9 @@ import (
 
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	apierrs "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 )
 
 // NewDeviceDetector creates a new DeviceDetector.
@@ -73,15 +70,7 @@ func (dd *DeviceDetector) do() error {
 
 	node := new(corev1.Node)
 	if err := dd.Get(ctx, types.NamespacedName{Name: dd.nodeName}, node); err != nil {
-		if !apierrs.IsNotFound(err) {
-			log.Error(err, "unable to fetch Node", "node", dd.nodeName)
-			return err
-		}
-	}
-
-	nodeGVK, err := apiutil.GVKForObject(node, dd.scheme)
-	if err != nil {
-		log.Error(err, "unable to get GVK")
+		log.Error(err, "unable to fetch Node", "node", dd.nodeName)
 		return err
 	}
 
@@ -92,15 +81,9 @@ func (dd *DeviceDetector) do() error {
 	}
 	log.Info("local devices", "devices", devices)
 
-	nodeRef := &metav1.OwnerReference{
-		APIVersion: nodeGVK.GroupVersion().String(),
-		Kind:       nodeGVK.Kind,
-		Name:       node.GetName(),
-		UID:        node.GetUID(),
-	}
 	var errStrings []string
 	for _, dev := range devices {
-		err := dd.createPV(ctx, dev, nodeRef)
+		err := dd.createPV(ctx, dev, node)
 		if err != nil {
 			errStrings = append(errStrings, err.Error())
 		}

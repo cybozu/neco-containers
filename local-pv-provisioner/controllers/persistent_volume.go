@@ -45,7 +45,7 @@ func (dd *DeviceDetector) pvName(devName string) string {
 	return strings.Join([]string{"local", dd.nodeName, hex.EncodeToString(hasher.Sum(nil))[:10]}, "-")
 }
 
-func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, ownerRef *metav1.OwnerReference) error {
+func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node) error {
 	pvMode := corev1.PersistentVolumeBlock
 	log := dd.log.WithValues("node", dd.nodeName)
 	pv := &corev1.PersistentVolume{
@@ -71,8 +71,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, ownerRef *me
 		},
 	}
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
-		pv.SetOwnerReferences([]metav1.OwnerReference{*ownerRef})
-		return nil
+		return ctrl.SetControllerReference(node, pv, dd.scheme)
 	})
 	if err != nil {
 		log.Error(err, "unable to create PV")

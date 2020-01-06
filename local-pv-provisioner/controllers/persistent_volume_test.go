@@ -7,7 +7,6 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
@@ -29,15 +28,12 @@ func testDeviceDetectorCreatePV() {
 			Path:          "dummy/device",
 			CapacityBytes: 512,
 		}
-		inputOwnerRef := &metav1.OwnerReference{
-			APIVersion: "testVersion",
-			Kind:       "testKind",
-			Name:       "test-node",
-			UID:        "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-		}
+		node := new(corev1.Node)
+		node.Name = "test-node"
+		node.UID = "test-uid"
 
 		By("creating PV")
-		err := dd.createPV(context.Background(), device, inputOwnerRef)
+		err := dd.createPV(context.Background(), device, node)
 		Expect(err).NotTo(HaveOccurred())
 
 		By("confirming PV")
@@ -59,9 +55,8 @@ func testDeviceDetectorCreatePV() {
 		Expect(ownerRefList).To(HaveLen(1))
 
 		outputOwnerRef := ownerRefList[0]
-		Expect(outputOwnerRef.APIVersion).To(Equal(inputOwnerRef.APIVersion))
-		Expect(outputOwnerRef.Kind).To(Equal(inputOwnerRef.Kind))
-		Expect(outputOwnerRef.Name).To(Equal(inputOwnerRef.Name))
-		Expect(outputOwnerRef.UID).To(Equal(inputOwnerRef.UID))
+		Expect(outputOwnerRef.Kind).To(Equal("Node"))
+		Expect(outputOwnerRef.Name).To(Equal(node.Name))
+		Expect(outputOwnerRef.UID).To(Equal(node.UID))
 	})
 }
