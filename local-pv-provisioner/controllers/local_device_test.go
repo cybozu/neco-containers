@@ -18,6 +18,7 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 		deviceNameFilter string
 		inputDevices     []Device
 		want             []Device
+		wantErrDev       []Device
 		wantErr          bool
 	}{
 		{
@@ -25,6 +26,7 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 			deviceNameFilter: ".*",
 			inputDevices:     []Device{},
 			want:             []Device{},
+			wantErrDev:       []Device{},
 			wantErr:          false,
 		},
 		{
@@ -32,6 +34,7 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 			deviceNameFilter: ".*",
 			inputDevices:     []Device{{Path: "dev01", CapacityBytes: 512}},
 			want:             []Device{{Path: "dev01", CapacityBytes: 512}},
+			wantErrDev:       []Device{},
 			wantErr:          false,
 		},
 		{
@@ -39,13 +42,28 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 			deviceNameFilter: ".*",
 			inputDevices:     []Device{{Path: "dev01", CapacityBytes: 512}, {Path: "dev02", CapacityBytes: 1024}},
 			want:             []Device{{Path: "dev01", CapacityBytes: 512}, {Path: "dev02", CapacityBytes: 1024}},
+			wantErrDev:       []Device{},
 			wantErr:          false,
+		},
+		{
+			name:             "exist error devices",
+			deviceNameFilter: ".*",
+			inputDevices: []Device{
+				{Path: "dev01", CapacityBytes: 512},
+				{Path: "dev02", CapacityBytes: 1024},
+				{Path: "dev03", CapacityBytes: 0},
+				{Path: "dev04", CapacityBytes: 0},
+			},
+			want:       []Device{{Path: "dev01", CapacityBytes: 512}, {Path: "dev02", CapacityBytes: 1024}},
+			wantErrDev: []Device{{Path: "dev03", CapacityBytes: 0}, {Path: "dev04", CapacityBytes: 0}},
+			wantErr:    false,
 		},
 		{
 			name:             "filter specified devices",
 			deviceNameFilter: "^dev",
 			inputDevices:     []Device{{Path: "foo", CapacityBytes: 512}, {Path: "dev01", CapacityBytes: 512}},
 			want:             []Device{{Path: "dev01", CapacityBytes: 512}},
+			wantErrDev:       []Device{},
 			wantErr:          false,
 		},
 	}
@@ -64,12 +82,12 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 				deviceNameFilter: regexp.MustCompile(tt.deviceNameFilter),
 				nodeName:         "test-node-name",
 			}
-			got, err := dd.listLocalDevices()
+			got, errDev, err := dd.listLocalDevices()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeviceDetector.listLocalDevices() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if len(got) != len(tt.want) {
-				t.Errorf("len(got) != len(tt.want): %d != %d", len(got), len(tt.want))
+				t.Fatalf("len(got) != len(tt.want): %d != %d", len(got), len(tt.want))
 			}
 			for i, dev := range got {
 				if filepath.Base(dev.Path) != tt.want[i].Path {
@@ -77,6 +95,17 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 				}
 				if dev.CapacityBytes != tt.want[i].CapacityBytes {
 					t.Errorf("dev.capacityBytes != tt.want[i].capacityBytes: %d != %d", dev.CapacityBytes, tt.want[i].CapacityBytes)
+				}
+			}
+			if len(errDev) != len(tt.wantErrDev) {
+				t.Fatalf("len(errDev) != len(tt.wantErrDev): %d != %d", len(errDev), len(tt.wantErrDev))
+			}
+			for i, dev := range errDev {
+				if filepath.Base(dev.Path) != tt.wantErrDev[i].Path {
+					t.Errorf("filepath.Base(dev.path) != tt.wantErrDev[i].path: %s != %s", filepath.Base(dev.Path), tt.wantErrDev[i].Path)
+				}
+				if dev.CapacityBytes != tt.wantErrDev[i].CapacityBytes {
+					t.Errorf("dev.capacityBytes != tt.wantErrDev[i].capacityBytes: %d != %d", dev.CapacityBytes, tt.wantErrDev[i].CapacityBytes)
 				}
 			}
 		})
@@ -98,9 +127,11 @@ func setupDummyDevice(t *testing.T, devices []Device) (string, string) {
 		dummyDeviceName := filepath.Join(dummyFileDir, device.Path+".dummy")
 		dummyDeviceSymlink := filepath.Join(symlinkDir, device.Path)
 
-		err := exec.Command("fallocate", "-l", fmt.Sprintf("%d", device.CapacityBytes), dummyDeviceName).Run()
-		if err != nil {
-			t.Fatal(err)
+		if device.CapacityBytes != 0 {
+			err := exec.Command("fallocate", "-l", fmt.Sprintf("%d", device.CapacityBytes), dummyDeviceName).Run()
+			if err != nil {
+				t.Fatal(err)
+			}
 		}
 
 		err = exec.Command("ln", "-s", dummyDeviceName, dummyDeviceSymlink).Run()

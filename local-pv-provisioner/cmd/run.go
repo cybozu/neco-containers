@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	scheme   = runtime.NewScheme()
-	setupLog = ctrl.Log.WithName("setup")
+	scheme = runtime.NewScheme()
 )
 
 func init() {
@@ -30,6 +29,7 @@ func init() {
 
 func run() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
+	log := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
@@ -37,40 +37,40 @@ func run() error {
 		LeaderElection:     false,
 	})
 	if err != nil {
-		setupLog.Error(err, "unable to start manager")
+		log.Error(err, "unable to start manager")
 		return err
 	}
 	if len(config.nodeName) == 0 {
 		err = errors.New("node-name must not by empty")
-		setupLog.Error(err, "validation error")
+		log.Error(err, "validation error")
 		return err
 	}
 	if !filepath.IsAbs(config.deviceDir) {
 		err = errors.New("device-dir is must be a absolute path")
-		setupLog.Error(err, "device-dir is must be a absolute path")
+		log.Error(err, "device-dir is must be a absolute path")
 		return err
 	}
 	info, err := os.Stat(config.deviceDir)
 	if err != nil {
-		setupLog.Error(err, "unable to get status of divice direcotry", "device-dir", config.deviceDir)
+		log.Error(err, "unable to get status of divice direcotry", "device-dir", config.deviceDir)
 		return err
 	}
 	if !info.Mode().IsDir() {
 		err = errors.New("device-dir is not a direcotry")
-		setupLog.Error(err, "divice-dir is not a direcotry")
+		log.Error(err, "divice-dir is not a direcotry")
 		return err
 	}
 	re, err := regexp.Compile(config.deviceNameFilter)
 	if err != nil {
-		setupLog.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
+		log.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
 		return err
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), ctrl.Log.WithName("local-pv-provisioner"),
+	dd := controllers.NewDeviceDetector(mgr.GetClient(), log,
 		config.deviceDir, re, config.nodeName, time.Duration(config.pollingInterval)*time.Second, scheme)
 	err = mgr.Add(dd)
 	if err != nil {
-		setupLog.Error(err, "unable to add device-detector to manager")
+		log.Error(err, "unable to add device-detector to manager")
 		return err
 	}
 
@@ -82,9 +82,9 @@ func run() error {
 		return err
 	}
 
-	setupLog.Info("starting manager")
+	log.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		setupLog.Error(err, "problem running manager")
+		log.Error(err, "problem running manager")
 		return err
 	}
 	return nil

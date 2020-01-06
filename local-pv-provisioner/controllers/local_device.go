@@ -6,16 +6,16 @@ import (
 	"path/filepath"
 )
 
-func (dd *DeviceDetector) listLocalDevices() ([]Device, error) {
-	log := dd.log.WithValues("node", dd.nodeName)
+func (dd *DeviceDetector) listLocalDevices() ([]Device, []Device, error) {
+	log := dd.log
 	var devs []Device
+	var errDevs []Device
 
 	err := filepath.Walk(dd.deviceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			log.Error(err, "prevent panic by handling failure accessing", "path", path)
 			return err
 		}
-		log.Info("walk path", "path", path)
 
 		if info.IsDir() {
 			return nil
@@ -25,9 +25,8 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, error) {
 			capacityBytes, err := dd.getCapacityBytes(path)
 			if err != nil {
 				log.Error(err, "unable to get capacity", "path", path)
-				devs = append(devs, Device{Path: path, HasError: true})
+				errDevs = append(errDevs, Device{Path: path})
 			} else {
-				log.Info("get capacity", "path", path, "capacity", capacityBytes)
 				devs = append(devs, Device{Path: path, CapacityBytes: capacityBytes})
 			}
 		}
@@ -35,9 +34,10 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, error) {
 	})
 	if err != nil {
 		log.Error(err, "error while walking the path", "path", dd.deviceDir)
-		return nil, err
+		return nil, nil, err
 	}
-	return devs, nil
+
+	return devs, errDevs, nil
 }
 
 func (dd *DeviceDetector) getCapacityBytes(path string) (int64, error) {

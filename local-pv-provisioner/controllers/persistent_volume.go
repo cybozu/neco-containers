@@ -10,6 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
 const (
@@ -25,7 +26,7 @@ func (dd *DeviceDetector) pvName(devName string) string {
 
 func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node) error {
 	pvMode := corev1.PersistentVolumeBlock
-	log := dd.log.WithValues("node", dd.nodeName)
+	log := dd.log
 	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: dd.pvName(dev.Path)}}
 
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
@@ -47,9 +48,11 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		return ctrl.SetControllerReference(node, pv, dd.scheme)
 	})
 	if err != nil {
-		log.Error(err, "unable to create PV", "node", node.Name, "device", dev.Path)
+		log.Error(err, "unable to create PV", "device", dev)
 		return err
 	}
-	log.Info("PV successfully created", "operation", op)
+	if op != controllerutil.OperationResultNone {
+		log.Info("PV successfully created", "operation", op, "device", dev)
+	}
 	return nil
 }
