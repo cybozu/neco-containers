@@ -9,35 +9,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
 	storageClass     = "local-storage"
 	hostNameLabelKey = "kubernetes.io/hostname"
-	pvOwnerKey       = ".metadata.controller"
 )
-
-// SetupWithManager makes search index of owner references.
-func (dd *DeviceDetector) SetupWithManager(mgr ctrl.Manager) error {
-	if err := mgr.GetFieldIndexer().IndexField(&corev1.PersistentVolume{}, pvOwnerKey, detectOwner); err != nil {
-		return err
-	}
-	return nil
-}
-
-func detectOwner(rawObj runtime.Object) []string {
-	pv := rawObj.(*corev1.PersistentVolume)
-	owner := metav1.GetControllerOf(pv)
-	if owner == nil {
-		return nil
-	}
-	if owner.Kind != "Node" {
-		return nil
-	}
-	return []string{owner.Name}
-}
 
 func (dd *DeviceDetector) pvName(devName string) string {
 	hasher := sha1.New()

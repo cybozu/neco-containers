@@ -68,12 +68,6 @@ func run() error {
 
 	dd := controllers.NewDeviceDetector(mgr.GetClient(), ctrl.Log.WithName("local-pv-provisioner"),
 		config.deviceDir, re, config.nodeName, time.Duration(config.pollingInterval)*time.Second, scheme)
-	err = dd.SetupWithManager(mgr)
-	if err != nil {
-		setupLog.Error(err, "unable to setup with manager")
-		return err
-	}
-
 	err = mgr.Add(dd)
 	if err != nil {
 		setupLog.Error(err, "unable to add device-detector to manager")
