@@ -25,10 +25,11 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, error) {
 			capacityBytes, err := dd.getCapacityBytes(path)
 			if err != nil {
 				log.Error(err, "unable to get capacity", "path", path)
-				return err
+				devs = append(devs, Device{Path: path, HasError: true})
+			} else {
+				log.Info("get capacity", "path", path, "capacity", capacityBytes)
+				devs = append(devs, Device{Path: path, CapacityBytes: capacityBytes})
 			}
-			log.Info("get capacity", "path", path, "capacity", capacityBytes)
-			devs = append(devs, Device{Path: path, CapacityBytes: capacityBytes})
 		}
 		return nil
 	})

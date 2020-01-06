@@ -2,9 +2,7 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -23,6 +21,7 @@ func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, 
 type Device struct {
 	Path          string
 	CapacityBytes int64
+	HasError      bool
 }
 
 // DeviceDetector monitors local devices.
@@ -81,17 +80,14 @@ func (dd *DeviceDetector) do() error {
 	}
 	log.Info("local devices", "devices", devices)
 
-	var errStrings []string
 	for _, dev := range devices {
-		err := dd.createPV(ctx, dev, node)
-		if err != nil {
-			errStrings = append(errStrings, err.Error())
+		if !dev.HasError {
+			err := dd.createPV(ctx, dev, node)
+			if err != nil {
+				return err
+			}
 		}
 	}
-	if len(errStrings) > 0 {
-		err := errors.New(strings.Join(errStrings, "; "))
-		log.Error(err, "unable to create pv")
-		return err
-	}
+
 	return nil
 }

@@ -69,9 +69,9 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		return ctrl.SetControllerReference(node, pv, dd.scheme)
 	})
 	if err != nil {
-		log.Error(err, "unable to create PV")
-	} else {
-		log.Info("PV successfully created", "operation", op)
+		log.Error(err, "unable to create PV", "node", node.Name, "device", dev.Path)
+		return err
 	}
+	log.Info("PV successfully created", "operation", op)
 	return nil
 }
