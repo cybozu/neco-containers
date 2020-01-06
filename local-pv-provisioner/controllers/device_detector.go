@@ -15,13 +15,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 )
 
-const nodeNameLabel = "cybozu.com/node-name"
-
 // NewDeviceDetector creates a new DeviceDetector.
-func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme) manager.Runnable {
+func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme) *DeviceDetector {
 	return &DeviceDetector{client, log, deviceDir, deviceNameFilter, nodeName, interval, scheme}
 }
 
@@ -88,12 +85,6 @@ func (dd *DeviceDetector) do() error {
 		return err
 	}
 
-	var pvList corev1.PersistentVolumeList
-	if err := dd.List(ctx, &pvList, client.MatchingLabels{nodeNameLabel: dd.nodeName}); err != nil {
-		log.Error(err, "unable to list PV")
-		return err
-	}
-
 	devices, err := dd.listLocalDevices()
 	if err != nil {
 		log.Error(err, "unable to list local devices")
@@ -109,11 +100,9 @@ func (dd *DeviceDetector) do() error {
 	}
 	var errStrings []string
 	for _, dev := range devices {
-		if !dd.pvExists(pvList, dev) {
-			err := dd.createPV(ctx, dev, nodeRef)
-			if err != nil {
-				errStrings = append(errStrings, err.Error())
-			}
+		err := dd.createPV(ctx, dev, nodeRef)
+		if err != nil {
+			errStrings = append(errStrings, err.Error())
 		}
 	}
 	if len(errStrings) > 0 {

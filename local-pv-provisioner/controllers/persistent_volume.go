@@ -8,14 +8,36 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 const (
 	storageClass     = "local-storage"
 	hostNameLabelKey = "kubernetes.io/hostname"
+	pvOwnerKey       = ".metadata.controller"
 )
+
+// SetupWithManager makes search index of owner references.
+func (dd *DeviceDetector) SetupWithManager(mgr ctrl.Manager) error {
+	if err := mgr.GetFieldIndexer().IndexField(&corev1.PersistentVolume{}, pvOwnerKey, detectOwner); err != nil {
+		return err
+	}
+	return nil
+}
+
+func detectOwner(rawObj runtime.Object) []string {
+	pv := rawObj.(*corev1.PersistentVolume)
+	owner := metav1.GetControllerOf(pv)
+	if owner == nil {
+		return nil
+	}
+	if owner.Kind != "Node" {
+		return nil
+	}
+	return []string{owner.Name}
+}
 
 func (dd *DeviceDetector) pvName(devName string) string {
 	hasher := sha1.New()
@@ -23,22 +45,12 @@ func (dd *DeviceDetector) pvName(devName string) string {
 	return strings.Join([]string{"local", dd.nodeName, hex.EncodeToString(hasher.Sum(nil))[:10]}, "-")
 }
 
-func (dd *DeviceDetector) pvExists(pvList corev1.PersistentVolumeList, dev Device) bool {
-	for _, pv := range pvList.Items {
-		if pv.GetName() == dd.pvName(dev.Path) {
-			return true
-		}
-	}
-	return false
-}
-
-func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, ownerRef *v1.OwnerReference) error {
+func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, ownerRef *metav1.OwnerReference) error {
 	pvMode := corev1.PersistentVolumeBlock
 	log := dd.log.WithValues("node", dd.nodeName)
 	pv := &corev1.PersistentVolume{
-		ObjectMeta: v1.ObjectMeta{
-			Name:   dd.pvName(dev.Path),
-			Labels: map[string]string{nodeNameLabel: dd.nodeName},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: dd.pvName(dev.Path),
 		},
 		Spec: corev1.PersistentVolumeSpec{
 			Capacity: corev1.ResourceList{
@@ -59,7 +71,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, ownerRef *v1
 		},
 	}
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
-		pv.SetOwnerReferences([]v1.OwnerReference{*ownerRef})
+		pv.SetOwnerReferences([]metav1.OwnerReference{*ownerRef})
 		return nil
 	})
 	if err != nil {

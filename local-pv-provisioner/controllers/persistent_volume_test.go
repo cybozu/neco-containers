@@ -10,7 +10,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func testDeviceDetectorCreatePV() {
@@ -43,7 +42,7 @@ func testDeviceDetectorCreatePV() {
 
 		By("confirming PV")
 		var pvList corev1.PersistentVolumeList
-		err = dd.List(context.Background(), &pvList, client.MatchingLabels{nodeNameLabel: dd.nodeName})
+		err = dd.List(context.Background(), &pvList)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pvList.Items).To(HaveLen(1))
 		pv := pvList.Items[0]
