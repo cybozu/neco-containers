@@ -90,5 +90,11 @@ func testDeviceDetectorCreatePV() {
 			Expect(outputOwnerRef.Name).To(Equal(node.Name))
 			Expect(outputOwnerRef.UID).To(Equal(node.UID))
 		}
+
+		By("checking count of PVs")
+		pvList := new(corev1.PersistentVolumeList)
+		err := dd.List(context.Background(), pvList)
+		Expect(err).NotTo(HaveOccurred())
+		Expect(pvList.Items).To(HaveLen(len(tests)))
 	})
 }
