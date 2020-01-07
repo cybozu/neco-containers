@@ -40,7 +40,7 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  : local-storage
+  storageClassName: local-storage
   local:
     path: /dev/disk/by-path/pci-0000:3b:00.0-ata-1
   nodeAffinity:
@@ -53,12 +53,31 @@ spec:
           - node1
 ```
 
-PVs are named according to the following rules.
+* `metadata.name` is decided according to the following rules.
+   * The name is a concatenation of `local`, node name, and device name with `-`.
+   * If it contains characters other than alphabets, numbers, `-` and `.`, it is replaced with `-`.
+* `spec.storageClassName` is automatically set a value `local-storage`.
+* `spec.capacity.storage` is decided from the max capacity of the device.
 
-* The name is a concatenation of `local`, node name, and device name with `-`.
-* If it contains characters other than alphabets, numbers, `-` and` .`, it is replaced with `-`.
+## Prometheus metrics
 
-`storageClassName` 
+`local-pv-provisioner` exposes the following metrics.
+
+### `local_pv_provisioner_available_devices`
+
+`local_pv_provisioner_available_devices` is a gauge that indicates the number of available devices recognized by `local-pv-provisioner`.
+
+| Label  | Description            |
+| ------ | ---------------------- |
+| `node` | The node resource name |
+
+### `local_pv_provisioner_error_devices`
+
+`local_pv_provisioner_available_devices` is a gauge that indicates the number of error devices recognized by `local-pv-provisioner`.
+
+| Label  | Description            |
+| ------ | ---------------------- |
+| `node` | The node resource name |
 
 ## Command-line flags and environment variables
 
@@ -70,10 +89,6 @@ PVs are named according to the following rules.
 | node-name          | LP_NODE_NAME          | `""`                 | The name of Node on which this program is running.                                                  |
 | polling-interval   | LP_POLLING_INTERVAL   | `10`                 | Polling interval to check devices. It is set by a second.                                           |
 | development        | LP_DEVELOPMENT        | `false`              | Use development logger config.                                                                      |
-
-## How to decide the size of PV
-
-`pv.spec.capacity.storage` is decided from the max capacity of the disk.
 
 ## Installation
 
