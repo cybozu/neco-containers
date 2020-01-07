@@ -3,14 +3,19 @@
 local-pv-provisioner
 ====================
 
-`local-pv-provisioner` is a custom controller that creates [local](https://kubernetes.io/docs/concepts/storage/volumes/#local) PersistentVolume resources from devices that match the specified conditions.
+`local-pv-provisioner` is a custom controller that creates [local](https://kubernetes.io/docs/concepts/storage/volumes/#local) PersistentVolume(PV) resources from devices that match the specified conditions.
 
-* Created PVs will be removed along with the deletion of the node to which it belongs.
+* The PVs are linked to a node by `ownerReferences` setting.
+* The PVs will be removed along with the deletion of the node.
 
 ## How to discover devices
 
-You can specify the condition of the target devices by command-line args with a regular expression.
-If you specifies the following condition, devices under `/dev/disk/by-path/` will be selected.
+`local-pv-provisioner` searches for devices according to `--device-path` and `--device-name-filter` options.
+
+* `--device-path` option specifies the path to search the devices.
+* `--device-name-filter` option filter the device names using a regular expression.
+
+If you specifies the following condition, all devices under `/dev/disk/by-path/` will be selected.
 
 ```console
 $ local-pv-provisioner --device-path="/dev/disk/by-path/" --device-name-filter=".*"
@@ -22,7 +27,7 @@ $ local-pv-provisioner --device-path="/dev/disk/by-path/" --device-name-filter="
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: node1-sda
+  name: local-node1-pci-0000-3b-00.0-ata-1
   ownerReferences:
     - apiVersion: v1
       kind: Node
@@ -35,9 +40,9 @@ spec:
   accessModes:
   - ReadWriteOnce
   persistentVolumeReclaimPolicy: Retain
-  storageClassName: local-storage
+  : local-storage
   local:
-    path: /dev/sda
+    path: /dev/disk/by-path/pci-0000:3b:00.0-ata-1
   nodeAffinity:
     required:
       nodeSelectorTerms:
@@ -47,6 +52,13 @@ spec:
           values:
           - node1
 ```
+
+PVs are named according to the following rules.
+
+* The name is a concatenation of `local`, node name, and device name with `-`.
+* If it contains characters other than alphabets, numbers, `-` and` .`, it is replaced with `-`.
+
+`storageClassName` 
 
 ## Command-line flags and environment variables
 
