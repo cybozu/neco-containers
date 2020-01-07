@@ -81,7 +81,7 @@ func (dd *DeviceDetector) Start(ch <-chan struct{}) error {
 }
 
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
-// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=list;create;update;watch
+// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch
 
 func (dd *DeviceDetector) do() error {
 	ctx := context.Background()

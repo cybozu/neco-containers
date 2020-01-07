@@ -20,6 +20,8 @@ rules:
   - persistentvolumes
   verbs:
   - create
+  - get
   - list
+  - patch
   - update
   - watch
