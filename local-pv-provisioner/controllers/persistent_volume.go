@@ -35,28 +35,41 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
 		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
-		pv.Spec.Capacity = corev1.ResourceList{
-			corev1.ResourceStorage: *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI),
+		// Workaround because capacity comparison doesn't work well in CreateOrUpdate.
+		newQuantity := *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI)
+		oldQuantity, ok := pv.Spec.Capacity[corev1.ResourceStorage]
+		if len(pv.Spec.Capacity) != 1 || !ok || !oldQuantity.Equal(newQuantity) {
+			pv.Spec.Capacity = corev1.ResourceList{
+				corev1.ResourceStorage: *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI),
+			}
 		}
+
 		pv.Spec.NodeAffinity = &corev1.VolumeNodeAffinity{
 			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
 				{MatchExpressions: []corev1.NodeSelectorRequirement{
-					{Key: hostNameLabelKey, Operator: "In", Values: []string{dd.nodeName}},
+					{
+						Key:      hostNameLabelKey,
+						Operator: "In",
+						Values:   []string{dd.nodeName},
+					},
 				}},
 			}},
 		}
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
-		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{Local: &corev1.LocalVolumeSource{Path: dev.Path}}
+		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{
+			Local: &corev1.LocalVolumeSource{Path: dev.Path},
+		}
 		pv.Spec.StorageClassName = StorageClass
 		pv.Spec.VolumeMode = &pvMode
+
 		return ctrl.SetControllerReference(node, pv, dd.scheme)
 	})
 	if err != nil {
-		log.Error(err, "unable to create PV", "device", dev)
+		log.Error(err, "unable to create or update PV", "device", dev)
 		return err
 	}
 	if op != controllerutil.OperationResultNone {
-		log.Info("PV successfully created", "operation", op, "device", dev)
+		log.Info("PV successfully created or updated", "operation", op, "device", dev)
 	}
 	return nil
 }
