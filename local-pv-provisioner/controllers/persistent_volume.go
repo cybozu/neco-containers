@@ -2,8 +2,8 @@ package controllers
 
 import (
 	"context"
-	"crypto/sha1"
-	"encoding/hex"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -19,10 +19,13 @@ const (
 	hostNameLabelKey = "kubernetes.io/hostname"
 )
 
-func (dd *DeviceDetector) pvName(devName string) string {
-	hasher := sha1.New()
-	hasher.Write([]byte(devName))
-	return strings.Join([]string{"local", dd.nodeName, hex.EncodeToString(hasher.Sum(nil))[:10]}, "-")
+var (
+	vpNameRegexp = regexp.MustCompile(`[^.0-9A-Za-z]+`)
+)
+
+func (dd *DeviceDetector) pvName(devPath string) string {
+	tmp := strings.Join([]string{"local", dd.nodeName, filepath.Base(devPath)}, "-")
+	return strings.ToLower(vpNameRegexp.ReplaceAllString(tmp, "-"))
 }
 
 func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node) error {
