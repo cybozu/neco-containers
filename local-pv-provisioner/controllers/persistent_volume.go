@@ -14,7 +14,8 @@ import (
 )
 
 const (
-	storageClass     = "local-storage"
+	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
+	StorageClass     = "local-storage"
 	hostNameLabelKey = "kubernetes.io/hostname"
 )
 
@@ -43,7 +44,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		}
 		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
 		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{Local: &corev1.LocalVolumeSource{Path: dev.Path}}
-		pv.Spec.StorageClassName = storageClass
+		pv.Spec.StorageClassName = StorageClass
 		pv.Spec.VolumeMode = &pvMode
 		return ctrl.SetControllerReference(node, pv, dd.scheme)
 	})
