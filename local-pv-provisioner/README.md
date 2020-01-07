@@ -89,9 +89,3 @@ spec:
 | node-name          | LP_NODE_NAME          |                      | The name of Node on which this program is running. It is a required flag.                           |
 | polling-interval   | LP_POLLING_INTERVAL   | `10s`                | Polling interval to check devices.                                                                  |
 | development        | LP_DEVELOPMENT        | `false`              | Use development logger config.                                                                      |
-
-## Installation
-
-```console
-$ kubectl apply -f ./install.yaml
-```
