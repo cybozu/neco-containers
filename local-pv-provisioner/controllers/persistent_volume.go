@@ -35,13 +35,12 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
 		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
+
 		// Workaround because capacity comparison doesn't work well in CreateOrUpdate.
-		newQuantity := *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI)
-		oldQuantity, ok := pv.Spec.Capacity[corev1.ResourceStorage]
-		if len(pv.Spec.Capacity) != 1 || !ok || !oldQuantity.Equal(newQuantity) {
-			pv.Spec.Capacity = corev1.ResourceList{
-				corev1.ResourceStorage: *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI),
-			}
+		quantity := *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI)
+		_ = quantity.String()
+		pv.Spec.Capacity = corev1.ResourceList{
+			corev1.ResourceStorage: quantity,
 		}
 
 		pv.Spec.NodeAffinity = &corev1.VolumeNodeAffinity{
