@@ -13,7 +13,7 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, []Device, error) {
 
 	err := filepath.Walk(dd.deviceDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
-			log.Error(err, "prevent panic by handling failure accessing", "path", path)
+			log.Error(err, "failure accessing a path", "path", path)
 			return err
 		}
 

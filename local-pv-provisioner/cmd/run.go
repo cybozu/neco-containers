@@ -30,6 +30,32 @@ func run() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
 	log := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
 
+	if len(config.nodeName) == 0 {
+		err := errors.New("node-name must not be empty")
+		log.Error(err, "validation error")
+		return err
+	}
+	if !filepath.IsAbs(config.deviceDir) {
+		err := errors.New("device-dir must be an absolute path")
+		log.Error(err, "device-dir must be an absolute path")
+		return err
+	}
+	info, err := os.Stat(config.deviceDir)
+	if err != nil {
+		log.Error(err, "unable to get status of device directory", "device-dir", config.deviceDir)
+		return err
+	}
+	if !info.Mode().IsDir() {
+		err = errors.New("device-dir is not a directory")
+		log.Error(err, "device-dir is not a directory")
+		return err
+	}
+	re, err := regexp.Compile(config.deviceNameFilter)
+	if err != nil {
+		log.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
+		return err
+	}
+
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
 		MetricsBindAddress: config.metricsAddr,
@@ -37,31 +63,6 @@ func run() error {
 	})
 	if err != nil {
 		log.Error(err, "unable to start manager")
-		return err
-	}
-	if len(config.nodeName) == 0 {
-		err = errors.New("node-name must not by empty")
-		log.Error(err, "validation error")
-		return err
-	}
-	if !filepath.IsAbs(config.deviceDir) {
-		err = errors.New("device-dir is must be a absolute path")
-		log.Error(err, "device-dir is must be a absolute path")
-		return err
-	}
-	info, err := os.Stat(config.deviceDir)
-	if err != nil {
-		log.Error(err, "unable to get status of divice direcotry", "device-dir", config.deviceDir)
-		return err
-	}
-	if !info.Mode().IsDir() {
-		err = errors.New("device-dir is not a direcotry")
-		log.Error(err, "divice-dir is not a direcotry")
-		return err
-	}
-	re, err := regexp.Compile(config.deviceNameFilter)
-	if err != nil {
-		log.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
 		return err
 	}
 
