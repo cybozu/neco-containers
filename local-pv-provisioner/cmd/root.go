@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ var config struct {
 	deviceDir        string
 	deviceNameFilter string
 	development      bool
-	pollingInterval  int
+	pollingInterval  time.Duration
 }
 
 var rootCmd = &cobra.Command{
@@ -31,7 +32,7 @@ var rootCmd = &cobra.Command{
 		config.deviceDir = viper.GetString("device-dir")
 		config.deviceNameFilter = viper.GetString("device-name-filter")
 		config.nodeName = viper.GetString("node-name")
-		config.pollingInterval = viper.GetInt("polling-interval")
+		config.pollingInterval = viper.GetDuration("polling-interval")
 		return run()
 	},
 }
@@ -51,7 +52,7 @@ func init() {
 	fs.String("device-dir", "/dev/disk/by-path/", "Path to the directory that stores the devices for which PersistentVolumes are created.")
 	fs.String("device-name-filter", ".*", "A regular expression that allows selection of devices on device-idr to be created PersistentVolume.")
 	fs.String("node-name", "", "The name of Node on which this program is running")
-	fs.Uint("polling-interval", 10, "Polling interval to check devices. It is set by a second.")
+	fs.Duration("polling-interval", 10*time.Second, "Polling interval to check devices.")
 
 	if err := viper.BindPFlags(fs); err != nil {
 		panic(err)

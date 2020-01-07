@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"time"
 
 	"github.com/cybozu/neco-containers/local-pv-provisioner/controllers"
 	corev1 "k8s.io/api/core/v1"
@@ -67,7 +66,7 @@ func run() error {
 	}
 
 	dd := controllers.NewDeviceDetector(mgr.GetClient(), log,
-		config.deviceDir, re, config.nodeName, time.Duration(config.pollingInterval)*time.Second, scheme)
+		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme)
 	err = mgr.Add(dd)
 	if err != nil {
 		log.Error(err, "unable to add device-detector to manager")
