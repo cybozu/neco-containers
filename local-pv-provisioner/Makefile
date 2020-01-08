@@ -4,10 +4,6 @@ IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = quay.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
 KUBEBUILDER_VERSION = 2.2.0
 CTRLTOOLS_VERSION = 0.2.4
-KIND_VERSION = 0.6.1
-KIND_NODE_VERSION = 1.16
-KIND_NAME = lpp-test
-KUBERNETES_VERSION= 1.16.3
 
 SUDO = sudo
 SUDO_GO = $(SUDO) $(shell which go)
@@ -52,4 +48,4 @@ setup:
 clean:
 	rm -rf bin
 
-.PHONY: all test build manifests generate clean docker setup
+.PHONY: all test build manifests generate docker setup clean
