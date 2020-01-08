@@ -5,8 +5,7 @@ local-pv-provisioner
 
 `local-pv-provisioner` is a custom controller that creates [local](https://kubernetes.io/docs/concepts/storage/volumes/#local) PersistentVolume(PV) resources from devices that match the specified conditions.
 
-* The PVs are linked to a node by `ownerReferences` setting.
-* The PVs will be removed along with the deletion of the node.
+* The PVs will be removed along with the deletion of the node because of using `ownerReferences`.
 
 ## How to discover devices
 
