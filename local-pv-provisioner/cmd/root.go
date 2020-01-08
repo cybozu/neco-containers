@@ -52,7 +52,7 @@ func init() {
 	fs.String("device-dir", "/dev/disk/by-path/", "Path to the directory that stores the devices for which PersistentVolumes are created.")
 	fs.String("device-name-filter", ".*", "A regular expression that allows selection of devices on device-idr to be created PersistentVolume.")
 	fs.String("node-name", "", "The name of Node on which this program is running")
-	fs.Duration("polling-interval", 10*time.Second, "Polling interval to check devices.")
+	fs.Duration("polling-interval", 5*time.Minute, "Polling interval to check devices.")
 
 	if err := viper.BindPFlags(fs); err != nil {
 		panic(err)
