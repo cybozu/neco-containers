@@ -150,7 +150,7 @@ spec:
             claimName: sample-pvc
     ```
 
-3. After the pod was created, the PVC will be bind to a PV.
+3. The PVC will be bound to a PV.
     ```
     $ kubectl get pv,pvc
     NAME                                               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM                STORAGECLASS    REASON   AGE
