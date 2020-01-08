@@ -48,7 +48,6 @@ setup:
 	$(SUDO) rm -rf /usr/local/kubebuilder
 	$(SUDO) mv /tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH) /usr/local/kubebuilder
 	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
-	GO111MODULE=on GOFLAGS= go install github.com/onsi/ginkgo/ginkgo
 
 clean:
 	rm -rf bin
