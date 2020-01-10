@@ -81,6 +81,16 @@ func testDeviceDetectorCreatePV() {
 			capacity := pv.Spec.Capacity[corev1.ResourceStorage]
 			Expect(capacity.CmpInt64(device.CapacityBytes)).To(Equal(0))
 
+			By("checking NodeAffinity")
+			terms := pv.Spec.NodeAffinity.Required.NodeSelectorTerms
+			Expect(terms).To(HaveLen(1))
+			Expect(terms[0].MatchExpressions).To(HaveLen(1))
+			matchExpression := terms[0].MatchExpressions[0]
+			Expect(matchExpression.Key).To(Equal("kubernetes.io/hostname"))
+			Expect(matchExpression.Operator).To(Equal(corev1.NodeSelectorOpIn))
+			Expect(matchExpression.Values).To(HaveLen(1))
+			Expect(matchExpression.Values[0]).To(Equal(node.Name))
+
 			By("checking ownerReferences")
 			ownerRefList := pv.GetOwnerReferences()
 			Expect(ownerRefList).To(HaveLen(1))
