@@ -15,8 +15,7 @@ import (
 
 const (
 	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
-	StorageClass     = "local-storage"
-	hostNameLabelKey = "kubernetes.io/hostname"
+	StorageClass = "local-storage"
 )
 
 var (
@@ -47,8 +46,8 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
 				{MatchExpressions: []corev1.NodeSelectorRequirement{
 					{
-						Key:      hostNameLabelKey,
-						Operator: "In",
+						Key:      corev1.LabelHostname,
+						Operator: corev1.NodeSelectorOpIn,
 						Values:   []string{dd.nodeName},
 					},
 				}},
