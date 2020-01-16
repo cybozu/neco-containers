@@ -13,7 +13,6 @@ RUN make
 
 FROM quay.io/cybozu/ubuntu:18.04
 
-COPY --from=build /etc/ssl/certs /etc/ssl/certs
 COPY --from=build /go/src/github.com/coredns/coredns/LICENSE /usr/local/coredns/LICENSE
 COPY --from=build /go/src/github.com/coredns/coredns/coredns /usr/local/coredns/bin/coredns
 ENV PATH=/usr/local/coredns/bin:"$PATH"

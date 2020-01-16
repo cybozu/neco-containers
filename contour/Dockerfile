@@ -12,7 +12,7 @@ RUN curl -sSLf https://github.com/projectcontour/contour/archive/v${CONTOUR_VERS
 
 WORKDIR /work/contour/
 
-RUN GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOLDFLAGS="-w -s" go build -o /go/bin/contour -v github.com/projectcontour/contour/cmd/contour
+RUN GO111MODULE=on GOOS=linux GOLDFLAGS="-w -s" go build -o /go/bin/contour -v github.com/projectcontour/contour/cmd/contour
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
