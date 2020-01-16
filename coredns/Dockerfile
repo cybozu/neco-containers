@@ -11,7 +11,7 @@ RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.ta
 WORKDIR /go/src/github.com/coredns/coredns/
 RUN make
 
-FROM scratch
+FROM quay.io/cybozu/ubuntu:18.04
 
 COPY --from=build /etc/ssl/certs /etc/ssl/certs
 COPY --from=build /go/src/github.com/coredns/coredns/LICENSE /usr/local/coredns/LICENSE
