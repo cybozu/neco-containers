@@ -1,9 +1,9 @@
 # hyperkube container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.12-bionic AS build
+FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG K8S_VERSION=1.16.4
+ARG K8S_VERSION=1.16.5
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
