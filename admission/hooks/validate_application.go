@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 
 	argocd "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -48,9 +49,13 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {
 	for _, r := range v.config.Rules {
-		if r.Repository == repo {
+		if v.ignoreGitSuffix(r.Repository) == v.ignoreGitSuffix(repo) {
 			return r.Projects
 		}
 	}
 	return nil
+}
+
+func (v *argocdApplicationValidator) ignoreGitSuffix(s string) string {
+	return strings.TrimSuffix(s, ".git")
 }

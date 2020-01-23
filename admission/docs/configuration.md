@@ -17,8 +17,15 @@ Each rule represents the restriction on the applications in a certain repository
 
 | Name       | Type       | Description                                                               |
 | ---------- | ---------- | ------------------------------------------------------------------------- |
-| repository | string     | A URL of the repository                                                   |
-| projects   | \[\]string | A list of `spec.project`s allowed for the applications in the repository. |
+| repository | string     | A URL of the repository to be matched with `applications.spec.source.repoURL`.                                                   |
+| projects   | \[\]string | A list of `applications.spec.project`s allowed for the applications in the repository. |
+
+##### `.git` suffix in `repository`
+
+In GitHub, `.git` suffix is set at repository URL automatically. However, this suffix is optional. In fact, you can access the repository without the suffix.
+In view of this, neco-admission compares the remote URL ignoring `.git` suffix.
+
+### Example
 
 ```yaml
 ArgoCDApplicationValidator:
