@@ -54,8 +54,6 @@ func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenA
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.OperationState":                   schema_pkg_apis_application_v1alpha1_OperationState(ref),
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.OrphanedResourcesMonitorSettings": schema_pkg_apis_application_v1alpha1_OrphanedResourcesMonitorSettings(ref),
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.ProjectRole":                      schema_pkg_apis_application_v1alpha1_ProjectRole(ref),
-		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepoCreds":                        schema_pkg_apis_application_v1alpha1_RepoCreds(ref),
-		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepoCredsList":                    schema_pkg_apis_application_v1alpha1_RepoCredsList(ref),
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.Repository":                       schema_pkg_apis_application_v1alpha1_Repository(ref),
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepositoryCertificate":            schema_pkg_apis_application_v1alpha1_RepositoryCertificate(ref),
 		"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepositoryCertificateList":        schema_pkg_apis_application_v1alpha1_RepositoryCertificateList(ref),
@@ -125,14 +123,14 @@ func schema_pkg_apis_application_v1alpha1_AppProject(ref common.ReferenceCallbac
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -165,14 +163,14 @@ func schema_pkg_apis_application_v1alpha1_AppProjectList(ref common.ReferenceCal
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -319,14 +317,14 @@ func schema_pkg_apis_application_v1alpha1_Application(ref common.ReferenceCallba
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -381,18 +379,10 @@ func schema_pkg_apis_application_v1alpha1_ApplicationCondition(ref common.Refere
 							Format:      "",
 						},
 					},
-					"lastTransitionTime": {
-						SchemaProps: spec.SchemaProps{
-							Description: "LastTransitionTime is the time the condition was first observed.",
-							Ref:         ref("k8s.io/apimachinery/pkg/apis/meta/v1.Time"),
-						},
-					},
 				},
 				Required: []string{"type", "message"},
 			},
 		},
-		Dependencies: []string{
-			"k8s.io/apimachinery/pkg/apis/meta/v1.Time"},
 	}
 }
 
@@ -432,14 +422,14 @@ func schema_pkg_apis_application_v1alpha1_ApplicationList(ref common.ReferenceCa
 				Properties: map[string]spec.Schema{
 					"kind": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+							Description: "Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds",
 							Type:        []string{"string"},
 							Format:      "",
 						},
 					},
 					"apiVersion": {
 						SchemaProps: spec.SchemaProps{
-							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+							Description: "APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources",
 							Type:        []string{"string"},
 							Format:      "",
 						},
@@ -715,13 +705,6 @@ func schema_pkg_apis_application_v1alpha1_ApplicationSourceKustomize(ref common.
 							Format:      "",
 						},
 					},
-					"nameSuffix": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NameSuffix is a suffix appended to resources for kustomize apps",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
 					"images": {
 						SchemaProps: spec.SchemaProps{
 							Description: "Images are kustomize image overrides",
@@ -846,13 +829,6 @@ func schema_pkg_apis_application_v1alpha1_ApplicationSpec(ref common.ReferenceCa
 									},
 								},
 							},
-						},
-					},
-					"revisionHistoryLimit": {
-						SchemaProps: spec.SchemaProps{
-							Description: "This limits this number of items kept in the apps revision history. This should only be changed in exceptional circumstances. Setting to zero will store no history. This will reduce storage used. Increasing will increase the space used to store the history, so we do not recommend increasing it. Default is 10.",
-							Type:        []string{"integer"},
-							Format:      "int64",
 						},
 					},
 				},
@@ -1100,20 +1076,6 @@ func schema_pkg_apis_application_v1alpha1_Cluster(ref common.ReferenceCallback) 
 							Description: "The server version",
 							Type:        []string{"string"},
 							Format:      "",
-						},
-					},
-					"namespaces": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Holds list of namespaces which are accessible in that cluster. Cluster level resources would be ignored if namespace list if not empty.",
-							Type:        []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Type:   []string{"string"},
-										Format: "",
-									},
-								},
-							},
 						},
 					},
 				},
@@ -1781,95 +1743,6 @@ func schema_pkg_apis_application_v1alpha1_ProjectRole(ref common.ReferenceCallba
 	}
 }
 
-func schema_pkg_apis_application_v1alpha1_RepoCreds(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "RepoCreds holds a repository credentials definition",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"url": {
-						SchemaProps: spec.SchemaProps{
-							Description: "URL is the URL that this credentials matches to",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"username": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Username for authenticating at the repo server",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"password": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Password for authenticating at the repo server",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"sshPrivateKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "SSH private key data for authenticating at the repo server (only Git repos)",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"tlsClientCertData": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TLS client cert data for authenticating at the repo server",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"tlsClientCertKey": {
-						SchemaProps: spec.SchemaProps{
-							Description: "TLS client cert key for authenticating at the repo server",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-				},
-				Required: []string{"url"},
-			},
-		},
-	}
-}
-
-func schema_pkg_apis_application_v1alpha1_RepoCredsList(ref common.ReferenceCallback) common.OpenAPIDefinition {
-	return common.OpenAPIDefinition{
-		Schema: spec.Schema{
-			SchemaProps: spec.SchemaProps{
-				Description: "RepositoryList is a collection of Repositories.",
-				Type:        []string{"object"},
-				Properties: map[string]spec.Schema{
-					"metadata": {
-						SchemaProps: spec.SchemaProps{
-							Ref: ref("k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"),
-						},
-					},
-					"items": {
-						SchemaProps: spec.SchemaProps{
-							Type: []string{"array"},
-							Items: &spec.SchemaOrArray{
-								Schema: &spec.Schema{
-									SchemaProps: spec.SchemaProps{
-										Ref: ref("github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepoCreds"),
-									},
-								},
-							},
-						},
-					},
-				},
-				Required: []string{"items"},
-			},
-		},
-		Dependencies: []string{
-			"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1.RepoCreds", "k8s.io/apimachinery/pkg/apis/meta/v1.ListMeta"},
-	}
-}
-
 func schema_pkg_apis_application_v1alpha1_Repository(ref common.ReferenceCallback) common.OpenAPIDefinition {
 	return common.OpenAPIDefinition{
 		Schema: spec.Schema{
@@ -1957,13 +1830,6 @@ func schema_pkg_apis_application_v1alpha1_Repository(ref common.ReferenceCallbac
 						SchemaProps: spec.SchemaProps{
 							Description: "only for Helm repos",
 							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"inheritedCreds": {
-						SchemaProps: spec.SchemaProps{
-							Description: "Whether credentials were inherited from a credential set",
-							Type:        []string{"boolean"},
 							Format:      "",
 						},
 					},
@@ -2256,43 +2122,26 @@ func schema_pkg_apis_application_v1alpha1_ResourceDiff(ref common.ReferenceCallb
 					},
 					"targetState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TargetState contains the JSON serialized resource manifest defined in the Git/Helm",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"liveState": {
 						SchemaProps: spec.SchemaProps{
-							Description: "TargetState contains the JSON live resource manifest",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"diff": {
 						SchemaProps: spec.SchemaProps{
-							Description: "Diff contains the JSON patch between target and live resource Deprecated: use NormalizedLiveState and PredictedLiveState to render the difference",
-							Type:        []string{"string"},
-							Format:      "",
+							Type:   []string{"string"},
+							Format: "",
 						},
 					},
 					"hook": {
 						SchemaProps: spec.SchemaProps{
 							Type:   []string{"boolean"},
 							Format: "",
-						},
-					},
-					"normalizedLiveState": {
-						SchemaProps: spec.SchemaProps{
-							Description: "NormalizedLiveState contains JSON serialized live resource state with applied normalizations",
-							Type:        []string{"string"},
-							Format:      "",
-						},
-					},
-					"predictedLiveState": {
-						SchemaProps: spec.SchemaProps{
-							Description: "PredictedLiveState contains JSON serialized resource state that is calculated based on normalized and target resource state",
-							Type:        []string{"string"},
-							Format:      "",
 						},
 					},
 				},

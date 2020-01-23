@@ -4,8 +4,10 @@ go 1.13
 
 require (
 	github.com/Masterminds/semver v1.5.0 // indirect
-	github.com/argoproj/argo-cd v1.4.1
+	github.com/argoproj/argo-cd v1.3.6
 	github.com/argoproj/pkg v0.0.0-20200102163130-2dd1f3f6b4de // indirect
+	github.com/casbin/casbin v1.9.1 // indirect
+	github.com/gobuffalo/packr v1.30.1 // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
 	github.com/onsi/ginkgo v1.8.0
 	github.com/onsi/gomega v1.5.0

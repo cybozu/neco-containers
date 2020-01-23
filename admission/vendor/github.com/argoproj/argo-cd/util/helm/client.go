@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Masterminds/semver"
 	"github.com/patrickmn/go-cache"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
@@ -25,8 +24,18 @@ import (
 )
 
 var (
+	indexCache = cache.New(5*time.Minute, 5*time.Minute)
 	globalLock = util.NewKeyLock()
 )
+
+type Entry struct {
+	Version string
+	Created time.Time
+}
+
+type Index struct {
+	Entries map[string][]Entry
+}
 
 type Creds struct {
 	Username string
@@ -37,8 +46,8 @@ type Creds struct {
 }
 
 type Client interface {
-	CleanChartCache(chart string, version *semver.Version) error
-	ExtractChart(chart string, version *semver.Version) (string, util.Closer, error)
+	CleanChartCache(chart string, version string) error
+	ExtractChart(chart string, version string) (string, util.Closer, error)
 	GetIndex() (*Index, error)
 }
 
@@ -84,11 +93,11 @@ func (c *nativeHelmChart) helmChartRepoPath() error {
 	return nil
 }
 
-func (c *nativeHelmChart) CleanChartCache(chart string, version *semver.Version) error {
+func (c *nativeHelmChart) CleanChartCache(chart string, version string) error {
 	return os.RemoveAll(c.getChartPath(chart, version))
 }
 
-func (c *nativeHelmChart) ExtractChart(chart string, version *semver.Version) (string, util.Closer, error) {
+func (c *nativeHelmChart) ExtractChart(chart string, version string) (string, util.Closer, error) {
 	err := c.helmChartRepoPath()
 	if err != nil {
 		return "", nil, err
@@ -125,7 +134,7 @@ func (c *nativeHelmChart) ExtractChart(chart string, version *semver.Version) (s
 			return "", nil, err
 		}
 		defer func() { _ = os.RemoveAll(tempDest) }()
-		_, err = helmCmd.Fetch(c.repoURL, chart, version.String(), tempDest, c.creds)
+		_, err = helmCmd.Fetch(c.repoURL, chart, version, tempDest, c.creds)
 		if err != nil {
 			return "", nil, err
 		}
@@ -163,7 +172,7 @@ func (c *nativeHelmChart) ExtractChart(chart string, version *semver.Version) (s
 func (c *nativeHelmChart) GetIndex() (*Index, error) {
 	cachedIndex, found := indexCache.Get(c.repoURL)
 	if found {
-		log.WithFields(log.Fields{"url": c.repoURL}).Debug("index cache hit")
+		log.WithFields(log.Fields{"url": c.repoURL}).Debug("Index cache hit")
 		i := cachedIndex.(Index)
 		return &i, nil
 	}
@@ -197,13 +206,13 @@ func (c *nativeHelmChart) GetIndex() (*Index, error) {
 	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New("failed to get index: " + resp.Status)
+		return nil, errors.New("failed to get Index: " + resp.Status)
 	}
 
 	index := &Index{}
 	err = yaml.NewDecoder(resp.Body).Decode(index)
 
-	log.WithFields(log.Fields{"seconds": time.Since(start).Seconds()}).Info("took to get index")
+	log.WithFields(log.Fields{"seconds": time.Since(start).Seconds()}).Info("took to get Index")
 
 	indexCache.Set(c.repoURL, *index, cache.DefaultExpiration)
 
@@ -236,6 +245,6 @@ func newTLSConfig(creds Creds) (*tls.Config, error) {
 	return tlsConfig, nil
 }
 
-func (c *nativeHelmChart) getChartPath(chart string, version *semver.Version) string {
-	return path.Join(c.repoPath, fmt.Sprintf("%s-%v.tgz", chart, version))
+func (c *nativeHelmChart) getChartPath(chart string, version string) string {
+	return path.Join(c.repoPath, fmt.Sprintf("%s-%s.tgz", chart, version))
 }

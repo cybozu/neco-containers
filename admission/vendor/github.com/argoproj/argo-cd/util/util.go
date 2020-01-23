@@ -16,10 +16,7 @@ import (
 
 var (
 	// location to use for generating temporary files, such as the kubeconfig needed by kubectl
-	TempDir   string
-	NopCloser = NewCloser(func() error {
-		return nil
-	})
+	TempDir string
 )
 
 func init() {

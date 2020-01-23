@@ -95,9 +95,6 @@ message ApplicationCondition {
 
   // Message contains human-readable message indicating details about condition
   optional string message = 2;
-
-  // LastTransitionTime is the time the condition was first observed.
-  optional k8s.io.apimachinery.pkg.apis.meta.v1.Time lastTransitionTime = 3;
 }
 
 // ApplicationDestination contains deployment destination information
@@ -192,9 +189,6 @@ message ApplicationSourceKustomize {
   // NamePrefix is a prefix appended to resources for kustomize apps
   optional string namePrefix = 1;
 
-  // NameSuffix is a suffix appended to resources for kustomize apps
-  optional string nameSuffix = 2;
-
   // Images are kustomize image overrides
   repeated string images = 3;
 
@@ -228,13 +222,6 @@ message ApplicationSpec {
 
   // Infos contains a list of useful information (URLs, email addresses, and plain text) that relates to the application
   repeated Info info = 6;
-
-  // This limits this number of items kept in the apps revision history.
-  // This should only be changed in exceptional circumstances.
-  // Setting to zero will store no history. This will reduce storage used.
-  // Increasing will increase the space used to store the history, so we do not recommend increasing it.
-  // Default is 10.
-  optional int64 revisionHistoryLimit = 7;
 }
 
 // ApplicationStatus contains information about application sync, health status
@@ -307,9 +294,6 @@ message Cluster {
 
   // The server version
   optional string serverVersion = 5;
-
-  // Holds list of namespaces which are accessible in that cluster. Cluster level resources would be ignored if namespace list if not empty.
-  repeated string namespaces = 6;
 }
 
 // ClusterConfig is the configuration attributes. This structure is subset of the go-client
@@ -502,34 +486,6 @@ message ProjectRole {
   repeated string groups = 5;
 }
 
-// RepoCreds holds a repository credentials definition
-message RepoCreds {
-  // URL is the URL that this credentials matches to
-  optional string url = 1;
-
-  // Username for authenticating at the repo server
-  optional string username = 2;
-
-  // Password for authenticating at the repo server
-  optional string password = 3;
-
-  // SSH private key data for authenticating at the repo server (only Git repos)
-  optional string sshPrivateKey = 4;
-
-  // TLS client cert data for authenticating at the repo server
-  optional string tlsClientCertData = 5;
-
-  // TLS client cert key for authenticating at the repo server
-  optional string tlsClientCertKey = 6;
-}
-
-// RepositoryList is a collection of Repositories.
-message RepoCredsList {
-  optional k8s.io.apimachinery.pkg.apis.meta.v1.ListMeta metadata = 1;
-
-  repeated RepoCreds items = 2;
-}
-
 // Repository is a repository holding application configurations
 message Repository {
   // URL of the repo
@@ -569,9 +525,6 @@ message Repository {
 
   // only for Helm repos
   optional string name = 12;
-
-  // Whether credentials were inherited from a credential set
-  optional bool inheritedCreds = 13;
 }
 
 // A RepositoryCertificate is either SSH known hosts entry or TLS certificate
@@ -647,23 +600,13 @@ message ResourceDiff {
 
   optional string name = 4;
 
-  // TargetState contains the JSON serialized resource manifest defined in the Git/Helm
   optional string targetState = 5;
 
-  // TargetState contains the JSON live resource manifest
   optional string liveState = 6;
 
-  // Diff contains the JSON patch between target and live resource
-  // Deprecated: use NormalizedLiveState and PredictedLiveState to render the difference
   optional string diff = 7;
 
   optional bool hook = 8;
-
-  // NormalizedLiveState contains JSON serialized live resource state with applied normalizations
-  optional string normalizedLiveState = 9;
-
-  // PredictedLiveState contains JSON serialized resource state that is calculated based on normalized and target resource state
-  optional string predictedLiveState = 10;
 }
 
 // ResourceIgnoreDifferences contains resource filter and list of json paths which should be ignored during comparison with live state.
