@@ -83,6 +83,28 @@ func setupCommonResources() {
 					},
 				},
 			},
+			{
+				Name:          "vapplication.kb.io",
+				FailurePolicy: &failPolicy,
+				SideEffects:   &sideEffect,
+				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+					CABundle: caBundle,
+					URL:      strPtr("https://127.0.0.1:8443/validate-argoproj-io-application"),
+				},
+				Rules: []admissionregistrationv1beta1.RuleWithOperations{
+					{
+						Operations: []admissionregistrationv1beta1.OperationType{
+							admissionregistrationv1beta1.Create,
+							admissionregistrationv1beta1.Update,
+						},
+						Rule: admissionregistrationv1beta1.Rule{
+							APIGroups:   []string{"argoproj.io"},
+							APIVersions: []string{"v1alpha1"},
+							Resources:   []string{"applications"},
+						},
+					},
+				},
+			},
 		}
 		return nil
 	})

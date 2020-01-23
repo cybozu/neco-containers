@@ -22,6 +22,11 @@ func fillApplication(name, project, repoURL string) (*unstructured.Unstructured,
 	if err != nil {
 		return nil, err
 	}
+	// spec.destination is required
+	err = unstructured.SetNestedMap(app.UnstructuredContent(), map[string]interface{}{}, "spec", "destination")
+	if err != nil {
+		return nil, err
+	}
 	return app, nil
 }
 
@@ -32,7 +37,7 @@ const (
 
 var applicationValidatorConfig = &ArgoCDApplicationValidatorConfig{
 	[]ArgoCDApplicationRule{
-		{adminRepoURL, []string{"default", "system"}},
+		{adminRepoURL, []string{"default", "admin"}},
 	},
 }
 

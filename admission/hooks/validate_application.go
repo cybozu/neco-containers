@@ -28,6 +28,8 @@ func NewArgoCDApplicationValidator(c client.Client, dec *admission.Decoder, conf
 }
 
 func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	// We cannot use Application in "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
+	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
 	app := &unstructured.Unstructured{}
 	app.SetGroupVersionKind(schema.GroupVersionKind{Group: "argoproj.io", Kind: "Application", Version: "v1alpha1"})
 	err := v.decoder.Decode(req, app)

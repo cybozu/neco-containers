@@ -26,6 +26,9 @@ func init() {
 	metav1.AddToGroupVersion(scheme, gv)
 
 	_ = contourv1.AddToScheme(scheme)
+
+	// We cannot use AddTooScheme() of argoproj/argo-cd
+	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPort int) error {
