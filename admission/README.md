@@ -7,6 +7,21 @@ neco-admission
 
 It has the following webhooks / controllers.
 
+ArgoCDApplicationValidator
+--------------------------
+
+ArgoCD's [Application resource](https://github.com/argoproj/argo-cd/blob/master/manifests/crds/application-crd.yaml)
+can specify an [AppProject resource](https://github.com/argoproj/argo-cd/blob/master/manifests/crds/appproject-crd.yaml)
+by a `spec.project` property.
+The ability of the Application is restricted by the AppProject it belongs to.
+
+Each application team should specify appropriate `spec.project`s for
+their applications.
+To enforce this, `ArgoCDApplicationValidator` validates Application resources.
+
+See the [document](docs/configuration.md#argocdapplicationvalidator) for
+the configuration of `ArgoCDApplicationValitor`.
+
 CalicoNetworkPolicyValidator
 ----------------------------
 
