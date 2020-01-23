@@ -2,11 +2,13 @@ package hooks
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
-	argocd "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -26,25 +28,33 @@ func NewArgoCDApplicationValidator(c client.Client, dec *admission.Decoder, conf
 }
 
 func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	app := &argocd.Application{}
+	app := &unstructured.Unstructured{}
+	app.SetGroupVersionKind(schema.GroupVersionKind{Group: "argoproj.io", Kind: "Application", Version: "v1alpha1"})
 	err := v.decoder.Decode(req, app)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
-
-	// Check if spec.project is appropriate for the repository of the application.
-	projects := v.findProjects(app.Spec.Source.RepoURL)
-	if len(projects) == 0 {
-		return admission.Denied(fmt.Sprintf("rule not found for the repository %q", app.Spec.Source.RepoURL))
+	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
+	if !found {
+		return admission.Errored(http.StatusBadRequest, errors.New("spec.source.repoURL not found"))
+	}
+	if err != nil {
+		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.rource.repoURL; %w", err))
+	}
+	project, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "project")
+	if !found {
+		return admission.Errored(http.StatusBadRequest, errors.New("spec.project not found"))
+	}
+	if err != nil {
+		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.project; %w", err))
 	}
 
-	for _, p := range projects {
-		if p == app.Spec.Project {
+	for _, p := range v.findProjects(repoURL) {
+		if p == project {
 			return admission.Allowed("ok")
 		}
 	}
-
-	return admission.Denied(fmt.Sprintf("project %q is not allowed for the repository %q", app.Spec.Project, app.Spec.Source.RepoURL))
+	return admission.Denied(fmt.Sprintf("project %q is not allowed for the repository %q", project, repoURL))
 }
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {

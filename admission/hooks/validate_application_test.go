@@ -3,18 +3,26 @@ package hooks
 import (
 	"testing"
 
-	"github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func fillApplication(name, project, repoURL string) *v1alpha1.Application {
-	app := &v1alpha1.Application{}
-	app.Name = name
-	app.Namespace = "default"
-	app.Spec.Project = project
-	app.Spec.Source.RepoURL = repoURL
-	return app
+func fillApplication(name, project, repoURL string) (*unstructured.Unstructured, error) {
+	app := &unstructured.Unstructured{}
+	app.SetGroupVersionKind(schema.GroupVersionKind{Group: "argoproj.io", Kind: "Application", Version: "v1alpha1"})
+	app.SetName(name)
+	app.SetNamespace("default")
+	err := unstructured.SetNestedField(app.UnstructuredContent(), project, "spec", "project")
+	if err != nil {
+		return nil, err
+	}
+	err = unstructured.SetNestedField(app.UnstructuredContent(), repoURL, "spec", "source", "repoURL")
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
 }
 
 const (
@@ -30,21 +38,27 @@ var applicationValidatorConfig = &ArgoCDApplicationValidatorConfig{
 
 var _ = Describe("validate Application WebHook with ", func() {
 	It("should allow admin App on admin repo", func() {
-		err := k8sClient.Create(testCtx, fillApplication("test1", "admin", adminRepoURL))
+		app, err := fillApplication("test1", "admin", adminRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should deny admin App on tenant repo", func() {
-		err := k8sClient.Create(testCtx, fillApplication("test2", "default", tenantRepoURL))
+		app, err := fillApplication("test2", "admin", tenantRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
 		Expect(err).To(HaveOccurred())
 	})
 
 	It("should deny updating App with invalid repoURL", func() {
-		app := fillApplication("test3", "admin", adminRepoURL)
-		err := k8sClient.Create(testCtx, app)
+		app, err := fillApplication("test3", "admin", adminRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 
-		app.Spec.Source.RepoURL = tenantRepoURL
+		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantRepoURL, "spec", "source", "repoURL")
+		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
 		Expect(err).To(HaveOccurred())
 	})

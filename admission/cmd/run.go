@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	argocdv1alpha1 "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	"github.com/cybozu/neco-containers/admission/hooks"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -22,7 +21,6 @@ func init() {
 
 	// +kubebuilder:scaffold:scheme
 	_ = contourv1.AddToScheme(scheme)
-	_ = argocdv1alpha1.AddToScheme(scheme)
 }
 
 func run(addr string, port int, conf *hooks.Config) error {

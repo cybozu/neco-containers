@@ -3,7 +3,6 @@ package hooks
 import (
 	"path/filepath"
 
-	argocdv1alpha1 "github.com/argoproj/argo-cd/pkg/apis/application/v1alpha1"
 	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -27,7 +26,6 @@ func init() {
 	metav1.AddToGroupVersion(scheme, gv)
 
 	_ = contourv1.AddToScheme(scheme)
-	_ = argocdv1alpha1.AddToScheme(scheme)
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPort int) error {
