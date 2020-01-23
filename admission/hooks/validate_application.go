@@ -35,7 +35,7 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 	// Check if spec.project is appropriate for the repository of the application.
 	projects := v.findProjects(app.Spec.Source.RepoURL)
 	if len(projects) == 0 {
-		return admission.Allowed("ok")
+		return admission.Denied(fmt.Sprintf("rule not found for the repository %q", app.Spec.Source.RepoURL))
 	}
 
 	for _, p := range projects {
@@ -44,7 +44,7 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 		}
 	}
 
-	return admission.Denied(fmt.Sprintf("project %q is not allowed for repository %q", app.Spec.Project, app.Spec.Source.RepoURL))
+	return admission.Denied(fmt.Sprintf("project %q is not allowed for the repository %q", app.Spec.Project, app.Spec.Source.RepoURL))
 }
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {

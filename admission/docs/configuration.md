@@ -13,7 +13,8 @@ The configuration of `ArgoCDApplicationValidator` is a map with the following ke
 | ----- | -------- | ------------------------------------------ |
 | rules | \[\]rule | A list of rules to enforce `spec.project`. |
 
-Each rule represents the restriction on the applications in a certain repository.
+Each rule represents the restriction on the applications in a certain repository.  
+If neco-admission has no rule for a given App's repoURL, neco-admission denies the API request.
 
 | Name       | Type       | Description                                                               |
 | ---------- | ---------- | ------------------------------------------------------------------------- |
