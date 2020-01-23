@@ -23,7 +23,7 @@ func init() {
 	_ = contourv1.AddToScheme(scheme)
 }
 
-func run(addr string, port int) error {
+func run(addr string, port int, conf *hooks.Config) error {
 	ctrl.SetLogger(zap.Logger(config.development))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
@@ -48,6 +48,7 @@ func run(addr string, port int) error {
 		wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass))
 	}
 	wh.Register("/validate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyValidator(mgr.GetClient(), dec))
+	wh.Register("/validate-argoproj-io-application", hooks.NewArgoCDApplicationValidator(mgr.GetClient(), dec, &conf.ArgoCDApplicationValidatorConfig))
 
 	// +kubebuilder:scaffold:builder
 

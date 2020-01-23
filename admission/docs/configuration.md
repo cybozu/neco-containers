@@ -7,7 +7,7 @@ This collection is indexed by webhooks names.
 ArgoCDApplicationValidator
 -------------------------
 
-The configuration of `ArgoCDApplicationValitor` is a map with the following keys.
+The configuration of `ArgoCDApplicationValidator` is a map with the following keys.
 
 | Name  | Type     | Description                                |
 | ----- | -------- | ------------------------------------------ |
