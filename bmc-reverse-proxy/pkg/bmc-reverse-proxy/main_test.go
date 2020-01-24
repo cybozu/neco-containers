@@ -15,11 +15,32 @@ func TestDirectInner(t *testing.T) {
 		expectedHost string
 	}{
 		{
-			name:         "ResolveIPAddressFromHost",
+			name:         "ResolveIPAddressFromHost1",
 			host:         "cybozu.com",
 			inner:        80,
 			resolveMap:   map[string]string{"cybozu": "10.1.2.3"},
 			expectedHost: "10.1.2.3:80",
+		},
+		{
+			name:         "ResolveIPAddressFromHost2",
+			host:         "123ABCD.bmc.stage0.cybozu-ne.co",
+			inner:        443,
+			resolveMap:   map[string]string{"123ABCD": "10.1.2.3"},
+			expectedHost: "10.1.2.3:443",
+		},
+		{
+			name:         "ResolveIPAddressFromLowerCaseNameHost",
+			host:         "123abcd.bmc.stage0.cybozu-ne.co",
+			inner:        443,
+			resolveMap:   map[string]string{"123abcd": "10.1.2.3"},
+			expectedHost: "10.1.2.3:443",
+		},
+		{
+			name:         "ResolveIPAddressFromLowerCaseNameHostWithUpperCaseName",
+			host:         "123abcd.bmc.stage0.cybozu-ne.co",
+			inner:        443,
+			resolveMap:   map[string]string{"123ABCD": "10.1.2.3"},
+			expectedHost: "10.1.2.3:443",
 		},
 		{
 			name:         "ResolveIPAddressFromHostWithEnvironment",
