@@ -53,6 +53,9 @@ func directorToInner(request *http.Request, inner uint16, resolveMap map[string]
 	hostname := getHostname(request.Host)
 	address, ok := resolveMap[hostname]
 	if !ok {
+		address, ok = resolveMap[strings.ToUpper(hostname)]
+	}
+	if !ok {
 		log.Error("failed to resolve hostname", map[string]interface{}{
 			"hostname": hostname,
 		})
