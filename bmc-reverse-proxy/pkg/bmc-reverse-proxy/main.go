@@ -53,15 +53,14 @@ func directorToInner(request *http.Request, inner uint16, resolveMap map[string]
 	hostname := getHostname(request.Host)
 	address, ok := resolveMap[hostname]
 	if !ok {
-		address2, ok2 := resolveMap[strings.ToUpper(hostname)]
-		if !ok2 {
-			log.Error("failed to resolve hostname", map[string]interface{}{
-				"hostname": hostname,
-			})
-			// Director cannot return an error. Set an invalid address to fail.
-			address2 = "0.0.0.0"
-		}
-		address = address2
+		address, ok = resolveMap[strings.ToUpper(hostname)]
+	}
+	if !ok {
+		log.Error("failed to resolve hostname", map[string]interface{}{
+			"hostname": hostname,
+		})
+		// Director cannot return an error. Set an invalid address to fail.
+		address = "0.0.0.0"
 	}
 	request.URL.Host = fmt.Sprintf("%s:%d", address, inner)
 	request.URL.Scheme = "https"
