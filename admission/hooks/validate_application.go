@@ -37,18 +37,18 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
-	if !found {
-		return admission.Errored(http.StatusBadRequest, errors.New("spec.source.repoURL not found"))
-	}
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.rource.repoURL; %w", err))
 	}
-	project, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "project")
 	if !found {
-		return admission.Errored(http.StatusBadRequest, errors.New("spec.project not found"))
+		return admission.Errored(http.StatusBadRequest, errors.New("spec.source.repoURL not found"))
 	}
+	project, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "project")
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.project; %w", err))
+	}
+	if !found {
+		return admission.Errored(http.StatusBadRequest, errors.New("spec.project not found"))
 	}
 
 	for _, p := range v.findProjects(repoURL) {
