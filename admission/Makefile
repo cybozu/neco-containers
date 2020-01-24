@@ -4,6 +4,7 @@ KUBEBUILDER_VERSION = 2.2.0
 CTRLTOOLS_VERSION = 0.2.4
 CALICO_VERSION = 3.10
 CONTOUR_VERSION = 1.0.1
+ARGOCD_VERSION = 1.3.6
 
 SUDO=sudo
 GOOS := $(shell go env GOOS)
@@ -17,7 +18,7 @@ all: build
 test: crds
 	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
 	test -z "$$(golint $$(go list ./... | grep -v /vendor/) | grep -v '/mtest/.*: should not use dot imports' | tee /dev/stderr)"
-	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
+	test -z "$$(nilerr $$(go list ./... | grep -v /vendor/) 2>&1 | tee /dev/stderr)"
 	test -z "$$(restrictpkg -packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	ineffassign .
 	go test -race -v ./...
@@ -47,6 +48,7 @@ crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
+	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 
 clean:
 	rm -rf bin

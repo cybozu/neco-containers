@@ -36,6 +36,24 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-argoproj-io-application
+  failurePolicy: Fail
+  name: vapplication.kb.io
+  rules:
+  - apiGroups:
+    - argoproj.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - applications
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-projectcontour-io-httpproxy
   failurePolicy: Fail
   name: vhttpproxy.kb.io

@@ -26,6 +26,9 @@ func init() {
 	metav1.AddToGroupVersion(scheme, gv)
 
 	_ = contourv1.AddToScheme(scheme)
+
+	// We cannot use AddToScheme() of argoproj/argo-cd
+	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPort int) error {
@@ -53,6 +56,7 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPo
 	wh.Register("/validate-projectcalico-org-networkpolicy", NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	wh.Register("/mutate-projectcontour-io-httpproxy", NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
 	wh.Register("/validate-projectcontour-io-httpproxy", NewContourHTTPProxyValidator(mgr.GetClient(), dec))
+	wh.Register("/validate-argoproj-io-application", NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
 
 	if err := mgr.Start(stopCh); err != nil {
 		return err

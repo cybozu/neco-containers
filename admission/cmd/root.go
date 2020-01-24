@@ -3,12 +3,15 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
 
+	"github.com/cybozu/neco-containers/admission/hooks"
 	"github.com/spf13/cobra"
 	"k8s.io/klog"
+	"sigs.k8s.io/yaml"
 )
 
 var config struct {
@@ -18,6 +21,7 @@ var config struct {
 	development bool
 
 	httpProxyDefaultClass string
+	configPath            string
 }
 
 var rootCmd = &cobra.Command{
@@ -34,8 +38,25 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid webhook address: %s, %v", config.webhookAddr, err)
 		}
-		return run(h, numPort)
+		conf, err := parseConfig(config.configPath)
+		if err != nil {
+			return err
+		}
+		return run(h, numPort, conf)
 	},
+}
+
+func parseConfig(configPath string) (*hooks.Config, error) {
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	var conf hooks.Config
+	err = yaml.Unmarshal(data, &conf)
+	if err != nil {
+		return nil, err
+	}
+	return &conf, nil
 }
 
 // Execute executes the command.
@@ -53,6 +74,7 @@ func init() {
 	fs.StringVar(&config.certDir, "cert-dir", "", "certificate directory")
 	fs.BoolVar(&config.development, "development", false, "Use development logger config")
 	fs.StringVar(&config.httpProxyDefaultClass, "httpproxy-default-class", "", "Default Ingress class of HTTPProxy")
+	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)
