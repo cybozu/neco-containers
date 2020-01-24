@@ -27,7 +27,7 @@ func init() {
 
 	_ = contourv1.AddToScheme(scheme)
 
-	// We cannot use AddTooScheme() of argoproj/argo-cd
+	// We cannot use AddToScheme() of argoproj/argo-cd
 	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
 }
 

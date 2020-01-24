@@ -38,7 +38,7 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 	}
 	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
 	if err != nil {
-		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.rource.repoURL; %w", err))
+		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.resource.repoURL; %w", err))
 	}
 	if !found {
 		return admission.Errored(http.StatusBadRequest, errors.New("spec.source.repoURL not found"))
