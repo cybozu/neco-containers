@@ -79,6 +79,86 @@ jobs:
                 docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
                 docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
             fi
+  build-ceph:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      container-image:
+        type: string
+      dir:
+        type: string
+        default: ""
+      attach:
+        type: boolean
+        default: false
+    description: "build << parameters.container-image >>"
+    working_directory: /app
+    docker:
+      - image: docker:stable
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - when:
+          condition: << parameters.attach >>
+          steps:
+            - attach_workspace:
+                at: /app/<< parameters.dir >>/workspace
+      - setup_remote_docker
+      - run:
+          name: Install tools
+          command: |
+            apk add --no-cache curl jq
+      - run:
+          name: Check TAG files
+          command: |
+            c="$(./tag_exists << parameters.container-image >> << parameters.dir >>)"
+            if [ "$c" = ng ]; then
+                echo << parameters.container-image >> > BUILDS
+            fi
+      - run:
+          name: Lint Dockerfile
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            docker run --rm -i hadolint/hadolint /bin/hadolint - --ignore DL3008 --ignore DL3016 < $dir/Dockerfile
+      - run:
+          name: Build images
+          no_output_timeout: 20m
+          command: |
+            if [ ! -f BUILDS ]; then
+                echo "no need to build << parameters.container-image >>."
+                exit 0
+            fi
+            echo "building << parameters.container-image >> ..."
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest $dir
+      - deploy:
+          name: Push Docker image to Quay.io
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            echo
+            echo "pushing << parameters.container-image >> ..."
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            TAG=$(cat $dir/TAG)
+            docker tag quay.io/cybozu/<< parameters.container-image >>:latest quay.io/cybozu/<< parameters.container-image >>:$TAG
+            docker push quay.io/cybozu/<< parameters.container-image >>:$TAG
+            if echo $TAG | grep -q -e - ; then
+                echo ===== Skip pushing branch tags for pre-release $TAG =====
+                exit 0
+            fi
+            if [ -f $dir/BRANCH ]; then
+                BRANCH=$(cat $dir/BRANCH)
+                docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
+                docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
+            fi
   test-go-sources:
     parameters:
       directory:
@@ -242,138 +322,141 @@ jobs:
 workflows:
   main:
     jobs:
-      - test-cke-tools-scripts
-      - test-go-sources:
-          name: test-go-sources-bmc-reverse-proxy
-          directory: bmc-reverse-proxy
-      - test-go-sources:
-          name: test-go-sources-cke-tools
-          directory: cke-tools/src
-      - test-local-pv-provisioner
-      - test-go-sources:
-          name: test-go-sources-machines-endpoints
-          directory: machines-endpoints
-      - test-go-sources:
-          name: test-go-sources-restrictpkg
-          directory: golang/restrictpkg
-      - test-go-sources:
-          name: test-go-sources-testhttpd
-          directory: testhttpd/src
-      - build:
-          name: build-argocd
-          container-image: argocd
-      - build:
-          name: build-bird
-          container-image: bird
-      - build:
-          name: build-bmc-reverse-proxy
-          container-image: bmc-reverse-proxy
-      - build:
-          name: build-calico
-          container-image: calico
-      - build-cert-manager:
-          version: 0.12.0
-      - build:
-          name: build-cert-manager-container
-          container-image: cert-manager
-          attach: true
-          dir: cert-manager
-          requires:
-            - build-cert-manager
-      - build:
-          name: build-chrony
-          container-image: chrony
-      - build:
-          name: build-cke-tools
-          container-image: cke-tools
-      - build:
-          name: buiild-contour
-          container-image: contour
-      - build:
-          name: build-coredns
-          container-image: coredns
-      - build:
-          name: build-dex
-          container-image: dex
-      - build:
-          name: build-dnsmasq
-          container-image: dnsmasq
-      - build-envoy:
-          version: 1.12.2
-      - build:
-          name: build-envoy-container
-          container-image: envoy
-          attach: true
-          dir: envoy
-          requires:
-            - build-envoy
-      - build:
-          name: build-etcd
-          container-image: etcd
-      - build:
-          name: build-external-dns
-          container-image: external-dns
-      - build:
-          name: build-golang
-          container-image: golang
-      - build:
-          name: build-grafana
-          container-image: grafana
-      - build:
-          name: build-hyperkube
-          container-image: hyperkube
-      - build:
-          name: build-kind-node
-          container-image: kind-node
-      - build:
-          name: build-kube-state-metrics
-          container-image: kube-state-metrics
-      - build:
-          name: build-local-pv-provisioner
-          container-image: local-pv-provisioner
-          requires:
-            - test-local-pv-provisioner
-      - build:
-          name: build-machines-endpoints
-          container-image: machines-endpoints
-      - build:
-          name: build-metallb
-          container-image: metallb
-      - build:
-          name: build-pause
-          container-image: pause
-      - build:
-          name: build-prometheus
-          container-image: prometheus
-      - build:
-          name: build-redis
-          container-image: redis
-      - build:
-          name: build-rook
-          container-image: rook
-      - build:
-          name: build-serf
-          container-image: serf
-      - build:
-          name: build-squid
-          container-image: squid
-      - build:
-          name: build-teleport
-          container-image: teleport
-      - build:
-          name: build-testhttpd
-          container-image: testhttpd
-      - build:
-          name: build-unbound
-          container-image: unbound
-      - build-admission
-      - build:
-          name: build-admission-image
-          container-image: neco-admission
-          dir: admission
-          attach: true
-          requires:
-            - build-admission
-      - build:
-          name: build-gorush
-          container-image: gorush
+      # - test-cke-tools-scripts
+      # - test-go-sources:
+      #     name: test-go-sources-bmc-reverse-proxy
+      #     directory: bmc-reverse-proxy
+      # - test-go-sources:
+      #     name: test-go-sources-cke-tools
+      #     directory: cke-tools/src
+      # - test-local-pv-provisioner
+      # - test-go-sources:
+      #     name: test-go-sources-machines-endpoints
+      #     directory: machines-endpoints
+      # - test-go-sources:
+      #     name: test-go-sources-restrictpkg
+      #     directory: golang/restrictpkg
+      # - test-go-sources:
+      #     name: test-go-sources-testhttpd
+      #     directory: testhttpd/src
+      # - build:
+      #     name: build-argocd
+      #     container-image: argocd
+      # - build:
+      #     name: build-bird
+      #     container-image: bird
+      # - build:
+      #     name: build-bmc-reverse-proxy
+      #     container-image: bmc-reverse-proxy
+      # - build:
+      #     name: build-calico
+      #     container-image: calico
+      # - build-cert-manager:
+      #     version: 0.12.0
+      # - build:
+      #     name: build-cert-manager-container
+      #     container-image: cert-manager
+      #     attach: true
+      #     dir: cert-manager
+      #     requires:
+      #       - build-cert-manager
+      # - build:
+      #     name: build-chrony
+      #     container-image: chrony
+      # - build:
+      #     name: build-cke-tools
+      #     container-image: cke-tools
+      # - build:
+      #     name: buiild-contour
+      #     container-image: contour
+      # - build:
+      #     name: build-coredns
+      #     container-image: coredns
+      # - build:
+      #     name: build-dex
+      #     container-image: dex
+      # - build:
+      #     name: build-dnsmasq
+      #     container-image: dnsmasq
+      # - build-envoy:
+      #     version: 1.12.2
+      # - build:
+      #     name: build-envoy-container
+      #     container-image: envoy
+      #     attach: true
+      #     dir: envoy
+      #     requires:
+      #       - build-envoy
+      # - build:
+      #     name: build-etcd
+      #     container-image: etcd
+      # - build:
+      #     name: build-external-dns
+      #     container-image: external-dns
+      # - build:
+      #     name: build-golang
+      #     container-image: golang
+      # - build:
+      #     name: build-grafana
+      #     container-image: grafana
+      # - build:
+      #     name: build-hyperkube
+      #     container-image: hyperkube
+      # - build:
+      #     name: build-kind-node
+      #     container-image: kind-node
+      # - build:
+      #     name: build-kube-state-metrics
+      #     container-image: kube-state-metrics
+      # - build:
+      #     name: build-local-pv-provisioner
+      #     container-image: local-pv-provisioner
+      #     requires:
+      #       - test-local-pv-provisioner
+      # - build:
+      #     name: build-machines-endpoints
+      #     container-image: machines-endpoints
+      # - build:
+      #     name: build-metallb
+      #     container-image: metallb
+      # - build:
+      #     name: build-pause
+      #     container-image: pause
+      # - build:
+      #     name: build-prometheus
+      #     container-image: prometheus
+      # - build:
+      #     name: build-redis
+      #     container-image: redis
+      # - build:
+      #     name: build-rook
+      #     container-image: rook
+      # - build:
+      #     name: build-serf
+      #     container-image: serf
+      # - build:
+      #     name: build-squid
+      #     container-image: squid
+      # - build:
+      #     name: build-teleport
+      #     container-image: teleport
+      # - build:
+      #     name: build-testhttpd
+      #     container-image: testhttpd
+      # - build:
+      #     name: build-unbound
+      #     container-image: unbound
+      # - build-admission
+      # - build:
+      #     name: build-admission-image
+      #     container-image: neco-admission
+      #     dir: admission
+      #     attach: true
+      #     requires:
+      #       - build-admission
+      # - build:
+      #     name: build-gorush
+      #     container-image: gorush
+      - build-ceph:
+          name: build-ceph
+          container-image: ceph
