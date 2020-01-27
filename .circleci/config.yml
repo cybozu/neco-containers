@@ -377,3 +377,6 @@ workflows:
       - build:
           name: build-gorush
           container-image: gorush
+      - build:
+          name: build-metrics-server
+          container-image: metrics-server
