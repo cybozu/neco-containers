@@ -2,7 +2,7 @@
 github.com/cybozu-go/log
 # github.com/cybozu-go/netutil v1.2.0
 github.com/cybozu-go/netutil
-# github.com/cybozu-go/well v1.9.0
+# github.com/cybozu-go/well v1.10.0
 github.com/cybozu-go/well
 # github.com/davecgh/go-spew v1.1.1
 github.com/davecgh/go-spew/spew

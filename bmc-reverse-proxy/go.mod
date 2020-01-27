@@ -4,7 +4,7 @@ go 1.13
 
 require (
 	github.com/cybozu-go/log v1.5.0
-	github.com/cybozu-go/well v1.9.0
+	github.com/cybozu-go/well v1.10.0
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/json-iterator/go v1.1.8 // indirect
