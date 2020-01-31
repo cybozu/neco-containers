@@ -400,6 +400,8 @@ workflows:
       - build:
           name: build-rook
           container-image: rook
+          requires:
+            - build-ceph-container
       - build:
           name: build-serf
           container-image: serf
