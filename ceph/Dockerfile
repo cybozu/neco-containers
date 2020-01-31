@@ -29,11 +29,10 @@ RUN apt-get update && apt-get install --no-install-recommends -y \
         /usr/share/{bash-completion,pkgconfig/bash-completion.pc} \
         /var/log/* \
         /var/tmp/* && \
-    find  / -xdev \(-name "*.pyc"\) -o \(-name "*.pyo"\) -exec rm -f {} \;
+    find  / -xdev \(-name "*.pyc"\) -o \(-name "*.pyo"\) -exec rm -f {} \; && \
+    ln -s /sbin/sgdisk /usr/sbin/sgdisk && \
+    mkdir -p /usr/local/share/doc/ceph
 
-RUN ln -s /sbin/sgdisk /usr/sbin/sgdisk
-
-RUN mkdir -p /usr/local/share/doc/ceph
 COPY workspace/COPYING* /usr/local/share/doc/ceph/
 
 # Stage2: runtime container with squashing layers
