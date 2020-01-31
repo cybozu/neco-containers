@@ -115,7 +115,12 @@ jobs:
       - run:
           name: Build Ceph packages
           command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
+            if [ ! -f BUILDS ]; then
+              # fake for the next step
+              cd src/workspace
+              touch COPYING
+              exit 0
+            fi
             cd src/ceph
             sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
             sed -i -e 's/usr\/share\/java\/libcephfs-test.jar//' debian/ceph-test.install
