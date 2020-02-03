@@ -2,7 +2,6 @@
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
 ARG METRICS_SERVER_VERSION=0.3.6
-ARG CGO_ENABLED=0
 # Use workdir `kubernetes-incubator` because `kubernetes-incubator` is used for
 # import paths instead of `kubernetes-sigs` in metrics-server.
 WORKDIR /go/src/github.com/kubernetes-incubator
