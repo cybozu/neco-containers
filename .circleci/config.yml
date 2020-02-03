@@ -394,6 +394,9 @@ workflows:
           name: build-metallb
           container-image: metallb
       - build:
+          name: build-metrics-server
+          container-image: metrics-server
+      - build:
           name: build-pause
           container-image: pause
       - build:
