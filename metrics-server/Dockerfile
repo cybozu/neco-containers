@@ -2,11 +2,15 @@
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
 ARG METRICS_SERVER_VERSION=0.3.6
-ARG CGO_ENABLED=0
+# Use workdir `kubernetes-incubator` because `kubernetes-incubator` is used for
+# import paths instead of `kubernetes-sigs` in metrics-server.
+WORKDIR /go/src/github.com/kubernetes-incubator
+# Need to clone with git because tar-ball does not contain `.git` directory and
+# `.git` is needed in the building sequence.
+RUN git clone https://github.com/kubernetes-sigs/metrics-server
+
 WORKDIR /go/src/github.com/kubernetes-incubator/metrics-server
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -fsSL https://github.com/kubernetes-sigs/metrics-server/archive/v${METRICS_SERVER_VERSION}.tar.gz | \
-    tar --strip-components=1 -xzf - && \
+RUN git checkout v${METRICS_SERVER_VERSION} && \
     make all
 
 # Runtime stage
