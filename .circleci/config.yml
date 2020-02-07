@@ -435,7 +435,7 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build-ceph:
-          version: 14.2.6
+          version: 15.1.0
       - build:
           name: build-ceph-container
           container-image: ceph

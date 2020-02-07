@@ -8,8 +8,10 @@ ENV DEBIAN_FRONTEND noninteractive
 
 COPY workspace/*.deb /tmp/
 
-RUN apt-get update && apt-get install --no-install-recommends -y \
-        jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
+RUN apt-get update && apt-get install --no-install-recommends -y software-properties-common && \
+    add-apt-repository ppa:ubuntu-toolchain-r/test && \
+    apt-get update && apt-get install --no-install-recommends -y \
+        libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
         /tmp/*.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
