@@ -37,7 +37,7 @@ COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/monitoring /etc/c
 COPY --from=build ${ROOK_DIR}/cluster/olm/ceph/templates /etc/ceph-csv-templates
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /tini
-RUN chmod +x /tini
+RUN chmod 755 /tini
 
 USER 10000:10000
 
