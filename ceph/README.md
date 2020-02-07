@@ -17,10 +17,10 @@ Reference for updating image
 This image based on the Dockerfile produced by `ceph/ceph-container`.
 You can make the Dockerfile with following commands:
 ```console
-git clone git@github.com/ceph/ceph-container.git
+git clone git@github.com:ceph/ceph-container.git
 cd ceph-container
-make FLAVORS=luminous,centos,7 stage
-# Then the Dockerfile will be located at /staging/luminous-centos-7-x86_64/daemon-base
+make FLAVORS=luminous,debian,9 stage
+# Then the Dockerfile will be located at ./staging/luminous-debian-9-x86_64/daemon-base
 ```
 
 [Ceph]: https://github.com/ceph/ceph
