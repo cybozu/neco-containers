@@ -1,7 +1,6 @@
 # Ceph container image
 
-# Stage1: setup environment & install
-FROM quay.io/cybozu/ubuntu:18.04 AS build
+FROM quay.io/cybozu/ubuntu:18.04
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
@@ -36,9 +35,3 @@ RUN apt-get update && apt-get install --no-install-recommends -y software-proper
     mkdir -p /usr/local/share/doc/ceph
 
 COPY workspace/COPYING* /usr/local/share/doc/ceph/
-
-# Stage2: runtime container with squashing layers
-
-FROM scratch
-
-COPY --from=build / /
