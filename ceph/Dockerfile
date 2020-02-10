@@ -7,7 +7,8 @@ ENV DEBIAN_FRONTEND noninteractive
 
 COPY workspace/*.deb /tmp/
 
-RUN apt-get update && apt-get install --no-install-recommends -y software-properties-common && \
+RUN mkdir -p /var/run/ceph && \
+    apt-get update && apt-get install --no-install-recommends -y software-properties-common && \
     add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get update && apt-get install --no-install-recommends -y \
         libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
