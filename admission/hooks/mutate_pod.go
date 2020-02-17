@@ -35,9 +35,18 @@ func (m *podMutator) Handle(ctx context.Context, req admission.Request) admissio
 	}
 
 	poPatched := po.DeepCopy()
-	for ic, c := range po.Spec.Containers {
-		if m.isTargetContainer(c) {
-			poPatched = m.appendMountTmp(ic, *po)
+	for _, co := range po.Spec.InitContainers {
+		if m.isMountedTmp(co) {
+			volumeName := m.generateVolumeName(co.Name, po.Spec.Volumes)
+			m.appendEmptyDir(volumeName, poPatched)
+			m.appendMountTmp(volumeName, &co)
+		}
+	}
+	for _, co := range po.Spec.Containers {
+		if m.isMountedTmp(co) {
+			volumeName := m.generateVolumeName(co.Name, po.Spec.Volumes)
+			m.appendEmptyDir(volumeName, poPatched)
+			m.appendMountTmp(volumeName, &co)
 		}
 	}
 
@@ -48,7 +57,7 @@ func (m *podMutator) Handle(ctx context.Context, req admission.Request) admissio
 	return admission.PatchResponseFromRaw(req.Object.Raw, marshaled)
 }
 
-func (m *podMutator) isTargetContainer(c v1.Container) bool {
+func (m *podMutator) isMountedTmp(c v1.Container) bool {
 	for _, mount := range c.VolumeMounts {
 		if mount.MountPath == "/tmp" || strings.HasPrefix(mount.MountPath, "/tmp/") {
 			return false
@@ -57,23 +66,20 @@ func (m *podMutator) isTargetContainer(c v1.Container) bool {
 	return true
 }
 
-func (m *podMutator) appendMountTmp(indexContainer int, po v1.Pod) *v1.Pod {
-	volumeName := m.generateVolumeName(po.Spec.Containers[indexContainer].Name, po.Spec.Volumes)
-
-	po.Spec.Volumes = append(po.Spec.Volumes, v1.Volume{
-		Name:         volumeName,
-		VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
-	})
-	po.Spec.Containers[indexContainer].VolumeMounts = append(po.Spec.Containers[indexContainer].VolumeMounts,
-		v1.VolumeMount{Name: volumeName, MountPath: "/tmp"})
-	return &po
-}
-
 func (m *podMutator) hashString(name string) string {
 	h := sha1.New()
 	h.Write([]byte(name))
 	bs := h.Sum(nil)
 	return fmt.Sprintf("%x", bs)
+}
+
+func (m *podMutator) isUniqueVolumeName(volumes []v1.Volume, name string) bool {
+	for _, v := range volumes {
+		if v.Name == name {
+			return false
+		}
+	}
+	return true
 }
 
 func (m *podMutator) generateVolumeName(containerName string, volumes []v1.Volume) string {
@@ -85,11 +91,13 @@ func (m *podMutator) generateVolumeName(containerName string, volumes []v1.Volum
 	}
 }
 
-func (m *podMutator) isUniqueVolumeName(volumes []v1.Volume, name string) bool {
-	for _, v := range volumes {
-		if v.Name == name {
-			return false
-		}
-	}
-	return true
+func (m *podMutator) appendEmptyDir(volumeName string, po *v1.Pod) {
+	po.Spec.Volumes = append(po.Spec.Volumes, v1.Volume{
+		Name:         volumeName,
+		VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{}},
+	})
+}
+
+func (m *podMutator) appendMountTmp(volumeName string, co *v1.Container) {
+	co.VolumeMounts = append(co.VolumeMounts, v1.VolumeMount{Name: volumeName, MountPath: "/tmp"})
 }
