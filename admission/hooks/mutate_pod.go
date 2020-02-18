@@ -69,12 +69,7 @@ func (m *podMutator) isMountedTmp(co *corev1.Container) bool {
 }
 
 func (m *podMutator) hashString(name string) string {
-	const maxHashLen int = 16
-	hash := hex.EncodeToString(sha1.New().Sum([]byte(name)))
-	if len(hash) > maxHashLen {
-		return hash[:maxHashLen]
-	}
-	return hash
+	return hex.EncodeToString(sha1.New().Sum([]byte(name)))
 }
 
 func (m *podMutator) isUniqueVolumeName(volumes []corev1.Volume, name string) bool {
