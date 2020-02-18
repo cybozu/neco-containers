@@ -53,6 +53,7 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, webhookHost string, webhookPo
 
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
+	wh.Register("/mutate-pod", NewPodMutator(mgr.GetClient(), dec))
 	wh.Register("/validate-projectcalico-org-networkpolicy", NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	wh.Register("/mutate-projectcontour-io-httpproxy", NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
 	wh.Register("/validate-projectcontour-io-httpproxy", NewContourHTTPProxyValidator(mgr.GetClient(), dec))

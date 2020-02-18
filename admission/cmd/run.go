@@ -43,6 +43,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	// admission.NewDecoder never returns non-nil error
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
+	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec))
 	wh.Register("/validate-projectcalico-org-networkpolicy", hooks.NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	if config.httpProxyDefaultClass != "" {
 		wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass))

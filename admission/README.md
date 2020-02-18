@@ -62,3 +62,11 @@ option for `neco-admission`.
 The validating webhook prevents creating or updating `HTTPProxy` without the annotations.
 
 `neco-admission` does not watch `IngressRoute` because it is deprecated.
+
+PodMutator
+----------
+
+PodMutator mutates Pod manifests to mount writable emptyDir to `/tmp` for each containers.
+The purpose of this mutator is to prevent Pods from unexpected death by writing to read-only filesystem. 
+
+However, Pods that already have another volumes mounted under `/tmp/*` are excluded from the mutating target.
