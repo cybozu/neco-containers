@@ -3,8 +3,8 @@ package hooks
 import (
 	"context"
 	"crypto/sha1"
+	"encoding/hex"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/mutate-pod,mutating=true,failurePolicy=fail,groups="",resources=pods,versions=v1,name=mpod.kb.io
+// +kubebuilder:webhook:verbs=create,path=/mutate-pod,mutating=true,failurePolicy=fail,groups="",resources=pods,versions=v1,name=mpod.kb.io
 
 type podMutator struct {
 	client  client.Client
@@ -69,10 +69,12 @@ func (m *podMutator) isMountedTmp(co *corev1.Container) bool {
 }
 
 func (m *podMutator) hashString(name string) string {
-	h := sha1.New()
-	h.Write([]byte(name))
-	bs := h.Sum(nil)
-	return fmt.Sprintf("%x", bs)
+	const maxHashLen int = 16
+	hash := hex.EncodeToString(sha1.New().Sum([]byte(name)))
+	if len(hash) > maxHashLen {
+		return hash[:maxHashLen]
+	}
+	return hash
 }
 
 func (m *podMutator) isUniqueVolumeName(volumes []corev1.Volume, name string) bool {
