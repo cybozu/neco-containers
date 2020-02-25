@@ -4,21 +4,17 @@ import (
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
-	"golang.org/x/tools/go/analysis/passes/inspect"
 )
 
-// Analyzer checks if you are forget to execute gomega.Assertion for gomega.Eventually
+// Analyzer checks if you forget to execute gomega.Assertion for gomega.Eventually
 var Analyzer = &analysis.Analyzer{
-	Name: "eventuallycheck",
-	Doc:  doc,
-	Run:  run,
-	Requires: []*analysis.Analyzer{
-		inspect.Analyzer,
-	},
+	Name:             "eventuallycheck",
+	Doc:              "eventuallycheck checks if you forget to call Assertion for Eventually or not",
+	Run:              run,
 	RunDespiteErrors: false,
 }
 
-const doc = "eventuallycheck checks if you forget to call Assertion for Eventually or not"
+const errorMessage = "invalid Eventually: Assertion not called"
 
 func isIdent(n ast.Expr, name string) bool {
 	switch x := n.(type) {
@@ -34,7 +30,7 @@ func isEventuallyFunc(n ast.Expr) bool {
 	return isIdent(n, "Eventually")
 }
 
-func isNamespacedEventuallyFunc(n ast.Expr, pkgName string) bool {
+func isNamedEventuallyFunc(n ast.Expr, pkgName string) bool {
 	switch x := n.(type) {
 	case *ast.SelectorExpr:
 		if !isIdent(x.X, pkgName) {
@@ -45,7 +41,7 @@ func isNamespacedEventuallyFunc(n ast.Expr, pkgName string) bool {
 	return false
 }
 
-func isEventuallyCall(caller ast.Expr) bool {
+func isEventuallyCalled(caller ast.Expr) bool {
 	switch x := caller.(type) {
 	case *ast.CallExpr:
 		return isEventuallyFunc(x.Fun)
@@ -53,12 +49,50 @@ func isEventuallyCall(caller ast.Expr) bool {
 	return false
 }
 
+func isNamedEventuallyCalled(caller ast.Expr, gomegaPkgName string) bool {
+	switch x := caller.(type) {
+	case *ast.CallExpr:
+		return isNamedEventuallyFunc(x.Fun, gomegaPkgName)
+	}
+	return false
+}
+
+func checkForNamedImportFile(f *ast.File, gomegaPkgName string, pass *analysis.Pass) {
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.SelectorExpr:
+			// <pkgName>.Eventually(<func definition>).Should(Succeed())
+			return !isNamedEventuallyCalled(x.X, gomegaPkgName)
+		case *ast.CallExpr:
+			if isNamedEventuallyFunc(x.Fun, gomegaPkgName) {
+				// <pkgName>.Eventually(<func definition>)
+				pass.Reportf(n.Pos(), errorMessage)
+				return false
+			}
+		}
+		return true
+	})
+}
+
+func checkForDotImportFile(f *ast.File, pass *analysis.Pass) {
+	ast.Inspect(f, func(n ast.Node) bool {
+		switch x := n.(type) {
+		case *ast.SelectorExpr:
+			// Eventually(<func definition>).Should(Succeed())
+			return !isEventuallyCalled(x.X)
+		case *ast.CallExpr:
+			if isEventuallyFunc(x.Fun) {
+				// Eventually(<func definition>)
+				pass.Reportf(n.Pos(), errorMessage)
+				return false
+			}
+		}
+		return true
+	})
+}
+
 func run(pass *analysis.Pass) (interface{}, error) {
 	for _, f := range pass.Files {
-		// for _, d := range f.Decls {
-		// 	ast.Print(pass.Fset, d)
-		// 	fmt.Println()
-		// }
 		useGomega := false
 		gomegaPkgName := "gomega"
 
@@ -81,43 +115,9 @@ func run(pass *analysis.Pass) (interface{}, error) {
 		}
 
 		if gomegaPkgName == "." {
-			// dot import
-			ast.Inspect(f, func(n ast.Node) bool {
-				switch x := n.(type) {
-				case *ast.SelectorExpr:
-					if isEventuallyCall(x.X) {
-						// Eventually(<func definition>).Should(Succeed())
-						return false
-					}
-				case *ast.CallExpr:
-					if isEventuallyFunc(x.Fun) {
-						// Eventually(<func definition>)
-						pass.Reportf(n.Pos(), "invalid Eventually: Assertion not called")
-						return false
-					}
-				}
-				return true
-			})
+			checkForDotImportFile(f, pass)
 		} else {
-			ast.Inspect(f, func(n ast.Node) bool {
-				switch x := n.(type) {
-				case *ast.SelectorExpr:
-					switch cx := x.X.(type) {
-					case *ast.CallExpr:
-						if isNamespacedEventuallyFunc(cx.Fun, gomegaPkgName) {
-							// <pkgName>.Eventually(<func definition>).Should(Succeed())
-							return false
-						}
-					}
-				case *ast.CallExpr:
-					if isNamespacedEventuallyFunc(x.Fun, gomegaPkgName) {
-						// <pkgName>.Eventually(<func definition>)
-						pass.Reportf(n.Pos(), "invalid Eventually: Assertion not called")
-						return false
-					}
-				}
-				return true
-			})
+			checkForNamedImportFile(f, gomegaPkgName, pass)
 		}
 	}
 	return nil, nil
