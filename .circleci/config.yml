@@ -147,12 +147,7 @@ jobs:
       - run:
           command: |
             cd << parameters.directory >>
-            test -z "$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-            golint -set_exit_status $(go list -mod=vendor ./... | grep -v /vendor/)
-            go build -mod=vendor -o /dev/null ./...
-            go test -mod=vendor -race -v ./...
-            go vet -mod=vendor ./...
-            ineffassign .
+            make test SUDO=
   test-cke-tools-scripts:
     docker:
       - image: quay.io/cybozu/ubuntu-dev:18.04
