@@ -1,4 +1,4 @@
-package testsrc
+package main
 
 import (
 	gin "github.com/onsi/ginkgo"
@@ -13,8 +13,12 @@ func testEventually2() {
 	})
 
 	gin.It("should not execute eventually", func() {
-		gome.Eventually(func() error {
+		gome.Eventually(func() error { // want "invalid Eventually: Assertion not called"
 			return nil
 		})
 	})
+}
+
+func main() {
+	testEventually2()
 }

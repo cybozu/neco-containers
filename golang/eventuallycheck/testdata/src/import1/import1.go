@@ -1,4 +1,4 @@
-package import1
+package main
 
 import (
 	"github.com/onsi/ginkgo"
@@ -13,8 +13,12 @@ func testEventually2() {
 	})
 
 	ginkgo.It("should not execute eventually", func() {
-		gomega.Eventually(func() error {
+		gomega.Eventually(func() error { // want "invalid Eventually: Assertion not called"
 			return nil
 		})
 	})
+}
+
+func main()  {
+	testEventually2()
 }

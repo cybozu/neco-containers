@@ -1,4 +1,4 @@
-package dotimport
+package main
 
 import (
 	. "github.com/onsi/ginkgo"
@@ -13,8 +13,12 @@ func testEventually() {
 	})
 
 	It("should not execute eventually", func() {
-		Eventually(func() error {
+		Eventually(func() error { // want "invalid Eventually: Assertion not called"
 			return nil
 		})
 	})
+}
+
+func main() {
+	testEventually()
 }

@@ -1,4 +1,4 @@
-package testsrc
+package main
 
 // Eventually is a dummy function
 func Eventually() bool {
@@ -7,4 +7,8 @@ func Eventually() bool {
 
 func testEventually3() {
 	Eventually()
+}
+
+func main() {
+	testEventually3()
 }

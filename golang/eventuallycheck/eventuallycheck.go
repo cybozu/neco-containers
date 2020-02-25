@@ -1,15 +1,14 @@
 package eventuallycheck
 
 import (
-	"fmt"
 	"go/ast"
 
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 )
 
-// EventuallyCheckAnalyzer checks if you are forget to execute gomega.Eventually
-var EventuallyCheckAnalyzer = &analysis.Analyzer{
+// Analyzer checks if you are forget to execute gomega.Assertion for gomega.Eventually
+var Analyzer = &analysis.Analyzer{
 	Name: "eventuallycheck",
 	Doc:  doc,
 	Run:  run,
@@ -19,7 +18,7 @@ var EventuallyCheckAnalyzer = &analysis.Analyzer{
 	RunDespiteErrors: false,
 }
 
-const doc = "restrictpkg checks if you are forget to execute gomega.Eventually"
+const doc = "eventuallycheck checks if you forget to call Assertion for Eventually or not"
 
 func isIdent(n ast.Expr, name string) bool {
 	switch x := n.(type) {
@@ -83,17 +82,19 @@ func run(pass *analysis.Pass) (interface{}, error) {
 
 		if gomegaPkgName == "." {
 			// dot import
-			// Eventually(<func definition>).Should(Succeed())
 			ast.Inspect(f, func(n ast.Node) bool {
 				switch x := n.(type) {
 				case *ast.SelectorExpr:
-					return false
+					if isEventuallyCall(x.X) {
+						// Eventually(<func definition>).Should(Succeed())
+						return false
+					}
 				case *ast.CallExpr:
 					if isEventuallyFunc(x.Fun) {
-						pass.Reportf(n.Pos(), "invalid Eventually")
-						fmt.Println("invalid Eventually: " + pass.Fset.Position(n.Pos()).String())
+						// Eventually(<func definition>)
+						pass.Reportf(n.Pos(), "invalid Eventually: Assertion not called")
+						return false
 					}
-					return true
 				}
 				return true
 			})
@@ -101,17 +102,17 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			ast.Inspect(f, func(n ast.Node) bool {
 				switch x := n.(type) {
 				case *ast.SelectorExpr:
-					// <pkgName>.Eventually(<func definition>).Should(Succeed())
 					switch cx := x.X.(type) {
 					case *ast.CallExpr:
 						if isNamespacedEventuallyFunc(cx.Fun, gomegaPkgName) {
+							// <pkgName>.Eventually(<func definition>).Should(Succeed())
 							return false
 						}
 					}
 				case *ast.CallExpr:
-					// <pkgName>.Eventually(<func definition>)
 					if isNamespacedEventuallyFunc(x.Fun, gomegaPkgName) {
-						pass.Reportf(n.Pos(), "invalid Eventually")
+						// <pkgName>.Eventually(<func definition>)
+						pass.Reportf(n.Pos(), "invalid Eventually: Assertion not called")
 						return false
 					}
 				}
