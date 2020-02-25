@@ -311,6 +311,9 @@ workflows:
           name: test-go-sources-restrictpkg
           directory: golang/restrictpkg
       - test-go-sources:
+          name: test-go-sources-eventuallycheck
+          directory: golang/eventuallycheck
+      - test-go-sources:
           name: test-go-sources-testhttpd
           directory: testhttpd/src
       - build:
