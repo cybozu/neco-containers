@@ -13,7 +13,7 @@ func testEventually2() {
 	})
 
 	gin.It("should not execute eventually", func() {
-		gome.Eventually(func() error { // want "invalid Eventually: Assertion not called"
+		gome.Eventually(func() error { // want "invalid Assertion: Should/ShouldNot not called"
 			return nil
 		})
 	})

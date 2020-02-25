@@ -14,45 +14,54 @@ var Analyzer = &analysis.Analyzer{
 	RunDespiteErrors: false,
 }
 
-const errorMessage = "invalid Eventually: Assertion not called"
+var assertionFuncs = []string{
+	"Consistently",
+	"ConsistentlyWithOffset",
+	"Eventually",
+	"EventuallyWithOffset",
+}
 
-func isIdent(n ast.Expr, name string) bool {
+const errorMessage = "invalid Assertion: Should/ShouldNot not called"
+
+func isIdent(n ast.Expr, names ...string) bool {
 	switch x := n.(type) {
 	case *ast.Ident:
-		if x.Name == name {
-			return true
+		for _, n := range names {
+			if x.Name == n {
+				return true
+			}
 		}
 	}
 	return false
 }
 
-func isEventuallyFunc(n ast.Expr) bool {
-	return isIdent(n, "Eventually")
+func isAssertionFunc(n ast.Expr) bool {
+	return isIdent(n, assertionFuncs...)
 }
 
-func isNamedEventuallyFunc(n ast.Expr, pkgName string) bool {
+func isNamedAssertionFunc(n ast.Expr, pkgName string) bool {
 	switch x := n.(type) {
 	case *ast.SelectorExpr:
 		if !isIdent(x.X, pkgName) {
 			return false
 		}
-		return x.Sel != nil && isEventuallyFunc(x.Sel)
+		return x.Sel != nil && isAssertionFunc(x.Sel)
 	}
 	return false
 }
 
-func isEventuallyCalled(caller ast.Expr) bool {
+func isAssertionFuncCalled(caller ast.Expr) bool {
 	switch x := caller.(type) {
 	case *ast.CallExpr:
-		return isEventuallyFunc(x.Fun)
+		return isAssertionFunc(x.Fun)
 	}
 	return false
 }
 
-func isNamedEventuallyCalled(caller ast.Expr, gomegaPkgName string) bool {
+func isNamedAssertionFuncCalled(caller ast.Expr, gomegaPkgName string) bool {
 	switch x := caller.(type) {
 	case *ast.CallExpr:
-		return isNamedEventuallyFunc(x.Fun, gomegaPkgName)
+		return isNamedAssertionFunc(x.Fun, gomegaPkgName)
 	}
 	return false
 }
@@ -61,11 +70,11 @@ func checkForNamedImportFile(f *ast.File, gomegaPkgName string, pass *analysis.P
 	ast.Inspect(f, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.SelectorExpr:
-			// <pkgName>.Eventually(<func definition>).Should(Succeed())
-			return !isNamedEventuallyCalled(x.X, gomegaPkgName)
+			// e.g. <pkgName>.Eventually(<func definition>).Should(Succeed())
+			return !isNamedAssertionFuncCalled(x.X, gomegaPkgName)
 		case *ast.CallExpr:
-			if isNamedEventuallyFunc(x.Fun, gomegaPkgName) {
-				// <pkgName>.Eventually(<func definition>)
+			if isNamedAssertionFunc(x.Fun, gomegaPkgName) {
+				// e.g. <pkgName>.Eventually(<func definition>)
 				pass.Reportf(n.Pos(), errorMessage)
 				return false
 			}
@@ -78,11 +87,11 @@ func checkForDotImportFile(f *ast.File, pass *analysis.Pass) {
 	ast.Inspect(f, func(n ast.Node) bool {
 		switch x := n.(type) {
 		case *ast.SelectorExpr:
-			// Eventually(<func definition>).Should(Succeed())
-			return !isEventuallyCalled(x.X)
+			// e.g. Eventually(<func definition>).Should(Succeed())
+			return !isAssertionFuncCalled(x.X)
 		case *ast.CallExpr:
-			if isEventuallyFunc(x.Fun) {
-				// Eventually(<func definition>)
+			if isAssertionFunc(x.Fun) {
+				// e.g. Eventually(<func definition>)
 				pass.Reportf(n.Pos(), errorMessage)
 				return false
 			}

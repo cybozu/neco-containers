@@ -13,7 +13,7 @@ func testEventually2() {
 	})
 
 	ginkgo.It("should not execute eventually", func() {
-		gomega.Eventually(func() error { // want "invalid Eventually: Assertion not called"
+		gomega.Eventually(func() error { // want "invalid Assertion: Should/ShouldNot not called"
 			return nil
 		})
 	})
