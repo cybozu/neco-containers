@@ -1,2 +1,4 @@
 *
 !restrictpkg
+!eventuallycheck
+!custom-checker
