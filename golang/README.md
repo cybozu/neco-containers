@@ -12,7 +12,7 @@ tools:
 * [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
 * [nilerr](https://github.com/gostaticanalysis/nilerr)
-* [custome-checker](./analyzer/cmd/custome-checker/README.md)
+* [custom-checker](./analyzer/cmd/custom-checker/README.md)
 * [eventuallycheck](./analyzer/cmd/eventuallycheck/README.md)
 * [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
 
