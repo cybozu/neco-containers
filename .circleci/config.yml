@@ -303,11 +303,8 @@ workflows:
           name: test-go-sources-machines-endpoints
           directory: machines-endpoints
       - test-go-sources:
-          name: test-go-sources-restrictpkg
-          directory: golang/restrictpkg
-      - test-go-sources:
-          name: test-go-sources-eventuallycheck
-          directory: golang/eventuallycheck
+          name: test-go-sources-analyzer
+          directory: golang/analyzer
       - test-go-sources:
           name: test-go-sources-testhttpd
           directory: testhttpd/src
