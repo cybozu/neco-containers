@@ -22,12 +22,18 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
     && mkdir -p /go/src
 
 COPY ./restrictpkg /work/restrictpkg
-COPY ./eventuallycheck /work/eventuallycheck
 WORKDIR /work/restrictpkg
 RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/restrictpkg/
+
+COPY ./eventuallycheck /work/eventuallycheck
 WORKDIR /work/eventuallycheck
 RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/eventuallycheck/
+
+COPY ./custom-checker /work/custom-checker
+WORKDIR /work/custom-checker
+RUN GOBIN=/usr/local/bin go install -mod=vendor ./custom-checker/
+
 WORKDIR /work
-RUN rm -r /work/restrictpkg /work/eventuallycheck
+RUN rm -r /work/restrictpkg /work/eventuallycheck /work/custom-checker
 
 CMD ["/bin/bash"]
