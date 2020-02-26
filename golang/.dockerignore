@@ -1,4 +1,2 @@
 *
-!restrictpkg
-!eventuallycheck
-!custom-checker
+!analyzer

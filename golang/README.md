@@ -12,6 +12,8 @@ tools:
 * [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
 * [nilerr](https://github.com/gostaticanalysis/nilerr)
-* [restrictpkg](./restrictpkg/README.md)
+* [custom-checker](./analyzer/cmd/custom-checker/README.md)
+* [eventuallycheck](./analyzer/cmd/eventuallycheck/README.md)
+* [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
 
 This container is based on [quay.io/cybozu/ubuntu-dev](https://quay.io/repository/cybozu/ubuntu-dev).
