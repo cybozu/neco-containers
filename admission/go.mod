@@ -8,7 +8,7 @@ require (
 	github.com/projectcalico/libcalico-go v1.7.2-0.20191008175127-399044ecb659
 	github.com/projectcontour/contour v1.0.1
 	github.com/spf13/cobra v0.0.5
-	golang.org/x/crypto v0.0.0-20190701094942-4def268fd1a4 // indirect
+	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d // indirect
 	k8s.io/api v0.16.4
 	k8s.io/apimachinery v0.16.4
 	k8s.io/client-go v0.16.4
