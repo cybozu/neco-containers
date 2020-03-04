@@ -169,7 +169,7 @@ jobs:
         type: string
     docker:
       - image: quay.io/cybozu/golang:1.13-bionic
-    resource_class: xlarge
+    resource_class: 2xlarge+
     steps:
       - checkout
       - run:
@@ -213,7 +213,7 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
             cd envoy
-            bazel build --jobs 8 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
+            bazel build --jobs 20 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
             strip --strip-debug bazel-bin/source/exe/envoy-static
             mv bazel-bin/source/exe/envoy-static ../workspace/envoy
             mv LICENSE ../workspace
@@ -348,7 +348,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.12.2
+          version: 1.12.3
       - build:
           name: build-envoy-container
           container-image: envoy
