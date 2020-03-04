@@ -169,7 +169,7 @@ jobs:
         type: string
     docker:
       - image: quay.io/cybozu/golang:1.13-bionic
-    resource_class: xlarge
+    resource_class: 2xlarge+
     steps:
       - checkout
       - run:
@@ -348,7 +348,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.12.2
+          version: 1.12.3
       - build:
           name: build-envoy-container
           container-image: envoy
