@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
 
-ARG PAUSE_VERSION=3.1
+ARG PAUSE_VERSION=3.2
 
 RUN mkdir /work
 
