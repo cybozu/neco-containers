@@ -1,9 +1,9 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/hyperkube/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/hyperkube)
+[![Docker Repository on Quay](https://quay.io/repository/cybozu/kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/kubernetes)
 
-hyperkube container
+kubernetes container
 ===================
 
-[hyperkube](https://github.com/kubernetes/kubernetes/tree/master/cluster/images/hyperkube) an all-in-one binary for the Kubernetes components.
+[kubernetes](https://github.com/kubernetes/kubernetes) image contains binaries for the Kubernetes components.
 
 Usage
 -----
@@ -11,7 +11,7 @@ Usage
 To launch `apiserver` by `docker run`:
 
     $ docker run --net=host --name apiserver -d \
-        quay.io/cybozu/hyperkube:1.16 kube-apiserver \
+        quay.io/cybozu/kubernetes:1.17 kube-apiserver \
         --advertise-address=192.168.1.101 \
         --insecure-bind-address=0.0.0.0 \
         --insecure-port=8080 \
@@ -21,4 +21,4 @@ To launch `apiserver` by `docker run`:
 
 To use `kubectl` by `docker run`:
 
-    $ docker run --rm -it quay.io/cybozu/hyperkube:1.16 kubectl cluster-info
+    $ docker run --rm -it quay.io/cybozu/kubernetes:1.17 kubectl cluster-info
