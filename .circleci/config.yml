@@ -369,14 +369,14 @@ workflows:
           name: build-grafana
           container-image: grafana
       - build:
-          name: build-hyperkube
-          container-image: hyperkube
-      - build:
           name: build-kind-node
           container-image: kind-node
       - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
+      - build:
+          name: build-kubernetes
+          container-image: kubernetes
       - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
