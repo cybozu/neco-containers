@@ -5,7 +5,7 @@ github.com/containernetworking/cni/pkg/types
 github.com/containernetworking/cni/pkg/types/020
 github.com/containernetworking/cni/pkg/types/current
 github.com/containernetworking/cni/pkg/version
-# github.com/containernetworking/plugins v0.8.3
+# github.com/containernetworking/plugins v0.8.5
 github.com/containernetworking/plugins/pkg/ip
 github.com/containernetworking/plugins/pkg/ipam
 github.com/containernetworking/plugins/pkg/ns
@@ -13,7 +13,7 @@ github.com/containernetworking/plugins/pkg/utils
 github.com/containernetworking/plugins/pkg/utils/buildversion
 github.com/containernetworking/plugins/pkg/utils/hwaddr
 github.com/containernetworking/plugins/pkg/utils/sysctl
-# github.com/coreos/go-iptables v0.4.2
+# github.com/coreos/go-iptables v0.4.5
 github.com/coreos/go-iptables/iptables
 # github.com/j-keck/arping v1.0.0
 github.com/j-keck/arping
