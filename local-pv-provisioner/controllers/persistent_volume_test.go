@@ -73,6 +73,11 @@ func testDeviceDetectorCreatePV() {
 			Expect(localVolume).NotTo(BeNil())
 			Expect(localVolume.Path).To(Equal(device.Path))
 
+			By("checking label")
+			Expect(pv.ObjectMeta.Labels).To(HaveLen(1))
+			Expect(pv.ObjectMeta.Labels).To(HaveKey(localPVProvisionerLabelKey))
+			Expect(pv.ObjectMeta.Labels[localPVProvisionerLabelKey]).To(Equal(node.Name))
+
 			By("checking storageClassName")
 			Expect(pv.Spec.StorageClassName).To(Equal("local-storage"))
 

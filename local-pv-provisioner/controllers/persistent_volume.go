@@ -16,6 +16,8 @@ import (
 const (
 	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
 	StorageClass = "local-storage"
+
+	localPVProvisionerLabelKey = "local-pv-provisioner.cybozu.com/node"
 )
 
 var (
@@ -33,6 +35,8 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: dd.pvName(dev.Path)}}
 
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
+		pv.ObjectMeta.Labels = map[string]string{localPVProvisionerLabelKey: node.Name}
+
 		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 
 		// Workaround because capacity comparison doesn't work well in CreateOrUpdate.
