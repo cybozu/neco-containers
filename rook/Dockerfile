@@ -3,8 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG ROOK_VERSION=1.2.2-master-19350d62
-ARG DEP_VERSION=0.5.4
+ARG ROOK_VERSION=1.2.6-master-da3bf49b
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -13,9 +12,7 @@ RUN git clone https://github.com/cybozu-go/rook.git ${ROOK_DIR}
 
 WORKDIR ${ROOK_DIR}
 
-ENV GO111MODULE=off
 RUN git checkout v${ROOK_VERSION}
-RUN make vendor
 RUN make build IMAGES=""
 
 WORKDIR ${ROOK_DIR}/images/ceph
