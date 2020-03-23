@@ -101,7 +101,7 @@ jobs:
             mkdir -p src/workspace
             if [ ! -f BUILDS ]; then exit 0; fi
             cd src
-            git clone https://github.com/ceph/ceph.git
+            git clone https://github.com/cybozu/ceph.git
             cd ceph
             git checkout v<< parameters.version >>
             git submodule update --init --recursive
@@ -430,7 +430,7 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build-ceph:
-          version: 14.2.8
+          version: 14.2.8.2
       - build:
           name: build-ceph-container
           container-image: ceph
