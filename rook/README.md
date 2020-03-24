@@ -23,7 +23,7 @@ git rebase upstream/master
 
 git push -f fork neco-release
 git tag "v$ROOK_VERSION-master-$MASTER_COMMIT"
-git push origin "v$ROOK_VERSION-master-$MASTER_COMMIT"
+git push fork "v$ROOK_VERSION-master-$MASTER_COMMIT"
 ```
 
 After that, please set `TAG` as `$ROOK_VERSION-master` and increment `BRANCH` (i.e. the image tag will be labeled as `v$ROOK_VERSION-master.$BRANCH`). And please update Dockerfile to use the tag `v$ROOK_VERSION-master-$MASTER_COMMIT`.
