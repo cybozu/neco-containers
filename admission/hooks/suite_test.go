@@ -3,7 +3,7 @@ package hooks
 import (
 	"context"
 	"crypto/tls"
-	"io/ioutil"
+	"fmt"
 	"net"
 	"path/filepath"
 	"testing"
@@ -14,11 +14,21 @@ import (
 
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
 	storagev1 "k8s.io/api/storage/v1"
-	ctrl "sigs.k8s.io/controller-runtime"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+)
+
+var (
+	podMutatingWebhookPath     = "/mutate-pod"
+	contourMutatingWebhookPath = "/mutate-projectcontour-io-httpproxy"
+	calicoValidateWebhookPath  = "/validate-projectcalico-org-networkpolicy"
+	contourValidateWebhookPath = "/validate-projectcontour-io-httpproxy"
+	argocdValidateWebhookPath  = "/validate-argoproj-io-application"
 )
 
 var k8sClient client.Client
@@ -31,134 +41,6 @@ func strPtr(s string) *string { return &s }
 func modePtr(m storagev1.VolumeBindingMode) *storagev1.VolumeBindingMode { return &m }
 
 func setupCommonResources() {
-	caBundle, err := ioutil.ReadFile("testdata/ca.crt")
-	Expect(err).ShouldNot(HaveOccurred())
-	vwh := &admissionregistrationv1beta1.ValidatingWebhookConfiguration{}
-	vwh.Name = "neco-admission"
-	_, err = ctrl.CreateOrUpdate(testCtx, k8sClient, vwh, func() error {
-		failPolicy := admissionregistrationv1beta1.Fail
-		sideEffect := admissionregistrationv1beta1.SideEffectClassNone
-		vwh.Webhooks = []admissionregistrationv1beta1.ValidatingWebhook{
-			{
-				Name:          "vnetworkpolicy.kb.io",
-				FailurePolicy: &failPolicy,
-				SideEffects:   &sideEffect,
-				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-					CABundle: caBundle,
-					URL:      strPtr("https://127.0.0.1:8443/validate-projectcalico-org-networkpolicy"),
-				},
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
-					{
-						Operations: []admissionregistrationv1beta1.OperationType{
-							admissionregistrationv1beta1.Create,
-							admissionregistrationv1beta1.Update,
-						},
-						Rule: admissionregistrationv1beta1.Rule{
-							APIGroups:   []string{"crd.projectcalico.org"},
-							APIVersions: []string{"v1"},
-							Resources:   []string{"networkpolicies"},
-						},
-					},
-				},
-			},
-			{
-				Name:          "vhttpproxy.kb.io",
-				FailurePolicy: &failPolicy,
-				SideEffects:   &sideEffect,
-				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-					CABundle: caBundle,
-					URL:      strPtr("https://127.0.0.1:8443/validate-projectcontour-io-httpproxy"),
-				},
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
-					{
-						Operations: []admissionregistrationv1beta1.OperationType{
-							admissionregistrationv1beta1.Create,
-							admissionregistrationv1beta1.Update,
-						},
-						Rule: admissionregistrationv1beta1.Rule{
-							APIGroups:   []string{"projectcontour.io"},
-							APIVersions: []string{"v1"},
-							Resources:   []string{"httpproxies"},
-						},
-					},
-				},
-			},
-			{
-				Name:          "vapplication.kb.io",
-				FailurePolicy: &failPolicy,
-				SideEffects:   &sideEffect,
-				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-					CABundle: caBundle,
-					URL:      strPtr("https://127.0.0.1:8443/validate-argoproj-io-application"),
-				},
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
-					{
-						Operations: []admissionregistrationv1beta1.OperationType{
-							admissionregistrationv1beta1.Create,
-							admissionregistrationv1beta1.Update,
-						},
-						Rule: admissionregistrationv1beta1.Rule{
-							APIGroups:   []string{"argoproj.io"},
-							APIVersions: []string{"v1alpha1"},
-							Resources:   []string{"applications"},
-						},
-					},
-				},
-			},
-		}
-		return nil
-	})
-	Expect(err).ShouldNot(HaveOccurred())
-
-	mwh := &admissionregistrationv1beta1.MutatingWebhookConfiguration{}
-	mwh.Name = "neco-admission"
-	_, err = ctrl.CreateOrUpdate(testCtx, k8sClient, mwh, func() error {
-		failPolicy := admissionregistrationv1beta1.Fail
-		mwh.Webhooks = []admissionregistrationv1beta1.MutatingWebhook{
-			{
-				Name:          "mpod.kb.io",
-				FailurePolicy: &failPolicy,
-				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-					CABundle: caBundle,
-					URL:      strPtr("https://127.0.0.1:8443/mutate-pod"),
-				},
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
-					{
-						Operations: []admissionregistrationv1beta1.OperationType{
-							admissionregistrationv1beta1.Create,
-						},
-						Rule: admissionregistrationv1beta1.Rule{
-							APIGroups:   []string{""},
-							APIVersions: []string{"v1"},
-							Resources:   []string{"pods"},
-						},
-					},
-				},
-			},
-			{
-				Name:          "mhttpproxy.kb.io",
-				FailurePolicy: &failPolicy,
-				ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-					CABundle: caBundle,
-					URL:      strPtr("https://127.0.0.1:8443/mutate-projectcontour-io-httpproxy"),
-				},
-				Rules: []admissionregistrationv1beta1.RuleWithOperations{
-					{
-						Operations: []admissionregistrationv1beta1.OperationType{
-							admissionregistrationv1beta1.Create,
-						},
-						Rule: admissionregistrationv1beta1.Rule{
-							APIGroups:   []string{"projectcontour.io"},
-							APIVersions: []string{"v1"},
-							Resources:   []string{"httpproxies"},
-						},
-					},
-				},
-			},
-		}
-		return nil
-	})
-	Expect(err).ShouldNot(HaveOccurred())
 }
 
 func TestAPIs(t *testing.T) {
@@ -167,20 +49,157 @@ func TestAPIs(t *testing.T) {
 	SetDefaultEventuallyTimeout(time.Minute)
 	RunSpecsWithDefaultAndCustomReporters(t,
 		"Controller Suite",
-		[]Reporter{envtest.NewlineReporter{}})
+		[]Reporter{printer.NewlineReporter{}})
 }
 
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
-	apiServerFlags := append(envtest.DefaultKubeAPIServerFlags,
-		"--admission-control=MutatingAdmissionWebhook",
-		"--admission-control=ValidatingAdmissionWebhook",
-	)
+	failPolicy := admissionregistrationv1beta1.Fail
+	sideEffect := admissionregistrationv1beta1.SideEffectClassNone
+	webhookInstallOptions := envtest.WebhookInstallOptions{
+		MutatingWebhooks: []runtime.Object{
+			&admissionregistrationv1beta1.MutatingWebhookConfiguration{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "neco-admission",
+				},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "MutatingWebhookConfiguration",
+					APIVersion: "admissionregistration.k8s.io/v1beta1",
+				},
+				Webhooks: []admissionregistrationv1beta1.MutatingWebhook{
+					{
+						Name:          "mpod.kb.io",
+						FailurePolicy: &failPolicy,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &podMutatingWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{""},
+									APIVersions: []string{"v1"},
+									Resources:   []string{"pods"},
+								},
+							},
+						},
+					},
+					{
+						Name:          "mhttpproxy.kb.io",
+						FailurePolicy: &failPolicy,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &contourMutatingWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{"projectcontour.io"},
+									APIVersions: []string{"v1"},
+									Resources:   []string{"httpproxies"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+		ValidatingWebhooks: []runtime.Object{
+			&admissionregistrationv1beta1.ValidatingWebhookConfiguration{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "neco-admission",
+				},
+				TypeMeta: metav1.TypeMeta{
+					Kind:       "ValidatingWebhookConfiguration",
+					APIVersion: "admissionregistration.k8s.io/v1beta1",
+				},
+				Webhooks: []admissionregistrationv1beta1.ValidatingWebhook{
+					{
+						Name:          "vnetworkpolicy.kb.io",
+						FailurePolicy: &failPolicy,
+						SideEffects:   &sideEffect,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &calicoValidateWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+									admissionregistrationv1beta1.Update,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{"crd.projectcalico.org"},
+									APIVersions: []string{"v1"},
+									Resources:   []string{"networkpolicies"},
+								},
+							},
+						},
+					},
+					{
+						Name:          "vhttpproxy.kb.io",
+						FailurePolicy: &failPolicy,
+						SideEffects:   &sideEffect,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &contourValidateWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+									admissionregistrationv1beta1.Update,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{"projectcontour.io"},
+									APIVersions: []string{"v1"},
+									Resources:   []string{"httpproxies"},
+								},
+							},
+						},
+					},
+					{
+						Name:          "vapplication.kb.io",
+						FailurePolicy: &failPolicy,
+						SideEffects:   &sideEffect,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &argocdValidateWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+									admissionregistrationv1beta1.Update,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{"argoproj.io"},
+									APIVersions: []string{"v1alpha1"},
+									Resources:   []string{"applications"},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:  []string{filepath.Join("..", "config", "crd", "bases")},
-		KubeAPIServerFlags: apiServerFlags,
+		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
+		WebhookInstallOptions: webhookInstallOptions,
 	}
 
 	var err error
@@ -197,10 +216,11 @@ var _ = BeforeSuite(func() {
 	setupNetworkPolicyResources()
 
 	By("running webhook server")
-	go run(stopCh, cfg, "127.0.0.1", 8443)
+	go run(stopCh, cfg, &testEnv.WebhookInstallOptions)
 	d := &net.Dialer{Timeout: time.Second}
 	Eventually(func() error {
-		conn, err := tls.DialWithDialer(d, "tcp", "127.0.0.1:8443", &tls.Config{
+		serverURL := fmt.Sprintf("%s:%d", testEnv.WebhookInstallOptions.LocalServingHost, testEnv.WebhookInstallOptions.LocalServingPort)
+		conn, err := tls.DialWithDialer(d, "tcp", serverURL, &tls.Config{
 			InsecureSkipVerify: true,
 		})
 		if err != nil {
