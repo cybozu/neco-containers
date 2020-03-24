@@ -19,7 +19,7 @@ WORKDIR ${ROOK_DIR}/images/ceph
 RUN make generate-csv-ceph-templates
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:14.2
+FROM quay.io/cybozu/ceph:14.2.8.2
 
 ARG TINI_VERSION=v0.16.1
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
