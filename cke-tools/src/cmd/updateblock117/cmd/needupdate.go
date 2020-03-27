@@ -11,8 +11,8 @@ import (
 var needUpdateCmd = &cobra.Command{
 	Use:   "need-update <block-pv-name>",
 	Short: "check that we should modify the path of the target device file or not",
-	Long: "check that we should modify the path of the target device file or not",
-	Args: cobra.ExactArgs(1),
+	Long:  "check that we should modify the path of the target device file or not",
+	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pvName := args[0]
 		res := result{}
@@ -22,7 +22,11 @@ var needUpdateCmd = &cobra.Command{
 		}
 		if existsOld {
 			res.Result = "yes"
-			_, err = fmt.Println(json.Marshal(res))
+			out, err := json.Marshal(res)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Println(string(out))
 			return err
 		}
 
@@ -32,8 +36,11 @@ var needUpdateCmd = &cobra.Command{
 		}
 		if existsTmp {
 			res.Result = "yes"
-			_, err = fmt.Println(json.Marshal(res))
-			return err
+			out, err := json.Marshal(res)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Println(string(out))
 		}
 
 		outdated, err := updateblock117.IsSymlinkOutdated(pvName)
@@ -42,13 +49,23 @@ var needUpdateCmd = &cobra.Command{
 		}
 		if outdated {
 			res.Result = "yes"
-			_, err = fmt.Println(json.Marshal(res))
+			out, err := json.Marshal(res)
+			if err != nil {
+				return err
+			}
+			_, err = fmt.Println(string(out))
+		}
+
+		res.Result = "no"
+		out, err := json.Marshal(res)
+		if err != nil {
 			return err
 		}
-		return nil
+		_, err = fmt.Println(string(out))
+		return err
 	},
 }
 
 type result struct {
-	Result string	`json:"result"`
+	Result string `json:"result"`
 }

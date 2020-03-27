@@ -19,7 +19,7 @@ func ExistsBlockDeviceAtOldLocation(pvName string) (bool, error) {
 	return existsDeviceFile(oldPath)
 }
 
-// ExistsBlockDeviceAtOldLocation returns true if the PV's path is located at /tmp/{pvname}.
+// ExistsBlockDeviceAtTmp returns true if the PV's path is located at /tmp/{pvname}.
 func ExistsBlockDeviceAtTmp(pvName string) (bool, error) {
 	tmpPath := filepath.Join("/tmp", pvName)
 	return existsDeviceFile(tmpPath)
