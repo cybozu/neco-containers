@@ -33,8 +33,8 @@ Check that we should modify the path of the target device file or not.
 
 `block-pv-name` is the name of the PersistentVolume object.
 
-- Returns stdout `{result: "yes"}` if the device needs to tweak.
-- Returns stdout `{result: "no"}` if the device needs to tweak.
+- Returns stdout `{"result": "yes"}` if the device needs to tweak.
+- Returns stdout `{"result": "no"}` if the device needs to tweak.
 
 ### `updateblock117 operate <block-pv-name>`
 
@@ -42,4 +42,4 @@ Modify device file path and its symbolic links for Kubelet 1.17.
 
 `block-pv-name` is the name of the PersistentVolume object.
 
-- Returns stdout `{result: "completed"}` if the process has been finished successfully.
+- Returns stdout `{"result": "completed"}` if the process has been finished successfully.

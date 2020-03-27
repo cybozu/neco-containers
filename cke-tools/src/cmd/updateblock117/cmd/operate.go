@@ -8,28 +8,22 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var needUpdateCmd = &cobra.Command{
-	Use:   "need-update <block-pv-name>",
-	Short: "check that we should modify the path of the target device file or not",
-	Long:  "check that we should modify the path of the target device file or not",
+var operateCmd = &cobra.Command{
+	Use:   "operate <block-pv-name>",
+	Short: "move block device to new location and fix symbolic link",
+	Long:  "move block device to new location and fix symbolic link",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		pvName := args[0]
-		res := struct {
-			Result string `json:"result"`
-		}{}
 		existsOld, err := updateblock117.ExistsBlockDeviceAtOldLocation(pvName)
 		if err != nil {
 			return err
 		}
 		if existsOld {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
+			err = updateblock117.MoveBlockDeviceToTmp(pvName)
 			if err != nil {
 				return err
 			}
-			_, err = fmt.Println(string(out))
-			return err
 		}
 
 		existsTmp, err := updateblock117.ExistsBlockDeviceAtTmp(pvName)
@@ -37,13 +31,10 @@ var needUpdateCmd = &cobra.Command{
 			return err
 		}
 		if existsTmp {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
+			err = updateblock117.MoveBlockDeviceToNew(pvName)
 			if err != nil {
 				return err
 			}
-			_, err = fmt.Println(string(out))
-			return err
 		}
 
 		outdated, err := updateblock117.IsSymlinkOutdated(pvName)
@@ -51,16 +42,16 @@ var needUpdateCmd = &cobra.Command{
 			return err
 		}
 		if outdated {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
+			err = updateblock117.UpdateSymlink(pvName)
 			if err != nil {
 				return err
 			}
-			_, err = fmt.Println(string(out))
-			return err
 		}
 
-		res.Result = "no"
+		res := struct {
+			Result string `json:"result"`
+		}{}
+		res.Result = "completed"
 		out, err := json.Marshal(res)
 		if err != nil {
 			return err

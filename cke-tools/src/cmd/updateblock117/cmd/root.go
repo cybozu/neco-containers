@@ -22,4 +22,5 @@ func Execute() error {
 
 func init() {
 	rootCmd.AddCommand(needUpdateCmd)
+	rootCmd.AddCommand(operateCmd)
 }
