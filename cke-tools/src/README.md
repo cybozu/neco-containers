@@ -30,7 +30,7 @@ Check that we should modify the path of the target device file or not.
 
 ### `updateblock117 operate <block-pv-name>`
 
-Modify device file path and its symbolic links for Kubelet 1.17.
+Modify the device file path and its symbolic links for Kubelet 1.17.
 
 `block-pv-name` is the name of the PersistentVolume object.
 
