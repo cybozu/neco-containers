@@ -9,7 +9,7 @@ import (
 )
 
 var operateCmd = &cobra.Command{
-	Use:   "operate <block-pv-name>",
+	Use:   "operate PV",
 	Short: "move block device to new location and fix symbolic link",
 	Long:  "move block device to new location and fix symbolic link",
 	Args:  cobra.ExactArgs(1),
