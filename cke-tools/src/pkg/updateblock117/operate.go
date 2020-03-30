@@ -7,8 +7,8 @@ import (
 
 // MoveBlockDeviceToTmp moves block device to tmp path.
 func MoveBlockDeviceToTmp(pvName string) error {
-	oldPath := filepath.Join(devicePublishDir, pvName)
-	tmpPath := filepath.Join("/tmp", pvName)
+	oldPath := makeOldDeviceFilePath(pvName)
+	tmpPath := makeTmpDeviceFilePath(pvName)
 	return os.Rename(oldPath, tmpPath)
 }
 
@@ -19,14 +19,14 @@ func MoveBlockDeviceToNew(pvName string) error {
 		return err
 	}
 
-	dir := filepath.Join(devicePublishDir, pvName)
+	dir := makeOldDeviceFilePath(pvName)
 	err = os.MkdirAll(dir, 0750)
 	if err != nil {
 		return err
 	}
 
-	tmpPath := filepath.Join("/tmp", pvName)
-	newPath := filepath.Join(dir, podUID)
+	tmpPath := makeTmpDeviceFilePath(pvName)
+	newPath := makeNewDeviceFilePath(pvName, podUID)
 	return os.Rename(tmpPath, newPath)
 }
 
@@ -37,7 +37,7 @@ func UpdateSymlink(pvName string) error {
 		return err
 	}
 
-	targetPath := filepath.Join(devicePublishDir, pvName, podUID)
+	targetPath := makeNewDeviceFilePath(pvName, podUID)
 	symlinkPath := filepath.Join(deviceRootDir, pvName, "dev", podUID)
 	symlinkTmpPath := symlinkPath + ".tmp"
 

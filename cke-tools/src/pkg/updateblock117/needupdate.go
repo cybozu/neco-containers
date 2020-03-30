@@ -7,21 +7,35 @@ import (
 	"path/filepath"
 )
 
-const deviceRootDir = "/var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices/"
-const devicePublishDir = "/var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices/publish/"
+const (
+	deviceRootDir    = "/var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices/"
+	devicePublishDir = "/var/lib/kubelet/plugins/kubernetes.io/csi/volumeDevices/publish/"
+)
+
+func makeOldDeviceFilePath(pvName string) string {
+	return filepath.Join(devicePublishDir, pvName)
+}
+
+func makeTmpDeviceFilePath(pvName string) string {
+	return filepath.Join(devicePublishDir, pvName+".tmp")
+}
+
+func makeNewDeviceFilePath(pvName, podUID string) string {
+	return filepath.Join(devicePublishDir, pvName, podUID)
+}
 
 // ExistsBlockDeviceAtOldLocation returns true if the PV's path is located at old path
 // old path: `plugins/kubernetes.io/csi/volumeDevices/publish/{pvname}`
 // new path: `plugins/kubernetes.io/csi/volumeDevices/publish/{pvname}/{podUid}`
 // ref https://github.com/kubernetes/kubernetes/pull/74026
 func ExistsBlockDeviceAtOldLocation(pvName string) (bool, error) {
-	oldPath := filepath.Join(devicePublishDir, pvName)
+	oldPath := makeOldDeviceFilePath(pvName)
 	return existsDeviceFile(oldPath)
 }
 
 // ExistsBlockDeviceAtTmp returns true if the PV's path is located at /tmp/{pvname}.
 func ExistsBlockDeviceAtTmp(pvName string) (bool, error) {
-	tmpPath := filepath.Join("/tmp", pvName)
+	tmpPath := makeTmpDeviceFilePath(pvName)
 	return existsDeviceFile(tmpPath)
 }
 
@@ -48,7 +62,7 @@ func IsSymlinkOutdated(pvName string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	outdated := res != filepath.Join(devicePublishDir, pvName, podUID)
+	outdated := res != makeNewDeviceFilePath(pvName, podUID)
 	return outdated, nil
 }
 
