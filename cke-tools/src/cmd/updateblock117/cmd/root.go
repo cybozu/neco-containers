@@ -19,8 +19,3 @@ To operate this procedure by CKE, updateblock117 is used.`,
 func Execute() error {
 	return rootCmd.Execute()
 }
-
-func init() {
-	rootCmd.AddCommand(needUpdateCmd)
-	rootCmd.AddCommand(operateCmd)
-}

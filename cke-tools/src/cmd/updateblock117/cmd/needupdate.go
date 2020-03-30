@@ -14,22 +14,15 @@ var needUpdateCmd = &cobra.Command{
 	Long:  "check that we should modify the path of the target device file or not",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true
 		pvName := args[0]
-		res := struct {
-			Result string `json:"result"`
-		}{}
+
 		existsOld, err := updateblock117.ExistsBlockDeviceAtOldLocation(pvName)
 		if err != nil {
 			return err
 		}
 		if existsOld {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Println(string(out))
-			return err
+			return output("yes")
 		}
 
 		existsTmp, err := updateblock117.ExistsBlockDeviceAtTmp(pvName)
@@ -37,13 +30,7 @@ var needUpdateCmd = &cobra.Command{
 			return err
 		}
 		if existsTmp {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Println(string(out))
-			return err
+			return output("yes")
 		}
 
 		outdated, err := updateblock117.IsSymlinkOutdated(pvName)
@@ -51,21 +38,26 @@ var needUpdateCmd = &cobra.Command{
 			return err
 		}
 		if outdated {
-			res.Result = "yes"
-			out, err := json.Marshal(res)
-			if err != nil {
-				return err
-			}
-			_, err = fmt.Println(string(out))
-			return err
+			return output("yes")
 		}
 
-		res.Result = "no"
-		out, err := json.Marshal(res)
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Println(string(out))
-		return err
+		return output("no")
 	},
+}
+
+func output(s string) error {
+	res := struct {
+		Result string `json:"result"`
+	}{}
+	res.Result = s
+	out, err := json.Marshal(res)
+	if err != nil {
+		return err
+	}
+	_, err = fmt.Println(string(out))
+	return err
+}
+
+func init() {
+	rootCmd.AddCommand(needUpdateCmd)
 }

@@ -1,9 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/cybozu-go/cke-tools/pkg/updateblock117"
 	"github.com/spf13/cobra"
 )
@@ -14,6 +11,7 @@ var operateCmd = &cobra.Command{
 	Long:  "move block device to new location and fix symbolic link",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceUsage = true
 		pvName := args[0]
 		existsOld, err := updateblock117.ExistsBlockDeviceAtOldLocation(pvName)
 		if err != nil {
@@ -48,15 +46,10 @@ var operateCmd = &cobra.Command{
 			}
 		}
 
-		res := struct {
-			Result string `json:"result"`
-		}{}
-		res.Result = "completed"
-		out, err := json.Marshal(res)
-		if err != nil {
-			return err
-		}
-		_, err = fmt.Println(string(out))
-		return err
+		return output("completed")
 	},
+}
+
+func init() {
+	rootCmd.AddCommand(operateCmd)
 }
