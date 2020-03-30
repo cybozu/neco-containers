@@ -9,7 +9,7 @@ import (
 )
 
 var needUpdateCmd = &cobra.Command{
-	Use:   "need-update <block-pv-name>",
+	Use:   "need-update PV",
 	Short: "check that we should modify the path of the target device file or not",
 	Long:  "check that we should modify the path of the target device file or not",
 	Args:  cobra.ExactArgs(1),
