@@ -41,6 +41,9 @@ func ExistsBlockDeviceAtTmp(pvName string) (bool, error) {
 
 func existsDeviceFile(location string) (bool, error) {
 	fi, err := os.Stat(location)
+	if os.IsNotExist(err) {
+		return false, nil
+	}
 	if err != nil {
 		return false, err
 	}
