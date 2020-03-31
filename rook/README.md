@@ -6,7 +6,7 @@ Rook container
 This container uses a cybozu's own Rook [cybozu-go/rook][]:neco-release. It's because the following feature and fixes are necessary for Neco and are not in the upstream's newest stable version (v1.2.6):
 
 * Supporting `topologySpreadConstraints`. We created a branch to support it. However, merging it to upstream Rook would take time (see [Rook's issue](https://github.com/rook/rook/issues/4387)).
-* Some trivial bugs and the regression about LV-backed PVC (see the Path at [cybozu-go/rook][]:use-dmcrypt-dev)
+* Some trivial bugs about dm devices  (see the Path at [cybozu-go/rook][]:use-dmcrypt-dev)
 
 Our custom Rook is created as follows to support the above-mentioned feature and fixes.
 
