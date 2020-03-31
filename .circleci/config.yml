@@ -36,6 +36,10 @@ jobs:
                 echo << parameters.container-image >> > BUILDS
             fi
       - run:
+          name: Validate consistency between BRANCH and TAG
+          command: |
+            ./tag_branch_consistency << parameters.dir >>
+      - run:
           name: Lint Dockerfile
           command: |
             dir=<< parameters.dir >>
