@@ -1,13 +1,13 @@
-#!/bin/bash -e
+#!/bin/sh -e
 
-if [[ $# -eq 0 ]]; then
+if [ $# -eq 0 ]; then
     echo "Usage: tag_branch_consistency DIR"
     exit 1
 fi
 
 DIR="$1"
 
-if [[ ! -f ${DIR}/BRANCH ]]; then
+if [ ! -f ${DIR}/BRANCH ]; then
     echo "Skip because BRANCH not found"
     exit 0
 fi
@@ -15,7 +15,7 @@ fi
 TAG=$(cat "${DIR}"/TAG)
 BRANCH=$(cat "${DIR}"/BRANCH)
 
-if [[ ${TAG} == ${BRANCH}* ]]; then
+if [ ${TAG} = $(echo ${BRANCH}$(echo ${TAG} | sed -e s/${BRANCH}//)) ]; then
     exit 0
 fi
 
