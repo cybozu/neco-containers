@@ -36,6 +36,12 @@ jobs:
                 echo << parameters.container-image >> > BUILDS
             fi
       - run:
+          name: Validate consistency between BRANCH and TAG
+          command: |
+            if [ "${CIRCLE_JOB}" = "build-golang" ]; then exit 0; fi
+            if [ "${CIRCLE_JOB}" = "build-gorush" ]; then exit 0; fi
+            ./tag_branch_consistency << parameters.container-image >>
+      - run:
           name: Lint Dockerfile
           command: |
             dir=<< parameters.dir >>
