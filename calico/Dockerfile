@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG CALICO_VERSION=3.11.1
+ARG CALICO_VERSION=3.13.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
@@ -55,6 +55,7 @@ COPY --from=build /go/src/github.com/projectcalico/node/LICENSE /usr/local/calic
 
 # For typha
 COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/typha.cfg /etc/calico/typha.cfg
+COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/nsswitch.conf /etc/nsswitch.conf
 
 # Since our binary isn't designed to run as PID 1, run it via the tini init daemon.
 ENV TINI_VERSION v0.18.0
