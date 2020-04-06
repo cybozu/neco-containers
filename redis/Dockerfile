@@ -5,7 +5,7 @@
 FROM quay.io/cybozu/ubuntu-dev:18.04 as build
 
 ARG GOSU_VERSION=1.11
-ARG REDIS_VERSION=5.0.7
+ARG REDIS_VERSION=5.0.8
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update && \
