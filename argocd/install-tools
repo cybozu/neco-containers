@@ -3,4 +3,5 @@
 DEST=/host
 
 cp --remove-destination /usr/local/argocd/bin/argocd $DEST/argocd
+cp --remove-destination /usr/local/argocd/bin/argocd-util $DEST/argocd-util
 chmod 755 $DEST/argocd
