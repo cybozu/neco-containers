@@ -3,11 +3,11 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG METALLB_VERSION=0.8.3
+ARG METALLB_VERSION=0.9.3
 
 WORKDIR /work/metallb
 
-RUN curl -fsSL -o metallb.tar.gz https://github.com/google/metallb/archive/v${METALLB_VERSION}.tar.gz \
+RUN curl -fsSL -o metallb.tar.gz https://github.com/metallb/metallb/archive/v${METALLB_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f metallb.tar.gz \
     && rm -f metallb.tar.gz \
     && CGO_ENABLED=0 GOLDFLAGS="-w -s" go install ./speaker ./controller
