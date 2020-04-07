@@ -20,7 +20,7 @@ func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	// +kubebuilder:scaffold:scheme
-	_ = contourv1.AddToScheme(scheme)
+	contourv1.AddKnownTypes(scheme)
 }
 
 func run(addr string, port int, conf *hooks.Config) error {

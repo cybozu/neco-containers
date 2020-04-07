@@ -24,7 +24,7 @@ func init() {
 	scheme.AddKnownTypes(gv, &calicov3.NetworkPolicy{})
 	metav1.AddToGroupVersion(scheme, gv)
 
-	_ = contourv1.AddToScheme(scheme)
+	contourv1.AddKnownTypes(scheme)
 
 	// We cannot use AddToScheme() of argoproj/argo-cd
 	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
