@@ -253,7 +253,7 @@ jobs:
       - run:
           name: Install Bazel
           environment:
-            BAZEL_VERSION: 1.1.0
+            BAZEL_VERSION: 1.2.1
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
@@ -327,7 +327,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-cert-manager:
-          version: 0.12.0
+          version: 0.14.1
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
@@ -354,7 +354,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.12.3
+          version: 1.13.1
       - build:
           name: build-envoy-container
           container-image: envoy

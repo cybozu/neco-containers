@@ -11,6 +11,8 @@ func fillHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPPr
 	hp.Name = name
 	hp.Namespace = "default"
 	hp.Annotations = annotations
+	hp.Status.CurrentStatus = "dummy"
+	hp.Status.Description = "dummy"
 	return hp
 }
 

@@ -12,6 +12,8 @@ func testHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPPr
 	hp.Name = name
 	hp.Namespace = "default"
 	hp.Annotations = annotations
+	hp.Status.CurrentStatus = "dummy"
+	hp.Status.Description = "dummy"
 
 	err := k8sClient.Create(testCtx, hp)
 	Expect(err).NotTo(HaveOccurred())
