@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu:18.04
 
-ARG SQUID_VERSION=3.5.27-1ubuntu1.4
+ARG SQUID_VERSION=3.5.27-1ubuntu1.5
 
 RUN apt-get update \
 && apt-get -y install --no-install-recommends \
