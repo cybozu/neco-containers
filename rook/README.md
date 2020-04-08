@@ -3,9 +3,8 @@
 Rook container
 ==============
 
-This container uses a cybozu's own Rook [cybozu-go/rook][]:neco-release. It's because the following feature and fixes are necessary for Neco and are not in the upstream's newest stable version (v1.2.6):
+This container uses a cybozu's own Rook [cybozu-go/rook][]:neco-release. It's because the following feature and fixes are necessary for Neco and are not in the upstream's newest stable version (v1.3.0):
 
-* Supporting `topologySpreadConstraints`. We created a branch to support it. However, merging it to upstream Rook would take time (see [Rook's issue](https://github.com/rook/rook/issues/4387)).
 * Some trivial bugs about dm devices  (see the Path at [cybozu-go/rook][]:use-dmcrypt-dev)
 
 Our custom Rook is created as follows to support the above-mentioned feature and fixes.
@@ -13,7 +12,7 @@ Our custom Rook is created as follows to support the above-mentioned feature and
 Until a release from Rook supports the above feature, the following update procedure is needed:
 
 ```
-# Please set $ROOK_VERSION & $MASTER_COMMIT, e.g. ROOK_VERSION="1.2.6"; MASTER_COMMIT="da3bf49b"
+# Please set $ROOK_VERSION & $MASTER_COMMIT, e.g. ROOK_VERSION="1.3.0"; MASTER_COMMIT="7701c0b"
 cd go/src/github.com/rook/rook
 git checkout master && git pull
 git remote add fork git@github.com:cybozu-go/rook.git
