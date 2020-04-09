@@ -15,10 +15,10 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=cert-manager-controller \
-    quay.io/cybozu/cert-manager:0.14.1.1 controller
+    quay.io/cybozu/cert-manager:0.14.2.1 controller
 ```
 
 License
 -------
 
-[LICENSES](https://github.com/jetstack/cert-manager/tree/v0.14.1/LICENSES) is a file bundled with all LICENSE files under the `vendor` directory.
+[LICENSES](https://github.com/jetstack/cert-manager/tree/v0.14.2/LICENSES) is a file bundled with all LICENSE files under the `vendor` directory.
