@@ -19,9 +19,8 @@ RUN make install \
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
 
-COPY --from=build /go/bin/contour /usr/local/contour/bin/contour
+COPY --from=build /go/bin/contour /bin/contour
 COPY --from=build /work/contour/LICENSE  /usr/local/contour/LICENSE
-ENV PATH=/usr/local/contour/bin:"$PATH"
 
 USER 10000:10000
 
