@@ -1,4 +1,4 @@
-# Grafana container
+# Grafana Operator container
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
@@ -17,3 +17,4 @@ FROM quay.io/cybozu/ubuntu:18.04
 USER 10000:10000
 
 COPY --from=build /usr/local/bin/grafana-operator /usr/local/bin/grafana-operator
+COPY --from=build /work/grafana-operator/LICENSE /usr/local/grafana-operator/LICENSE

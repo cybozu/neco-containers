@@ -1,14 +1,10 @@
-Grafana container
+Grafana Operator container
 ==================
 
-[Grafana](https://grafana.com/) is the dashboard for Prometheus.
+[Grafana Operator](https://github.com/integr8ly/grafana-operator) automates deployment of Grafana instances.
 
 Usage
 -----
 
-1. Run the container
-    ```console
-    $ docker run --net=host quay.io/cybozu/grafana:6.7.2
-    ```
-2. Access the browser `localhost:3000`
-3. Input user/password, the default values are admin/admin
+Run this image with the following deployment configuration.<br />
+https://github.com/integr8ly/grafana-operator/tree/master/deploy
