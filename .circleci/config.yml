@@ -375,6 +375,9 @@ workflows:
           name: build-grafana
           container-image: grafana
       - build:
+          name: build-grafana-operator
+          container-image: grafana-operator
+      - build:
           name: build-kind-node
           container-image: kind-node
       - build:
