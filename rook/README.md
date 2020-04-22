@@ -17,7 +17,7 @@ cd go/src/github.com/rook/rook
 git checkout master && git pull
 git remote add fork git@github.com:cybozu-go/rook.git
 git fetch fork && git checkout neco-release
-git rebase upstream/master
+git rebase fork/master
 # Please resolve conflict & dependencies carefully
 
 git push -f fork neco-release
