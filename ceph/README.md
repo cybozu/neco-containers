@@ -30,7 +30,7 @@ git rebase fork/master
 # Please resolve conflict & dependencies carefully
 
 git push -f fork neco-release
-git tag "v$CEPH_VERSION"
+git tag -a "v$CEPH_VERSION"
 git push fork "v$CEPH_VERSION"
 ```
 
