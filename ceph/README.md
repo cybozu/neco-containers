@@ -14,7 +14,7 @@ To use in Rook, you need to write a manifest of the custom resource CephCluster 
 Reference for updating image
 ----------------------------
 
-This container uses a cybozu's own Ceph [cybozu/ceph][]:neco-release. It's because using dmcrypt devices that is already encrypted by users is not supported in the upstream's newest stable version (v15.2.1), but the function is  necessary for Neco.
+This container uses a cybozu's patched Ceph [cybozu/ceph][]:neco-release. It's because using dmcrypt devices that is already encrypted by users is not supported in the upstream's newest stable version (v15.2.1), but the function is  necessary for Neco.
 
 Our custom Ceph is created as follows to support the above-mentioned feature.
 
