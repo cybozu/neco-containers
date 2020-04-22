@@ -14,13 +14,27 @@ To use in Rook, you need to write a manifest of the custom resource CephCluster 
 Reference for updating image
 ----------------------------
 
-This image based on the Dockerfile produced by `ceph/ceph-container`.
-You can make the Dockerfile with following commands:
-```console
-git clone git@github.com:ceph/ceph-container.git
-cd ceph-container
-make FLAVORS=luminous,debian,9 stage
-# Then the Dockerfile will be located at ./staging/luminous-debian-9-x86_64/daemon-base
+This container uses a cybozu's own Ceph [cybozu/ceph][]:neco-release. It's because using dmcrypt devices that is already encrypted by users is not supported in the upstream's newest stable version (v15.2.1), but the function is  necessary for Neco.
+
+Our custom Ceph is created as follows to support the above-mentioned feature.
+
+Until a release from Ceph supports the above feature, the following update procedure is needed:
+
+```
+# Please set $CEPH_VERSION, e.g. CEPH_VERSION="14.2.8.4"
+cd go/src/github.com/ceph/ceph
+git checkout master && git pull
+git remote add fork git@github.com:cybozu/ceph.git
+git fetch fork && git checkout neco-release
+git rebase fork/master
+# Please resolve conflict & dependencies carefully
+
+git push -f fork neco-release
+git tag "v$CEPH_VERSION"
+git push fork "v$CEPH_VERSION"
 ```
 
+Note that when a stable version of Ceph starts to support the above-mentioned feature and fixes, please update this procedure.
+
 [Ceph]: https://github.com/ceph/ceph
+[cybozu/ceph]: https://github.com/cybozu/ceph
