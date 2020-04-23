@@ -66,12 +66,13 @@ func Execute() {
 }
 
 func handler(rw http.ResponseWriter, req *http.Request) {
-	well.Go(monitorReady)
-	well.Go(monitorHTTP)
-	well.Go(monitorHTTPS)
+	env := well.NewEnvironment(req.Context())
+	env.Go(monitorReady)
+	env.Go(monitorHTTP)
+	env.Go(monitorHTTPS)
 
-	well.Stop()
-	err := well.Wait()
+	env.Stop()
+	err := env.Wait()
 	if err != nil {
 		rw.WriteHeader(http.StatusBadGateway)
 		rw.Write([]byte(err.Error()))
@@ -85,10 +86,19 @@ func handler(rw http.ResponseWriter, req *http.Request) {
 
 func monitorReady(ctx context.Context) error {
 	c := well.HTTPClient{
-		Timeout: config.timeout,
+		Client: &http.Client{
+			Timeout: config.timeout,
+		},
 	}
 
-	resp, err := c.Get(config.readyURL)
+	req, err := http.NewRequestWithContext(ctx, "GET", config.readyURL, nil)
+	if err != nil {
+		log.Error("failed to build HTTP request for readyURL", map[string]interface{}{
+			log.FnError: err,
+		})
+		return err
+	}
+	resp, err := c.Do(req)
 	if err != nil {
 		log.Error("failed to access readiness probe", map[string]interface{}{
 			log.FnError: err,
@@ -108,10 +118,19 @@ func monitorReady(ctx context.Context) error {
 
 func monitorHTTP(ctx context.Context) error {
 	c := well.HTTPClient{
-		Timeout: config.timeout,
+		Client: &http.Client{
+			Timeout: config.timeout,
+		},
 	}
 
-	_, err := c.Get(config.httpURL)
+	req, err := http.NewRequestWithContext(ctx, "GET", config.httpURL, nil)
+	if err != nil {
+		log.Error("failed to build HTTP request for httpURL", map[string]interface{}{
+			log.FnError: err,
+		})
+		return err
+	}
+	_, err = c.Do(req)
 	if err != nil {
 		log.Error("failed to access HTTP endpoint", map[string]interface{}{
 			log.FnError: err,
