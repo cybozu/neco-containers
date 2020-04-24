@@ -314,6 +314,9 @@ workflows:
       - test-go-sources:
           name: test-go-sources-testhttpd
           directory: testhttpd/src
+      - test-go-sources:
+          name: test-go-sources-envoy
+          directory: envoy
       - build:
           name: build-argocd
           container-image: argocd
