@@ -2,9 +2,11 @@ package hooks
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
-	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -23,15 +25,20 @@ func NewGrafanaDashboardValidator(c client.Client, dec *admission.Decoder) http.
 }
 
 func (v *grafanaDashboardValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	db := &integreatlyv1alpha1.GrafanaDashboard{}
-	err := v.decoder.Decode(req, db)
+	gd := &unstructured.Unstructured{}
+	gd.SetGroupVersionKind(schema.GroupVersionKind{Group: "integreatly.org", Kind: "GrafanaDashboard", Version: "v1alpha1"})
+	err := v.decoder.Decode(req, gd)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if len(db.Spec.Plugins) > 0 {
-		return admission.Denied("spec.plugins must be empty")
+	plugins, _, err := unstructured.NestedSlice(gd.UnstructuredContent(), "spec", "plugins")
+	if err != nil {
+		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.plugins; %w", err))
 	}
 
+	if len(plugins) > 0 {
+		return admission.Denied("spec.plugins must be empty")
+	}
 	return admission.Allowed("ok")
 }
