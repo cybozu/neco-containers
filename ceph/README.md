@@ -26,7 +26,7 @@ cd go/src/github.com/ceph/ceph
 git checkout master && git pull
 git remote add fork git@github.com:cybozu/ceph.git
 git fetch fork && git checkout neco-release
-git rebase fork/master
+git rebase master
 # Please resolve conflict & dependencies carefully
 
 git push -f fork neco-release
