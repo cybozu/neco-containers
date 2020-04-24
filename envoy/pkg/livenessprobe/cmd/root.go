@@ -21,6 +21,14 @@ var config struct {
 	httpsAddr  string
 }
 
+type monitor struct {
+	client    *http.Client
+	timeout   time.Duration
+	readyURL  string
+	httpURL   string
+	httpsAddr string
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "livenessprobe",
 	Short: "liveness probe for Envoy",
@@ -35,25 +43,48 @@ var rootCmd = &cobra.Command{
 		}
 	},
 
-	RunE: func(cmd *cobra.Command, args []string) error {
+	Run: func(cmd *cobra.Command, args []string) {
 		mux := http.NewServeMux()
-		mux.HandleFunc("/", handler)
-		serv := &well.HTTPServer{
-			Server: &http.Server{
-				Addr:    config.listenAddr,
-				Handler: mux,
-			},
-		}
-		err := serv.ListenAndServe()
-		if err != nil {
-			return err
-		}
 
-		err = well.Wait()
-		if err != nil && !well.IsSignaled(err) {
-			return err
+		m := &monitor{
+			client: &http.Client{
+				Transport: &http.Transport{
+					DisableKeepAlives: true,
+
+					// rest are copied from http.DefaultTransport
+					Proxy: http.ProxyFromEnvironment,
+					DialContext: (&net.Dialer{
+						Timeout:   30 * time.Second,
+						KeepAlive: 30 * time.Second,
+						DualStack: true,
+					}).DialContext,
+					ForceAttemptHTTP2:     true,
+					MaxIdleConns:          100,
+					IdleConnTimeout:       90 * time.Second,
+					TLSHandshakeTimeout:   10 * time.Second,
+					ExpectContinueTimeout: 1 * time.Second,
+				},
+				Timeout: config.timeout,
+			},
+			readyURL:  config.readyURL,
+			httpURL:   config.httpURL,
+			httpsAddr: config.httpsAddr,
+			timeout:   config.timeout,
 		}
-		return nil
+		mux.Handle("/", m)
+
+		serv := &http.Server{
+			Addr:    config.listenAddr,
+			Handler: mux,
+		}
+		well.Go(func(ctx context.Context) error {
+			<-ctx.Done()
+			return serv.Shutdown(ctx)
+		})
+		err := serv.ListenAndServe()
+		if err != http.ErrServerClosed {
+			log.ErrorExit(err)
+		}
 	},
 }
 
@@ -65,40 +96,35 @@ func Execute() {
 	}
 }
 
-func handler(rw http.ResponseWriter, req *http.Request) {
+func (m *monitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	env := well.NewEnvironment(req.Context())
-	env.Go(monitorReady)
-	env.Go(monitorHTTP)
-	env.Go(monitorHTTPS)
+	env.Go(m.monitorReady)
+	env.Go(m.monitorHTTP)
+	env.Go(m.monitorHTTPS)
 
 	env.Stop()
 	err := env.Wait()
 	if err != nil {
+		log.Error("returning failure result", map[string]interface{}{
+			log.FnError: err,
+		})
 		rw.WriteHeader(http.StatusBadGateway)
-		rw.Write([]byte(err.Error()))
 		return
 	}
 
-	rw.WriteHeader(http.StatusOK)
-	rw.Write([]byte("ok"))
+	log.Debug("returning success result", nil)
 	return
 }
 
-func monitorReady(ctx context.Context) error {
-	c := well.HTTPClient{
-		Client: &http.Client{
-			Timeout: config.timeout,
-		},
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", config.readyURL, nil)
+func (m *monitor) monitorReady(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", m.readyURL, nil)
 	if err != nil {
 		log.Error("failed to build HTTP request for readyURL", map[string]interface{}{
 			log.FnError: err,
 		})
 		return err
 	}
-	resp, err := c.Do(req)
+	resp, err := m.client.Do(req)
 	if err != nil {
 		log.Error("failed to access readiness probe", map[string]interface{}{
 			log.FnError: err,
@@ -116,21 +142,15 @@ func monitorReady(ctx context.Context) error {
 	return nil
 }
 
-func monitorHTTP(ctx context.Context) error {
-	c := well.HTTPClient{
-		Client: &http.Client{
-			Timeout: config.timeout,
-		},
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "GET", config.httpURL, nil)
+func (m *monitor) monitorHTTP(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, "GET", m.httpURL, nil)
 	if err != nil {
 		log.Error("failed to build HTTP request for httpURL", map[string]interface{}{
 			log.FnError: err,
 		})
 		return err
 	}
-	_, err = c.Do(req)
+	_, err = m.client.Do(req)
 	if err != nil {
 		log.Error("failed to access HTTP endpoint", map[string]interface{}{
 			log.FnError: err,
@@ -143,8 +163,8 @@ func monitorHTTP(ctx context.Context) error {
 	return nil
 }
 
-func monitorHTTPS(ctx context.Context) error {
-	conn, err := net.DialTimeout("tcp", config.httpsAddr, config.timeout)
+func (m *monitor) monitorHTTPS(ctx context.Context) error {
+	conn, err := net.DialTimeout("tcp", m.httpsAddr, m.timeout)
 	if err != nil {
 		log.Error("failed to connect to HTTPS endpoint", map[string]interface{}{
 			log.FnError: err,
@@ -160,9 +180,9 @@ func monitorHTTPS(ctx context.Context) error {
 
 func init() {
 	fs := rootCmd.Flags()
-	fs.StringVar(&config.listenAddr, "listen-addr", ":8003", "Listen address for probe")
+	fs.StringVar(&config.listenAddr, "listen-addr", ":8502", "Listen address for probe")
 	fs.DurationVar(&config.timeout, "timeout", time.Second*5, "Timeout")
-	fs.StringVar(&config.readyURL, "ready-url", "http://0.0.0.0:8002/ready", "URL of Envoy readiness probe")
-	fs.StringVar(&config.httpURL, "http-url", "http://0.0.0.0:8080/", "URL for checking HTTP behavior")
-	fs.StringVar(&config.httpsAddr, "https-addr", "0.0.0.0:8443", "Address for checking HTTPS behavior")
+	fs.StringVar(&config.readyURL, "ready-url", "http://localhost:8002/ready", "URL of Envoy readiness probe")
+	fs.StringVar(&config.httpURL, "http-url", "http://localhost:8080/", "URL for checking HTTP behavior")
+	fs.StringVar(&config.httpsAddr, "https-addr", "localhost:8443", "Address for checking HTTPS behavior")
 }
