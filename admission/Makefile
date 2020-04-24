@@ -5,6 +5,7 @@ CTRLTOOLS_VERSION = 0.2.8
 CALICO_VERSION = 3.11
 CONTOUR_VERSION = 1.3.0
 ARGOCD_VERSION = 1.5.2
+GRAFANA_OPERATOR_VERSION = 3.2.0
 
 SUDO=sudo
 GOOS := $(shell go env GOOS)
@@ -49,6 +50,7 @@ crds:
 	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
+	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/integr8ly/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
 
 clean:
 	rm -rf bin

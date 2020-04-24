@@ -24,11 +24,12 @@ import (
 )
 
 var (
-	podMutatingWebhookPath     = "/mutate-pod"
-	contourMutatingWebhookPath = "/mutate-projectcontour-io-httpproxy"
-	calicoValidateWebhookPath  = "/validate-projectcalico-org-networkpolicy"
-	contourValidateWebhookPath = "/validate-projectcontour-io-httpproxy"
-	argocdValidateWebhookPath  = "/validate-argoproj-io-application"
+	podMutatingWebhookPath              = "/mutate-pod"
+	contourMutatingWebhookPath          = "/mutate-projectcontour-io-httpproxy"
+	calicoValidateWebhookPath           = "/validate-projectcalico-org-networkpolicy"
+	contourValidateWebhookPath          = "/validate-projectcontour-io-httpproxy"
+	argocdValidateWebhookPath           = "/validate-argoproj-io-application"
+	grafanaDashboardValidateWebhookPath = "/validate-integreatly-org-grafanadashboard"
 )
 
 var k8sClient client.Client
@@ -189,6 +190,29 @@ var _ = BeforeSuite(func() {
 									APIGroups:   []string{"argoproj.io"},
 									APIVersions: []string{"v1alpha1"},
 									Resources:   []string{"applications"},
+								},
+							},
+						},
+					},
+					{
+						Name:          "vgrafanadashboard.kb.io",
+						FailurePolicy: &failPolicy,
+						SideEffects:   &sideEffect,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &grafanaDashboardValidateWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Create,
+									admissionregistrationv1beta1.Update,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{"integreatly.org"},
+									APIVersions: []string{"v1alpha1"},
+									Resources:   []string{"grafanadashboards"},
 								},
 							},
 						},

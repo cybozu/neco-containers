@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	integreatlyv1alpha1 "github.com/integr8ly/grafana-operator/pkg/apis/integreatly/v1alpha1"
 	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,6 +26,7 @@ func init() {
 	metav1.AddToGroupVersion(scheme, gv)
 
 	contourv1.AddKnownTypes(scheme)
+	_ = integreatlyv1alpha1.AddToScheme(scheme)
 
 	// We cannot use AddToScheme() of argoproj/argo-cd
 	// because it introduces references to k8s.io/kubernetes, which confuses vendor versions.
@@ -52,6 +54,7 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, opts *envtest.WebhookInstallO
 	wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
 	wh.Register(contourValidateWebhookPath, NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
+	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 
 	if err := mgr.Start(stopCh); err != nil {
 		return err

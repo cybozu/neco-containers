@@ -70,3 +70,12 @@ PodMutator mutates Pod manifests to mount writable emptyDir to `/tmp` for each c
 The purpose of this mutator is to prevent Pods from unexpected death by writing to read-only filesystem. 
 
 However, Pods that already have another volumes mounted under `/tmp/*` are excluded from the mutating target.
+
+GrafanaDashboardValidator
+-------------------------
+
+GrafanaDashboardValidator validates [GrafanaDashboard](https://github.com/integr8ly/grafana-operator/blob/v3.2.0/documentation/dashboards.md).
+
+This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` is empty.
+
+The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.

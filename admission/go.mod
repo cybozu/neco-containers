@@ -3,6 +3,7 @@ module github.com/cybozu/neco-containers/admission
 go 1.13
 
 require (
+	github.com/integr8ly/grafana-operator v2.0.0+incompatible
 	github.com/onsi/ginkgo v1.11.0
 	github.com/onsi/gomega v1.8.1
 	github.com/projectcalico/libcalico-go v1.7.2-0.20191008175127-399044ecb659

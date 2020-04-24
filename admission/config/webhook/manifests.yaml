@@ -102,3 +102,21 @@ webhooks:
     - UPDATE
     resources:
     - networkpolicies
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-integreatly-org-grafanadashboard
+  failurePolicy: Fail
+  name: vgrafanadashboard.kb.io
+  rules:
+    - apiGroups:
+        - integreatly.org
+      apiVersions:
+        - v1alpha1
+      operations:
+        - CREATE
+        - UPDATE
+      resources:
+        - grafanadashboards
