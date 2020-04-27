@@ -94,7 +94,19 @@ func TestMonitorHTTP(t *testing.T) {
 
 	err = m.monitorHTTP(context.Background())
 	if err == nil {
-		t.Error("monitorHTTP returned nil when httpURL is not reachable")
+		t.Error("monitorHTTP returned nil when httpURL is not reachable and http request has succeeded before")
+	}
+
+	m2 := monitor{
+		client: &http.Client{
+			Timeout: 1 * time.Second,
+		},
+		httpURL: m.httpURL,
+	}
+
+	err = m2.monitorHTTP(context.Background())
+	if err != nil {
+		t.Error("monitorHTTP returned non-nil when httpURL is not reachable and http request has not succeeded before")
 	}
 }
 
@@ -118,6 +130,15 @@ func TestMonitorHTTPS(t *testing.T) {
 
 	err = m.monitorHTTPS(context.Background())
 	if err == nil {
-		t.Error("monitorHTTPS returned nil when httpsAddr is not reachable")
+		t.Error("monitorHTTPS returned nil when httpsAddr is not reachable and connection has succeeded before")
+	}
+
+	m2 := monitor{
+		httpsAddr: m.httpsAddr,
+	}
+
+	err = m2.monitorHTTPS(context.Background())
+	if err != nil {
+		t.Error("monitorHTTPS returned non-nil when httpsAddr is not reachable and connection has not succeeded before")
 	}
 }

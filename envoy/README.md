@@ -19,4 +19,13 @@ Usage
     quay.io/cybozu/envoy:1.12
     ```
 
+Livenessprobe
+-----
+
+Envoy has its own probe, but it does not guarantee that Envoy is working correctly.
+Therefore, we developed a custom probe for confirming Envoy is listening on HTTP/HTTPS endpoints.
+
+As Envoy does not start listening on HTTP/HTTPS endpoints until the corresponding HTTPProxy/IngressRoute is created, the custom probe  returns success at the start until it really succeeds to connect.
+
+
 [Envoy]: https://github.com/envoyproxy/envoy
