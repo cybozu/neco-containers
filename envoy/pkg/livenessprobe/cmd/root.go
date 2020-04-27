@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"sync/atomic"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -22,11 +23,32 @@ var config struct {
 }
 
 type monitor struct {
-	client    *http.Client
-	timeout   time.Duration
-	readyURL  string
-	httpURL   string
-	httpsAddr string
+	client         *http.Client
+	timeout        time.Duration
+	readyURL       string
+	httpURL        string
+	httpsAddr      string
+	httpActivated  atomicBool
+	httpsActivated atomicBool
+}
+
+type atomicBool struct {
+	flag int32
+}
+
+func (b *atomicBool) set(flag bool) {
+	var val int32
+	if flag {
+		val = 1
+	}
+	atomic.StoreInt32(&b.flag, val)
+}
+
+func (b *atomicBool) get() bool {
+	if atomic.LoadInt32(&b.flag) == 0 {
+		return false
+	}
+	return true
 }
 
 var rootCmd = &cobra.Command{
@@ -148,11 +170,15 @@ func (m *monitor) monitorHTTP(ctx context.Context) error {
 		log.Error("failed to access HTTP endpoint", map[string]interface{}{
 			log.FnError: err,
 		})
+		if !m.httpActivated.get() {
+			return nil
+		}
 		return err
 	}
 
 	// Status code is not checked.
 	// The current implementation of Envoy returns 404, but this can be changed.
+	m.httpActivated.set(true)
 	return nil
 }
 
@@ -162,12 +188,16 @@ func (m *monitor) monitorHTTPS(ctx context.Context) error {
 		log.Error("failed to connect to HTTPS endpoint", map[string]interface{}{
 			log.FnError: err,
 		})
+		if !m.httpsActivated.get() {
+			return nil
+		}
 		return err
 	}
 
 	if conn != nil {
 		conn.Close()
 	}
+	m.httpsActivated.set(true)
 	return nil
 }
 
