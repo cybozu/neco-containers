@@ -34,16 +34,12 @@ var rootCmd = &cobra.Command{
 	Short: "liveness probe for Envoy",
 	Long:  `Liveness probe for Envoy.`,
 
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		cmd.SilenceUsage = true
-
+	Run: func(cmd *cobra.Command, args []string) {
 		err := well.LogConfig{}.Apply()
 		if err != nil {
 			log.ErrorExit(err)
 		}
-	},
 
-	Run: func(cmd *cobra.Command, args []string) {
 		mux := http.NewServeMux()
 
 		m := &monitor{
@@ -81,7 +77,7 @@ var rootCmd = &cobra.Command{
 			<-ctx.Done()
 			return serv.Shutdown(ctx)
 		})
-		err := serv.ListenAndServe()
+		err = serv.ListenAndServe()
 		if err != http.ErrServerClosed {
 			log.ErrorExit(err)
 		}
@@ -105,9 +101,6 @@ func (m *monitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	env.Stop()
 	err := env.Wait()
 	if err != nil {
-		log.Error("returning failure result", map[string]interface{}{
-			log.FnError: err,
-		})
 		rw.WriteHeader(http.StatusBadGateway)
 		return
 	}

@@ -16,7 +16,7 @@ COPY workspace/envoy /usr/local/bin/envoy
 COPY workspace/docker-entrypoint.sh /docker-entrypoint.sh
 COPY workspace/LICENSE /usr/local/share/doc/envoy/LICENSE
 COPY envoy.yaml /etc/envoy/envoy.yaml
-COPY --from=build /go/bin /
+COPY --from=build /go/bin/livenessprobe /usr/local/bin/livenessprobe
 
 EXPOSE 9901
 
