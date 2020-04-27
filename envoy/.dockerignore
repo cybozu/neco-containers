@@ -1,3 +1,6 @@
 *
 !workspace
 !envoy.yaml
+!pkg
+!vendor
+!go.mod
