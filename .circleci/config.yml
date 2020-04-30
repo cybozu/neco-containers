@@ -430,6 +430,9 @@ workflows:
       - build:
           name: build-unbound
           container-image: unbound
+      - build:
+          name: build-vault
+          container-image: vault
       - build-admission
       - build:
           name: build-admission-image
