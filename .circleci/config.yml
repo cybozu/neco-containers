@@ -317,6 +317,14 @@ workflows:
       - test-go-sources:
           name: test-go-sources-envoy
           directory: envoy
+      - build-admission
+      - build:
+          name: build-admission-image
+          container-image: neco-admission
+          dir: admission
+          attach: true
+          requires:
+            - build-admission
       - build:
           name: build-argocd
           container-image: argocd
@@ -329,6 +337,15 @@ workflows:
       - build:
           name: build-calico
           container-image: calico
+      - build-ceph:
+          version: 15.2.1.1
+      - build:
+          name: build-ceph-container
+          container-image: ceph
+          attach: true
+          dir: ceph
+          requires:
+            - build-ceph
       - build-cert-manager:
           version: 0.14.2
       - build:
@@ -374,6 +391,9 @@ workflows:
       - build:
           name: build-golang
           container-image: golang
+      - build:
+          name: build-gorush
+          container-image: gorush
       - build:
           name: build-grafana
           container-image: grafana
@@ -433,23 +453,3 @@ workflows:
       - build:
           name: build-vault
           container-image: vault
-      - build-admission
-      - build:
-          name: build-admission-image
-          container-image: neco-admission
-          dir: admission
-          attach: true
-          requires:
-            - build-admission
-      - build:
-          name: build-gorush
-          container-image: gorush
-      - build-ceph:
-          version: 15.2.1.1
-      - build:
-          name: build-ceph-container
-          container-image: ceph
-          attach: true
-          dir: ceph
-          requires:
-            - build-ceph
