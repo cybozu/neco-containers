@@ -347,7 +347,7 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 0.14.2
+          version: 0.14.3
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
