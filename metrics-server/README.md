@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/metrics-server/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/metrics-server)
-
 metrics-server
 ==============
 
@@ -8,3 +6,8 @@ This directory provides a Dockerfile to build a Docker container running [metric
 For more information and usage, see [metrics-server][] project page.
 
 [metrics-server]: https://github.com/kubernetes-sigs/metrics-server
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/metrics-server)

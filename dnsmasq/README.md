@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/dnsmasq/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/dnsmasq)
-
 dnsmasq-container
 ==============
 
@@ -14,3 +12,8 @@ To launch `dnsmasq` by `docker run`:
          --net=host quay.io/cybozu/dnsmasq \
          -d -q \
          --dhcp-range=192.168.1.3,192.168.1.254
+ 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/dnsmasq)

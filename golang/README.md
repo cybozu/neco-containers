@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/golang/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/golang)
-
 Go container
 ============
 
@@ -17,3 +15,8 @@ tools:
 * [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
 
 This container is based on [quay.io/cybozu/ubuntu-dev](https://quay.io/repository/cybozu/ubuntu-dev).
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/golang)

@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/testhttpd/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/testhttpd)
-
 testhttpd container
 ===============
 
@@ -15,3 +13,8 @@ Usage
 ```console
 $ kubectl run quay.io/cybozu/testhttpd
 ``` 
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/testhttpd)

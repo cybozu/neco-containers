@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/cert-manager/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/cert-manager)
-
 cert-manager container
 ======================
 
@@ -22,3 +20,8 @@ License
 -------
 
 [LICENSES](https://github.com/jetstack/cert-manager/tree/v0.14.3/LICENSES) is a file bundled with all LICENSE files under the `vendor` directory.
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/cert-manager)

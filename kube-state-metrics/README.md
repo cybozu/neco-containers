@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/kube-state-metrics/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/kube-state-metrics)
-
 kube-state-metrics
 ==================
 
@@ -13,3 +11,8 @@ $ docker run -p 8080:8080 -p 8081:8081 \
     quay.io/cybozu/kube-state-metrics:1.9.0.1 \
     --kubeconfig=<KUBE-CONFIG>\
 ```
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/kube-state-metrics)

@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/pause/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/pause)
-
 pause container
 ===============
 
@@ -9,3 +7,8 @@ Usage
 -----
 
 Specify the image name for kubelet with `--pod-infra-container-image` option.
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/pause)

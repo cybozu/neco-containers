@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/local-pv-provisioner/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/local-pv-provisioner)
-
 local-pv-provisioner
 ====================
 
@@ -173,3 +171,7 @@ spec:
 | node-name          | LP_NODE_NAME          |                      | The name of Node on which this program is running. It is a required flag.                           |
 | polling-interval   | LP_POLLING_INTERVAL   | `5m`                 | Polling interval to check devices.                                                                  |
 | development        | LP_DEVELOPMENT        | `false`              | Use development logger config.                                                                      |
+
+## Docker images
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/local-pv-provisioner)

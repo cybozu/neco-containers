@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/bird/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/bird)
-
 [BIRD][] container
 ==================
 
@@ -85,3 +83,8 @@ Daemon is up and running
 ```
 
 [BIRD]: https://bird.network.cz/
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/bird)

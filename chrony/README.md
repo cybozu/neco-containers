@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/chrony/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/chrony)
-
 [Chrony][] container
 ================
 
@@ -37,3 +35,8 @@ $ docker exec -it chrony chronyc tracking
 ```
 
 [Chrony]: https://chrony.tuxfamily.org/
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/chrony)

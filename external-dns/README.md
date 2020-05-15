@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/external-dns/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/external-dns)
-
 ExternalDNS container
 =====================
 
@@ -20,3 +18,8 @@ $ docker run -d --read-only --name=external-dns \
 ```
 
 [ExternalDNS]: https://github.com/kubernetes-incubator/external-dns/
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/external-dns)

@@ -12,3 +12,8 @@ Usage
     ```
 2. Access the browser `localhost:3000`
 3. Input user/password, the default values are admin/admin
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/grafana)

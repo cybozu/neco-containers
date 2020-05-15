@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/squid/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/squid)
-
 # Squid container
 
 [Squid](http://www.squid-cache.org/) is a web proxy cache service.
@@ -15,3 +13,7 @@ Prepare configuration file `squid.conf` at working directory, then execute follo
         --mount type=bind,source=/tmp/squid,target=/var/log/squid \
         --mount type=bind,source="$(pwd)"/squid.conf,target=/etc/squid/squid.conf \
         quay.io/cybozu/squid:3.5.27.1.9
+ 
+## Docker images
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/squid)

@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/serf/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/serf)
-
 serf-container
 ===============
 
@@ -41,3 +39,8 @@ To use serf cli, first install it in a host OS directory `DIR`:
 Then run `serf` as follows:
 
     $ DIR/serf members
+ 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/serf)

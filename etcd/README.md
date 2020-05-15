@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/etcd/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/etcd)
-
 etcd-container
 ==============
 
@@ -29,3 +27,8 @@ To use `etcdctl`, first install it in a host directory `DIR`:
 Then run `etcdctl` as follows:
 
     $ DIR/etcdctl get /
+ 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/etcd)
