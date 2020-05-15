@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/vault/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/vault)
-
 vault-container
 ===============
 
