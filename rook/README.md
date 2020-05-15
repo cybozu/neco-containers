@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/rook/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/rook)
-
 Rook container
 ==============
 
@@ -31,3 +29,8 @@ Note that when a stable version of Rook starts to support the above-mentioned fe
 
 [rook]: https://github.com/rook/rook
 [cybozu-go/rook]: https://github.com/cybozu-go/rook
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/rook)

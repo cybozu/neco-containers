@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/metallb/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/metallb)
-
 MetalLB container
 =================
 
@@ -9,3 +7,8 @@ that runs [metallb][].
 For more information and usage, see [metallb][] project page.
 
 [metallb]: https://metallb.universe.tf/
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/metallb)

@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/kubernetes/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/kubernetes)
-
 kubernetes container
 ===================
 
@@ -26,3 +24,8 @@ To launch `apiserver` by `docker run`:
         --enable-bootstrap-token-auth=true \
         --etcd-servers=http://192.168.1.101:2379,http://192.168.1.102:2379,http://192.168.1.103:2379 \
         --storage-backend=etcd3
+ 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/kubernetes)

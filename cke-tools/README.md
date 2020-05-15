@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/cke-tools/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/cke-tools)
-
 cke-tools container
 ===================
 
@@ -45,3 +43,8 @@ $ docker run -d --read-only \
     quay.io/cybozu/cke-tools:1.7 \
       -config /config/config.yml
 ```
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/cke-tools)

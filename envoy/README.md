@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/envoy/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/envoy)
-
 Envoy container
 ====================
 
@@ -29,3 +27,8 @@ As Envoy does not start listening on HTTP/HTTPS endpoints until the correspondin
 
 
 [Envoy]: https://github.com/envoyproxy/envoy
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/envoy)

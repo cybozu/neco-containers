@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/dex/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/dex)
-
 dex container
 =================
 
@@ -18,3 +16,8 @@ $ docker run -d --read-only --name=dex \
 ```
 
 [dex]: https://github.com/dexidp/dex
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/dex)

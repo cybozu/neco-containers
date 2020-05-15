@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/calico/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/calico)
-
 calico container
 ================
 
@@ -26,3 +24,8 @@ $ docker run -d --read-only --name=calico --entrypoint="tini --"\
 
 [BIRD]: https://github.com/projectcalico/bird
 [confd]: https://github.com/projectcalico/confd
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/calico)

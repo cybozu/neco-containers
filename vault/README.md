@@ -39,3 +39,8 @@ To use vault cli, first install it in a host OS directory `DIR`:
 Then run `vault` as follows:
 
     $ DIR/vault status
+ 
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/vault)

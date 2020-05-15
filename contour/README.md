@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/contour/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/contour)
-
 Contour container
 =================
 
@@ -18,3 +16,8 @@ $ docker run -d --read-only --name=contour \
 ```
 
 [Contour]: https://github.com/heptio/contour
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/contour)

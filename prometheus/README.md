@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/prometheus/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/prometheus)
-
 Prometheus container
 ====================
 
@@ -54,3 +52,8 @@ $ docker run -d --read-only --cap-drop ALL \
     quay.io/cybozu/prometheus:2.7.1-1 \
     --persistence.file=/data/metrics
 ```
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/prometheus)

@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/teleport/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/teleport)
-
 Teleport container
 ==================
 
@@ -30,3 +28,8 @@ $ docker run  --rm -u root:root \
 ```
 
 [Teleport]: https://github.com/gravitational/teleport
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/teleport)

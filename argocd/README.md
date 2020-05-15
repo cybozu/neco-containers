@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/argocd/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/argocd)
-
 # Argo CD container
 
 This directory provides a Dockerfile to build a argocd container
@@ -21,3 +19,7 @@ $ docker run --rm -u root:root \
 ```console
 $ kubectl apply -f install.yml
 ```
+
+## Docker images
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/argocd)

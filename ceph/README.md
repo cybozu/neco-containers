@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/ceph/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/ceph)
-
 Ceph container
 ==============
 
@@ -38,3 +36,8 @@ Note that when a stable version of Ceph starts to support the above-mentioned fe
 
 [Ceph]: https://github.com/ceph/ceph
 [cybozu/ceph]: https://github.com/cybozu/ceph
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/ceph)

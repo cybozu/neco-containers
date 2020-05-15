@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/neco-admission/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/neco-admission)
-
 neco-admission
 ==============
 
@@ -79,3 +77,8 @@ GrafanaDashboardValidator validates [GrafanaDashboard](https://github.com/integr
 This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` is empty.
 
 The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/neco-admission)

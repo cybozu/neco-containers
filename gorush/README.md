@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/gorush/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/gorush)
-
 Gorush container
 ==================
 
@@ -19,3 +17,8 @@ $ docker run -d --rm --read-only \
 ```
 
 [Gorush]: https://github.com/appleboy/gorush
+
+Docker images
+-------------
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/gorush)

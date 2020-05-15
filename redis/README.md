@@ -1,5 +1,3 @@
-[![Docker Repository on Quay](https://quay.io/repository/cybozu/redis/status "Docker Repository on Quay")](https://quay.io/repository/cybozu/redis)
-
 # Redis container
 
 [Redis](https://redis.io/) is an in-memory database that persists on disk.
@@ -21,3 +19,7 @@ OK
 127.0.0.1:6379> keys *
 1) "foo"
 ```
+
+## Docker images
+
+Docker images are available on [Quay.io](https://quay.io/repository/cybozu/redis)
