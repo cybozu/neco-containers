@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG K8S_VERSION=1.17.5
+ARG K8S_VERSION=1.17.6
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
