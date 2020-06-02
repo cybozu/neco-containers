@@ -139,6 +139,7 @@ func (m *monitor) monitorReady(ctx context.Context) error {
 		})
 		return err
 	}
+
 	resp, err := m.client.Do(req)
 	if err != nil {
 		log.Error("failed to access readiness probe", map[string]interface{}{
@@ -146,6 +147,7 @@ func (m *monitor) monitorReady(ctx context.Context) error {
 		})
 		return err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		log.Error("readiness probe returned non-OK", map[string]interface{}{
@@ -165,7 +167,8 @@ func (m *monitor) monitorHTTP(ctx context.Context) error {
 		})
 		return err
 	}
-	_, err = m.client.Do(req)
+
+	resp, err := m.client.Do(req)
 	if err != nil {
 		log.Error("failed to access HTTP endpoint", map[string]interface{}{
 			log.FnError: err,
@@ -175,6 +178,7 @@ func (m *monitor) monitorHTTP(ctx context.Context) error {
 		}
 		return err
 	}
+	defer resp.Body.Close()
 
 	// Status code is not checked.
 	// The current implementation of Envoy returns 404, but this can be changed.
