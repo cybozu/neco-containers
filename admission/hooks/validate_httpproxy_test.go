@@ -29,17 +29,40 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should deny updating httproxy with empty or no annotation", func() {
+	It("should deny httpproxy with no ingress.class annotations", func() {
+		hp := fillHTTPProxy("vhp2", nil)
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).Should(HaveOccurred())
+
+	})
+
+	It("should deny httpproxy to update kubernetes.io/ingress.class value", func() {
 		hp := fillHTTPProxy("vhp3", map[string]string{annotationKubernetesIngressClass: "global"})
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		hp.Annotations[annotationKubernetesIngressClass] = ""
+		hp.Annotations[annotationKubernetesIngressClass] = "forest"
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
+	})
 
-		delete(hp.Annotations, annotationKubernetesIngressClass)
+	It("should deny httpproxy to update projectcontour.io/ingress.class value", func() {
+		hp := fillHTTPProxy("vhp4", map[string]string{annotationContourIngressClass: "global"})
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+
+		hp.Annotations[annotationContourIngressClass] = "forest"
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
+	})
+
+	It("should allow httpproxy to update other annotations", func() {
+		hp := fillHTTPProxy("vhp5", map[string]string{annotationContourIngressClass: "global"})
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+
+		hp.Annotations["foo"] = "forest"
+		err = k8sClient.Update(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
 	})
 })
