@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG ROOK_VERSION=1.3.2-master-382c6c3
+ARG ROOK_VERSION=1.3.4-master-9911e5cc
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -19,7 +19,7 @@ WORKDIR ${ROOK_DIR}/images/ceph
 RUN make generate-csv-ceph-templates
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:15.2.1.1
+FROM quay.io/cybozu/ceph:15.2.3.1
 
 ARG TINI_VERSION=v0.16.1
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
