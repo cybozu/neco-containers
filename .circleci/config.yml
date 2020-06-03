@@ -106,7 +106,7 @@ jobs:
             mkdir -p src/workspace
             if [ ! -f BUILDS ]; then exit 0; fi
             cd src
-            git clone https://github.com/cybozu/ceph.git
+            git clone https://github.com/ceph/ceph.git
             cd ceph
             git checkout v<< parameters.version >>
             git submodule update --init --recursive
@@ -337,7 +337,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-ceph:
-          version: 15.2.1.1
+          version: 15.2.3
       - build:
           name: build-ceph-container
           container-image: ceph
