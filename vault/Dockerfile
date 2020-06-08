@@ -10,9 +10,7 @@ RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.
 WORKDIR /work/vault
 
 COPY disable-etcd-version-detection.patch .
-COPY remove-broken-golanci-lint.patch .
 RUN patch -p1 < disable-etcd-version-detection.patch
-RUN patch -p1 < remove-broken-golanci-lint.patch
 
 RUN make fmt && \
     make bootstrap && \

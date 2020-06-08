@@ -1,4 +1,3 @@
 *
 !install-tools
 !disable-etcd-version-detection.patch
-!remove-broken-golanci-lint.patch
