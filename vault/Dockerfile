@@ -3,16 +3,14 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG VAULT_VERSION=1.3.4
+ARG VAULT_VERSION=1.4.1
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
 WORKDIR /work/vault
 
 COPY disable-etcd-version-detection.patch .
-COPY remove-broken-golanci-lint.patch .
 RUN patch -p1 < disable-etcd-version-detection.patch
-RUN patch -p1 < remove-broken-golanci-lint.patch
 
 RUN make fmt && \
     make bootstrap && \
