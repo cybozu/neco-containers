@@ -1,15 +1,15 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
-ARG GRAFANA_VERSION=6.7.4
+FROM quay.io/cybozu/golang:1.14-bionic AS build
+ARG GRAFANA_VERSION=7.0.3
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana
 
-RUN GOFLAGS=-mod=vendor make build-go
+RUN make build-go
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends gnupg && \
@@ -37,10 +37,6 @@ ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bi
 
 WORKDIR $GF_PATHS_HOME
 
-RUN apt-get update && \
-    apt-get install --no-install-recommends -qq -y \
-    libfontconfig && \
-    rm -rf /var/lib/apt/lists/*
 COPY --from=build /work/grafana/conf ./conf
 
 RUN groupadd -r -g $GF_GID grafana && \
