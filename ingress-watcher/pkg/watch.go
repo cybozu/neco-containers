@@ -4,13 +4,14 @@ import (
 	"context"
 	"net/http"
 	"time"
+
+	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 )
 
 // Watcher watches target server health and creates metrics from it.
 type Watcher struct {
 	endpoint   string
 	interval   time.Duration
-	channel    chan string
 	httpClient *http.Client
 }
 
@@ -18,13 +19,11 @@ type Watcher struct {
 func NewWatcher(
 	endpoint string,
 	interval time.Duration,
-	channel chan string,
 	httpClient *http.Client,
 ) *Watcher {
 	return &Watcher{
 		endpoint:   endpoint,
 		interval:   interval,
-		channel:    channel,
 		httpClient: httpClient,
 	}
 }
@@ -38,11 +37,19 @@ func (w *Watcher) Run(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-tick.C:
-			health, err := w.httpClient.Get(w.endpoint)
+			res, err := w.httpClient.Get("http://" + w.endpoint)
 			if err != nil {
-				return err
+				metrics.HTTPGetFailTotal.WithLabelValues(w.endpoint).Inc()
+			} else {
+				metrics.HTTPGetSuccessfulTotal.WithLabelValues(res.Status, w.endpoint).Inc()
 			}
-			w.channel <- health.Status
+
+			res, err = w.httpClient.Get("https://" + w.endpoint)
+			if err != nil {
+				metrics.HTTPSGetFailTotal.WithLabelValues(w.endpoint).Inc()
+			} else {
+				metrics.HTTPSGetSuccessfulTotal.WithLabelValues(res.Status, w.endpoint).Inc()
+			}
 		}
 	}
 }
