@@ -3,13 +3,11 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 )
 
-var config struct {
+var rootConfig struct {
 	targetAddr string
 }
 
@@ -18,7 +16,7 @@ var rootCmd = &cobra.Command{
 	Short: "Ingress monitoring tool for Neco",
 	Long:  `Ingress monitoring tool for Neco.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%#v %#v", config, viper.GetString("target-addr"))
+		fmt.Printf("%#v", rootConfig)
 	},
 }
 
@@ -31,19 +29,7 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(initConfig)
-
 	fs := rootCmd.PersistentFlags()
-	fs.StringVarP(&config.targetAddr, "target-addr", "", "", "Target Ingress address and port.")
-
-	viper.BindPFlag("target-addr", fs.Lookup("target-addr"))
-	fs.Set("target-addr", viper.GetString("target-addr"))
-
+	fs.StringVarP(&rootConfig.targetAddr, "target-addr", "", "", "Target Ingress address and port.")
 	rootCmd.MarkPersistentFlagRequired("target-addr")
-}
-
-func initConfig() {
-	viper.SetEnvPrefix("iw")
-	viper.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
-	viper.AutomaticEnv()
 }
