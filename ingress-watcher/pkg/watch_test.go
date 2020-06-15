@@ -3,6 +3,7 @@ package pkg
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -11,6 +12,7 @@ import (
 	"github.com/cybozu-go/well"
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
 )
 
 const timeoutDuration = 550 * time.Millisecond
@@ -21,6 +23,13 @@ const (
 	httpGetFailTotalName        = "ingresswatcher_http_get_fail_total"
 	httpsGetFailTotalName       = "ingresswatcher_https_get_fail_total"
 )
+
+var metricsNames = []string{
+	httpGetSuccessfulTotalName,
+	httpsGetSuccessfulTotalName,
+	httpGetFailTotalName,
+	httpsGetFailTotalName,
+}
 
 func TestWatcherRun(t *testing.T) {
 	type fields struct {
@@ -38,16 +47,16 @@ func TestWatcherRun(t *testing.T) {
 		result map[string]float64
 	}{
 		{
-			name: "GET every 100ms in 550ms",
+			name: "GET success every 100ms in 550ms",
 			fields: fields{
 				endpoint: "foo",
 				interval: 100 * time.Millisecond,
-				httpClient: newTestClient(func(req *http.Request) *http.Response {
+				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return &http.Response{
 						StatusCode: http.StatusOK,
 						Body:       ioutil.NopCloser(bytes.NewBuffer([]byte(""))),
 						Header:     make(http.Header),
-					}
+					}, nil
 				}),
 			},
 			result: map[string]float64{
@@ -57,10 +66,31 @@ func TestWatcherRun(t *testing.T) {
 				httpsGetFailTotalName:       0,
 			},
 		},
+
+		{
+			name: "GET fail every 100ms in 550ms",
+			fields: fields{
+				endpoint: "foo",
+				interval: 100 * time.Millisecond,
+				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
+					return nil, errors.New("error")
+				}),
+			},
+			result: map[string]float64{
+				httpGetSuccessfulTotalName:  0,
+				httpsGetSuccessfulTotalName: 0,
+				httpGetFailTotalName:        5,
+				httpsGetFailTotalName:       5,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			registry := prometheus.NewRegistry()
+			metrics.HTTPGetSuccessfulTotal.Reset()
+			metrics.HTTPSGetSuccessfulTotal.Reset()
+			metrics.HTTPGetFailTotal.Reset()
+			metrics.HTTPSGetFailTotal.Reset()
 			registry.MustRegister(
 				metrics.HTTPGetSuccessfulTotal,
 				metrics.HTTPGetFailTotal,
@@ -87,35 +117,51 @@ func TestWatcherRun(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
+			mfMap := make(map[string]*dto.Metric)
 			for _, mf := range metricsFamily {
-				if mf.Name == nil {
-					t.Fatalf("%s: name should no be nil", tt.name)
+				if len(mf.Metric) != 1 {
+					t.Fatalf("%s: Metric should contain only one element.", *mf.Name)
 				}
-				for _, m := range mf.Metric {
-					v, ok := tt.result[*mf.Name]
-					if !ok {
-						t.Errorf("%s: value for %q is not found", tt.name, *mf.Name)
-					}
-					if v != *m.Counter.Value {
-						t.Errorf(
-							"%s: value for %q is wrong.  expected: %f, actual: %f",
-							tt.name,
-							*mf.Name,
-							*m.Counter.Value,
-							v,
-						)
-					}
+				mfMap[*mf.Name] = mf.Metric[0]
+			}
+
+			for _, n := range metricsNames {
+				m, ok := mfMap[n]
+				if !ok && tt.result[n] != 0 {
+					t.Errorf(
+						"%s: value for %q should be %f but not found.",
+						tt.name,
+						n,
+						tt.result[n],
+					)
+					continue
+				}
+				if !ok && tt.result[n] == 0 {
+					continue
+				}
+
+				v, ok := tt.result[n]
+				if !ok {
+					t.Fatalf("%s: not found", n)
+				}
+				if v != *m.Counter.Value {
+					t.Errorf(
+						"%s: value for %q is wrong.  expected: %f, actual: %f",
+						tt.name,
+						n,
+						v,
+						*m.Counter.Value,
+					)
 				}
 			}
 		})
 	}
 }
 
-type RoundTripFunc func(req *http.Request) *http.Response
+type RoundTripFunc func(req *http.Request) (*http.Response, error)
 
 func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
+	return f(req)
 }
 
 func newTestClient(fn RoundTripFunc) *http.Client {
