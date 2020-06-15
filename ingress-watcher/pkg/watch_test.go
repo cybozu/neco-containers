@@ -98,11 +98,11 @@ func TestWatcherRun(t *testing.T) {
 				metrics.HTTPSGetFailTotal,
 			)
 
-			w := &Watcher{
-				endpoint:   tt.fields.endpoint,
-				interval:   tt.fields.interval,
-				httpClient: tt.fields.httpClient,
-			}
+			w := NewWatcher(
+				tt.fields.endpoint,
+				tt.fields.interval,
+				tt.fields.httpClient,
+			)
 
 			env := well.NewEnvironment(context.Background())
 			env.Go(func(ctx context.Context) error {
