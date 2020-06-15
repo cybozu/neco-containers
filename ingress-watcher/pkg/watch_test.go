@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"testing"
@@ -16,17 +15,12 @@ import (
 
 const timeoutDuration = 550 * time.Millisecond
 
-type RoundTripFunc func(req *http.Request) *http.Response
-
-func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
-	return f(req), nil
-}
-
-func newTestClient(fn RoundTripFunc) *http.Client {
-	return &http.Client{
-		Transport: RoundTripFunc(fn),
-	}
-}
+const (
+	httpGetSuccessfulTotalName  = "ingresswatcher_http_get_successful_total"
+	httpsGetSuccessfulTotalName = "ingresswatcher_https_get_successful_total"
+	httpGetFailTotalName        = "ingresswatcher_http_get_fail_total"
+	httpsGetFailTotalName       = "ingresswatcher_https_get_fail_total"
+)
 
 func TestWatcherRun(t *testing.T) {
 	type fields struct {
@@ -37,10 +31,11 @@ func TestWatcherRun(t *testing.T) {
 	type args struct {
 		ctx context.Context
 	}
+
 	tests := []struct {
 		name   string
 		fields fields
-		result int
+		result map[string]float64
 	}{
 		{
 			name: "GET every 100ms in 550ms",
@@ -55,13 +50,23 @@ func TestWatcherRun(t *testing.T) {
 					}
 				}),
 			},
-			result: 5,
+			result: map[string]float64{
+				httpGetSuccessfulTotalName:  5,
+				httpsGetSuccessfulTotalName: 5,
+				httpGetFailTotalName:        0,
+				httpsGetFailTotalName:       0,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			registry := prometheus.NewRegistry()
-			registry.MustRegister(metrics.HTTPGetSuccessfulTotal, metrics.HTTPSGetSuccessfulTotal)
+			registry.MustRegister(
+				metrics.HTTPGetSuccessfulTotal,
+				metrics.HTTPGetFailTotal,
+				metrics.HTTPSGetSuccessfulTotal,
+				metrics.HTTPSGetFailTotal,
+			)
 
 			w := &Watcher{
 				endpoint:   tt.fields.endpoint,
@@ -78,8 +83,43 @@ func TestWatcherRun(t *testing.T) {
 			env.Stop()
 			env.Wait()
 
-			metrics, _ := registry.Gather()
-			fmt.Printf("%#v", metrics)
+			metricsFamily, err := registry.Gather()
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			for _, mf := range metricsFamily {
+				if mf.Name == nil {
+					t.Fatalf("%s: name should no be nil", tt.name)
+				}
+				for _, m := range mf.Metric {
+					v, ok := tt.result[*mf.Name]
+					if !ok {
+						t.Errorf("%s: value for %q is not found", tt.name, *mf.Name)
+					}
+					if v != *m.Counter.Value {
+						t.Errorf(
+							"%s: value for %q is wrong.  expected: %f, actual: %f",
+							tt.name,
+							*mf.Name,
+							*m.Counter.Value,
+							v,
+						)
+					}
+				}
+			}
 		})
+	}
+}
+
+type RoundTripFunc func(req *http.Request) *http.Response
+
+func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
+	return f(req), nil
+}
+
+func newTestClient(fn RoundTripFunc) *http.Client {
+	return &http.Client{
+		Transport: RoundTripFunc(fn),
 	}
 }
