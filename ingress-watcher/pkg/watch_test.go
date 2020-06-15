@@ -120,7 +120,7 @@ func TestWatcherRun(t *testing.T) {
 			mfMap := make(map[string]*dto.Metric)
 			for _, mf := range metricsFamily {
 				if len(mf.Metric) != 1 {
-					t.Fatalf("%s: Metric should contain only one element.", *mf.Name)
+					t.Fatalf("%s: metric %s should contain only one element.", tt.name, *mf.Name)
 				}
 				mfMap[*mf.Name] = mf.Metric[0]
 			}
@@ -142,7 +142,7 @@ func TestWatcherRun(t *testing.T) {
 
 				v, ok := tt.result[n]
 				if !ok {
-					t.Fatalf("%s: not found", n)
+					t.Fatalf("%s: value for %q not found", tt.name, n)
 				}
 				if v != *m.Counter.Value {
 					t.Errorf(

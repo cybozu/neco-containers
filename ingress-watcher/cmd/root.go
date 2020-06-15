@@ -5,10 +5,19 @@ import (
 	"os"
 	"time"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 )
+
+var registry *prometheus.Registry
+
+type logger struct{}
+
+func (l logger) Println(v ...interface{}) {
+	log.Error(fmt.Sprint(v...), nil)
+}
 
 var rootConfig struct {
 	targetAddr string

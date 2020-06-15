@@ -25,7 +25,17 @@ var exportCmd = &cobra.Command{
 			rootConfig.interval,
 			&http.Client{},
 		).Run)
-		well.Go(subMain)
+		well.Go(func(ctx context.Context) error {
+			mux := http.NewServeMux()
+			mux.Handle("/metrics", promhttp.Handler())
+			serv := &well.HTTPServer{
+				Server: &http.Server{
+					Addr:    exportConfig.listenAddr,
+					Handler: mux,
+				},
+			}
+			return serv.ListenAndServe()
+		})
 		well.Stop()
 		err := well.Wait()
 		if err != nil && !well.IsSignaled(err) {
@@ -39,16 +49,4 @@ func init() {
 	fs.StringVarP(&exportConfig.listenAddr, "listen-addr", "", "0.0.0.0:8080", "Listen address of metrics server.")
 
 	rootCmd.AddCommand(exportCmd)
-}
-
-func subMain(ctx context.Context) error {
-	mux := http.NewServeMux()
-	mux.Handle("/metrics", promhttp.Handler())
-	serv := &well.HTTPServer{
-		Server: &http.Server{
-			Addr:    exportConfig.listenAddr,
-			Handler: mux,
-		},
-	}
-	return serv.ListenAndServe()
 }
