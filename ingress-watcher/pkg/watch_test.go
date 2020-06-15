@@ -33,9 +33,9 @@ var metricsNames = []string{
 
 func TestWatcherRun(t *testing.T) {
 	type fields struct {
-		endpoint   string
-		interval   time.Duration
-		httpClient *http.Client
+		targetAddrs []string
+		interval    time.Duration
+		httpClient  *http.Client
 	}
 	type args struct {
 		ctx context.Context
@@ -49,8 +49,8 @@ func TestWatcherRun(t *testing.T) {
 		{
 			name: "GET success every 100ms in 550ms",
 			fields: fields{
-				endpoint: "foo",
-				interval: 100 * time.Millisecond,
+				targetAddrs: []string{"foo"},
+				interval:    100 * time.Millisecond,
 				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return &http.Response{
 						StatusCode: http.StatusOK,
@@ -70,8 +70,8 @@ func TestWatcherRun(t *testing.T) {
 		{
 			name: "GET fail every 100ms in 550ms",
 			fields: fields{
-				endpoint: "foo",
-				interval: 100 * time.Millisecond,
+				targetAddrs: []string{"foo"},
+				interval:    100 * time.Millisecond,
 				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return nil, errors.New("error")
 				}),
@@ -99,7 +99,7 @@ func TestWatcherRun(t *testing.T) {
 			)
 
 			w := NewWatcher(
-				tt.fields.endpoint,
+				tt.fields.targetAddrs,
 				tt.fields.interval,
 				tt.fields.httpClient,
 			)
