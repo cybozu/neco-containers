@@ -125,7 +125,7 @@ func TestWatcherRun(t *testing.T) {
 			}
 			mfMap := make(map[metricKey]*dto.Metric)
 			for _, mf := range metricsFamily {
-				if len(mf.Metric) != 1 {
+				if len(mf.Metric) != len(tt.fields.targetAddrs) {
 					t.Fatalf("%s: metric %s should contain only one element.", tt.name, *mf.Name)
 				}
 				for _, met := range mf.Metric {
