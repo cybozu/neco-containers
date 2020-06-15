@@ -49,7 +49,7 @@ func TestWatcherRun(t *testing.T) {
 		{
 			name: "GET success every 100ms in 550ms",
 			fields: fields{
-				targetAddrs: []string{"foo"},
+				targetAddrs: []string{"foo", "bar"},
 				interval:    100 * time.Millisecond,
 				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return &http.Response{
@@ -98,12 +98,12 @@ func TestWatcherRun(t *testing.T) {
 				metrics.HTTPSGetFailTotal,
 			)
 
+			// create watcher and run
 			w := NewWatcher(
 				tt.fields.targetAddrs,
 				tt.fields.interval,
 				tt.fields.httpClient,
 			)
-
 			env := well.NewEnvironment(context.Background())
 			env.Go(func(ctx context.Context) error {
 				ctx, cancel := context.WithTimeout(ctx, timeoutDuration)
@@ -113,45 +113,59 @@ func TestWatcherRun(t *testing.T) {
 			env.Stop()
 			env.Wait()
 
+			// parse mertics family
 			metricsFamily, err := registry.Gather()
 			if err != nil {
 				t.Fatal(err)
 			}
-			mfMap := make(map[string]*dto.Metric)
+
+			type metricKey struct {
+				name string
+				path string
+			}
+			mfMap := make(map[metricKey]*dto.Metric)
 			for _, mf := range metricsFamily {
 				if len(mf.Metric) != 1 {
 					t.Fatalf("%s: metric %s should contain only one element.", tt.name, *mf.Name)
 				}
-				mfMap[*mf.Name] = mf.Metric[0]
+				for _, met := range mf.Metric {
+					p := labelToMap(met.Label)["path"]
+					mfMap[metricKey{*mf.Name, p}] = met
+				}
 			}
 
+			// assert results
 			for _, n := range metricsNames {
-				m, ok := mfMap[n]
-				if !ok && tt.result[n] != 0 {
-					t.Errorf(
-						"%s: value for %q should be %f but not found.",
-						tt.name,
-						n,
-						tt.result[n],
-					)
-					continue
-				}
-				if !ok && tt.result[n] == 0 {
-					continue
-				}
+				for _, ta := range w.tagetAddrs {
+					m, ok := mfMap[metricKey{n, ta}]
+					if !ok && tt.result[n] != 0 {
+						t.Errorf(
+							"%s: value for %s{path=%s} should be %f but not found.",
+							tt.name,
+							n,
+							ta,
+							tt.result[n],
+						)
+						continue
+					}
+					if !ok && tt.result[n] == 0 {
+						continue
+					}
 
-				v, ok := tt.result[n]
-				if !ok {
-					t.Fatalf("%s: value for %q not found", tt.name, n)
-				}
-				if v != *m.Counter.Value {
-					t.Errorf(
-						"%s: value for %q is wrong.  expected: %f, actual: %f",
-						tt.name,
-						n,
-						v,
-						*m.Counter.Value,
-					)
+					v, ok := tt.result[n]
+					if !ok {
+						t.Fatalf("%s: value for %s{path=%s not found", tt.name, n, ta)
+					}
+					if v != *m.Counter.Value {
+						t.Errorf(
+							"%s: value for %s{path=%s} is wrong.  expected: %f, actual: %f",
+							tt.name,
+							n,
+							ta,
+							v,
+							*m.Counter.Value,
+						)
+					}
 				}
 			}
 		})
@@ -168,4 +182,12 @@ func newTestClient(fn RoundTripFunc) *http.Client {
 	return &http.Client{
 		Transport: RoundTripFunc(fn),
 	}
+}
+
+func labelToMap(labelPair []*dto.LabelPair) map[string]string {
+	res := make(map[string]string)
+	for _, l := range labelPair {
+		res[*l.Name] = *l.Value
+	}
+	return res
 }
