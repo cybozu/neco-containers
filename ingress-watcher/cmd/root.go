@@ -23,8 +23,8 @@ func (l logger) Println(v ...interface{}) {
 }
 
 var rootConfig struct {
-	TargetAddrs []string
-	Interval    time.Duration
+	TargetAddrs   []string
+	WatchInterval time.Duration
 }
 
 var rootCmd = &cobra.Command{
@@ -61,7 +61,7 @@ func Execute() {
 func init() {
 	fs := rootCmd.PersistentFlags()
 	fs.StringArrayVarP(&rootConfig.TargetAddrs, "target-addrs", "", nil, "Target Ingress address and port.")
-	fs.DurationVarP(&rootConfig.Interval, "interval", "", 5*time.Second, "Polling interval.")
+	fs.DurationVarP(&rootConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&configFile, "config", "", "", "Configuration YAML file path.")
 
 	prometheus.MustRegister(

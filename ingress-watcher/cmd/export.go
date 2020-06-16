@@ -36,7 +36,7 @@ var exportCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(watch.NewWatcher(
 			rootConfig.TargetAddrs,
-			rootConfig.Interval,
+			rootConfig.WatchInterval,
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {

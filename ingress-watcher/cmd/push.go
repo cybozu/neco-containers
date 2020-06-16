@@ -45,12 +45,13 @@ var pushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(watch.NewWatcher(
 			rootConfig.TargetAddrs,
-			rootConfig.Interval,
+			rootConfig.WatchInterval,
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			tick := time.NewTicker(pushConfig.PushInterval)
 			defer tick.Stop()
+
 			pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(&prometheus.Registry{})
 			for {
 				select {
