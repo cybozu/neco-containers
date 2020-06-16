@@ -23,8 +23,8 @@ func (l logger) Println(v ...interface{}) {
 }
 
 var rootConfig struct {
-	TargetAddrs []string      `yaml:"targetAddrs"`
-	Interval    time.Duration `yaml:"interval"`
+	TargetAddrs []string
+	Interval    time.Duration
 }
 
 var rootCmd = &cobra.Command{

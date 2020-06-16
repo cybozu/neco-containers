@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"time"
 
@@ -11,18 +12,36 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var pushConfig struct {
-	jobName  string
-	addr     string
-	interval time.Duration
+	JobName      string
+	PushAddr     string
+	PushInterval time.Duration
 }
 
 var pushCmd = &cobra.Command{
 	Use:   "push",
 	Short: "Push metrics to Pushgateway",
 	Long:  `Push metrics to Pushgateway`,
+	PreRunE: func(cmd *cobra.Command, args []string) error {
+		if configFile != "" {
+			if err := viper.Unmarshal(&pushConfig); err != nil {
+				return err
+			}
+		}
+
+		if len(pushConfig.JobName) == 0 {
+			return errors.New("required flag \"job-name\" not set")
+		}
+
+		if len(pushConfig.PushAddr) == 0 {
+			return errors.New("required flag \"push-addr\" not set")
+		}
+
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(pkg.NewWatcher(
 			rootConfig.TargetAddrs,
@@ -30,8 +49,8 @@ var pushCmd = &cobra.Command{
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {
-			pusher := push.New(pushConfig.addr, pushConfig.jobName).Gatherer(&prometheus.Registry{})
-			tick := time.NewTicker(pushConfig.interval)
+			pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(&prometheus.Registry{})
+			tick := time.NewTicker(pushConfig.PushInterval)
 			defer tick.Stop()
 			for {
 				select {
@@ -41,7 +60,7 @@ var pushCmd = &cobra.Command{
 					err := pusher.Add()
 					if err != nil {
 						log.Warn("push failed.", map[string]interface{}{
-							"pushaddr": pushConfig.addr,
+							"pushaddr": pushConfig.PushAddr,
 						})
 					}
 				}
@@ -58,11 +77,9 @@ var pushCmd = &cobra.Command{
 
 func init() {
 	fs := pushCmd.Flags()
-	fs.StringVarP(&pushConfig.addr, "push-addr", "", "", "Pushgateway addres.")
-	fs.StringVarP(&pushConfig.jobName, "job-name", "", "", "Job name.")
-	rootCmd.MarkPersistentFlagRequired("job-name")
-	fs.DurationVarP(&pushConfig.interval, "push-interval", "", 10*time.Second, "Push interval.")
-	rootCmd.MarkPersistentFlagRequired("job-name")
+	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway addres.")
+	fs.StringVarP(&pushConfig.JobName, "job-name", "", "", "Job name.")
+	fs.DurationVarP(&pushConfig.PushInterval, "push-interval", "", 10*time.Second, "Push interval.")
 
 	rootCmd.AddCommand(pushCmd)
 }
