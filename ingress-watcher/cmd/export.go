@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/cybozu-go/log"
@@ -15,6 +16,12 @@ import (
 
 var exportConfig struct {
 	ListenAddr string
+}
+
+type logger struct{}
+
+func (l logger) Println(v ...interface{}) {
+	log.Error(fmt.Sprint(v...), nil)
 }
 
 var exportCmd = &cobra.Command{
@@ -41,7 +48,14 @@ var exportCmd = &cobra.Command{
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			mux := http.NewServeMux()
-			mux.Handle("/metrics", promhttp.Handler())
+			handler := promhttp.HandlerFor(
+				registry,
+				promhttp.HandlerOpts{
+					ErrorLog:      logger{},
+					ErrorHandling: promhttp.ContinueOnError,
+				},
+			)
+			mux.Handle("/metrics", handler)
 			serv := &well.HTTPServer{
 				Server: &http.Server{
 					Addr:    exportConfig.ListenAddr,

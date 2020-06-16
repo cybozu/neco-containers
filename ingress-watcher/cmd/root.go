@@ -6,20 +6,14 @@ import (
 	"os"
 	"time"
 
-	"github.com/cybozu-go/log"
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
+var registry *prometheus.Registry
 var configFile string
-
-type logger struct{}
-
-func (l logger) Println(v ...interface{}) {
-	log.Error(fmt.Sprint(v...), nil)
-}
 
 var rootConfig struct {
 	TargetURLs    []string
@@ -63,7 +57,8 @@ func init() {
 	fs.DurationVarP(&rootConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&configFile, "config", "", "", "Configuration YAML file path.")
 
-	prometheus.MustRegister(
+	registry = prometheus.NewRegistry()
+	registry.MustRegister(
 		metrics.HTTPGetSuccessfulTotal,
 		metrics.HTTPGetFailTotal,
 	)

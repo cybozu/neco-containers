@@ -9,7 +9,6 @@ import (
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
 	"github.com/cybozu/neco-containers/ingress-watcher/pkg/watch"
-	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -57,7 +56,7 @@ var pushCmd = &cobra.Command{
 				case <-ctx.Done():
 					return ctx.Err()
 				case <-tick.C:
-					pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(&prometheus.Registry{})
+					pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(registry)
 					err := pusher.Add()
 					if err != nil {
 						log.Warn("push failed.", map[string]interface{}{
