@@ -8,7 +8,7 @@ import (
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
-	"github.com/cybozu/neco-containers/ingress-watcher/pkg"
+	"github.com/cybozu/neco-containers/ingress-watcher/pkg/watch"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/cobra"
@@ -43,7 +43,7 @@ var pushCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		well.Go(pkg.NewWatcher(
+		well.Go(watch.NewWatcher(
 			rootConfig.TargetAddrs,
 			rootConfig.Interval,
 			&http.Client{},
