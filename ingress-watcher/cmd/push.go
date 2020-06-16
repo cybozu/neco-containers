@@ -49,9 +49,9 @@ var pushCmd = &cobra.Command{
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {
-			pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(&prometheus.Registry{})
 			tick := time.NewTicker(pushConfig.PushInterval)
 			defer tick.Stop()
+			pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(&prometheus.Registry{})
 			for {
 				select {
 				case <-ctx.Done():
@@ -60,7 +60,12 @@ var pushCmd = &cobra.Command{
 					err := pusher.Add()
 					if err != nil {
 						log.Warn("push failed.", map[string]interface{}{
-							"pushaddr": pushConfig.PushAddr,
+							"addr":      pushConfig.PushAddr,
+							log.FnError: err,
+						})
+					} else {
+						log.Info("push succeeded.", map[string]interface{}{
+							"addr": pushConfig.PushAddr,
 						})
 					}
 				}

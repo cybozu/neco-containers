@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 )
@@ -42,18 +43,34 @@ func (w *Watcher) Run(ctx context.Context) error {
 				case <-ctx.Done():
 					return ctx.Err()
 				case <-tick.C:
-					res, err := w.httpClient.Get("http://" + t)
+					url := "http://" + t
+					res, err := w.httpClient.Get(url)
 					if err != nil {
+						log.Info("GET failed.", map[string]interface{}{
+							"url":       url,
+							log.FnError: err,
+						})
 						metrics.HTTPGetFailTotal.WithLabelValues(t).Inc()
 					} else {
+						log.Info("GET succeeded.", map[string]interface{}{
+							"url": url,
+						})
 						metrics.HTTPGetSuccessfulTotal.WithLabelValues(res.Status, t).Inc()
 						res.Body.Close()
 					}
 
-					res, err = w.httpClient.Get("https://" + t)
+					url = "https://" + t
+					res, err = w.httpClient.Get(url)
 					if err != nil {
+						log.Info("GET failed.", map[string]interface{}{
+							"url":       url,
+							log.FnError: err,
+						})
 						metrics.HTTPSGetFailTotal.WithLabelValues(t).Inc()
 					} else {
+						log.Info("GET succeeded.", map[string]interface{}{
+							"url": url,
+						})
 						metrics.HTTPSGetSuccessfulTotal.WithLabelValues(res.Status, t).Inc()
 						res.Body.Close()
 					}
