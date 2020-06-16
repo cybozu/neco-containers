@@ -12,23 +12,25 @@ Usage
 
 1. Run a metrics server and return metrics at `GET /metrics`.
     ```bash
-    ingress-watcher push \
-    --target-addrs yahoo.com \
-    --target-addrs yahoo.com \
-    --listen-addr localhost:8080
+    ingress-watcher export \
+    --target-addrs example.com \
+    --target-addrs example.org \
+    --listen-addr localhost:8080 \
+    --watch-interval 10s
     ```
 
 2. Push and expose the collected metrics via [Pushgateway](https://github.com/prometheus/pushgateway).
     ```bash
     ingress-watcher push \
-    --target-addrs www.google.com \
-    --target-addrs yahoo.com \
-    --job-name job \
+    --target-addrs example.com \
+    --target-addrs example.org \
     --push-addr localhost:9091 \
+    --watch-interval 10s \
+    --job-name job \
     --push-interval 5s
     ```
 
-The flag values can also be defined with a YAML file.
+The flag values can also be defined with a YAML file with the flag `--config <filename>`. Flag values are overwritten by this YAML file.
 
 ```yaml
 targetAddrs:
@@ -37,7 +39,7 @@ targetAddrs:
 - foo.bar.baz
 watchInterval: 10s
 
-# export
+# for export
 listenAddr: localhost:8080
 
 # for push
