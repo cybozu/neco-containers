@@ -16,8 +16,11 @@ RUN mkdir -p /go/src/k8s.io/ && \
       tar zxf - -C /go/src/k8s.io/ && \
     mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
 
+COPY 92029.patch /tmp
+
 WORKDIR /go/src/k8s.io/kubernetes
-RUN make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
+RUN patch -p1 --no-backup-if-mismatch < /tmp/92029.patch && \
+    make WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:18.04
