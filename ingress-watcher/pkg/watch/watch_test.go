@@ -18,24 +18,15 @@ import (
 const timeoutDuration = 550 * time.Millisecond
 
 const (
-	httpGetSuccessfulTotalName  = "ingresswatcher_http_get_successful_total"
-	httpsGetSuccessfulTotalName = "ingresswatcher_https_get_successful_total"
-	httpGetFailTotalName        = "ingresswatcher_http_get_fail_total"
-	httpsGetFailTotalName       = "ingresswatcher_https_get_fail_total"
+	httpGetSuccessfulTotalName = "ingresswatcher_http_get_successful_total"
+	httpGetFailTotalName       = "ingresswatcher_http_get_fail_total"
 )
-
-var metricsNames = []string{
-	httpGetSuccessfulTotalName,
-	httpsGetSuccessfulTotalName,
-	httpGetFailTotalName,
-	httpsGetFailTotalName,
-}
 
 func TestWatcherRun(t *testing.T) {
 	type fields struct {
-		targetAddrs []string
-		interval    time.Duration
-		httpClient  *http.Client
+		targetURLs []string
+		interval   time.Duration
+		httpClient *http.Client
 	}
 	type args struct {
 		ctx context.Context
@@ -49,8 +40,8 @@ func TestWatcherRun(t *testing.T) {
 		{
 			name: "GET success every 100ms in 550ms",
 			fields: fields{
-				targetAddrs: []string{"foo", "bar"},
-				interval:    100 * time.Millisecond,
+				targetURLs: []string{"foo", "bar"},
+				interval:   100 * time.Millisecond,
 				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return &http.Response{
 						StatusCode: http.StatusOK,
@@ -60,27 +51,23 @@ func TestWatcherRun(t *testing.T) {
 				}),
 			},
 			result: map[string]float64{
-				httpGetSuccessfulTotalName:  5,
-				httpsGetSuccessfulTotalName: 5,
-				httpGetFailTotalName:        0,
-				httpsGetFailTotalName:       0,
+				httpGetSuccessfulTotalName: 5,
+				httpGetFailTotalName:       0,
 			},
 		},
 
 		{
 			name: "GET fail every 100ms in 550ms",
 			fields: fields{
-				targetAddrs: []string{"foo"},
-				interval:    100 * time.Millisecond,
+				targetURLs: []string{"foo"},
+				interval:   100 * time.Millisecond,
 				httpClient: newTestClient(func(req *http.Request) (*http.Response, error) {
 					return nil, errors.New("error")
 				}),
 			},
 			result: map[string]float64{
-				httpGetSuccessfulTotalName:  0,
-				httpsGetSuccessfulTotalName: 0,
-				httpGetFailTotalName:        5,
-				httpsGetFailTotalName:       5,
+				httpGetSuccessfulTotalName: 0,
+				httpGetFailTotalName:       5,
 			},
 		},
 	}
@@ -88,19 +75,15 @@ func TestWatcherRun(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			registry := prometheus.NewRegistry()
 			metrics.HTTPGetSuccessfulTotal.Reset()
-			metrics.HTTPSGetSuccessfulTotal.Reset()
 			metrics.HTTPGetFailTotal.Reset()
-			metrics.HTTPSGetFailTotal.Reset()
 			registry.MustRegister(
 				metrics.HTTPGetSuccessfulTotal,
 				metrics.HTTPGetFailTotal,
-				metrics.HTTPSGetSuccessfulTotal,
-				metrics.HTTPSGetFailTotal,
 			)
 
 			// create watcher and run
 			w := NewWatcher(
-				tt.fields.targetAddrs,
+				tt.fields.targetURLs,
 				tt.fields.interval,
 				tt.fields.httpClient,
 			)
@@ -125,7 +108,7 @@ func TestWatcherRun(t *testing.T) {
 			}
 			mfMap := make(map[metricKey]*dto.Metric)
 			for _, mf := range metricsFamily {
-				if len(mf.Metric) != len(tt.fields.targetAddrs) {
+				if len(mf.Metric) != len(tt.fields.targetURLs) {
 					t.Fatalf("%s: metric %s should contain only one element.", tt.name, *mf.Name)
 				}
 				for _, met := range mf.Metric {
@@ -135,8 +118,8 @@ func TestWatcherRun(t *testing.T) {
 			}
 
 			// assert results
-			for _, n := range metricsNames {
-				for _, ta := range w.tagetAddrs {
+			for _, n := range []string{httpGetSuccessfulTotalName, httpGetFailTotalName} {
+				for _, ta := range w.targetAddrs {
 					m, ok := mfMap[metricKey{n, ta}]
 					if !ok && tt.result[n] != 0 {
 						t.Errorf(

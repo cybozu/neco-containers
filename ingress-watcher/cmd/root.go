@@ -13,7 +13,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-var registry *prometheus.Registry
 var configFile string
 
 type logger struct{}
@@ -23,7 +22,7 @@ func (l logger) Println(v ...interface{}) {
 }
 
 var rootConfig struct {
-	TargetAddrs   []string
+	TargetURLs    []string
 	WatchInterval time.Duration
 }
 
@@ -42,8 +41,8 @@ var rootCmd = &cobra.Command{
 			}
 		}
 
-		if len(rootConfig.TargetAddrs) == 0 {
-			return errors.New("required flag \"target-addrs\" not set")
+		if len(rootConfig.TargetURLs) == 0 {
+			return errors.New("required flag \"target-urls\" not set")
 		}
 
 		return nil
@@ -60,14 +59,12 @@ func Execute() {
 
 func init() {
 	fs := rootCmd.PersistentFlags()
-	fs.StringArrayVarP(&rootConfig.TargetAddrs, "target-addrs", "", nil, "Target Ingress address and port.")
+	fs.StringArrayVarP(&rootConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
 	fs.DurationVarP(&rootConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&configFile, "config", "", "", "Configuration YAML file path.")
 
 	prometheus.MustRegister(
 		metrics.HTTPGetSuccessfulTotal,
 		metrics.HTTPGetFailTotal,
-		metrics.HTTPSGetSuccessfulTotal,
-		metrics.HTTPSGetFailTotal,
 	)
 }

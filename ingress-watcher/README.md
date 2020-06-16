@@ -13,8 +13,8 @@ Usage
 1. Run a metrics server and return metrics at `GET /metrics`.
     ```bash
     ingress-watcher export \
-    --target-addrs example.com \
-    --target-addrs example.org \
+    --target-urls https://example.com \
+    --target-urls https://example.org \
     --listen-addr localhost:8080 \
     --watch-interval 10s
     ```
@@ -22,8 +22,8 @@ Usage
 2. Push and expose the collected metrics via [Pushgateway](https://github.com/prometheus/pushgateway).
     ```bash
     ingress-watcher push \
-    --target-addrs example.com \
-    --target-addrs example.org \
+    --target-urls https://example.com \
+    --target-urls https://example.org \
     --push-addr localhost:9091 \
     --watch-interval 10s \
     --job-name job \
@@ -33,10 +33,10 @@ Usage
 The flag values can also be defined with a YAML file with the flag `--config <filename>`. Flag values are overwritten by this YAML file.
 
 ```yaml
-targetAddrs:
-- www.google.co.jp
-- www.google.com
-- foo.bar.baz
+targetURLs:
+- https://www.google.co.jp
+- https://www.google.com
+- https://foo.bar.baz
 watchInterval: 10s
 
 # for export
