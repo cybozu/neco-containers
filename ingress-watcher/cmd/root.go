@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -9,9 +10,11 @@ import (
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var registry *prometheus.Registry
+var configFile string
 
 type logger struct{}
 
@@ -20,16 +23,30 @@ func (l logger) Println(v ...interface{}) {
 }
 
 var rootConfig struct {
-	targetAddrs []string
-	interval    time.Duration
+	TargetAddrs []string      `yaml:"targetAddrs"`
+	Interval    time.Duration `yaml:"interval"`
 }
 
 var rootCmd = &cobra.Command{
 	Use:   "ingress-watcher",
 	Short: "Ingress monitoring tool for Neco",
 	Long:  `Ingress monitoring tool for Neco.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%#v", rootConfig)
+	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
+		if configFile != "" {
+			viper.SetConfigFile(configFile)
+			if err := viper.ReadInConfig(); err != nil {
+				return err
+			}
+			if err := viper.Unmarshal(&rootConfig); err != nil {
+				return err
+			}
+		}
+
+		if len(rootConfig.TargetAddrs) == 0 {
+			return errors.New("required flag \"target-addrs\" not set")
+		}
+
+		return nil
 	},
 }
 
@@ -43,9 +60,9 @@ func Execute() {
 
 func init() {
 	fs := rootCmd.PersistentFlags()
-	fs.StringArrayVarP(&rootConfig.targetAddrs, "target-addrs", "", nil, "Target Ingress address and port.")
-	rootCmd.MarkPersistentFlagRequired("target-addrs")
-	fs.DurationVarP(&rootConfig.interval, "interval", "", 5*time.Second, "Polling interval.")
+	fs.StringArrayVarP(&rootConfig.TargetAddrs, "target-addrs", "", nil, "Target Ingress address and port.")
+	fs.DurationVarP(&rootConfig.Interval, "interval", "", 5*time.Second, "Polling interval.")
+	fs.StringVarP(&configFile, "config", "", "", "Configuration YAML file path.")
 
 	prometheus.MustRegister(
 		metrics.HTTPGetSuccessfulTotal,

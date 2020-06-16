@@ -21,8 +21,8 @@ var exportCmd = &cobra.Command{
 	Long:  `Run server to export metrics for prometheus`,
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(pkg.NewWatcher(
-			rootConfig.targetAddrs,
-			rootConfig.interval,
+			rootConfig.TargetAddrs,
+			rootConfig.Interval,
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {

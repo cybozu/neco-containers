@@ -25,8 +25,8 @@ var pushCmd = &cobra.Command{
 	Long:  `Push metrics to Pushgateway`,
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(pkg.NewWatcher(
-			rootConfig.targetAddrs,
-			rootConfig.interval,
+			rootConfig.TargetAddrs,
+			rootConfig.Interval,
 			&http.Client{},
 		).Run)
 		well.Go(func(ctx context.Context) error {
