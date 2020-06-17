@@ -27,11 +27,12 @@ Usage
     --push-addr localhost:9091 \
     --watch-interval 10s \
     --job-name job \
-    --push-interval 5s
+    --push-interval 10s
     ```
 
 The flag values can also be defined with a YAML file with the flag `--config <filename>`. Flag values are overwritten by this YAML file.
 
+For `export` sub command, the following settings can be accepted:
 ```yaml
 targetURLs:
 - https://www.google.co.jp
@@ -39,10 +40,17 @@ targetURLs:
 - https://foo.bar.baz
 watchInterval: 10s
 
-# for export
 listenAddr: localhost:8080
+```
 
-# for push
+For `push` sub command:
+```yaml
+targetURLs:
+- https://www.google.co.jp
+- https://www.google.com
+- https://foo.bar.baz
+watchInterval: 10s
+
 pushAddr: localhost:9091
 jobName: job
 pushInterval: 10s

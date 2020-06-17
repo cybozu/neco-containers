@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
@@ -14,8 +15,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+var exportConfigFile string
+
 var exportConfig struct {
-	ListenAddr string
+	TargetURLs    []string
+	WatchInterval time.Duration
+	ListenAddr    string
 }
 
 type logger struct{}
@@ -29,10 +34,18 @@ var exportCmd = &cobra.Command{
 	Short: "Run server to export metrics for prometheus",
 	Long:  `Run server to export metrics for prometheus`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if configFile != "" {
+		if exportConfigFile != "" {
+			viper.SetConfigFile(exportConfigFile)
+			if err := viper.ReadInConfig(); err != nil {
+				return err
+			}
 			if err := viper.Unmarshal(&exportConfig); err != nil {
 				return err
 			}
+		}
+
+		if len(exportConfig.TargetURLs) == 0 {
+			return errors.New(`required flag "target-urls" not set`)
 		}
 
 		if len(exportConfig.ListenAddr) == 0 {
@@ -42,8 +55,8 @@ var exportCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(watch.NewWatcher(
-			rootConfig.TargetURLs,
-			rootConfig.WatchInterval,
+			exportConfig.TargetURLs,
+			exportConfig.WatchInterval,
 			&well.HTTPClient{Client: &http.Client{}},
 		).Run)
 		well.Go(func(ctx context.Context) error {
@@ -75,6 +88,9 @@ var exportCmd = &cobra.Command{
 func init() {
 	fs := exportCmd.Flags()
 	fs.StringVarP(&exportConfig.ListenAddr, "listen-addr", "", "0.0.0.0:8080", "Listen address of metrics server.")
+	fs.StringArrayVarP(&exportConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
+	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
+	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
 
 	rootCmd.AddCommand(exportCmd)
 }

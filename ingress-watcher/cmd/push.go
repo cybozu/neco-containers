@@ -14,10 +14,14 @@ import (
 	"github.com/spf13/viper"
 )
 
+var pushConfigFile string
+
 var pushConfig struct {
-	JobName      string
-	PushAddr     string
-	PushInterval time.Duration
+	TargetURLs    []string
+	WatchInterval time.Duration
+	JobName       string
+	PushAddr      string
+	PushInterval  time.Duration
 }
 
 var pushCmd = &cobra.Command{
@@ -25,10 +29,18 @@ var pushCmd = &cobra.Command{
 	Short: "Push metrics to Pushgateway",
 	Long:  `Push metrics to Pushgateway`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		if configFile != "" {
+		if pushConfigFile != "" {
+			viper.SetConfigFile(pushConfigFile)
+			if err := viper.ReadInConfig(); err != nil {
+				return err
+			}
 			if err := viper.Unmarshal(&pushConfig); err != nil {
 				return err
 			}
+		}
+
+		if len(pushConfig.TargetURLs) == 0 {
+			return errors.New(`required flag "target-urls" not set`)
 		}
 
 		if len(pushConfig.JobName) == 0 {
@@ -43,8 +55,8 @@ var pushCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		well.Go(watch.NewWatcher(
-			rootConfig.TargetURLs,
-			rootConfig.WatchInterval,
+			pushConfig.TargetURLs,
+			pushConfig.WatchInterval,
 			&well.HTTPClient{Client: &http.Client{}},
 		).Run)
 		well.Go(func(ctx context.Context) error {
@@ -82,6 +94,9 @@ var pushCmd = &cobra.Command{
 
 func init() {
 	fs := pushCmd.Flags()
+	fs.StringArrayVarP(&pushConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
+	fs.DurationVarP(&pushConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
+	fs.StringVarP(&pushConfigFile, "config", "", "", "Configuration YAML file path.")
 	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway address.")
 	fs.StringVarP(&pushConfig.JobName, "job-name", "", "", "Job name.")
 	fs.DurationVarP(&pushConfig.PushInterval, "push-interval", "", 10*time.Second, "Push interval.")
