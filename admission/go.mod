@@ -10,6 +10,7 @@ require (
 	github.com/spf13/cobra v0.0.5
 	go.uber.org/atomic v1.4.0 // indirect
 	golang.org/x/crypto v0.0.0-20200221231518-2aa609cf4a9d // indirect
+	golang.org/x/text v0.3.3 // indirect
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v0.17.6
