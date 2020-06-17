@@ -36,7 +36,7 @@ var rootCmd = &cobra.Command{
 		}
 
 		if len(rootConfig.TargetURLs) == 0 {
-			return errors.New("required flag \"target-urls\" not set")
+			return errors.New(`required flag "target-urls" not set`)
 		}
 
 		return nil

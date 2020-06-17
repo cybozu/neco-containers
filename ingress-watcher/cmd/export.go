@@ -36,7 +36,7 @@ var exportCmd = &cobra.Command{
 		}
 
 		if len(exportConfig.ListenAddr) == 0 {
-			return errors.New("required flag \"listen-addr\" not set")
+			return errors.New(`required flag "listen-addr" not set`)
 		}
 		return nil
 	},
@@ -44,7 +44,7 @@ var exportCmd = &cobra.Command{
 		well.Go(watch.NewWatcher(
 			rootConfig.TargetURLs,
 			rootConfig.WatchInterval,
-			&http.Client{},
+			&well.HTTPClient{Client: &http.Client{}},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			mux := http.NewServeMux()

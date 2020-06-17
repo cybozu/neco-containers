@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
 	"github.com/cybozu/neco-containers/ingress-watcher/metrics"
 	"github.com/prometheus/client_golang/prometheus"
@@ -27,9 +28,6 @@ func TestWatcherRun(t *testing.T) {
 		targetURLs []string
 		interval   time.Duration
 		httpClient *http.Client
-	}
-	type args struct {
-		ctx context.Context
 	}
 
 	tests := []struct {
@@ -85,7 +83,10 @@ func TestWatcherRun(t *testing.T) {
 			w := NewWatcher(
 				tt.fields.targetURLs,
 				tt.fields.interval,
-				tt.fields.httpClient,
+				&well.HTTPClient{
+					Client:   tt.fields.httpClient,
+					Severity: log.LvDebug,
+				},
 			)
 			env := well.NewEnvironment(context.Background())
 			env.Go(func(ctx context.Context) error {
@@ -162,9 +163,7 @@ func (f RoundTripFunc) RoundTrip(req *http.Request) (*http.Response, error) {
 }
 
 func newTestClient(fn RoundTripFunc) *http.Client {
-	return &http.Client{
-		Transport: RoundTripFunc(fn),
-	}
+	return &http.Client{Transport: fn}
 }
 
 func labelToMap(labelPair []*dto.LabelPair) map[string]string {

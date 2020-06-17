@@ -14,14 +14,14 @@ import (
 type Watcher struct {
 	targetAddrs []string
 	interval    time.Duration
-	httpClient  *http.Client
+	httpClient  *well.HTTPClient
 }
 
 // NewWatcher creates an Ingress watcher.
 func NewWatcher(
 	targetURLs []string,
 	interval time.Duration,
-	httpClient *http.Client,
+	httpClient *well.HTTPClient,
 ) *Watcher {
 	return &Watcher{
 		targetAddrs: targetURLs,
@@ -43,7 +43,17 @@ func (w *Watcher) Run(ctx context.Context) error {
 				case <-ctx.Done():
 					return ctx.Err()
 				case <-tick.C:
-					res, err := w.httpClient.Get(t)
+					req, err := http.NewRequest("GET", t, nil)
+					if err != nil {
+						log.Error("failed to create new request.", map[string]interface{}{
+							"url":       t,
+							log.FnError: err,
+						})
+						return err
+					}
+
+					req = req.WithContext(ctx)
+					res, err := w.httpClient.Do(req)
 					if err != nil {
 						log.Info("GET failed.", map[string]interface{}{
 							"url":       t,
