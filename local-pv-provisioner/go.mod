@@ -9,6 +9,7 @@ require (
 	github.com/prometheus/client_golang v1.0.0
 	github.com/spf13/cobra v0.0.5
 	github.com/spf13/viper v1.3.2
+	golang.org/x/text v0.3.3 // indirect
 	k8s.io/api v0.17.6
 	k8s.io/apimachinery v0.17.6
 	k8s.io/client-go v0.17.6
