@@ -4,7 +4,7 @@
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
 ARG PROMETHEUS_VERSION=2.18.1
-ARG ALERTMANAGER_VERSION=0.20.0
+ARG ALERTMANAGER_VERSION=0.21.0
 ARG PUSHGATEWAY_VERSION=1.2.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
