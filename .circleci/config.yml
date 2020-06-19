@@ -426,6 +426,9 @@ workflows:
           name: build-metrics-server
           container-image: metrics-server
       - build:
+          name: build-moco-mysql
+          container-image: moco-mysql
+      - build:
           name: build-pause
           container-image: pause
       - build:
