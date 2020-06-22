@@ -479,7 +479,7 @@ workflows:
           container-image: metrics-server
       - build-moco-mysql:
           mysql-version: 8.0.20
-          boost-in-mysql-package: 1_70_0
+          boost-in-mysql-package: "1_70_0"
       - build:
           name: build-moco-mysql-container
           container-image: moco-mysql
