@@ -296,8 +296,6 @@ jobs:
     parameters:
       mysql-version:
         type: string
-      boost-in-mysql-package:
-        type: string
     docker:
       - image: quay.io/cybozu/ubuntu-dev:18.04
     resource_class: 2xlarge+
@@ -334,7 +332,7 @@ jobs:
             cd mysql-<< parameters.mysql-version >>
             mkdir bld
             cd bld
-            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=../boost/boost_<< parameters.boost-in-mysql-package >> -DWITH_NUMA=1 -DWITH_JEMALLOC=1
+            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1
             make -j 20
             make install
       - persist_to_workspace:
@@ -479,7 +477,6 @@ workflows:
           container-image: metrics-server
       - build-moco-mysql:
           mysql-version: 8.0.20
-          boost-in-mysql-package: "1_70_0"
       - build:
           name: build-moco-mysql-container
           container-image: moco-mysql
