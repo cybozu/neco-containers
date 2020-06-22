@@ -292,6 +292,56 @@ jobs:
           root: admission/bin
           paths:
             - neco-admission
+  build-moco-mysql:
+    parameters:
+      mysql-version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:18.04
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists moco-mysql)"
+            if [ "$c" = ng ]; then
+                echo moco-mysql > BUILDS
+            fi
+      - run:
+          name: Install dependency packages
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            apt-get -y install cmake libncurses5-dev libjemalloc-dev libnuma-dev pkg-config
+      - run:
+          name: Build MySQL
+          command: |
+            if [ ! -f BUILDS ]; then
+                # fake for the next step
+                mkdir -p /usr/local/mysql
+                cd /usr/local/mysql
+                touch LICENSE
+                mkdir bin lib share
+                exit 0
+            fi
+            mkdir src
+            cd src
+            curl -fsSL -O https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-boost-<< parameters.mysql-version >>.tar.gz
+            tar -x -z -f mysql-boost-<< parameters.mysql-version >>.tar.gz
+            cd mysql-<< parameters.mysql-version >>
+            mkdir bld
+            cd bld
+            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1
+            make -j 20
+            make install
+      - persist_to_workspace:
+          root: /usr/local/mysql
+          paths:
+            - LICENSE
+            - bin
+            - lib
+            - share
 
 workflows:
   main:
@@ -425,9 +475,15 @@ workflows:
       - build:
           name: build-metrics-server
           container-image: metrics-server
+      - build-moco-mysql:
+          mysql-version: 8.0.20
       - build:
-          name: build-moco-mysql
+          name: build-moco-mysql-container
           container-image: moco-mysql
+          attach: true
+          dir: moco-mysql
+          requires:
+            - build-moco-mysql
       - build:
           name: build-pause
           container-image: pause
