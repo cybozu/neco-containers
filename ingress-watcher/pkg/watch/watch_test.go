@@ -19,6 +19,7 @@ import (
 const timeoutDuration = 550 * time.Millisecond
 
 const (
+	httpGetTotalName           = "ingresswatcher_http_get_total"
 	httpGetSuccessfulTotalName = "ingresswatcher_http_get_successful_total"
 	httpGetFailTotalName       = "ingresswatcher_http_get_fail_total"
 )
@@ -49,6 +50,7 @@ func TestWatcherRun(t *testing.T) {
 				}),
 			},
 			result: map[string]float64{
+				httpGetTotalName:           5,
 				httpGetSuccessfulTotalName: 5,
 				httpGetFailTotalName:       0,
 			},
@@ -64,6 +66,7 @@ func TestWatcherRun(t *testing.T) {
 				}),
 			},
 			result: map[string]float64{
+				httpGetTotalName:           5,
 				httpGetSuccessfulTotalName: 0,
 				httpGetFailTotalName:       5,
 			},
@@ -72,9 +75,11 @@ func TestWatcherRun(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			registry := prometheus.NewRegistry()
+			metrics.HTTPGetTotal.Reset()
 			metrics.HTTPGetSuccessfulTotal.Reset()
 			metrics.HTTPGetFailTotal.Reset()
 			registry.MustRegister(
+				metrics.HTTPGetTotal,
 				metrics.HTTPGetSuccessfulTotal,
 				metrics.HTTPGetFailTotal,
 			)
@@ -119,7 +124,7 @@ func TestWatcherRun(t *testing.T) {
 			}
 
 			// assert results
-			for _, n := range []string{httpGetSuccessfulTotalName, httpGetFailTotalName} {
+			for _, n := range []string{httpGetTotalName, httpGetSuccessfulTotalName, httpGetFailTotalName} {
 				for _, ta := range w.targetAddrs {
 					m, ok := mfMap[metricKey{n, ta}]
 					if !ok && tt.result[n] != 0 {

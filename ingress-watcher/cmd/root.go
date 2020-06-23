@@ -28,6 +28,7 @@ func Execute() {
 func init() {
 	registry = prometheus.NewRegistry()
 	registry.MustRegister(
+		metrics.HTTPGetTotal,
 		metrics.HTTPGetSuccessfulTotal,
 		metrics.HTTPGetFailTotal,
 	)
