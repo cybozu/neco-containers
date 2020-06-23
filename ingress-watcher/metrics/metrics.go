@@ -6,6 +6,16 @@ const (
 	namespace = "ingresswatcher"
 )
 
+// HTTPGetTotal returns the total successful count of http get.
+var HTTPGetTotal = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Namespace: namespace,
+		Name:      "http_get_total",
+		Help:      "The total count of http get.",
+	},
+	[]string{"path"},
+)
+
 // HTTPGetSuccessfulTotal returns the total successful count of http get.
 var HTTPGetSuccessfulTotal = prometheus.NewCounterVec(
 	prometheus.CounterOpts{

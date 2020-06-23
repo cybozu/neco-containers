@@ -34,6 +34,11 @@ func NewWatcher(
 func (w *Watcher) Run(ctx context.Context) error {
 	env := well.NewEnvironment(ctx)
 	for _, t := range w.targetAddrs {
+		// Initialize counter value as 0.
+		// Not initialize HTTPGetSuccessfulTotal because it needs status code.
+		metrics.HTTPGetTotal.WithLabelValues(t)
+		metrics.HTTPGetFailTotal.WithLabelValues(t)
+
 		t := t
 		env.Go(func(ctx context.Context) error {
 			tick := time.NewTicker(w.interval)
@@ -54,6 +59,7 @@ func (w *Watcher) Run(ctx context.Context) error {
 
 					req = req.WithContext(ctx)
 					res, err := w.httpClient.Do(req)
+					metrics.HTTPGetTotal.WithLabelValues(t).Inc()
 					if err != nil {
 						log.Info("GET failed.", map[string]interface{}{
 							"url":       t,
