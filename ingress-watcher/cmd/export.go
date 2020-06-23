@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"net/http"
@@ -18,9 +19,10 @@ import (
 var exportConfigFile string
 
 var exportConfig struct {
-	TargetURLs    []string
-	WatchInterval time.Duration
-	ListenAddr    string
+	TargetURLs     []string
+	WatchInterval  time.Duration
+	ListenAddr     string
+	PermitInsecure bool
 }
 
 type logger struct{}
@@ -54,10 +56,17 @@ var exportCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		client := &http.Client{}
+		if exportConfig.PermitInsecure {
+			client.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+		}
+
 		well.Go(watch.NewWatcher(
 			exportConfig.TargetURLs,
 			exportConfig.WatchInterval,
-			&well.HTTPClient{Client: &http.Client{}},
+			&well.HTTPClient{Client: client},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			mux := http.NewServeMux()
@@ -91,6 +100,7 @@ func init() {
 	fs.StringArrayVarP(&exportConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
 	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
+	fs.BoolVarP(&exportConfig.PermitInsecure, "permitInsecure", "", false, "Permit insecure access to targets.")
 
 	rootCmd.AddCommand(exportCmd)
 }

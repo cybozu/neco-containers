@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"net/http"
 	"time"
@@ -17,11 +18,12 @@ import (
 var pushConfigFile string
 
 var pushConfig struct {
-	TargetURLs    []string
-	WatchInterval time.Duration
-	JobName       string
-	PushAddr      string
-	PushInterval  time.Duration
+	TargetURLs     []string
+	WatchInterval  time.Duration
+	JobName        string
+	PushAddr       string
+	PushInterval   time.Duration
+	PermitInsecure bool
 }
 
 var pushCmd = &cobra.Command{
@@ -54,10 +56,17 @@ var pushCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		client := &http.Client{}
+		if pushConfig.PermitInsecure {
+			client.Transport = &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+		}
+
 		well.Go(watch.NewWatcher(
 			pushConfig.TargetURLs,
 			pushConfig.WatchInterval,
-			&well.HTTPClient{Client: &http.Client{}},
+			&well.HTTPClient{Client: client},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			tick := time.NewTicker(pushConfig.PushInterval)
@@ -100,6 +109,7 @@ func init() {
 	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway address.")
 	fs.StringVarP(&pushConfig.JobName, "job-name", "", "", "Job name.")
 	fs.DurationVarP(&pushConfig.PushInterval, "push-interval", "", 10*time.Second, "Push interval.")
+	fs.BoolVarP(&pushConfig.PermitInsecure, "permitInsecure", "", false, "Permit insecure access to targets.")
 
 	rootCmd.AddCommand(pushCmd)
 }
