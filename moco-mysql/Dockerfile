@@ -4,7 +4,10 @@ FROM quay.io/cybozu/ubuntu:18.04
 
 ARG MOCO_VERSION=0.1.1
 
-COPY workspace/* /usr/local/mysql/
+COPY workspace/bin/ /usr/local/mysql/bin/
+COPY workspace/lib/ /usr/local/mysql/lib/
+COPY workspace/share/ /usr/local/mysql/share/
+COPY workspace/LICENSE /usr/local/mysql/LICENSE
 COPY ping.sh /ping.sh
 
 RUN apt-get update \
