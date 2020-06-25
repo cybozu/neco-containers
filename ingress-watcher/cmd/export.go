@@ -101,7 +101,7 @@ func init() {
 	fs.StringArrayVarP(&exportConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
 	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
-	fs.BoolVarP(&exportConfig.PermitInsecure, "permit-insecure", "", false, "Permit insecure access to targets.")
+	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
 
 	rootCmd.AddCommand(exportCmd)
 }

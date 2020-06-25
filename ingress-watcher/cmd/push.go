@@ -109,7 +109,7 @@ func init() {
 	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway address.")
 	fs.StringVarP(&pushConfig.JobName, "job-name", "", "", "Job name.")
 	fs.DurationVarP(&pushConfig.PushInterval, "push-interval", "", 10*time.Second, "Push interval.")
-	fs.BoolVarP(&pushConfig.PermitInsecure, "permit-insecure", "", false, "Permit insecure access to targets.")
+	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
 
 	rootCmd.AddCommand(pushCmd)
 }

@@ -16,6 +16,7 @@ Usage
     --target-urls https://example.com \
     --target-urls https://example.org \
     --listen-addr localhost:8080 \
+    --permit-insecure \
     --watch-interval 10s
     ```
 
@@ -27,6 +28,7 @@ Usage
     --push-addr localhost:9091 \
     --watch-interval 10s \
     --job-name job \
+    --permit-insecure \
     --push-interval 10s
     ```
 
