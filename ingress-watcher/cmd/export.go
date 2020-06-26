@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -40,15 +41,6 @@ var exportCmd = &cobra.Command{
 	Short: "Run server to export metrics for prometheus",
 	Long:  `Run server to export metrics for prometheus`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
-		exportConfig.ResolveRules = make(map[string]interface{})
-		for _, rule := range resolveRules {
-			split := strings.Split(rule, ":")
-			if len(split) != 2 {
-				return errors.New(`invalid format in "resolve-rules" : ` + rule)
-			}
-			exportConfig.ResolveRules[split[0]] = split[1]
-		}
-
 		if exportConfigFile != "" {
 			viper.SetConfigFile(exportConfigFile)
 			if err := viper.ReadInConfig(); err != nil {
@@ -56,6 +48,13 @@ var exportCmd = &cobra.Command{
 			}
 			if err := viper.Unmarshal(&exportConfig); err != nil {
 				return err
+			}
+		}
+
+		for _, rule := range exportConfig.ResolveRules {
+			split := strings.Split(rule, ":")
+			if len(split) != 2 {
+				return errors.New(`invalid format in "resolve-rules" : ` + rule)
 			}
 		}
 
@@ -73,6 +72,31 @@ var exportCmd = &cobra.Command{
 		if exportConfig.PermitInsecure {
 			client.Transport = &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+		}
+		if len(exportConfig.ResolveRules) > 0 {
+			dialerFunc := func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{}
+				splitAddr := strings.Split(address, ":")
+				if len(splitAddr) > 2 {
+					return nil, errors.New(`invalid format : ` + address)
+				}
+
+				for _, rules := range exportConfig.ResolveRules {
+					s := strings.Split(rules, ":")
+					if splitAddr[0] == s[0] {
+						return d.DialContext(ctx, network, s[1]+":"+splitAddr[1])
+					}
+				}
+				return d.DialContext(ctx, network, address)
+			}
+
+			resolver := &net.Resolver{Dial: dialerFunc}
+			dialer := net.Dialer{Resolver: resolver}
+
+			transport := &http.Transport{
+				Dial:        dialer.Dial,
+				DialContext: dialer.DialContext,
 			}
 		}
 
@@ -114,7 +138,7 @@ func init() {
 	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
 	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
-	fs.StringArrayVarP(&exportConfig.ResolveRules, "resolve-rules", "", nil, "Resolve rules from fqdn to IPv4 address (ex. example.com:192.168.0.1).")
+	fs.StringArrayVarP(&exportConfig.ResolveRules, "resolve-rules", "", nil, "Resolve rules from FQDN to IPv4 address (ex. example.com:192.168.0.1).")
 
 	rootCmd.AddCommand(exportCmd)
 }
