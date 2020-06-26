@@ -17,7 +17,9 @@ Usage
     --target-urls https://example.org \
     --listen-addr localhost:8080 \
     --permit-insecure \
-    --watch-interval 10s
+    --watch-interval 10s \
+    --resolve-rules example.com:192.168.0.1 \
+    --resolve-rules example.org:192.168.0.2
     ```
 
 2. Push and expose the collected metrics via [Pushgateway](https://github.com/prometheus/pushgateway).
@@ -29,7 +31,9 @@ Usage
     --watch-interval 10s \
     --job-name job \
     --permit-insecure \
-    --push-interval 10s
+    --push-interval 10s \
+    --resolve-rules example.com:192.168.0.1 \
+    --resolve-rules example.org:192.168.0.2
     ```
 
 The flag values can also be defined with a YAML file with the flag `--config <filename>`. Flag values are overwritten by this YAML file.

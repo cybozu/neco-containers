@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/cybozu-go/log"
@@ -23,6 +24,8 @@ var exportConfig struct {
 	WatchInterval  time.Duration
 	ListenAddr     string
 	PermitInsecure bool
+	ResolveRules   []string
+	// TODO
 }
 
 type logger struct{}
@@ -37,6 +40,15 @@ var exportCmd = &cobra.Command{
 	Short: "Run server to export metrics for prometheus",
 	Long:  `Run server to export metrics for prometheus`,
 	PreRunE: func(cmd *cobra.Command, args []string) error {
+		exportConfig.ResolveRules = make(map[string]interface{})
+		for _, rule := range resolveRules {
+			split := strings.Split(rule, ":")
+			if len(split) != 2 {
+				return errors.New(`invalid format in "resolve-rules" : ` + rule)
+			}
+			exportConfig.ResolveRules[split[0]] = split[1]
+		}
+
 		if exportConfigFile != "" {
 			viper.SetConfigFile(exportConfigFile)
 			if err := viper.ReadInConfig(); err != nil {
@@ -102,6 +114,7 @@ func init() {
 	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
 	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
 	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
+	fs.StringArrayVarP(&exportConfig.ResolveRules, "resolve-rules", "", nil, "Resolve rules from fqdn to IPv4 address (ex. example.com:192.168.0.1).")
 
 	rootCmd.AddCommand(exportCmd)
 }
