@@ -26,7 +26,6 @@ var exportConfig struct {
 	ListenAddr     string
 	PermitInsecure bool
 	ResolveRules   []string
-	// TODO
 }
 
 type logger struct{}
@@ -68,13 +67,21 @@ var exportCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := &http.Client{}
+		var transport *http.Transport
 		if exportConfig.PermitInsecure {
-			client.Transport = &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			if transport == nil {
+				transport = &http.Transport{}
 			}
+			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 		}
+
 		if len(exportConfig.ResolveRules) > 0 {
+			resolveMap := make(map[string]string)
+			for _, rules := range exportConfig.ResolveRules {
+				s := strings.Split(rules, ":")
+				resolveMap[s[0]] = s[1]
+			}
+
 			dialerFunc := func(ctx context.Context, network, address string) (net.Conn, error) {
 				d := net.Dialer{}
 				splitAddr := strings.Split(address, ":")
@@ -82,22 +89,21 @@ var exportCmd = &cobra.Command{
 					return nil, errors.New(`invalid format : ` + address)
 				}
 
-				for _, rules := range exportConfig.ResolveRules {
-					s := strings.Split(rules, ":")
-					if splitAddr[0] == s[0] {
-						return d.DialContext(ctx, network, s[1]+":"+splitAddr[1])
-					}
+				if ip, ok := resolveMap[splitAddr[0]]; ok {
+					return d.DialContext(ctx, network, ip+":"+splitAddr[1])
 				}
 				return d.DialContext(ctx, network, address)
 			}
 
-			resolver := &net.Resolver{Dial: dialerFunc}
-			dialer := net.Dialer{Resolver: resolver}
-
-			transport := &http.Transport{
-				Dial:        dialer.Dial,
-				DialContext: dialer.DialContext,
+			if transport == nil {
+				transport = &http.Transport{}
 			}
+			transport.DialContext = dialerFunc
+		}
+
+		client := &http.Client{}
+		if transport != nil {
+			client.Transport = transport
 		}
 
 		well.Go(watch.NewWatcher(
