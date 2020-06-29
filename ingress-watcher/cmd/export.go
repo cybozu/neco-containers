@@ -2,16 +2,13 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
+	"github.com/cybozu/neco-containers/ingress-watcher/pkg/common"
 	"github.com/cybozu/neco-containers/ingress-watcher/pkg/watch"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/cobra"
@@ -21,11 +18,9 @@ import (
 var exportConfigFile string
 
 var exportConfig struct {
-	TargetURLs     []string
-	WatchInterval  time.Duration
-	ListenAddr     string
-	PermitInsecure bool
-	ResolveRules   []string
+	common.WatchConfig
+
+	ListenAddr string
 }
 
 type logger struct{}
@@ -50,66 +45,21 @@ var exportCmd = &cobra.Command{
 			}
 		}
 
-		for _, rule := range exportConfig.ResolveRules {
-			split := strings.Split(rule, ":")
-			if len(split) != 2 {
-				return errors.New(`invalid format in "resolve-rules" : ` + rule)
-			}
-		}
-
-		if len(exportConfig.TargetURLs) == 0 {
-			return errors.New(`required flag "target-urls" not set`)
+		if err := exportConfig.CheckCommonFlags(); err != nil {
+			return err
 		}
 
 		if len(exportConfig.ListenAddr) == 0 {
 			return errors.New(`required flag "listen-addr" not set`)
 		}
+
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		var transport *http.Transport
-		if exportConfig.PermitInsecure {
-			if transport == nil {
-				transport = &http.Transport{}
-			}
-			transport.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-		}
-
-		if len(exportConfig.ResolveRules) > 0 {
-			resolveMap := make(map[string]string)
-			for _, rules := range exportConfig.ResolveRules {
-				s := strings.Split(rules, ":")
-				resolveMap[s[0]] = s[1]
-			}
-
-			dialerFunc := func(ctx context.Context, network, address string) (net.Conn, error) {
-				d := net.Dialer{}
-				splitAddr := strings.Split(address, ":")
-				if len(splitAddr) > 2 {
-					return nil, errors.New(`invalid format : ` + address)
-				}
-
-				if ip, ok := resolveMap[splitAddr[0]]; ok {
-					return d.DialContext(ctx, network, ip+":"+splitAddr[1])
-				}
-				return d.DialContext(ctx, network, address)
-			}
-
-			if transport == nil {
-				transport = &http.Transport{}
-			}
-			transport.DialContext = dialerFunc
-		}
-
-		client := &http.Client{}
-		if transport != nil {
-			client.Transport = transport
-		}
-
 		well.Go(watch.NewWatcher(
 			exportConfig.TargetURLs,
 			exportConfig.WatchInterval,
-			&well.HTTPClient{Client: client},
+			&well.HTTPClient{Client: exportConfig.GetClient()},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			mux := http.NewServeMux()
@@ -139,12 +89,9 @@ var exportCmd = &cobra.Command{
 
 func init() {
 	fs := exportCmd.Flags()
-	fs.StringVarP(&exportConfig.ListenAddr, "listen-addr", "", "0.0.0.0:8080", "Listen address of metrics server.")
-	fs.StringArrayVarP(&exportConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
-	fs.DurationVarP(&exportConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
+	exportConfig.SetCommonFlags(fs)
 	fs.StringVarP(&exportConfigFile, "config", "", "", "Configuration YAML file path.")
-	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
-	fs.StringArrayVarP(&exportConfig.ResolveRules, "resolve-rules", "", nil, "Resolve rules from FQDN to IPv4 address (ex. example.com:192.168.0.1).")
+	fs.StringVarP(&exportConfig.ListenAddr, "listen-addr", "", "0.0.0.0:8080", "Listen address of metrics server.")
 
 	rootCmd.AddCommand(exportCmd)
 }

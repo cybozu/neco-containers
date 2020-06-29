@@ -2,13 +2,12 @@ package cmd
 
 import (
 	"context"
-	"crypto/tls"
 	"errors"
-	"net/http"
 	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
+	"github.com/cybozu/neco-containers/ingress-watcher/pkg/common"
 	"github.com/cybozu/neco-containers/ingress-watcher/pkg/watch"
 	"github.com/prometheus/client_golang/prometheus/push"
 	"github.com/spf13/cobra"
@@ -18,12 +17,11 @@ import (
 var pushConfigFile string
 
 var pushConfig struct {
-	TargetURLs     []string
-	WatchInterval  time.Duration
-	JobName        string
-	PushAddr       string
-	PushInterval   time.Duration
-	PermitInsecure bool
+	common.WatchConfig
+
+	JobName      string
+	PushAddr     string
+	PushInterval time.Duration
 }
 
 var pushCmd = &cobra.Command{
@@ -41,8 +39,8 @@ var pushCmd = &cobra.Command{
 			}
 		}
 
-		if len(pushConfig.TargetURLs) == 0 {
-			return errors.New(`required flag "target-urls" not set`)
+		if err := pushConfig.CheckCommonFlags(); err != nil {
+			return err
 		}
 
 		if len(pushConfig.JobName) == 0 {
@@ -56,17 +54,10 @@ var pushCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		client := &http.Client{}
-		if pushConfig.PermitInsecure {
-			client.Transport = &http.Transport{
-				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-			}
-		}
-
 		well.Go(watch.NewWatcher(
 			pushConfig.TargetURLs,
 			pushConfig.WatchInterval,
-			&well.HTTPClient{Client: client},
+			&well.HTTPClient{Client: pushConfig.GetClient()},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			tick := time.NewTicker(pushConfig.PushInterval)
@@ -103,13 +94,11 @@ var pushCmd = &cobra.Command{
 
 func init() {
 	fs := pushCmd.Flags()
-	fs.StringArrayVarP(&pushConfig.TargetURLs, "target-urls", "", nil, "Target Ingress address and port.")
-	fs.DurationVarP(&pushConfig.WatchInterval, "watch-interval", "", 5*time.Second, "Watching interval.")
+	pushConfig.SetCommonFlags(fs)
 	fs.StringVarP(&pushConfigFile, "config", "", "", "Configuration YAML file path.")
-	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway address.")
 	fs.StringVarP(&pushConfig.JobName, "job-name", "", "", "Job name.")
+	fs.StringVarP(&pushConfig.PushAddr, "push-addr", "", "", "Pushgateway address.")
 	fs.DurationVarP(&pushConfig.PushInterval, "push-interval", "", 10*time.Second, "Push interval.")
-	fs.BoolVar(&exportConfig.PermitInsecure, "permit-insecure", false, "Permit insecure access to targets.")
 
 	rootCmd.AddCommand(pushCmd)
 }
