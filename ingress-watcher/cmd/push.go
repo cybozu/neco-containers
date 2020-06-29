@@ -54,16 +54,18 @@ var pushCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
+		client := pushConfig.GetClient()
 		well.Go(watch.NewWatcher(
 			pushConfig.TargetURLs,
 			pushConfig.WatchInterval,
-			&well.HTTPClient{Client: pushConfig.GetClient()},
+			&well.HTTPClient{Client: client},
 		).Run)
 		well.Go(func(ctx context.Context) error {
 			tick := time.NewTicker(pushConfig.PushInterval)
 			defer tick.Stop()
 
 			pusher := push.New(pushConfig.PushAddr, pushConfig.JobName).Gatherer(registry)
+			pusher.Client(client)
 			for {
 				select {
 				case <-ctx.Done():
