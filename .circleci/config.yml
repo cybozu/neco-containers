@@ -411,7 +411,7 @@ workflows:
           name: build-cke-tools
           container-image: cke-tools
       - build:
-          name: buiild-contour
+          name: build-contour
           container-image: contour
       - build:
           name: build-coredns
