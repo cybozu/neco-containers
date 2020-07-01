@@ -8,7 +8,7 @@ In Kubernetes, this container can be used as a sidecar container to output logs 
 
 To launch tail:
 
-    $ docker run quay.io/cybozu/tail:1.4 -f /path/to/logfile
+    $ docker run quay.io/cybozu/tail:0 -f /path/to/file1.log /path/to/file2.log
  
 ## Docker images
 
