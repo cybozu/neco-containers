@@ -1,13 +1,14 @@
 # tail
 
+[tail](https://github.com/nxadm/tail) outputs the last part of files.
 
-[tail](https://github.com/nxadm/tail)
+In Kubernetes, this container can be used as a sidecar container to output logs to stdout.
 
 ## Usage
 
-To launch server with specific config file.
+To launch tail:
 
-    $ docker run quay.io/cybozu/tail:1.4 -- -f /path/to/logfile
+    $ docker run quay.io/cybozu/tail:1.4 -f /path/to/logfile
  
 ## Docker images
 

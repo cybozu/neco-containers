@@ -15,7 +15,6 @@ func main() {
 	follow := flag.Bool("f", false, "follow the growth of the file")
 	flag.Parse()
 
-	fmt.Printf("follow: %v\n", *follow)
 	if flag.NArg() < 1 {
 		fmt.Println("usage: ./tail [-f] [FILE]...")
 		os.Exit(1)
@@ -28,8 +27,8 @@ func main() {
 			if err != nil {
 				return err
 			}
-			go func(){
-				<- ctx.Done()
+			go func() {
+				<-ctx.Done()
 				t.Stop()
 			}()
 			for line := range t.Lines {

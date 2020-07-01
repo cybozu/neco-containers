@@ -11,4 +11,4 @@ FROM scratch
 COPY --from=build /go/bin /
 USER 10000:10000
 EXPOSE 8000
-ENTRYPOINT ["/tail", "-f"]
+ENTRYPOINT ["/tail"]
