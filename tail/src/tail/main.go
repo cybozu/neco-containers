@@ -30,6 +30,7 @@ func main() {
 			go func() {
 				<-ctx.Done()
 				t.Stop()
+				t.Cleanup()
 			}()
 			for line := range t.Lines {
 				fmt.Println(line.Text)
