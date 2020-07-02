@@ -71,6 +71,42 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-delete
+  failurePolicy: Fail
+  name: vdelete.kb.io
+  rules:
+  - apiGroups:
+    - apiextensions.k8s.io
+    apiVersions:
+    - v1
+    - v1beta1
+    operations:
+    - DELETE
+    resources:
+    - customresourcedefinitions
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-integreatly-org-grafanadashboard
+  failurePolicy: Fail
+  name: vgrafanadashboard.kb.io
+  rules:
+  - apiGroups:
+    - integreatly.org
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - grafanadashboards
+- clientConfig:
+    caBundle: Cg==
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-projectcontour-io-httpproxy
   failurePolicy: Fail
   name: vhttpproxy.kb.io
@@ -102,21 +138,3 @@ webhooks:
     - UPDATE
     resources:
     - networkpolicies
-- clientConfig:
-    caBundle: Cg==
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-integreatly-org-grafanadashboard
-  failurePolicy: Fail
-  name: vgrafanadashboard.kb.io
-  rules:
-    - apiGroups:
-        - integreatly.org
-      apiVersions:
-        - v1alpha1
-      operations:
-        - CREATE
-        - UPDATE
-      resources:
-        - grafanadashboards
