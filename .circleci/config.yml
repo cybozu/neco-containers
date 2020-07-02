@@ -503,6 +503,9 @@ workflows:
           name: build-squid
           container-image: squid
       - build:
+          name: build-tail
+          container-image: tail
+      - build:
           name: build-teleport
           container-image: teleport
       - build:
