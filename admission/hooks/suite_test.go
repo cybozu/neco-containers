@@ -30,6 +30,7 @@ var (
 	contourValidateWebhookPath          = "/validate-projectcontour-io-httpproxy"
 	argocdValidateWebhookPath           = "/validate-argoproj-io-application"
 	grafanaDashboardValidateWebhookPath = "/validate-integreatly-org-grafanadashboard"
+	deleteValidateWebhookPath           = "/validate-delete"
 )
 
 var k8sClient client.Client
@@ -213,6 +214,28 @@ var _ = BeforeSuite(func() {
 									APIGroups:   []string{"integreatly.org"},
 									APIVersions: []string{"v1alpha1"},
 									Resources:   []string{"grafanadashboards"},
+								},
+							},
+						},
+					},
+					{
+						Name:          "vdelete.kb.io",
+						FailurePolicy: &failPolicy,
+						SideEffects:   &sideEffect,
+						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
+							Service: &admissionregistrationv1beta1.ServiceReference{
+								Path: &deleteValidateWebhookPath,
+							},
+						},
+						Rules: []admissionregistrationv1beta1.RuleWithOperations{
+							{
+								Operations: []admissionregistrationv1beta1.OperationType{
+									admissionregistrationv1beta1.Delete,
+								},
+								Rule: admissionregistrationv1beta1.Rule{
+									APIGroups:   []string{""},
+									APIVersions: []string{"v1"},
+									Resources:   []string{"namespaces"},
 								},
 							},
 						},

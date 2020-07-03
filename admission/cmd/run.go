@@ -51,6 +51,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/validate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-argoproj-io-application", hooks.NewArgoCDApplicationValidator(mgr.GetClient(), dec, &conf.ArgoCDApplicationValidatorConfig))
 	wh.Register("/validate-integreatly-org-grafanadashboard", hooks.NewGrafanaDashboardValidator(mgr.GetClient(), dec))
+	wh.Register("/validate-delete", hooks.NewDeleteValidator(mgr.GetClient(), dec))
 
 	// +kubebuilder:scaffold:builder
 
