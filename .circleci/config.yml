@@ -450,9 +450,6 @@ workflows:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:
-          name: build-ingress-watcher
-          container-image: ingress-watcher
-      - build:
           name: build-kind-node
           container-image: kind-node
       - build:
