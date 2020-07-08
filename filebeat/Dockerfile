@@ -9,10 +9,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/elastic/beats/archive/v${BEATS_VERSION}.tar.gz | \
         tar zxf - -C /work/ \
     && mv /work/beats-${BEATS_VERSION} /work/beats \
-    && cd /work/beats \
-    && rm -rf x-pack \
-    && cd filebeat \
-    && make CGO_ENABLED=0 GOOS=linux GOARCH=amd64
+    && rm -rf /work/beats/x-pack
+WORKDIR /work/beats/filebeat
+RUN make CGO_ENABLED=0 GOOS=linux GOARCH=amd64
 
 # Stage2: setup runtime container
 FROM scratch
