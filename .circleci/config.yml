@@ -438,6 +438,9 @@ workflows:
           name: build-external-dns
           container-image: external-dns
       - build:
+          name: build-filebeat
+          container-image: filebeat
+      - build:
           name: build-golang
           container-image: golang
       - build:
