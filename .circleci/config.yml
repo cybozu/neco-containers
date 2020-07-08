@@ -444,6 +444,9 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build:
+          name: build-datadog-agent
+          container-image: datadog-agent
+      - build:
           name: build-grafana
           container-image: grafana
       - build:
