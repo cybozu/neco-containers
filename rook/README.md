@@ -25,7 +25,7 @@ git push -f fork neco-release
 
 # Set $ROOK_VERSION & $MASTER_COMMIT, e.g. ROOK_VERSION="1.3.0"; MASTER_COMMIT="7701c0"
 ROOK_VERSION=<LATEST STABLE VERSION>
-MASTER_COMMIT=$(git rev-parse master | cut -c 1-7)
+MASTER_COMMIT=$(git rev-parse --short=7 origin/master)
 git tag "v$ROOK_VERSION-master-$MASTER_COMMIT"
 git push fork "v$ROOK_VERSION-master-$MASTER_COMMIT"
 ```
