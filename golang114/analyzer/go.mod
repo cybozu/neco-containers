@@ -1,4 +1,4 @@
-module github.com/cybozu/neco-containers/golang/analyzer
+module github.com/cybozu/neco-containers/golang114/analyzer
 
 go 1.13
 

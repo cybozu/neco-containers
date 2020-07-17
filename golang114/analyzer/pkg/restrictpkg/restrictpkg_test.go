@@ -3,7 +3,7 @@ package restrictpkg_test
 import (
 	"testing"
 
-	"github.com/cybozu/neco-containers/golang/analyzer/pkg/restrictpkg"
+	"github.com/cybozu/neco-containers/golang114/analyzer/pkg/restrictpkg"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 

@@ -3,7 +3,7 @@ package eventuallycheck_test
 import (
 	"testing"
 
-	"github.com/cybozu/neco-containers/golang/analyzer/pkg/eventuallycheck"
+	"github.com/cybozu/neco-containers/golang114/analyzer/pkg/eventuallycheck"
 	"golang.org/x/tools/go/analysis/analysistest"
 )
 
