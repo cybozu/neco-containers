@@ -444,6 +444,10 @@ workflows:
           name: build-golang
           container-image: golang
       - build:
+          name: build-golang114
+          container-image: golang
+          dir: golang114
+      - build:
           name: build-gorush
           container-image: gorush
       - build:

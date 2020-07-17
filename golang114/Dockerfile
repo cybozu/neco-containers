@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:18.04
 
-ARG GO_VERSION=1.13.14
+ARG GO_VERSION=1.14.6
 WORKDIR /work
 
 ENV GOPATH=/go
@@ -21,7 +21,7 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
     && rm -rf /go/src \
     && mkdir -p /go/src
 
-COPY ./analyzer /work/analyzer
+COPY ../golang/analyzer /work/analyzer
 WORKDIR /work/analyzer
 RUN GOBIN=/usr/local/bin go install -mod=vendor ./cmd/...
 
