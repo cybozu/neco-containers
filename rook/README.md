@@ -1,7 +1,7 @@
 Rook container
 ==============
 
-This container uses a cybozu's own Rook [cybozu-go/rook][]:neco-release. It's because the following feature and fixes are necessary for Neco and are not in the upstream's newest stable version (v1.3.0):
+This container uses a cybozu's own Rook [cybozu-go/rook][]:neco-release. It's because the following feature and fixes are necessary for Neco and are not in the upstream's newest stable version (v1.3.8):
 
 * Some trivial bugs about dm devices  (see the Path at [cybozu-go/rook][]:use-dmcrypt-dev)
 * Update helm chart manifests (see [this][ceph: update helm version] commit)
