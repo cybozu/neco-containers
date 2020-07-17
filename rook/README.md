@@ -20,7 +20,7 @@ git checkout neco-release
 
 # Rebase and push to the forked repository
 # Please resolve conflict & dependencies carefully
-git rebase master
+git rebase origin/master
 git push -f fork neco-release
 
 # Set $ROOK_VERSION & $MASTER_COMMIT, e.g. ROOK_VERSION="1.3.0"; MASTER_COMMIT="7701c0"
