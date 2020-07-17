@@ -19,6 +19,9 @@ var assertionFuncs = []string{
 	"ConsistentlyWithOffset",
 	"Eventually",
 	"EventuallyWithOffset",
+	"Expect",
+	"ExpectWithOffset",
+	"Ω",
 }
 
 const errorMessage = "invalid Assertion: Should/ShouldNot not called"

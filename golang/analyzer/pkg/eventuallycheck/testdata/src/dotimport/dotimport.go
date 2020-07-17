@@ -19,6 +19,9 @@ func testEventually() {
 		EventuallyWithOffset(1, func() error {
 			return nil
 		}).Should(Succeed())
+		Expect(true).To(BeTrue())
+		ExpectWithOffset(1, true).To(BeTrue())
+		Ω(true).To(BeTrue())
 	})
 
 	It("should not execute eventually", func() {
@@ -28,6 +31,9 @@ func testEventually() {
 		Consistently(func() error { // want "invalid Assertion: Should/ShouldNot not called"
 			return nil
 		})
+		Expect(true)              // want "invalid Assertion: Should/ShouldNot not called"
+		ExpectWithOffset(1, true) // want "invalid Assertion: Should/ShouldNot not called"
+		Ω(true)                   // want "invalid Assertion: Should/ShouldNot not called"
 	})
 }
 
