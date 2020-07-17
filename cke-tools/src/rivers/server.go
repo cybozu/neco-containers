@@ -130,7 +130,7 @@ func (s *Server) randomUpstream() (net.Conn, error) {
 	for _, u := range ups {
 		conn, err := s.dialer.Dial("tcp", u)
 		if err == nil {
-			return conn, err
+			return conn, nil
 		}
 
 		s.logger.Warn("failed to connect to proxy server", map[string]interface{}{
