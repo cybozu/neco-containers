@@ -38,8 +38,10 @@ jobs:
       - run:
           name: Validate consistency between BRANCH and TAG
           command: |
-            if [ "${CIRCLE_JOB}" = "build-golang" ]; then exit 0; fi
-            ./tag_branch_consistency << parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+            ./tag_branch_consistency $dir
       - run:
           name: Lint Dockerfile
           command: |
