@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:18.04
 
-ARG GO_VERSION=1.14.6
+ARG GO_VERSION=1.14.7
 WORKDIR /work
 
 ENV GOPATH=/go
