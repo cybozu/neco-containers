@@ -2,15 +2,10 @@
 # Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/golang:1.13-bionic AS builder
+FROM quay.io/cybozu/golang:1.14-bionic AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Install dep
-ENV DEP_VERSION=0.5.3
-RUN curl -sSLf https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -o /usr/local/bin/dep && \
-    chmod +x /usr/local/bin/dep
-
 # Install packr
 ENV PACKR_VERSION=1.21.9
 RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VERSION}/packr_${PACKR_VERSION}_linux_amd64.tar.gz | \
@@ -29,25 +24,13 @@ RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/ku
     tar zxf - -C /usr/local/bin
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.13-bionic AS argocd-build
-ENV ARGOCD_VERSION=1.5.7
+FROM quay.io/cybozu/golang:1.14-bionic AS argocd-build
+ENV ARGOCD_VERSION=1.6.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 
-COPY --from=builder /usr/local/bin/dep /usr/local/bin/dep
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-# A dummy directory is created under $GOPATH/src/dummy so we are able to use dep
-# to install all the packages of our dep lock file
-RUN mkdir -p "${GOPATH}/src/dummy" \
-    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.toml" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.toml" \
-    && curl -sSLf -o "${GOPATH}/src/dummy/Gopkg.lock" "https://raw.githubusercontent.com/argoproj/argo-cd/v${ARGOCD_VERSION}/Gopkg.lock"
-
-WORKDIR ${GOPATH}/src/dummy
-RUN dep ensure -vendor-only && \
-    mv vendor/* "${GOPATH}/src/" && \
-    rmdir vendor
 
 WORKDIR /work
 RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
