@@ -6,8 +6,7 @@ require (
 	github.com/cybozu-go/log v1.5.0
 	github.com/cybozu-go/netutil v1.2.0
 	github.com/cybozu-go/well v1.10.0
-	github.com/spf13/cobra v0.0.6
-	github.com/spf13/viper v1.4.0
+	github.com/spf13/viper v1.4.0 // indirect
 	google.golang.org/genproto v0.0.0-20181221010529-a1fde7408246 // indirect
 	sigs.k8s.io/yaml v1.1.0
 )

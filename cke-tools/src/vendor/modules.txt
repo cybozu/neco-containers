@@ -54,8 +54,6 @@ github.com/hashicorp/hcl/hcl/token
 github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
-# github.com/inconshreveable/mousetrap v1.0.0
-github.com/inconshreveable/mousetrap
 # github.com/magiconair/properties v1.8.0
 github.com/magiconair/properties
 # github.com/mitchellh/mapstructure v1.1.2
@@ -69,8 +67,6 @@ github.com/spf13/afero
 github.com/spf13/afero/mem
 # github.com/spf13/cast v1.3.0
 github.com/spf13/cast
-# github.com/spf13/cobra v0.0.6
-github.com/spf13/cobra
 # github.com/spf13/jwalterweatherman v1.0.0
 github.com/spf13/jwalterweatherman
 # github.com/spf13/pflag v1.0.5
