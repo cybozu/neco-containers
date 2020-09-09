@@ -8,7 +8,7 @@ Usage
 
 ```console
 $ docker run -p 8080:8080 -p 8081:8081 \
-    quay.io/cybozu/kube-state-metrics:1.9.0.1 \
+    quay.io/cybozu/kube-state-metrics:1.9.7.1 \
     --kubeconfig=<KUBE-CONFIG>\
 ```
 
