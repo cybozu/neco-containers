@@ -1,6 +1,6 @@
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG COREDNS_VERSION=1.6.7
+ARG COREDNS_VERSION=1.7.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
