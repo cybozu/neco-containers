@@ -2,76 +2,51 @@ package controllers
 
 import (
 	"context"
-	"path/filepath"
-	"regexp"
-	"strings"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 )
 
 const (
-	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
-	StorageClass = "local-storage"
-
-	localPVProvisionerLabelKey = "local-pv-provisioner.cybozu.com/node"
+	releasedPVField = "status.phase"
 )
 
-var (
-	vpNameRegexp = regexp.MustCompile(`[^.0-9A-Za-z]+`)
-)
-
-func (dd *DeviceDetector) pvName(devPath string) string {
-	tmp := strings.Join([]string{"local", dd.nodeName, filepath.Base(devPath)}, "-")
-	return strings.ToLower(vpNameRegexp.ReplaceAllString(tmp, "-"))
+// NodeReconciler reconciles a Node object
+type PersistentVolumeReconciler struct {
+	client.Client
+	Log logr.Logger
 }
 
-func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node) error {
-	pvMode := corev1.PersistentVolumeBlock
-	log := dd.log
-	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: dd.pvName(dev.Path)}}
+// +kubebuilder:rbac:groups="",resources=persistentvolume,verbs=get;list;watch;delete
 
-	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
-		pv.ObjectMeta.Labels = map[string]string{localPVProvisionerLabelKey: node.Name}
+// Reconcile cleans up released local PV
+func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	ctx := context.Background()
+	log := r.Log.WithValues("persistentvolume", req.NamespacedName)
 
-		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
+	return ctrl.Result{}, nil
+}
 
-		// Workaround because capacity comparison doesn't work well in CreateOrUpdate.
-		quantity := *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI)
-		_ = quantity.String()
-		pv.Spec.Capacity = corev1.ResourceList{
-			corev1.ResourceStorage: quantity,
-		}
+// SetupWithManager sets up Reconciler with Manager.
+func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	// err := mgr.GetFieldIndexer().IndexField(&corev1.PersistentVolume{}, releasedPVField, func(o runtime.Object) []string {
+	// 	return []string{(o.(*corev1.PersistentVolume).Status.Phase)}
+	// })
+	// if err != nil {
+	// 	return err
+	// }
 
-		pv.Spec.NodeAffinity = &corev1.VolumeNodeAffinity{
-			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
-				{MatchExpressions: []corev1.NodeSelectorRequirement{
-					{
-						Key:      corev1.LabelHostname,
-						Operator: corev1.NodeSelectorOpIn,
-						Values:   []string{dd.nodeName},
-					},
-				}},
-			}},
-		}
-		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
-		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{
-			Local: &corev1.LocalVolumeSource{Path: dev.Path},
-		}
-		pv.Spec.StorageClassName = StorageClass
-		pv.Spec.VolumeMode = &pvMode
-
-		return ctrl.SetControllerReference(node, pv, dd.scheme)
-	})
-	if err != nil {
-		log.Error(err, "unable to create or update PV", "device", dev)
-		return err
+	pred := predicate.Funcs{
+		UpdateFunc:  func(event.UpdateEvent) bool { return true },
+		GenericFunc: func(event.GenericEvent) bool { return false },
 	}
-	if op != controllerutil.OperationResultNone {
-		log.Info("PV successfully created or updated", "operation", op, "device", dev)
-	}
-	return nil
+
+	return ctrl.NewControllerManagedBy(mgr).
+		WithEventFilter(pred).
+		For(&corev1.PersistentVolume{}).
+		Complete(r)
 }

@@ -2,8 +2,8 @@
 
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = quay.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
-KUBEBUILDER_VERSION = 2.2.0
-CTRLTOOLS_VERSION = 0.2.4
+KUBEBUILDER_VERSION = 2.3.1
+CTRLTOOLS_VERSION = 0.4.0
 
 SUDO = sudo
 SUDO_GO = $(SUDO) $(shell which go)
