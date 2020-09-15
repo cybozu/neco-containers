@@ -22,6 +22,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var stopCh = make(chan struct{})
 
 func Test(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -51,11 +52,19 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
+	By("running webhook server")
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+	Expect(mgr).ToNot(BeNil())
+
+	go mgr.Start(stopCh)
+
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	close(stopCh)
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })

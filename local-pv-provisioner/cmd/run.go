@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -29,6 +30,8 @@ func init() {
 func run() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
 	log := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
+
+	ctx := context.Background()
 
 	if len(config.nodeName) == 0 {
 		err := errors.New("node-name must not be empty")
@@ -75,10 +78,10 @@ func run() error {
 	}
 
 	// pre-cache objects
-	if _, err := mgr.GetCache().GetInformer(&corev1.PersistentVolume{}); err != nil {
+	if _, err := mgr.GetCache().GetInformer(ctx, &corev1.PersistentVolume{}); err != nil {
 		return err
 	}
-	if _, err := mgr.GetCache().GetInformer(&corev1.Node{}); err != nil {
+	if _, err := mgr.GetCache().GetInformer(ctx, &corev1.Node{}); err != nil {
 		return err
 	}
 
