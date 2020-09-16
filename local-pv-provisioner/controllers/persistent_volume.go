@@ -20,14 +20,15 @@ import (
 
 const (
 	releasedPVField = "status.phase"
-	watcherInterval = 1 * time.Hour
+	watcherInterval = 1 * time.Second
 )
 
+// Deleter clean up the block device
 type Deleter interface {
 	Delete(path string) error
 }
 
-// NodeReconciler reconciles a Node object
+// PersistentVolumeReconciler reconciles local PersistentVolume
 type PersistentVolumeReconciler struct {
 	client.Client
 	Log      logr.Logger

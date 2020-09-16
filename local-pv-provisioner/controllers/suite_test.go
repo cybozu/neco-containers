@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -33,6 +34,7 @@ func Test(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
+	ctx := context.Background()
 	ctrl.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
@@ -52,10 +54,21 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
-	By("running webhook server")
+	By("running manager")
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
 	Expect(err).ToNot(HaveOccurred())
 	Expect(mgr).ToNot(BeNil())
+
+	_, err = mgr.GetCache().GetInformer(ctx, &corev1.PersistentVolume{})
+	Expect(err).ShouldNot(HaveOccurred())
+	pvController := &PersistentVolumeReconciler{
+		mgr.GetClient(),
+		ctrl.Log,
+		"worker-1",
+		deleterMock{},
+	}
+	err = pvController.SetupWithManager(mgr, "worker-1")
+	Expect(err).ShouldNot(HaveOccurred())
 
 	go mgr.Start(stopCh)
 
@@ -71,4 +84,5 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("Test functions", func() {
 	Context("create pv", testDeviceDetectorCreatePV)
+	Context("persistent volume reconciler", testPersistentVolumeReconciler)
 })

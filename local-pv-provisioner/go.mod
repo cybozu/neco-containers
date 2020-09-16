@@ -3,6 +3,8 @@ module github.com/cybozu/neco-containers/local-pv-provisioner
 go 1.13
 
 require (
+	github.com/cybozu-go/sabakan v1.2.0
+	github.com/cybozu-go/sabakan/v2 v2.5.2
 	github.com/go-logr/logr v0.1.0
 	github.com/onsi/ginkgo v1.12.1
 	github.com/onsi/gomega v1.10.1
