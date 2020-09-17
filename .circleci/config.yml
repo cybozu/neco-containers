@@ -144,6 +144,9 @@ jobs:
     parameters:
       directory:
         type: string
+      targets:
+        type: string
+        default: test
     description: "test Go sources at << parameters.directory >>"
     docker:
       - image: quay.io/cybozu/golang:1.13-bionic
@@ -154,7 +157,7 @@ jobs:
       - run:
           command: |
             cd << parameters.directory >>
-            make test SUDO=
+            make << parameters.targets >> SUDO=
   test-cke-tools-scripts:
     docker:
       - image: quay.io/cybozu/ubuntu-dev:18.04
@@ -355,6 +358,7 @@ workflows:
       - test-go-sources:
           name: test-go-sources-cke-tools
           directory: cke-tools/src
+          targets: check-generate test
       - test-local-pv-provisioner
       - test-go-sources:
           name: test-go-sources-machines-endpoints
