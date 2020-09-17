@@ -3,6 +3,10 @@ package controllers
 import (
 	"context"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"os/exec"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -11,6 +15,7 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
+	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -25,12 +30,8 @@ func (deleterMock) Delete(path string) error {
 func testPersistentVolumeReconciler() {
 	ctx := context.Background()
 	It("should delete released PV", func() {
-		pv := prepareLocalPV("worker-1", corev1.VolumeReleased)
-		err := k8sClient.Create(ctx, &pv)
-		Expect(err).ShouldNot(HaveOccurred())
-		pv.Status.Phase = corev1.VolumeReleased
-		err = k8sClient.Status().Update(ctx, &pv)
-		Expect(err).ShouldNot(HaveOccurred())
+		pv := prepareLocalPV(ctx, "worker-1", false)
+
 		Eventually(func() error {
 			var res corev1.PersistentVolume
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
@@ -38,12 +39,38 @@ func testPersistentVolumeReconciler() {
 				return nil
 			}
 			return errors.New("not deleted yet")
-		}, 30*time.Second).Should(Succeed())
+		}, 5*time.Second).Should(Succeed())
+	})
+
+	It("should not delete released PV without the label", func() {
+		pv := prepareLocalPV(ctx, "worker-1", true)
+
+		Consistently(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			return err
+		}, 5*time.Second).Should(Succeed())
+
+		err := k8sClient.Delete(ctx, &pv)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("should not delete released PV with different node", func() {
+		pv := prepareLocalPV(ctx, "worker-2", false)
+
+		Consistently(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			return err
+		}, 5*time.Second).Should(Succeed())
+
+		err := k8sClient.Delete(ctx, &pv)
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 }
 
-func prepareLocalPV(node string, phase corev1.PersistentVolumePhase) corev1.PersistentVolume {
-	return corev1.PersistentVolume{
+func prepareLocalPV(ctx context.Context, node string, witoutLabel bool) corev1.PersistentVolume {
+	pv := corev1.PersistentVolume{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "local-pv",
 			Labels: map[string]string{
@@ -78,8 +105,49 @@ func prepareLocalPV(node string, phase corev1.PersistentVolumePhase) corev1.Pers
 				},
 			},
 		},
-		Status: corev1.PersistentVolumeStatus{
-			Phase: phase,
-		},
 	}
+
+	if witoutLabel {
+		pv.ObjectMeta.Labels = nil
+	}
+
+	err := k8sClient.Create(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	pv.Status.Phase = corev1.VolumeReleased
+	err = k8sClient.Status().Update(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	pv.ObjectMeta.Finalizers = []string{}
+	err = k8sClient.Update(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return pv
+}
+
+func testFillDeleter() {
+	It("should fill first specified bytes with zero", func() {
+		tmpFile, _ := ioutil.TempFile("", "deleter")
+		defer os.Remove(tmpFile.Name())
+		err := exec.Command("dd", `if=/dev/urandom`, "of="+tmpFile.Name(), fmt.Sprintf("bs=%d", 1024), "count=11").Run()
+		Expect(err).ShouldNot(HaveOccurred())
+
+		deleter := &FillDeleter{
+			fillBlockSize: 1024,
+			fillCount:     10,
+		}
+		deleter.Delete(tmpFile.Name())
+
+		zeroBlock := make([]byte, deleter.fillBlockSize)
+		buffer := make([]byte, deleter.fillBlockSize)
+		for i := uint(0); i < deleter.fillCount; i++ {
+			_, err := tmpFile.Read(buffer)
+			Expect(err).ShouldNot(HaveOccurred())
+			Expect(cmp.Equal(buffer, zeroBlock)).Should(BeTrue())
+		}
+
+		_, err = tmpFile.Read(buffer)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(cmp.Equal(buffer, zeroBlock)).Should(BeFalse())
+	})
 }

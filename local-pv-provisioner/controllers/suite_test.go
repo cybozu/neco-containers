@@ -85,4 +85,5 @@ var _ = AfterSuite(func() {
 var _ = Describe("Test functions", func() {
 	Context("create pv", testDeviceDetectorCreatePV)
 	Context("persistent volume reconciler", testPersistentVolumeReconciler)
+	Context("fill deleter", testFillDeleter)
 })
