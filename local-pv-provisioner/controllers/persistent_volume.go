@@ -13,14 +13,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
 	releasedPVField = "status.phase"
-	watcherInterval = 1 * time.Second
+	watcherInterval = 1 * time.Hour
 )
 
 // Deleter clean up the block device
@@ -30,10 +29,10 @@ type Deleter interface {
 
 // PersistentVolumeReconciler reconciles local PersistentVolume
 type PersistentVolumeReconciler struct {
-	client.Client
+	Cli      client.Client
 	Log      logr.Logger
-	nodeName string
-	deleter  Deleter
+	NodeName string
+	Deleter  Deleter
 }
 
 // +kubebuilder:rbac:groups="",resources=persistentvolume,verbs=get;list;watch;delete
@@ -44,12 +43,12 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	log := r.Log.WithValues("persistentvolume", req.NamespacedName)
 
 	var pv corev1.PersistentVolume
-	if err := r.Get(ctx, req.NamespacedName, &pv); err != nil {
+	if err := r.Cli.Get(ctx, req.NamespacedName, &pv); err != nil {
 		log.Error(err, "unable to fetch PersistentVolume", "name", req.NamespacedName)
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if name, ok := pv.ObjectMeta.Labels[localPVProvisionerLabelKey]; !ok || name != r.nodeName {
+	if name, ok := pv.ObjectMeta.Labels[localPVProvisionerLabelKey]; !ok || name != r.NodeName {
 		return ctrl.Result{}, nil
 	}
 
@@ -59,13 +58,14 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 
 	path := pv.Spec.Local.Path
 	log.Info("cleaning PersistentVolume", "name", req.NamespacedName, "path", path)
-	if err := r.deleter.Delete(path); err != nil {
+	if err := r.Deleter.Delete(path); err != nil {
 		log.Error(err, "unable to clean PersistentVolume, will retry by periodical reconciliation", "name", req.NamespacedName)
+		//lint:ignore nilerr retry with periodical trigger to avoid unnecessary load
 		return ctrl.Result{}, nil
 	}
 
 	log.Info("deleting PersistentVolume from api server", "name", req.NamespacedName)
-	if err := r.Delete(context.Background(), &pv); err != nil {
+	if err := r.Cli.Delete(context.Background(), &pv); err != nil {
 		log.Error(err, "unable to delete PersistentVolume", "name", req.NamespacedName)
 		return ctrl.Result{}, err
 	}
@@ -77,7 +77,12 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 // SetupWithManager sets up Reconciler with Manager.
 func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName string) error {
 	ch := make(chan event.GenericEvent)
-	watcher := NewPersistentVolumeWatcher(mgr.GetClient(), ch, nodeName, watcherInterval)
+	watcher := &persistentVolumeWatcher{
+		client:   mgr.GetClient(),
+		ch:       ch,
+		nodeName: nodeName,
+		tick:     watcherInterval,
+	}
 	err := mgr.Add(watcher)
 	if err != nil {
 		return err
@@ -87,7 +92,7 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	}
 
 	pred := predicate.Funcs{
-		CreateFunc:  func(event.CreateEvent) bool { return false },
+		CreateFunc:  func(event.CreateEvent) bool { return true },
 		DeleteFunc:  func(event.DeleteEvent) bool { return false },
 		UpdateFunc:  func(event.UpdateEvent) bool { return true },
 		GenericFunc: func(event.GenericEvent) bool { return true },
@@ -105,16 +110,6 @@ type persistentVolumeWatcher struct {
 	ch       chan<- event.GenericEvent
 	nodeName string
 	tick     time.Duration
-}
-
-// NewPersistentVolumeWatcher creates new persistentVolumeWatcher
-func NewPersistentVolumeWatcher(client client.Client, ch chan<- event.GenericEvent, nodeName string, tick time.Duration) manager.Runnable {
-	return &persistentVolumeWatcher{
-		client:   client,
-		ch:       ch,
-		nodeName: nodeName,
-		tick:     tick,
-	}
 }
 
 // Start implements Runnable.Start
@@ -158,8 +153,8 @@ func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 
 // FillDeleter fills first 100MByte with '\0'
 type FillDeleter struct {
-	fillBlockSize uint
-	fillCount     uint
+	FillBlockSize uint
+	FillCount     uint
 }
 
 // Delete implements Deleter's method.
@@ -170,8 +165,8 @@ func (d *FillDeleter) Delete(path string) error {
 	}
 	defer file.Close()
 
-	zeroBlock := make([]byte, d.fillBlockSize)
-	for i := uint(0); i < d.fillCount; i++ {
+	zeroBlock := make([]byte, d.FillBlockSize)
+	for i := uint(0); i < d.FillCount; i++ {
 		_, err = file.Write(zeroBlock)
 		if err != nil {
 			return err

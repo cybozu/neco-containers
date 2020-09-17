@@ -133,14 +133,14 @@ func testFillDeleter() {
 		Expect(err).ShouldNot(HaveOccurred())
 
 		deleter := &FillDeleter{
-			fillBlockSize: 1024,
-			fillCount:     10,
+			FillBlockSize: 1024,
+			FillCount:     10,
 		}
 		deleter.Delete(tmpFile.Name())
 
-		zeroBlock := make([]byte, deleter.fillBlockSize)
-		buffer := make([]byte, deleter.fillBlockSize)
-		for i := uint(0); i < deleter.fillCount; i++ {
+		zeroBlock := make([]byte, deleter.FillBlockSize)
+		buffer := make([]byte, deleter.FillBlockSize)
+		for i := uint(0); i < deleter.FillCount; i++ {
 			_, err := tmpFile.Read(buffer)
 			Expect(err).ShouldNot(HaveOccurred())
 			Expect(cmp.Equal(buffer, zeroBlock)).Should(BeTrue())

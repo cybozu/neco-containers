@@ -1,7 +1,7 @@
 local-pv-provisioner
 ====================
 
-`local-pv-provisioner` is a custom controller that creates [local](https://kubernetes.io/docs/concepts/storage/volumes/#local) PersistentVolume(PV) resources from devices that match the specified conditions.
+`local-pv-provisioner` is a custom controller that creates [local](https://kubernetes.io/docs/concepts/storage/volumes/#local) PersistentVolume(PV) resources from devices that match the specified conditions. It also cleanup the PVs when it's released and with the periodical trigger.
 
 * The PVs will be removed along with the deletion of the node because of using `ownerReferences`.
 
@@ -160,6 +160,15 @@ spec:
     NAME                               STATUS   VOLUME                            CAPACITY   ACCESS MODES   STORAGECLASS    AGE
     persistentvolumeclaim/sample-pvc   Bound    local-kind-worker2-dummy-dev-02   1Ki        RWO            local-storage   29s
     ```
+
+## How to cleanup released PVs
+
+The cleanup process is:
+1. Watches Update events for Persistent Volume
+2. If `spec.storageClassName: local-storage` and `status.phase: Released`, fill first 100MB of the corresponding device with zero value.
+3. Delete the Persistent Volume from Kubernetes API server.
+
+Note that this cleanup process is executed periodically (interval: 1 hour).
 
 ## Command-line flags and environment variables
 

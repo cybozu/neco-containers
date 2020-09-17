@@ -77,6 +77,22 @@ func run() error {
 		return err
 	}
 
+	deleter := controllers.FillDeleter{
+		FillBlockSize: 1024 * 1024,
+		FillCount:     100,
+	}
+	pc := &controllers.PersistentVolumeReconciler{
+		Cli:      mgr.GetClient(),
+		Log:      log,
+		NodeName: config.nodeName,
+		Deleter:  &deleter,
+	}
+	err = pc.SetupWithManager(mgr, config.nodeName)
+	if err != nil {
+		log.Error(err, "unable to register PersistentVolumeReconciler to mgr")
+		return err
+	}
+
 	// pre-cache objects
 	if _, err := mgr.GetCache().GetInformer(ctx, &corev1.PersistentVolume{}); err != nil {
 		return err
