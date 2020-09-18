@@ -159,7 +159,7 @@ type FillDeleter struct {
 
 // Delete implements Deleter's method.
 func (d *FillDeleter) Delete(path string) error {
-	file, err := os.OpenFile(path, os.O_RDWR, 0)
+	file, err := os.OpenFile(path, os.O_WRONLY, 0)
 	if err != nil {
 		return err
 	}
@@ -172,6 +172,7 @@ func (d *FillDeleter) Delete(path string) error {
 			return err
 		}
 	}
+	file.Sync()
 
 	return nil
 }
