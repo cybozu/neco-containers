@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
@@ -29,6 +30,8 @@ func init() {
 func run() error {
 	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
 	log := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
+
+	ctx := context.Background()
 
 	if len(config.nodeName) == 0 {
 		err := errors.New("node-name must not be empty")
@@ -66,19 +69,36 @@ func run() error {
 		return err
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), log,
-		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme)
+	deleter := controllers.FillDeleter{
+		FillBlockSize: 1024 * 1024,
+		FillCount:     100,
+	}
+
+	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(), log,
+		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
 	err = mgr.Add(dd)
 	if err != nil {
 		log.Error(err, "unable to add device-detector to manager")
 		return err
 	}
 
-	// pre-cache objects
-	if _, err := mgr.GetCache().GetInformer(&corev1.PersistentVolume{}); err != nil {
+	pc := &controllers.PersistentVolumeReconciler{
+		Cli:      mgr.GetClient(),
+		Log:      log,
+		NodeName: config.nodeName,
+		Deleter:  &deleter,
+	}
+	err = pc.SetupWithManager(mgr, config.nodeName)
+	if err != nil {
+		log.Error(err, "unable to register PersistentVolumeReconciler to mgr")
 		return err
 	}
-	if _, err := mgr.GetCache().GetInformer(&corev1.Node{}); err != nil {
+
+	// pre-cache objects
+	if _, err := mgr.GetCache().GetInformer(ctx, &corev1.PersistentVolume{}); err != nil {
+		return err
+	}
+	if _, err := mgr.GetCache().GetInformer(ctx, &corev1.Node{}); err != nil {
 		return err
 	}
 

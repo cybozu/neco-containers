@@ -2,76 +2,143 @@ package controllers
 
 import (
 	"context"
-	"path/filepath"
-	"regexp"
-	"strings"
+	"time"
 
+	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/event"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
 const (
-	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
-	StorageClass = "local-storage"
-
-	localPVProvisionerLabelKey = "local-pv-provisioner.cybozu.com/node"
+	releasedPVField = "status.phase"
+	watcherInterval = 1 * time.Hour
 )
 
-var (
-	vpNameRegexp = regexp.MustCompile(`[^.0-9A-Za-z]+`)
-)
-
-func (dd *DeviceDetector) pvName(devPath string) string {
-	tmp := strings.Join([]string{"local", dd.nodeName, filepath.Base(devPath)}, "-")
-	return strings.ToLower(vpNameRegexp.ReplaceAllString(tmp, "-"))
+// PersistentVolumeReconciler reconciles local PersistentVolume
+type PersistentVolumeReconciler struct {
+	Cli      client.Client
+	Log      logr.Logger
+	NodeName string
+	Deleter  Deleter
 }
 
-func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node) error {
-	pvMode := corev1.PersistentVolumeBlock
-	log := dd.log
-	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: dd.pvName(dev.Path)}}
+// +kubebuilder:rbac:groups="",resources=persistentvolume,verbs=get;list;watch;delete
 
-	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
-		pv.ObjectMeta.Labels = map[string]string{localPVProvisionerLabelKey: node.Name}
+// Reconcile cleans up released local PV
+func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
+	ctx := context.Background()
+	log := r.Log.WithValues("persistentvolume", req.NamespacedName.Name)
 
-		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
+	var pv corev1.PersistentVolume
+	if err := r.Cli.Get(ctx, req.NamespacedName, &pv); err != nil {
+		log.Error(err, "unable to fetch PersistentVolume")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
 
-		// Workaround because capacity comparison doesn't work well in CreateOrUpdate.
-		quantity := *resource.NewQuantity(dev.CapacityBytes, resource.BinarySI)
-		_ = quantity.String()
-		pv.Spec.Capacity = corev1.ResourceList{
-			corev1.ResourceStorage: quantity,
-		}
+	if name, ok := pv.ObjectMeta.Labels[localPVProvisionerLabelKey]; !ok || name != r.NodeName {
+		return ctrl.Result{}, nil
+	}
 
-		pv.Spec.NodeAffinity = &corev1.VolumeNodeAffinity{
-			Required: &corev1.NodeSelector{NodeSelectorTerms: []corev1.NodeSelectorTerm{
-				{MatchExpressions: []corev1.NodeSelectorRequirement{
-					{
-						Key:      corev1.LabelHostname,
-						Operator: corev1.NodeSelectorOpIn,
-						Values:   []string{dd.nodeName},
-					},
-				}},
-			}},
-		}
-		pv.Spec.PersistentVolumeReclaimPolicy = corev1.PersistentVolumeReclaimRetain
-		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{
-			Local: &corev1.LocalVolumeSource{Path: dev.Path},
-		}
-		pv.Spec.StorageClassName = StorageClass
-		pv.Spec.VolumeMode = &pvMode
+	if pv.Status.Phase != corev1.VolumeReleased {
+		return ctrl.Result{}, nil
+	}
 
-		return ctrl.SetControllerReference(node, pv, dd.scheme)
-	})
+	path := pv.Spec.Local.Path
+	log.Info("cleaning PersistentVolume", "path", path)
+	if err := r.Deleter.Delete(path); err != nil {
+		log.Error(err, "unable to clean the device of PersistentVolume")
+	}
+
+	log.Info("deleting PersistentVolume from api server")
+	if err := r.Cli.Delete(context.Background(), &pv); err != nil {
+		log.Error(err, "unable to delete PersistentVolume")
+		return ctrl.Result{}, err
+	}
+
+	log.Info("successful to cleanup PersistentVolume")
+	return ctrl.Result{}, nil
+}
+
+// SetupWithManager sets up Reconciler with Manager.
+func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName string) error {
+	ch := make(chan event.GenericEvent)
+	watcher := &persistentVolumeWatcher{
+		client:   mgr.GetClient(),
+		ch:       ch,
+		nodeName: nodeName,
+		tick:     watcherInterval,
+	}
+	err := mgr.Add(watcher)
 	if err != nil {
-		log.Error(err, "unable to create or update PV", "device", dev)
 		return err
 	}
-	if op != controllerutil.OperationResultNone {
-		log.Info("PV successfully created or updated", "operation", op, "device", dev)
+	src := source.Channel{
+		Source: ch,
+	}
+
+	pred := predicate.Funcs{
+		CreateFunc:  func(event.CreateEvent) bool { return true },
+		DeleteFunc:  func(event.DeleteEvent) bool { return false },
+		UpdateFunc:  func(event.UpdateEvent) bool { return true },
+		GenericFunc: func(event.GenericEvent) bool { return true },
+	}
+
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&corev1.PersistentVolume{}).
+		WithEventFilter(pred).
+		Watches(&src, &handler.EnqueueRequestForObject{}).
+		Complete(r)
+}
+
+type persistentVolumeWatcher struct {
+	client   client.Client
+	ch       chan<- event.GenericEvent
+	nodeName string
+	tick     time.Duration
+}
+
+// Start implements Runnable.Start
+func (w *persistentVolumeWatcher) Start(ch <-chan struct{}) error {
+	ticker := time.NewTicker(w.tick)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ch:
+			return nil
+		case <-ticker.C:
+			err := w.fireEvent(context.Background())
+			if err != nil {
+				return err
+			}
+		}
+	}
+}
+
+func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
+	var pvs corev1.PersistentVolumeList
+	err := w.client.List(ctx, &pvs, &client.ListOptions{
+		LabelSelector: labels.SelectorFromSet(map[string]string{localPVProvisionerLabelKey: w.nodeName}),
+	})
+	if err != nil {
+		return err
+	}
+
+	for _, pv := range pvs.Items {
+		if pv.Status.Phase != corev1.VolumeReleased {
+			continue
+		}
+		w.ch <- event.GenericEvent{
+			Meta: &metav1.ObjectMeta{
+				Name: pv.Name,
+			},
+		}
 	}
 	return nil
 }

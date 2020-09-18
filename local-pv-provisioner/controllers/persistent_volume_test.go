@@ -2,114 +2,140 @@ package controllers
 
 import (
 	"context"
-	"regexp"
+	"errors"
+	"time"
+
+	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
 )
 
-func testDeviceDetectorCreatePV() {
-	It("should create PV with specified ownerReference", func() {
-		re := regexp.MustCompile(".*")
+type deleterMock struct {
+}
 
-		dd := &DeviceDetector{
-			Client:           k8sClient,
-			log:              ctrl.Log.WithName("local-pv-provisioner-test"),
-			deviceDir:        "dummy",
-			deviceNameFilter: re,
-			nodeName:         "test-node-127.0.0.1",
-			interval:         0,
-			scheme:           scheme.Scheme,
-		}
-		node := new(corev1.Node)
-		node.Name = "test-node-127.0.0.1"
-		node.UID = "test-uid"
+func (deleterMock) Delete(path string) error {
+	if path == "/dev/crypt-disk/lun-0-broken" {
+		return errors.New("broken device")
+	}
+	return nil
+}
 
-		tests := []struct {
-			inputDevice    Device
-			expectedPvName string
-		}{
-			{
-				inputDevice: Device{
-					Path:          "/dev/dummy/device",
-					CapacityBytes: 512,
-				},
-				expectedPvName: "local-test-node-127.0.0.1-device",
-			},
-			{
-				inputDevice: Device{
-					Path:          "/dev/crypt-disk/by-path/pci-0000:3c:00.0-sas-exp0x500056b35e77bcff-phy0-lun-0",
-					CapacityBytes: 1024,
-				},
-				expectedPvName: "local-test-node-127.0.0.1-pci-0000-3c-00.0-sas-exp0x500056b35e77bcff-phy0-lun-0",
-			},
-			{
-				inputDevice: Device{
-					Path:          "/dev/dummy/device !\"#$%&'()*+,:;<=>?@[\\]^_`{|}~0123456789.ABCDEFGHIJKLMNOPQRSTUVWXYZ.abcdefghijklmnopqrstuvwxyz",
-					CapacityBytes: 2048,
-				},
-				expectedPvName: "local-test-node-127.0.0.1-device-0123456789.abcdefghijklmnopqrstuvwxyz.abcdefghijklmnopqrstuvwxyz",
-			},
-		}
+func testPersistentVolumeReconciler() {
+	ctx := context.Background()
+	It("should delete released PV", func() {
+		pv := prepareLocalPV(ctx, "worker-1", false, false)
 
-		for _, tt := range tests {
-			device := tt.inputDevice
-
-			By("creating PV")
-			err := dd.createPV(context.Background(), device, node)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("getting PV")
-			pv := new(corev1.PersistentVolume)
-			err = dd.Get(context.Background(), types.NamespacedName{Name: tt.expectedPvName}, pv)
-			Expect(err).NotTo(HaveOccurred())
-
-			By("checking PV source")
-			localVolume := pv.Spec.PersistentVolumeSource.Local
-			Expect(localVolume).NotTo(BeNil())
-			Expect(localVolume.Path).To(Equal(device.Path))
-
-			By("checking label")
-			Expect(pv.ObjectMeta.Labels).To(HaveLen(1))
-			Expect(pv.ObjectMeta.Labels).To(HaveKey(localPVProvisionerLabelKey))
-			Expect(pv.ObjectMeta.Labels[localPVProvisionerLabelKey]).To(Equal(node.Name))
-
-			By("checking storageClassName")
-			Expect(pv.Spec.StorageClassName).To(Equal("local-storage"))
-
-			By("checking capacity")
-			Expect(pv.Spec.Capacity).To(HaveKey(corev1.ResourceStorage))
-			capacity := pv.Spec.Capacity[corev1.ResourceStorage]
-			Expect(capacity.CmpInt64(device.CapacityBytes)).To(Equal(0))
-
-			By("checking NodeAffinity")
-			terms := pv.Spec.NodeAffinity.Required.NodeSelectorTerms
-			Expect(terms).To(HaveLen(1))
-			Expect(terms[0].MatchExpressions).To(HaveLen(1))
-			matchExpression := terms[0].MatchExpressions[0]
-			Expect(matchExpression.Key).To(Equal("kubernetes.io/hostname"))
-			Expect(matchExpression.Operator).To(Equal(corev1.NodeSelectorOpIn))
-			Expect(matchExpression.Values).To(HaveLen(1))
-			Expect(matchExpression.Values[0]).To(Equal(node.Name))
-
-			By("checking ownerReferences")
-			ownerRefList := pv.GetOwnerReferences()
-			Expect(ownerRefList).To(HaveLen(1))
-
-			outputOwnerRef := ownerRefList[0]
-			Expect(outputOwnerRef.Kind).To(Equal("Node"))
-			Expect(outputOwnerRef.Name).To(Equal(node.Name))
-			Expect(outputOwnerRef.UID).To(Equal(node.UID))
-		}
-
-		By("checking count of PVs")
-		pvList := new(corev1.PersistentVolumeList)
-		err := dd.List(context.Background(), pvList)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(pvList.Items).To(HaveLen(len(tests)))
+		Eventually(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			if apierrors.IsNotFound(err) {
+				return nil
+			}
+			return errors.New("not deleted yet")
+		}, 3*time.Second).Should(Succeed())
 	})
+
+	It("should not delete released PV without the label", func() {
+		pv := prepareLocalPV(ctx, "worker-1", true, false)
+
+		Consistently(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			return err
+		}, 3*time.Second).Should(Succeed())
+
+		err := k8sClient.Delete(ctx, &pv)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("should not delete released PV with different node", func() {
+		pv := prepareLocalPV(ctx, "worker-2", false, false)
+
+		Consistently(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			return err
+		}, 3*time.Second).Should(Succeed())
+
+		err := k8sClient.Delete(ctx, &pv)
+		Expect(err).ShouldNot(HaveOccurred())
+	})
+
+	It("should delete released PV even with broken device", func() {
+		pv := prepareLocalPV(ctx, "worker-1", false, true)
+
+		Eventually(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			if apierrors.IsNotFound(err) {
+				return nil
+			}
+			return errors.New("not deleted yet")
+		}, 5*time.Second).Should(Succeed())
+	})
+}
+
+func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) corev1.PersistentVolume {
+	pv := corev1.PersistentVolume{
+		ObjectMeta: v1.ObjectMeta{
+			Name: "local-pv",
+			Labels: map[string]string{
+				localPVProvisionerLabelKey: node,
+			},
+		},
+		Spec: corev1.PersistentVolumeSpec{
+			PersistentVolumeSource: corev1.PersistentVolumeSource{
+				Local: &corev1.LocalVolumeSource{
+					Path: "/dev/crypt-disk/lun-0",
+				},
+			},
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				corev1.ReadWriteOnce,
+			},
+			Capacity: corev1.ResourceList{
+				"storage": resource.MustParse("1G"),
+			},
+			NodeAffinity: &corev1.VolumeNodeAffinity{
+				Required: &corev1.NodeSelector{
+					NodeSelectorTerms: []corev1.NodeSelectorTerm{
+						{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      corev1.LabelHostname,
+									Operator: corev1.NodeSelectorOpIn,
+									Values:   []string{node},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if witoutLabel {
+		pv.ObjectMeta.Labels = nil
+	}
+
+	if broken {
+		pv.Spec.Local.Path = "/dev/crypt-disk/lun-0-broken"
+	}
+
+	err := k8sClient.Create(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	pv.ObjectMeta.Finalizers = []string{}
+	err = k8sClient.Update(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	pv.Status.Phase = corev1.VolumeReleased
+	err = k8sClient.Status().Update(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	return pv
 }

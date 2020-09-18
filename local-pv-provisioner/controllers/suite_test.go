@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -22,6 +23,7 @@ import (
 var cfg *rest.Config
 var k8sClient client.Client
 var testEnv *envtest.Environment
+var stopCh = make(chan struct{})
 
 func Test(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -32,6 +34,7 @@ func Test(t *testing.T) {
 }
 
 var _ = BeforeSuite(func(done Done) {
+	ctx := context.Background()
 	ctrl.SetLogger(zap.LoggerTo(GinkgoWriter, true))
 
 	By("bootstrapping test environment")
@@ -51,15 +54,36 @@ var _ = BeforeSuite(func(done Done) {
 	Expect(err).ToNot(HaveOccurred())
 	Expect(k8sClient).ToNot(BeNil())
 
+	By("running manager")
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{Scheme: scheme.Scheme})
+	Expect(err).ToNot(HaveOccurred())
+	Expect(mgr).ToNot(BeNil())
+
+	_, err = mgr.GetCache().GetInformer(ctx, &corev1.PersistentVolume{})
+	Expect(err).ShouldNot(HaveOccurred())
+	pvController := &PersistentVolumeReconciler{
+		mgr.GetClient(),
+		ctrl.Log,
+		"worker-1",
+		deleterMock{},
+	}
+	err = pvController.SetupWithManager(mgr, "worker-1")
+	Expect(err).ShouldNot(HaveOccurred())
+
+	go mgr.Start(stopCh)
+
 	close(done)
 }, 60)
 
 var _ = AfterSuite(func() {
 	By("tearing down the test environment")
+	close(stopCh)
 	err := testEnv.Stop()
 	Expect(err).ToNot(HaveOccurred())
 })
 
 var _ = Describe("Test functions", func() {
 	Context("create pv", testDeviceDetectorCreatePV)
+	Context("persistent volume reconciler", testPersistentVolumeReconciler)
+	Context("fill deleter", testFillDeleter)
 })
