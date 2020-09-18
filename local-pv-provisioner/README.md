@@ -55,6 +55,7 @@ spec:
     * If it contains characters other than alphabets, numbers, `-` and `.`, it is replaced with `-`.
 * `spec.storageClassName` is automatically set a value `local-storage`.
 * `spec.capacity.storage` is decided from the max capacity of the device.
+* The device specified `spec.local.path` is cleaned up by filling the first 100MB with zero value.
 
 ## Prometheus metrics
 
@@ -165,8 +166,9 @@ spec:
 
 The cleanup process is:
 1. Watches Update events for Persistent Volume
-2. If `spec.storageClassName: local-storage` and `status.phase: Released`, fill first 100MB of the corresponding device with zero value.
+2. If `spec.storageClassName: local-storage` and `status.phase: Released`, fill the first 100MB of the corresponding device with zero value.
 3. Delete the Persistent Volume from Kubernetes API server.
+  - Note that, this process is executed even if failed to cleanup the device.
 
 Note that this cleanup process is executed periodically (interval: 1 hour).
 

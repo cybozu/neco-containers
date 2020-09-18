@@ -10,6 +10,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/prometheus/client_golang/prometheus"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -117,19 +118,31 @@ func (dd *DeviceDetector) do() error {
 		return err
 	}
 
-	dd.availableDevices.Set(float64(len(devices)))
-	dd.errorDevices.Set(float64(len(errDevices)))
+	availDevices := make([]Device, 0)
 
 	for _, dev := range devices {
-		err := dd.deleter.Delete(dev.Path)
-		if err != nil {
-			return err
+		var pv corev1.PersistentVolume
+		err := dd.Client.Get(ctx, types.NamespacedName{Name: dd.pvName(dev.Path)}, &pv)
+		if apierrors.IsNotFound(err) {
+			err := dd.deleter.Delete(dev.Path)
+			if err != nil {
+				log.Error(err, "unable to cleanup device", "path", dev.Path)
+				errDevices = append(errDevices, dev)
+				continue
+			}
 		}
+
 		err = dd.createPV(ctx, dev, node)
 		if err != nil {
-			return err
+			log.Error(err, "unable to create or update PV", "path", dev.Path)
+			errDevices = append(errDevices, dev)
 		}
+
+		availDevices = append(availDevices, dev)
 	}
+
+	dd.availableDevices.Set(float64(len(availDevices)))
+	dd.errorDevices.Set(float64(len(errDevices)))
 
 	return nil
 }
