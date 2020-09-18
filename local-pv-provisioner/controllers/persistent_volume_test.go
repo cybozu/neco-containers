@@ -37,7 +37,7 @@ func testPersistentVolumeReconciler() {
 				return nil
 			}
 			return errors.New("not deleted yet")
-		}, 5*time.Second).Should(Succeed())
+		}, 3*time.Second).Should(Succeed())
 	})
 
 	It("should not delete released PV without the label", func() {
@@ -47,7 +47,7 @@ func testPersistentVolumeReconciler() {
 			var res corev1.PersistentVolume
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
 			return err
-		}, 5*time.Second).Should(Succeed())
+		}, 3*time.Second).Should(Succeed())
 
 		err := k8sClient.Delete(ctx, &pv)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -60,7 +60,7 @@ func testPersistentVolumeReconciler() {
 			var res corev1.PersistentVolume
 			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
 			return err
-		}, 5*time.Second).Should(Succeed())
+		}, 3*time.Second).Should(Succeed())
 
 		err := k8sClient.Delete(ctx, &pv)
 		Expect(err).ShouldNot(HaveOccurred())
@@ -129,12 +129,12 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) 
 	err := k8sClient.Create(ctx, &pv)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	pv.Status.Phase = corev1.VolumeReleased
-	err = k8sClient.Status().Update(ctx, &pv)
-	Expect(err).ShouldNot(HaveOccurred())
-
 	pv.ObjectMeta.Finalizers = []string{}
 	err = k8sClient.Update(ctx, &pv)
+	Expect(err).ShouldNot(HaveOccurred())
+
+	pv.Status.Phase = corev1.VolumeReleased
+	err = k8sClient.Status().Update(ctx, &pv)
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return pv
