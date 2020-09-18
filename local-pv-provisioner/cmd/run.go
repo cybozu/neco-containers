@@ -69,18 +69,19 @@ func run() error {
 		return err
 	}
 
+	deleter := controllers.FillDeleter{
+		FillBlockSize: 1024 * 1024,
+		FillCount:     100,
+	}
+
 	dd := controllers.NewDeviceDetector(mgr.GetClient(), log,
-		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme)
+		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
 	err = mgr.Add(dd)
 	if err != nil {
 		log.Error(err, "unable to add device-detector to manager")
 		return err
 	}
 
-	deleter := controllers.FillDeleter{
-		FillBlockSize: 1024 * 1024,
-		FillCount:     100,
-	}
 	pc := &controllers.PersistentVolumeReconciler{
 		Cli:      mgr.GetClient(),
 		Log:      log,

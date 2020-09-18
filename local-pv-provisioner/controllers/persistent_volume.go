@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -21,11 +20,6 @@ const (
 	releasedPVField = "status.phase"
 	watcherInterval = 1 * time.Hour
 )
-
-// Deleter clean up the block device
-type Deleter interface {
-	Delete(path string) error
-}
 
 // PersistentVolumeReconciler reconciles local PersistentVolume
 type PersistentVolumeReconciler struct {
@@ -59,9 +53,7 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	path := pv.Spec.Local.Path
 	log.Info("cleaning PersistentVolume", "name", req.NamespacedName, "path", path)
 	if err := r.Deleter.Delete(path); err != nil {
-		log.Error(err, "unable to clean PersistentVolume, will retry by periodical reconciliation", "name", req.NamespacedName)
-		//lint:ignore nilerr retry with periodical trigger to avoid unnecessary load
-		return ctrl.Result{}, nil
+		log.Error(err, "unable to clean the device of PersistentVolume", "name", req.NamespacedName)
 	}
 
 	log.Info("deleting PersistentVolume from api server", "name", req.NamespacedName)
@@ -148,31 +140,5 @@ func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 			},
 		}
 	}
-	return nil
-}
-
-// FillDeleter fills first 100MByte with '\0'
-type FillDeleter struct {
-	FillBlockSize uint
-	FillCount     uint
-}
-
-// Delete implements Deleter's method.
-func (d *FillDeleter) Delete(path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY, 0)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	zeroBlock := make([]byte, d.FillBlockSize)
-	for i := uint(0); i < d.FillCount; i++ {
-		_, err = file.Write(zeroBlock)
-		if err != nil {
-			return err
-		}
-	}
-	file.Sync()
-
 	return nil
 }

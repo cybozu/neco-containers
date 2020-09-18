@@ -33,8 +33,7 @@ var (
 )
 
 // NewDeviceDetector creates a new DeviceDetector.
-func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme) manager.Runnable {
-
+func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme, deleter Deleter) manager.Runnable {
 	dd := &DeviceDetector{
 		client, log, deviceDir, deviceNameFilter, nodeName, interval, scheme,
 		prometheus.NewGauge(prometheus.GaugeOpts{
@@ -47,6 +46,7 @@ func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, 
 			Help:        "The number of error devices recognized by local pv provisioner.",
 			ConstLabels: prometheus.Labels{"node": nodeName},
 		}),
+		deleter,
 	}
 
 	metrics.Registry.MustRegister(dd.availableDevices)
@@ -72,6 +72,7 @@ type DeviceDetector struct {
 	scheme           *runtime.Scheme
 	availableDevices prometheus.Gauge
 	errorDevices     prometheus.Gauge
+	deleter          Deleter
 }
 
 // Start implements controller-runtime's manager.Runnable.
@@ -120,7 +121,11 @@ func (dd *DeviceDetector) do() error {
 	dd.errorDevices.Set(float64(len(errDevices)))
 
 	for _, dev := range devices {
-		err := dd.createPV(ctx, dev, node)
+		err := dd.deleter.Delete(dev.Path)
+		if err != nil {
+			return err
+		}
+		err = dd.createPV(ctx, dev, node)
 		if err != nil {
 			return err
 		}

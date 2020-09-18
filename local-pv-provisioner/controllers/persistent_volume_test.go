@@ -3,10 +3,6 @@ package controllers
 import (
 	"context"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -15,7 +11,6 @@ import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 
-	"github.com/google/go-cmp/cmp"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -24,13 +19,16 @@ type deleterMock struct {
 }
 
 func (deleterMock) Delete(path string) error {
+	if path == "/dev/crypt-disk/lun-0-broken" {
+		return errors.New("broken device")
+	}
 	return nil
 }
 
 func testPersistentVolumeReconciler() {
 	ctx := context.Background()
 	It("should delete released PV", func() {
-		pv := prepareLocalPV(ctx, "worker-1", false)
+		pv := prepareLocalPV(ctx, "worker-1", false, false)
 
 		Eventually(func() error {
 			var res corev1.PersistentVolume
@@ -43,7 +41,7 @@ func testPersistentVolumeReconciler() {
 	})
 
 	It("should not delete released PV without the label", func() {
-		pv := prepareLocalPV(ctx, "worker-1", true)
+		pv := prepareLocalPV(ctx, "worker-1", true, false)
 
 		Consistently(func() error {
 			var res corev1.PersistentVolume
@@ -56,7 +54,7 @@ func testPersistentVolumeReconciler() {
 	})
 
 	It("should not delete released PV with different node", func() {
-		pv := prepareLocalPV(ctx, "worker-2", false)
+		pv := prepareLocalPV(ctx, "worker-2", false, false)
 
 		Consistently(func() error {
 			var res corev1.PersistentVolume
@@ -67,9 +65,22 @@ func testPersistentVolumeReconciler() {
 		err := k8sClient.Delete(ctx, &pv)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
+
+	It("should delete released PV even with broken device", func() {
+		pv := prepareLocalPV(ctx, "worker-1", false, true)
+
+		Eventually(func() error {
+			var res corev1.PersistentVolume
+			err := k8sClient.Get(ctx, types.NamespacedName{Name: pv.Name}, &res)
+			if apierrors.IsNotFound(err) {
+				return nil
+			}
+			return errors.New("not deleted yet")
+		}, 5*time.Second).Should(Succeed())
+	})
 }
 
-func prepareLocalPV(ctx context.Context, node string, witoutLabel bool) corev1.PersistentVolume {
+func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) corev1.PersistentVolume {
 	pv := corev1.PersistentVolume{
 		ObjectMeta: v1.ObjectMeta{
 			Name: "local-pv",
@@ -111,6 +122,10 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel bool) corev1.P
 		pv.ObjectMeta.Labels = nil
 	}
 
+	if broken {
+		pv.Spec.Local.Path = "/dev/crypt-disk/lun-0-broken"
+	}
+
 	err := k8sClient.Create(ctx, &pv)
 	Expect(err).ShouldNot(HaveOccurred())
 
@@ -123,31 +138,4 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel bool) corev1.P
 	Expect(err).ShouldNot(HaveOccurred())
 
 	return pv
-}
-
-func testFillDeleter() {
-	It("should fill first specified bytes with zero", func() {
-		tmpFile, _ := ioutil.TempFile("", "deleter")
-		defer os.Remove(tmpFile.Name())
-		err := exec.Command("dd", `if=/dev/urandom`, "of="+tmpFile.Name(), fmt.Sprintf("bs=%d", 1024), "count=11").Run()
-		Expect(err).ShouldNot(HaveOccurred())
-
-		deleter := &FillDeleter{
-			FillBlockSize: 1024,
-			FillCount:     10,
-		}
-		deleter.Delete(tmpFile.Name())
-
-		zeroBlock := make([]byte, deleter.FillBlockSize)
-		buffer := make([]byte, deleter.FillBlockSize)
-		for i := uint(0); i < deleter.FillCount; i++ {
-			_, err := tmpFile.Read(buffer)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(cmp.Equal(buffer, zeroBlock)).Should(BeTrue())
-		}
-
-		_, err = tmpFile.Read(buffer)
-		Expect(err).ShouldNot(HaveOccurred())
-		Expect(cmp.Equal(buffer, zeroBlock)).Should(BeFalse())
-	})
 }
