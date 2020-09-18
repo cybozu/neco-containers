@@ -74,7 +74,7 @@ func run() error {
 		FillCount:     100,
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), log,
+	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(), log,
 		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
 	err = mgr.Add(dd)
 	if err != nil {

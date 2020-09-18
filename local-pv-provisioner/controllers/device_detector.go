@@ -34,9 +34,9 @@ var (
 )
 
 // NewDeviceDetector creates a new DeviceDetector.
-func NewDeviceDetector(client client.Client, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme, deleter Deleter) manager.Runnable {
+func NewDeviceDetector(client client.Client, reader client.Reader, log logr.Logger, deviceDir string, deviceNameFilter *regexp.Regexp, nodeName string, interval time.Duration, scheme *runtime.Scheme, deleter Deleter) manager.Runnable {
 	dd := &DeviceDetector{
-		client, log, deviceDir, deviceNameFilter, nodeName, interval, scheme,
+		client, reader, log, deviceDir, deviceNameFilter, nodeName, interval, scheme,
 		prometheus.NewGauge(prometheus.GaugeOpts{
 			Name:        "local_pv_provisioner_available_devices",
 			Help:        "The number of devices recognized by local pv provisioner without errors.",
@@ -65,6 +65,7 @@ type Device struct {
 // DeviceDetector monitors local devices.
 type DeviceDetector struct {
 	client.Client
+	reader           client.Reader
 	log              logr.Logger
 	deviceDir        string
 	deviceNameFilter *regexp.Regexp
@@ -122,7 +123,7 @@ func (dd *DeviceDetector) do() error {
 
 	for _, dev := range devices {
 		var pv corev1.PersistentVolume
-		err := dd.Client.Get(ctx, types.NamespacedName{Name: dd.pvName(dev.Path)}, &pv)
+		err := dd.reader.Get(ctx, types.NamespacedName{Name: dd.pvName(dev.Path)}, &pv)
 		if apierrors.IsNotFound(err) {
 			err := dd.deleter.Delete(dev.Path)
 			if err != nil {

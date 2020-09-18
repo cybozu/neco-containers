@@ -34,11 +34,11 @@ type PersistentVolumeReconciler struct {
 // Reconcile cleans up released local PV
 func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
-	log := r.Log.WithValues("persistentvolume", req.NamespacedName)
+	log := r.Log.WithValues("persistentvolume", req.NamespacedName.Name)
 
 	var pv corev1.PersistentVolume
 	if err := r.Cli.Get(ctx, req.NamespacedName, &pv); err != nil {
-		log.Error(err, "unable to fetch PersistentVolume", "name", req.NamespacedName)
+		log.Error(err, "unable to fetch PersistentVolume")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -51,18 +51,18 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	}
 
 	path := pv.Spec.Local.Path
-	log.Info("cleaning PersistentVolume", "name", req.NamespacedName, "path", path)
+	log.Info("cleaning PersistentVolume", "path", path)
 	if err := r.Deleter.Delete(path); err != nil {
-		log.Error(err, "unable to clean the device of PersistentVolume", "name", req.NamespacedName)
+		log.Error(err, "unable to clean the device of PersistentVolume")
 	}
 
-	log.Info("deleting PersistentVolume from api server", "name", req.NamespacedName)
+	log.Info("deleting PersistentVolume from api server")
 	if err := r.Cli.Delete(context.Background(), &pv); err != nil {
-		log.Error(err, "unable to delete PersistentVolume", "name", req.NamespacedName)
+		log.Error(err, "unable to delete PersistentVolume")
 		return ctrl.Result{}, err
 	}
 
-	log.Info("successful to cleanup PersistentVolume", "name", req.NamespacedName)
+	log.Info("successful to cleanup PersistentVolume")
 	return ctrl.Result{}, nil
 }
 

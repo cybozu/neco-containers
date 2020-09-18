@@ -170,7 +170,7 @@ The cleanup process is:
 3. Delete the Persistent Volume from Kubernetes API server.
   - Note that, this process is executed even if failed to cleanup the device.
 
-Note that this cleanup process is executed periodically (interval: 1 hour).
+Note that this cleanup process is also executed periodically (interval: 1 hour).
 
 ## Command-line flags and environment variables
 
