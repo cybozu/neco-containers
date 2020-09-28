@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -156,18 +157,18 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 	return nil, err
 }
 
-func (c client) updateTargetEndpoints(targetIPs []net.IP, target, portName string, port int32) error {
+func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, target, portName string, port int32) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
 		return err
 	}
 
 	services := c.k8s.CoreV1().Services(ns)
-	_, err = services.Get(target, metav1.GetOptions{})
+	_, err = services.Get(ctx, target, metav1.GetOptions{})
 	switch {
 	case err == nil:
 	case k8serrors.IsNotFound(err):
-		_, err = services.Create(&corev1.Service{
+		_, err = services.Create(ctx, &corev1.Service{
 			ObjectMeta: metav1.ObjectMeta{
 				Name: target,
 			},
@@ -177,7 +178,7 @@ func (c client) updateTargetEndpoints(targetIPs []net.IP, target, portName strin
 				},
 				ClusterIP: "None",
 			},
-		})
+		}, metav1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -195,16 +196,16 @@ func (c client) updateTargetEndpoints(targetIPs []net.IP, target, portName strin
 		subset.Addresses[i].IP = ip.String()
 	}
 
-	_, err = c.k8s.CoreV1().Endpoints(ns).Update(&corev1.Endpoints{
+	_, err = c.k8s.CoreV1().Endpoints(ns).Update(ctx, &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: target,
 		},
 		Subsets: []corev1.EndpointSubset{subset},
-	})
+	}, metav1.UpdateOptions{})
 	return err
 }
 
-func (c client) updateBMCProxyConfigMap(machines []Machine) error {
+func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
 		return err
@@ -241,13 +242,13 @@ func (c client) updateBMCProxyConfigMap(machines []Machine) error {
 	}
 
 	cms := c.k8s.CoreV1().ConfigMaps(ns)
-	_, err = cms.Get(bmcProxyConfigMapName, metav1.GetOptions{})
+	_, err = cms.Get(ctx, bmcProxyConfigMapName, metav1.GetOptions{})
 	switch {
 	case err == nil:
-		_, err := cms.Update(&configMap)
+		_, err := cms.Update(ctx, &configMap, metav1.UpdateOptions{})
 		return err
 	case k8serrors.IsNotFound(err):
-		_, err := cms.Create(&configMap)
+		_, err := cms.Create(ctx, &configMap, metav1.CreateOptions{})
 		return err
 	}
 	return err
@@ -329,9 +330,11 @@ func main() {
 		log.ErrorExit(err)
 	}
 
+	ctx := context.Background()
+
 	if *flgMonitoringEndpoints {
 		// create etcd metrics endpoints on boot servers
-		err = client.updateTargetEndpoints(bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+		err = client.updateTargetEndpoints(ctx, bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
 		if err != nil {
 			log.ErrorExit(err)
 		}
@@ -348,7 +351,7 @@ func main() {
 		}
 
 		// create node-exporter endpoints on all servers
-		err = client.updateTargetEndpoints(machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
+		err = client.updateTargetEndpoints(ctx, machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
 		if err != nil {
 			log.ErrorExit(err)
 		}
@@ -356,7 +359,7 @@ func main() {
 
 	if *flgBMCConfigMap {
 		// create bmc-proxy configmap on all servers
-		err = client.updateBMCProxyConfigMap(machines)
+		err = client.updateBMCProxyConfigMap(ctx, machines)
 		if err != nil {
 			log.ErrorExit(err)
 		}

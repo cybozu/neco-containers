@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"context"
+
 	"github.com/cybozu/neco-containers/admission/hooks"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -56,7 +58,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	// +kubebuilder:scaffold:builder
 
 	// pre-cache objects
-	if _, err := mgr.GetCache().GetInformer(&corev1.Namespace{}); err != nil {
+	if _, err := mgr.GetCache().GetInformer(context.Background(), &corev1.Namespace{}); err != nil {
 		setupLog.Error(err, "unable to setup informer for namespaces")
 		return err
 	}
