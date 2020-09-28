@@ -132,13 +132,13 @@ func updateCertificate() error {
 	return nil
 }
 
-func updateResolveMap() error {
+func updateResolveMap(ctx context.Context) error {
 	ns, _, err := kubeConfig.Namespace()
 	if err != nil {
 		return fmt.Errorf("failed to get namespace: %v", err)
 	}
 
-	cm, err := k8s.CoreV1().ConfigMaps(ns).Get(bmcProxyConfigMapName, metav1.GetOptions{})
+	cm, err := k8s.CoreV1().ConfigMaps(ns).Get(ctx, bmcProxyConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get ConfigMap %q: %v", bmcProxyConfigMapName, err)
 	}
@@ -181,7 +181,7 @@ func main() {
 				return err
 			}
 
-			err = updateResolveMap()
+			err = updateResolveMap(ctx)
 			if err != nil {
 				return err
 			}
