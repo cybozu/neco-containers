@@ -172,6 +172,7 @@ jobs:
     steps:
       - checkout
       - run: cd local-pv-provisioner; make setup SUDO=
+      - run: cd local-pv-provisioner; make check-uncommitted
       - run: cd local-pv-provisioner; make test SUDO=
   build-envoy:
     parameters:
