@@ -29,7 +29,7 @@ type PersistentVolumeReconciler struct {
 	Deleter  Deleter
 }
 
-// +kubebuilder:rbac:groups="",resources=persistentvolume,verbs=get;list;watch;delete
+// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;delete
 
 // Reconcile cleans up released local PV
 func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
