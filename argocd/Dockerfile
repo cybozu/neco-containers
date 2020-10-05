@@ -19,13 +19,13 @@ RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kube
     chmod +x /usr/local/bin/kubectl
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=3.6.1
+ENV KUSTOMIZE_VERSION=3.7.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.14-bionic AS argocd-build
-ENV ARGOCD_VERSION=1.6.2
+ENV ARGOCD_VERSION=1.7.7
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
@@ -40,7 +40,7 @@ RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN make cli server controller repo-server argocd-util
+RUN make cli-local server controller repo-server argocd-util
 
 # Install yarn for building Web UI
 RUN apt-get update && apt-get install -y --no-install-recommends npm \
