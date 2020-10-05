@@ -1,9 +1,9 @@
 # calico container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.14-bionic AS build
 
-ARG CALICO_VERSION=3.14.1
+ARG CALICO_VERSION=3.16.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
