@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
-ARG CHRONY_VERSION=3.5
+ARG CHRONY_VERSION=3.5.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
