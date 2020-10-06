@@ -206,9 +206,11 @@ jobs:
             go get -u github.com/bazelbuild/buildtools/buildifier
       - run:
           name: Install Bazel
+          environment:
+            BAZEL_VERSION: 3.1.0
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -fsL -o /tmp/bazel.deb https://storage.googleapis.com/bazel-apt/pool/jdk1.8/b/bazel/bazel_1.0.0_amd64.deb
+            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -224,6 +226,7 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
             cd envoy
+            patch -p1 < ../../envoy/no-error-warning.patch
             bazel build --jobs 20 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
             strip --strip-debug bazel-bin/source/exe/envoy-static
             mv bazel-bin/source/exe/envoy-static ../workspace/envoy
@@ -431,6 +434,7 @@ workflows:
           container-image: dnsmasq
       - build-envoy:
           version: 1.15.1
+          # you should check that no-error-warning.patch is still needed when you update envoy.
       - build:
           name: build-envoy-container
           container-image: envoy
