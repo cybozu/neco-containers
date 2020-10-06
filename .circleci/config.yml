@@ -468,9 +468,6 @@ workflows:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:
-          name: build-kind-node
-          container-image: kind-node
-      - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
       - build:
