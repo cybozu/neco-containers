@@ -278,9 +278,9 @@ jobs:
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/jetstack/cert-manager
             cd cert-manager
             make cainjector controller webhook
-            mv bazel-bin/cmd/cainjector/linux_amd64_pure_stripped/cainjector ../workspace
-            mv bazel-bin/cmd/controller/linux_amd64_pure_stripped/controller ../workspace
-            mv bazel-bin/cmd/webhook/linux_amd64_pure_stripped/webhook ../workspace
+            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/cainjector/cainjector_/cainjector ../workspace
+            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/controller/controller_/controller ../workspace
+            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/webhook/webhook_/webhook ../workspace
             mv LICENSE ../workspace
       - persist_to_workspace:
           root: src/workspace
