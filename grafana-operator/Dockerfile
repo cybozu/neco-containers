@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
-ARG VERSION=3.3.0-master-3e0b2ab
+ARG VERSION=3.5.0-support-env-from-secret
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
