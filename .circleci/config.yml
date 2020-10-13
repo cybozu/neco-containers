@@ -242,7 +242,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/golang:1.13-bionic
+      - image: quay.io/cybozu/golang:1.15-bionic
     resource_class: xlarge
     steps:
       - checkout
