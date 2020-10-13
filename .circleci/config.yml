@@ -455,6 +455,10 @@ workflows:
           container-image: golang
           dir: golang114
       - build:
+          name: build-golang115
+          container-image: golang
+          dir: golang115
+      - build:
           name: build-gorush
           container-image: gorush
       - build:
