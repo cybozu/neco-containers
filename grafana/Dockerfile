@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.14-bionic AS build
-ARG GRAFANA_VERSION=7.0.4
+ARG GRAFANA_VERSION=7.2.1
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

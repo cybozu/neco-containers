@@ -3,18 +3,21 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG PROMETHEUS_VERSION=2.18.1
+ARG PROMETHEUS_VERSION=2.21.0
 ARG ALERTMANAGER_VERSION=0.21.0
-ARG PUSHGATEWAY_VERSION=1.2.0
+ARG PUSHGATEWAY_VERSION=1.3.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-RUN apt-get update && apt-get install --no-install-recommends -y gnupg \
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y gnupg \
+    && curl -sL https://deb.nodesource.com/setup_10.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update && apt-get install --no-install-recommends -y nodejs yarn
+    && apt-get update && apt-get install --no-install-recommends -y yarn
 
 WORKDIR /go/src/github.com/prometheus/prometheus
 RUN curl -fsSL -o prometheus.tar.gz "https://github.com/prometheus/prometheus/archive/v${PROMETHEUS_VERSION}.tar.gz" \
