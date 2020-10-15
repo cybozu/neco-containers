@@ -9,11 +9,11 @@ RUN mkdir /work
 
 WORKDIR /work
 
-RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/719b3286635ad277865689a5a7cb5ce845a65daa/build/pause/pause.c \
+RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/master/build/pause/pause.c \
     && gcc -Os -Wall -Werror -static -DVERSION=v${PAUSE_VERSION} -o pause pause.c \
     && strip pause
 
-RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/719b3286635ad277865689a5a7cb5ce845a65daa/LICENSE
+RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/master/LICENSE
 
 
 # Stage2: setup runtime container
