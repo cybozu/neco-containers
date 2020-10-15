@@ -23,6 +23,8 @@ jobs:
           steps:
             - attach_workspace:
                 at: /app/<< parameters.dir >>/workspace
+      # Use docker 19.03.13 to fix the grafana build failure caused by statx system call not being allowed with default docker version 17.09.0
+      # See https://github.com/docker/for-linux/issues/208 https://github.com/moby/moby/pull/36417
       - setup_remote_docker:
           version: 19.03.13
       - run:
