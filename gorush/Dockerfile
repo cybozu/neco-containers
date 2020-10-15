@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG GORUSH_VERSION="1.12.0"
+ARG GORUSH_VERSION="1.13.0"
 
 WORKDIR /work
 RUN git clone https://github.com/appleboy/gorush.git -b "v${GORUSH_VERSION}" . \

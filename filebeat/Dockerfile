@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS builder
 
-ARG BEATS_VERSION=7.8.0
+ARG BEATS_VERSION=7.9.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/elastic/beats/archive/v${BEATS_VERSION}.tar.gz | \
