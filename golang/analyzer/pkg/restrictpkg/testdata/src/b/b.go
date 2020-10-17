@@ -1,4 +1,4 @@
-package b
+package main
 
 import (
 	"os"

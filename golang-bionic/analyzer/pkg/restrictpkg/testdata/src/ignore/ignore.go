@@ -1,4 +1,4 @@
-package a
+package main
 
 import (
 	"html/template" // restrictpkg:ignore because I want to use it
