@@ -38,6 +38,13 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	ins.Preorder(nodeFilter, func(n ast.Node) {
 		switch n := n.(type) {
 		case *ast.ImportSpec:
+			if n.Comment != nil {
+				for _, c := range n.Comment.List {
+					if strings.Contains(c.Text, "restrictpkg:ignore") {
+						return
+					}
+				}
+			}
 			for _, p := range packages {
 				if n.Path.Value == fmt.Sprintf(`"%s"`, p) {
 					pass.Reportf(n.Pos(), fmt.Sprintf("%s package must not be imported", p))
