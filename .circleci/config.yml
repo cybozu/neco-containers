@@ -17,6 +17,10 @@ jobs:
     docker:
       - image: docker:stable
     steps:
+      - run:
+          name: Install tools
+          command: |
+            apk add --no-cache curl jq git
       - checkout
       - when:
           condition: << parameters.attach >>
@@ -27,10 +31,6 @@ jobs:
       # See https://github.com/docker/for-linux/issues/208 https://github.com/moby/moby/pull/36417
       - setup_remote_docker:
           version: 19.03.13
-      - run:
-          name: Install tools
-          command: |
-            apk add --no-cache curl jq
       - run:
           name: Check TAG files
           command: |
@@ -458,9 +458,9 @@ workflows:
           name: build-golang
           container-image: golang
       - build:
-          name: build-golang114
+          name: build-golang-bionic
           container-image: golang
-          dir: golang114
+          dir: golang-bionic
       - build:
           name: build-gorush
           container-image: gorush

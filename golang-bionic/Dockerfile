@@ -1,6 +1,6 @@
 # Go container
 
-FROM quay.io/cybozu/ubuntu-dev:20.04
+FROM quay.io/cybozu/ubuntu-dev:18.04
 
 ARG GO_VERSION=1.15.3
 WORKDIR /work
