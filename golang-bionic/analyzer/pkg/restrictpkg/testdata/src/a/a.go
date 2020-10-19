@@ -1,4 +1,4 @@
-package a
+package main
 
 import (
 	"html/template" // want "html/template package must not be imported"

@@ -14,5 +14,5 @@ func Test(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	analysistest.Run(t, testdata, analyzer, "a", "b")
+	analysistest.Run(t, testdata, analyzer, "a", "b", "ignore")
 }

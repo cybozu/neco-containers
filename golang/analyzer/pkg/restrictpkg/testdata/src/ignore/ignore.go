@@ -1,8 +1,8 @@
 package main
 
 import (
+	"html/template" // restrictpkg:ignore because I want to use it
 	"os"
-	"text/template"
 )
 
 func main() {
