@@ -3,19 +3,16 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.13-bionic AS build
 
-ARG ROOK_VERSION=1.4.4
+ARG ROOK_VERSION=1.4.6
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV GOPATH=/work/go
 RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
-COPY 6184.patch /tmp/
-
 WORKDIR ${ROOK_DIR}
 
-RUN git checkout v${ROOK_VERSION} && \
-    patch -p1 --no-backup-if-mismatch < /tmp/6184.patch
+RUN git checkout v${ROOK_VERSION}
 RUN make build IMAGES=""
 
 WORKDIR ${ROOK_DIR}/images/ceph
