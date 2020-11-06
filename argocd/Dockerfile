@@ -60,8 +60,12 @@ RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
+    mkdir -p /app/config/gpg/source && \
+    mkdir -p /app/config/gpg/keys && \
+    chown argocd:argocd /app/config/gpg/keys && \
+    chmod 0700 /app/config/gpg/keys && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git && \
+    apt-get install -y --no-install-recommends git gpg && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -74,6 +78,8 @@ ENV USER=argocd
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app /shared/argocd/app
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 
 COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
