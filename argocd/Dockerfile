@@ -60,12 +60,8 @@ RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
-    mkdir -p /app/config/gpg/source && \
-    mkdir -p /app/config/gpg/keys && \
-    chown argocd:argocd /app/config/gpg/keys && \
-    chmod 0700 /app/config/gpg/keys && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git gpg && \
+    apt-get install -y --no-install-recommends git gpg gpg-agent && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
