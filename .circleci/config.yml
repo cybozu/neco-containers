@@ -424,6 +424,9 @@ workflows:
           name: build-cke-tools
           container-image: cke-tools
       - build:
+          name: build-configmap-reload
+          container-image: configmap-reload
+      - build:
           name: build-contour
           container-image: contour
       - build:
