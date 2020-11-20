@@ -388,6 +388,9 @@ workflows:
           requires:
             - build-admission
       - build:
+          name: build-alertmanager
+          container-image: alertmanager
+      - build:
           name: build-argocd
           container-image: argocd
       - build:
