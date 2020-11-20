@@ -544,3 +544,6 @@ workflows:
       - build:
           name: build-vault
           container-image: vault
+      - build:
+          name: build-victoriametrics-operator
+          container-image: victoriametrics-operator
