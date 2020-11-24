@@ -182,9 +182,14 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/golang:1.15-focal
+      - image: quay.io/cybozu/ubuntu-dev:18.04
     resource_class: 2xlarge+
     steps:
+      - run:
+          name: Install git command
+          command: |
+            apt-get update
+            apt-get -y install git
       - checkout
       - run:
           name: Check TAG file
@@ -198,15 +203,27 @@ jobs:
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             apt-get update
-            apt-get -y install default-jdk gpg libtool cmake clang-format-6.0 \
-                automake autoconf ninja-build zip unzip pkg-config virtualenv \
-                zlib1g-dev bash-completion python
-            ln -s /usr/lib/jvm/default-java /usr/local/java
+            apt-get -y install build-essential \
+              libtool \
+              cmake \
+              automake \
+              autoconf \
+              make \
+              ninja-build \
+              curl \
+              unzip \
+              virtualenv \
+              python3-pip \
+              zlib1g-dev
+            ln -s `which python3` /usr/local/bin/python
       - run:
-          name: Install buildifier
+          name: Install build tools
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            go get -u github.com/bazelbuild/buildtools/buildifier
+            curl -O -SL https://raw.githubusercontent.com/envoyproxy/envoy-build-tools/master/build_container/build_container_common.sh
+            curl -O -SL https://raw.githubusercontent.com/envoyproxy/envoy-build-tools/master/build_container/build_container_ubuntu.sh
+            chmod +x build_container_ubuntu.sh
+            ./build_container_ubuntu.sh
       - run:
           name: Install Bazel
           environment:
@@ -229,6 +246,8 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
             cd envoy
+            bazel/setup_clang.sh /opt/llvm
+            echo "build --config=clang" >> user.bazelrc
             bazel build --jobs 20 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
             strip --strip-debug bazel-bin/source/exe/envoy-static
             mv bazel-bin/source/exe/envoy-static ../workspace/envoy
