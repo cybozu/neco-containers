@@ -12,6 +12,9 @@ jobs:
       attach:
         type: boolean
         default: false
+      targets:
+        type: string
+        default: ""
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
@@ -34,7 +37,15 @@ jobs:
       - run:
           name: Check TAG files
           command: |
-            c="$(./tag_exists << parameters.container-image >> << parameters.dir >>)"
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            image=<< parameters.container-image >>
+            targets="<< parameters.targets >>"
+            if [ "$targets" != "" ]; then
+              for target in $targets; do break; done # get first element
+              image=$image-$target
+            fi
+            c="$(./tag_exists $image $dir)"
             if [ "$c" = ng ]; then
                 echo << parameters.container-image >> > BUILDS
             fi
@@ -63,6 +74,13 @@ jobs:
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             docker build -t quay.io/cybozu/<< parameters.container-image >>:latest $dir
+            targets="<< parameters.targets >>"
+            if [ "$targets" != "" ]; then
+              for target in $targets; do
+                docker build -t quay.io/cybozu/<< parameters.container-image >>-$target:latest --target $target $dir
+              done
+            fi
+            docker images
       - deploy:
           name: Push Docker image to Quay.io
           command: |
@@ -77,18 +95,31 @@ jobs:
             echo "pushing << parameters.container-image >> ..."
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            targets="<< parameters.targets >>"
+            if [ "$targets" = "" ]; then
+              images=<< parameters.container-image >>
+            else
+              images=
+              for target in $targets; do
+                images="$images << parameters.container-image >>-$target"
+              done
+            fi
             TAG=$(cat $dir/TAG)
-            docker tag quay.io/cybozu/<< parameters.container-image >>:latest quay.io/cybozu/<< parameters.container-image >>:$TAG
-            docker push quay.io/cybozu/<< parameters.container-image >>:$TAG
+            for image in $images; do
+              docker tag quay.io/cybozu/$image:latest quay.io/cybozu/$image:$TAG
+              docker push quay.io/cybozu/$image:$TAG
+            done
             if echo $TAG | grep -q -e - ; then
                 echo ===== Skip pushing branch tags for pre-release $TAG =====
                 exit 0
             fi
-            if [ -f $dir/BRANCH ]; then
-                BRANCH=$(cat $dir/BRANCH)
-                docker tag quay.io/cybozu/<< parameters.container-image >>:$TAG quay.io/cybozu/<< parameters.container-image >>:$BRANCH
-                docker push quay.io/cybozu/<< parameters.container-image >>:$BRANCH
-            fi
+            for image in $images; do
+              if [ -f $dir/BRANCH ]; then
+                  BRANCH=$(cat $dir/BRANCH)
+                  docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
+                  docker push quay.io/cybozu/$image:$BRANCH
+              fi
+            done
   build-ceph:
     parameters:
       version:
@@ -388,6 +419,9 @@ workflows:
           requires:
             - build-admission
       - build:
+          name: build-alertmanager
+          container-image: alertmanager
+      - build:
           name: build-argocd
           container-image: argocd
       - build:
@@ -423,6 +457,9 @@ workflows:
       - build:
           name: build-cke-tools
           container-image: cke-tools
+      - build:
+          name: build-configmap-reload
+          container-image: configmap-reload
       - build:
           name: build-contour
           container-image: contour
@@ -509,6 +546,9 @@ workflows:
           name: build-prometheus
           container-image: prometheus
       - build:
+          name: build-prometheus-config-reloader
+          container-image: prometheus-config-reloader
+      - build:
           name: build-redis
           container-image: redis
       - build:
@@ -535,3 +575,10 @@ workflows:
       - build:
           name: build-vault
           container-image: vault
+      - build:
+          name: build-victoriametrics-operator
+          container-image: victoriametrics-operator
+      - build:
+          name: build-victoriametrics
+          container-image: victoriametrics
+          targets: vmsingle vmagent vmalert vminsert vmselect vmstorage
