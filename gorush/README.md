@@ -13,7 +13,7 @@ $ docker run -d --rm --read-only \
     -p 8088:8088 \
     --name gorush \
     --mount type=bind,source=/home/cybozu/config,target=/config \
-    quay.io/cybozu/gorush:1.12.0.1
+    quay.io/cybozu/gorush:1.13.0.2
 ```
 
 [Gorush]: https://github.com/appleboy/gorush
