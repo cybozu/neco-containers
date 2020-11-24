@@ -229,7 +229,6 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
             cd envoy
-            patch -p1 < ../../envoy/no-error-warning.patch
             bazel build --jobs 20 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
             strip --strip-debug bazel-bin/source/exe/envoy-static
             mv bazel-bin/source/exe/envoy-static ../workspace/envoy
@@ -437,7 +436,6 @@ workflows:
           container-image: dnsmasq
       - build-envoy:
           version: 1.16.1
-          # you should check that no-error-warning.patch is still needed when you update envoy.
       - build:
           name: build-envoy-container
           container-image: envoy
