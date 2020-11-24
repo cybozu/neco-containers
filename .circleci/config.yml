@@ -436,7 +436,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.15.1
+          version: 1.16.1
           # you should check that no-error-warning.patch is still needed when you update envoy.
       - build:
           name: build-envoy-container
