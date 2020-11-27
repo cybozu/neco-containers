@@ -56,7 +56,8 @@ func NewServer(upstreams []string, cfg Config) *Server {
 		dialer:    dialer,
 		pool: sync.Pool{
 			New: func() interface{} {
-				return make([]byte, copyBufferSize)
+				buf := make([]byte, copyBufferSize)
+				return &buf
 			},
 		},
 	}
@@ -89,8 +90,8 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 	st := time.Now()
 	env := well.NewEnvironment(ctx)
 	env.Go(func(ctx context.Context) error {
-		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(destConn, tc, buf)
+		buf := s.pool.Get().(*[]byte)
+		_, err := io.CopyBuffer(destConn, tc, *buf)
 		s.pool.Put(buf)
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
 			hc.CloseWrite()
@@ -99,8 +100,8 @@ func (s *Server) handleConnection(ctx context.Context, conn net.Conn) {
 		return err
 	})
 	env.Go(func(ctx context.Context) error {
-		buf := s.pool.Get().([]byte)
-		_, err := io.CopyBuffer(tc, destConn, buf)
+		buf := s.pool.Get().(*[]byte)
+		_, err := io.CopyBuffer(tc, destConn, *buf)
 		s.pool.Put(buf)
 		tc.CloseWrite()
 		if hc, ok := destConn.(netutil.HalfCloser); ok {
