@@ -31,7 +31,7 @@ func init() {
 }
 
 func run(stopCh <-chan struct{}, cfg *rest.Config, opts *envtest.WebhookInstallOptions) error {
-	ctrl.SetLogger(zap.Logger(true))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true)))
 
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 		Scheme:             scheme,
