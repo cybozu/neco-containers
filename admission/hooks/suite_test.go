@@ -13,7 +13,6 @@ import (
 	. "github.com/onsi/gomega"
 
 	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -37,10 +36,6 @@ var k8sClient client.Client
 var testEnv *envtest.Environment
 var testCtx = context.Background()
 var stopCh = make(chan struct{})
-
-func strPtr(s string) *string { return &s }
-
-func modePtr(m storagev1.VolumeBindingMode) *storagev1.VolumeBindingMode { return &m }
 
 func setupCommonResources() {
 }
