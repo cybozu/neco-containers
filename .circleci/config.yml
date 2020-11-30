@@ -1,5 +1,23 @@
 version: 2.1
 jobs:
+  test:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      directory:
+        type: string
+      targets:
+        type: string
+        default: test
+    description: "test at << parameters.directory >>"
+    docker:
+      - image: quay.io/cybozu/golang:1.13-bionic
+      - image: quay.io/coreos/etcd:v3.3
+    working_directory: /work
+    steps:
+      - checkout
+      - run: apt-get update
+      - run: make -C << parameters.directory >> << parameters.targets >> SUDO=
   build:
     # This is a parameterized job
     # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
@@ -174,40 +192,6 @@ jobs:
           root: src/workspace
           paths:
             - "*"
-  test-go-sources:
-    parameters:
-      directory:
-        type: string
-      targets:
-        type: string
-        default: test
-    description: "test Go sources at << parameters.directory >>"
-    docker:
-      - image: quay.io/cybozu/golang:1.13-bionic
-      - image: quay.io/coreos/etcd:v3.3
-    working_directory: /work
-    steps:
-      - checkout
-      - run:
-          command: |
-            cd << parameters.directory >>
-            make << parameters.targets >> SUDO=
-  test-cke-tools-scripts:
-    docker:
-      - image: quay.io/cybozu/ubuntu-dev:18.04
-    steps:
-      - checkout
-      - run: apt-get update
-      - run: cd cke-tools/src/scripts; make setup SUDO=
-      - run: cd cke-tools/src/scripts; make
-  test-local-pv-provisioner:
-    docker:
-      - image: quay.io/cybozu/golang:1.13-bionic
-    steps:
-      - checkout
-      - run: cd local-pv-provisioner; make setup SUDO=
-      - run: cd local-pv-provisioner; make check-uncommitted
-      - run: cd local-pv-provisioner; make test SUDO=
   build-envoy:
     parameters:
       version:
@@ -407,27 +391,35 @@ jobs:
 workflows:
   main:
     jobs:
-      - test-cke-tools-scripts
-      - test-go-sources:
-          name: test-go-sources-bmc-reverse-proxy
+      - test:
+          name: test-bmc-reverse-proxy
           directory: bmc-reverse-proxy
-      - test-go-sources:
-          name: test-go-sources-cke-tools
+      - test:
+          name: test-cke-tools
           directory: cke-tools/src
-          targets: check-generate test
-      - test-local-pv-provisioner
-      - test-go-sources:
-          name: test-go-sources-machines-endpoints
-          directory: machines-endpoints
-      - test-go-sources:
-          name: test-go-sources-analyzer
-          directory: golang/analyzer
-      - test-go-sources:
-          name: test-go-sources-testhttpd
-          directory: testhttpd/src
-      - test-go-sources:
-          name: test-go-sources-envoy
+          targets: setup check-uncommitted test
+      - test:
+          name: test-envoy
           directory: envoy
+      - test:
+          name: test-golang-analyzer
+          directory: golang/analyzer
+      - test:
+          name: test-golang-bionic-analyzer
+          directory: golang-bionic/analyzer
+      - test:
+          name: test-local-pv-provisioner
+          directory: local-pv-provisioner
+          targets: setup check-uncommitted test
+      - test:
+          name: test-machines-endpoints
+          directory: machines-endpoints
+      - test:
+          name: test-tail
+          directory: tail/src
+      - test:
+          name: test-testhttpd
+          directory: testhttpd/src
       - build-admission
       - build:
           name: build-admission-image

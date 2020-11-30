@@ -13,30 +13,37 @@ GOARCH := $(shell go env GOARCH)
 GOFLAGS = -mod=vendor
 export GOFLAGS
 
+.PHONY: all
 all: build
 
 # Run tests
+.PHONY: test
 test: crds
 	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
-	test -z "$$(golint $$(go list ./... | grep -v /vendor/) | grep -v '/mtest/.*: should not use dot imports' | tee /dev/stderr)"
+	staticcheck ./...
 	test -z "$$(nilerr $$(go list ./... | grep -v /vendor/) 2>&1 | tee /dev/stderr)"
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | grep -v vendor/ | tee /dev/stderr)"
 	ineffassign .
-	go test -race -v ./...
 	go vet ./...
+	go test -race -v ./...
+
 
 # Build manager binary
+.PHONY: build
 build:
 	CGO_ENABLED=0 go build -o bin/neco-admission main.go
 
 # Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
 manifests:
 	controller-gen rbac:roleName=neco-admission webhook paths="./..."
 
 # Generate code
+.PHONY: generate
 generate:
 	controller-gen object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
+.PHONY: setup
 setup:
 	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
 	$(SUDO) rm -rf /usr/local/kubebuilder
@@ -45,6 +52,7 @@ setup:
 	$(SUDO) chmod a+x /usr/local/kubebuilder/bin/kustomize
 	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
 
+.PHONY: crds
 crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
@@ -52,7 +60,6 @@ crds:
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/integr8ly/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
 
+.PHONY: clean
 clean:
 	rm -rf bin
-
-.PHONY: all test build manifests generate clean setup crds

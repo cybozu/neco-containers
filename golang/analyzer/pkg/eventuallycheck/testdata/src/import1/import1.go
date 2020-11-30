@@ -19,6 +19,6 @@ func testEventually2() {
 	})
 }
 
-func main()  {
+func main() {
 	testEventually2()
 }

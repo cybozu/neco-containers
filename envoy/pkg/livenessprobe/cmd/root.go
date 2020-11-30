@@ -45,10 +45,7 @@ func (b *atomicBool) set(flag bool) {
 }
 
 func (b *atomicBool) get() bool {
-	if atomic.LoadInt32(&b.flag) == 0 {
-		return false
-	}
-	return true
+	return atomic.LoadInt32(&b.flag) != 0
 }
 
 var rootCmd = &cobra.Command{
@@ -128,7 +125,6 @@ func (m *monitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	log.Debug("returning success result", nil)
-	return
 }
 
 func (m *monitor) monitorReady(ctx context.Context) error {

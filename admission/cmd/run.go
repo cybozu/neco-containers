@@ -26,7 +26,7 @@ func init() {
 }
 
 func run(addr string, port int, conf *hooks.Config) error {
-	ctrl.SetLogger(zap.Logger(config.development))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,

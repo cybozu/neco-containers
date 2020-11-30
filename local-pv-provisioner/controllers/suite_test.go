@@ -35,7 +35,7 @@ func Test(t *testing.T) {
 
 var _ = BeforeSuite(func(done Done) {
 	ctx := context.Background()
-	ctrl.SetLogger(zap.LoggerTo(GinkgoWriter, true))
+	ctrl.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{}
