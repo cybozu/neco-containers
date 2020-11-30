@@ -1,7 +1,7 @@
 Teleport container
 ==================
 
-Build Docker container image for [Teleport][], which  is a modern security gateway for remotely accessing.
+Build the Docker container image for [Teleport][], which  is a modern security gateway for remotely accessing.
 
 
 Usage
