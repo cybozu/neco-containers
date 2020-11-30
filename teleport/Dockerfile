@@ -1,9 +1,9 @@
 # Teleport container image
 
 # Stage1: build teleport
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.15-bionic AS build
 
-ENV TELEPORT_VERSION=4.3.7
+ENV TELEPORT_VERSION=5.0.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && \
     apt-get install -y --no-install-recommends zip libpam0g-dev && \
@@ -12,7 +12,7 @@ WORKDIR /go/src/github.com/gravitational/
 RUN git clone https://github.com/gravitational/teleport.git
 WORKDIR /go/src/github.com/gravitational/teleport
 RUN git checkout v${TELEPORT_VERSION} && \
-    GO111MODULE=off make full
+    make full
 
 # Stage2: final image
 FROM quay.io/cybozu/ubuntu:18.04
