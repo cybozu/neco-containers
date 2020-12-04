@@ -36,18 +36,19 @@ The target container of these operations have the following badges, so check bef
       $ go get sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
       $ go mod tidy
       ```
-3. Generate code and manifests.
+3. Modify the code to match the new CRDs if CRDs are changed.
+4. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
    $ make setup
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
-4. Confirm build and test are green.
+5. Confirm build and test are green.
    ```bash
    $ make build test
    ```
-5. Update `TAG` file.
+6. Update `TAG` file.
 
 ## argocd
 
