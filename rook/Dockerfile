@@ -32,6 +32,7 @@ COPY --from=build ${ROOK_DIR}/_output/bin/linux_amd64/rook \
 COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/csi/template /etc/ceph-csi
 COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/monitoring /etc/ceph-monitoring
 COPY --from=build ${ROOK_DIR}/cluster/olm/ceph/templates /etc/ceph-csv-templates
+COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /tini
 RUN chmod 755 /tini
