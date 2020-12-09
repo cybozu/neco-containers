@@ -37,6 +37,8 @@ The target container of these operations have the following badges, so check bef
       $ go mod tidy
       ```
 3. Modify the code to match the new CRDs if CRDs are changed.
+   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/master/admission/hooks) directory.
+   - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
 4. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
@@ -211,6 +213,9 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 5. Update `BRANCH` and `TAG` files.
 
 ## etcd
+
+***NOTE:*** The etcd is upgraded in neither the Regular Update nor the Kubernetes Update.
+Upgrading etcd needs a special procedure, so we do it as a special task.
 
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
