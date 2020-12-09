@@ -12,7 +12,7 @@ RUN curl -sSLf https://github.com/integr8ly/grafana-operator/archive/v${VERSION}
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator ./cmd/manager
 
 # Stage2: setup runtime container
-# refer to : https://github.com/cybozu-go/grafana-operator/blob/master/build/Dockerfile
+# refer to : https://github.com/integr8ly/grafana-operator/blob/master/build/Dockerfile
 FROM quay.io/cybozu/ubuntu:18.04
 USER 10000:10000
 
