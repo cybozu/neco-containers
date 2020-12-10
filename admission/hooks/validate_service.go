@@ -31,21 +31,14 @@ func (v *serviceValidator) Handle(ctx context.Context, req admission.Request) ad
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if svc.Spec.Type == corev1.ServiceTypeClusterIP && len(svc.Spec.ExternalIPs) > 0 {
+	if len(svc.Spec.ExternalIPs) > 0 {
 		return admission.Denied(
 			fmt.Sprintf(
-				"applying a ClusterIP service with externalIPs field is not allowed: type=%s len(externalIPs)=%d",
-				svc.Spec.Type,
+				"applying Service with externalIPs filled is not allowed: len(externalIPs)=%d",
 				len(svc.Spec.ExternalIPs),
 			),
 		)
 	}
 
-	return admission.Allowed(
-		fmt.Sprintf(
-			"confirmed the service is safe to apply: type=%s len(externalIPs)=%d",
-			svc.Spec.Type,
-			len(svc.Spec.ExternalIPs),
-		),
-	)
+	return admission.Allowed("ok")
 }
