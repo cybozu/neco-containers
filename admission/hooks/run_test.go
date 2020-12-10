@@ -54,6 +54,7 @@ func run(stopCh <-chan struct{}, cfg *rest.Config, opts *envtest.WebhookInstallO
 	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
+	wh.Register(serviceValidateWebhookPath, NewServiceValidator(mgr.GetClient(), dec))
 
 	if err := mgr.Start(stopCh); err != nil {
 		return err
