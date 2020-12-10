@@ -54,6 +54,7 @@ RUN groupadd -r -g $GF_GID grafana && \
 COPY --from=build /work/grafana/bin/linux-amd64/grafana-server /work/grafana/bin/linux-amd64/grafana-cli ./bin/
 COPY --from=build /work/grafana/public ./public
 COPY --from=build /work/grafana/tools ./tools
+COPY --from=build /work/grafana/LICENSE ./LICENSE
 
 EXPOSE 3000
 

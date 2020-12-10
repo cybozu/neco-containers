@@ -76,6 +76,7 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app /shared
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
 
 COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
