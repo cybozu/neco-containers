@@ -14,7 +14,7 @@ Run the container
 ```console
 $ docker run -p 3022:3022 -p 3023:3023 -p 3024:3024 -p 3025:3025 -p 3026:3026 -p 3080:3080 \
     -d --read-only --name=teleport \
-    quay.io/cybozu/teleport:4.3 \
+    quay.io/cybozu/teleport:5.0.1 \
     start ...
 ```
 
@@ -24,7 +24,7 @@ Get teleport binary
 $ docker run  --rm -u root:root \
     --entrypoint /usr/local/teleport/install-tools \
     --mount type=bind,source=DIR,target=/host \
-    quay.io/cybozu/teleport:4.3
+    quay.io/cybozu/teleport:5.0.1
 ```
 
 [Teleport]: https://github.com/gravitational/teleport

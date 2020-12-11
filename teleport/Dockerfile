@@ -3,7 +3,7 @@
 # Stage1: build teleport
 FROM quay.io/cybozu/golang:1.15-bionic AS build
 
-ENV TELEPORT_VERSION=5.0.0
+ENV TELEPORT_VERSION=5.0.1
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && \
     apt-get install -y --no-install-recommends zip libpam0g-dev && \
