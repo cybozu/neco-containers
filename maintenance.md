@@ -478,20 +478,6 @@ T.B.D.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## teleport
-
-![Regular Update](./regular_update.svg)
-
-***NOTE:*** This container image is just used to fill the teleport version in [artifacts.go](https://github.com/cybozu-go/neco/blob/master/artifacts.go).
-This image never actually run because we use the Teleport Enterprise image.
-
-1. Check the [release page](https://github.com/gravitational/teleport/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
-   - https://github.com/gravitational/teleport/blob/vX.Y.Z/docker/Dockerfile
-3. Update `TELEPORT_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
 ## testhttpd
 
 1. Update `BRANCH` and `TAG` files.
