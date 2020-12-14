@@ -415,9 +415,6 @@ workflows:
           name: test-machines-endpoints
           directory: machines-endpoints
       - test:
-          name: test-tail
-          directory: tail/src
-      - test:
           name: test-testhttpd
           directory: testhttpd/src
       - build-admission
@@ -569,9 +566,6 @@ workflows:
       - build:
           name: build-squid
           container-image: squid
-      - build:
-          name: build-tail
-          container-image: tail
       - build:
           name: build-testhttpd
           container-image: testhttpd
