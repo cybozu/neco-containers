@@ -27,6 +27,9 @@ jobs:
       dir:
         type: string
         default: ""
+      prebuild:
+        type: string
+        default: ""
       attach:
         type: boolean
         default: false
@@ -52,6 +55,13 @@ jobs:
       # See https://github.com/docker/for-linux/issues/208 https://github.com/moby/moby/pull/36417
       - setup_remote_docker:
           version: 19.03.13
+      - run:
+          name: Run prebuild script
+          command: |
+            prebuild=<< parameters.prebuild >>
+            if [ "$prebuild" != "" ]; then
+              source $prebuild
+            fi
       - run:
           name: Check TAG files
           command: |
@@ -560,6 +570,7 @@ workflows:
           container-image: moco-mysql
           attach: true
           dir: moco-mysql-8018
+          prebuild: moco-mysql-8018/prebuild.sh
           requires:
             - build-moco-mysql-8018
       - build:
@@ -574,6 +585,7 @@ workflows:
           container-image: moco-mysql
           attach: true
           dir: moco-mysql-8021
+          prebuild: moco-mysql-8021/prebuild.sh
           requires:
             - build-moco-mysql-8021
       - build:
@@ -581,6 +593,7 @@ workflows:
           container-image: moco-mysql
           attach: true
           dir: moco-mysql-8022
+          prebuild: moco-mysql-8022/prebuild.sh
           requires:
             - build-moco-mysql-8022
       - build:
