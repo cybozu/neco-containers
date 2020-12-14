@@ -573,9 +573,6 @@ workflows:
           name: build-tail
           container-image: tail
       - build:
-          name: build-teleport
-          container-image: teleport
-      - build:
           name: build-testhttpd
           container-image: testhttpd
       - build:
