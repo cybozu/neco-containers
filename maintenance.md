@@ -460,24 +460,6 @@ T.B.D.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## tail
-
-***NOTE:*** This image will be removed soon.
-
-1. Check the [release page](https://github.com/nxadm/tail/releases).
-2. Update go modules.
-   ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/tail/src
-   $ go get github.com/nxadm/tail@v<TAIL_VERSION>
-   $ go mod tidy
-   ```
-3. Confirm test are green.
-   ```bash
-   $ make test
-   ```
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
 ## testhttpd
 
 1. Update `BRANCH` and `TAG` files.
