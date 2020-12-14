@@ -544,6 +544,7 @@ workflows:
           tag-directory: moco-mysql-8018
           mysql-version: 8.0.18
       - build-moco-mysql:
+          name: build-moco-mysql-8020
           tag-directory: moco-mysql
           mysql-version: 8.0.20
       - build-moco-mysql:
@@ -562,12 +563,12 @@ workflows:
           requires:
             - build-moco-mysql-8018
       - build:
-          name: build-moco-mysql-container
+          name: build-moco-mysql-container-8020
           container-image: moco-mysql
           attach: true
           dir: moco-mysql
           requires:
-            - build-moco-mysql
+            - build-moco-mysql-8020
       - build:
           name: build-moco-mysql-container-8021
           container-image: moco-mysql
