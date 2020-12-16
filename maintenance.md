@@ -484,8 +484,21 @@ T.B.D.
 
 ## victoriametrics
 
-T.B.D.
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/VictoriaMetrics/VictoriaMetrics/releases).
+2. Check upstream Makefile and Dockerfile, and update our Dockerfile if needed.
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/Makefile
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/Makefile
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/deployment/Dockerfile
+3. Update `VICTORIAMETRICS_SINGLE_VERSION` and `VICTORIAMETRICS_CLUSTER_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
 
 ## victoriametrics-operator
 
-T.B.D.
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/VictoriaMetrics/operator/releases).
+2. Check upstream Makefile and Dockerfile, and update our Dockerfile if needed.
+3. Update `VICTORIAMETRICS_OPERATOR_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
