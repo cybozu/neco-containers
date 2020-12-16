@@ -349,7 +349,8 @@ jobs:
       - run:
           name: Check TAG file
           command: |
-            c="$(./tag_exists moco-mysql)"
+            d=<< parameters.mysql-version >>
+            c="$(./tag_exists moco-mysql moco-mysql/$d)"
             if [ "$c" = ng ]; then
                 echo moco-mysql > BUILDS
             fi
@@ -537,14 +538,45 @@ workflows:
           name: build-metrics-server
           container-image: metrics-server
       - build-moco-mysql:
+          name: build-moco-mysql-8018
+          mysql-version: 8.0.18
+      - build-moco-mysql:
+          name: build-moco-mysql-8020
           mysql-version: 8.0.20
+      - build-moco-mysql:
+          name: build-moco-mysql-8021
+          mysql-version: 8.0.21
+      - build-moco-mysql:
+          name: build-moco-mysql-8022
+          mysql-version: 8.0.22
       - build:
-          name: build-moco-mysql-container
+          name: build-moco-mysql-container-8018
           container-image: moco-mysql
           attach: true
-          dir: moco-mysql
+          dir: moco-mysql/8.0.18
           requires:
-            - build-moco-mysql
+            - build-moco-mysql-8018
+      - build:
+          name: build-moco-mysql-container-8020
+          container-image: moco-mysql
+          attach: true
+          dir: moco-mysql/8.0.20
+          requires:
+            - build-moco-mysql-8020
+      - build:
+          name: build-moco-mysql-container-8021
+          container-image: moco-mysql
+          attach: true
+          dir: moco-mysql/8.0.21
+          requires:
+            - build-moco-mysql-8021
+      - build:
+          name: build-moco-mysql-container-8022
+          container-image: moco-mysql
+          attach: true
+          dir: moco-mysql/8.0.22
+          requires:
+            - build-moco-mysql-8022
       - build:
           name: build-pause
           container-image: pause
