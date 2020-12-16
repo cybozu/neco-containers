@@ -27,9 +27,6 @@ jobs:
       dir:
         type: string
         default: ""
-      prebuild:
-        type: string
-        default: ""
       attach:
         type: boolean
         default: false
@@ -55,13 +52,6 @@ jobs:
       # See https://github.com/docker/for-linux/issues/208 https://github.com/moby/moby/pull/36417
       - setup_remote_docker:
           version: 19.03.13
-      - run:
-          name: Run prebuild script
-          command: |
-            prebuild=<< parameters.prebuild >>
-            if [ "$prebuild" != "" ]; then
-              source $prebuild
-            fi
       - run:
           name: Check TAG files
           command: |
@@ -349,8 +339,6 @@ jobs:
             - neco-admission
   build-moco-mysql:
     parameters:
-      tag-directory:
-        type: string
       mysql-version:
         type: string
     docker:
@@ -361,8 +349,8 @@ jobs:
       - run:
           name: Check TAG file
           command: |
-            d=<< parameters.tag-directory >>
-            c="$(./tag_exists moco-mysql $d)"
+            d=<< parameters.mysql-version >>
+            c="$(./tag_exists moco-mysql moco-mysql/$d)"
             if [ "$c" = ng ]; then
                 echo moco-mysql > BUILDS
             fi
@@ -551,49 +539,42 @@ workflows:
           container-image: metrics-server
       - build-moco-mysql:
           name: build-moco-mysql-8018
-          tag-directory: moco-mysql-8018
           mysql-version: 8.0.18
       - build-moco-mysql:
           name: build-moco-mysql-8020
-          tag-directory: moco-mysql
           mysql-version: 8.0.20
       - build-moco-mysql:
           name: build-moco-mysql-8021
-          tag-directory: moco-mysql-8021
           mysql-version: 8.0.21
       - build-moco-mysql:
           name: build-moco-mysql-8022
-          tag-directory: moco-mysql-8022
           mysql-version: 8.0.22
       - build:
           name: build-moco-mysql-container-8018
           container-image: moco-mysql
           attach: true
-          dir: moco-mysql-8018
-          prebuild: moco-mysql-8018/prebuild.sh
+          dir: moco-mysql/8.0.18
           requires:
             - build-moco-mysql-8018
       - build:
           name: build-moco-mysql-container-8020
           container-image: moco-mysql
           attach: true
-          dir: moco-mysql
+          dir: moco-mysql/8.0.20
           requires:
             - build-moco-mysql-8020
       - build:
           name: build-moco-mysql-container-8021
           container-image: moco-mysql
           attach: true
-          dir: moco-mysql-8021
-          prebuild: moco-mysql-8021/prebuild.sh
+          dir: moco-mysql/8.0.21
           requires:
             - build-moco-mysql-8021
       - build:
           name: build-moco-mysql-container-8022
           container-image: moco-mysql
           attach: true
-          dir: moco-mysql-8022
-          prebuild: moco-mysql-8022/prebuild.sh
+          dir: moco-mysql/8.0.22
           requires:
             - build-moco-mysql-8022
       - build:
