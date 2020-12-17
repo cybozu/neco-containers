@@ -426,6 +426,16 @@ T.B.D.
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+## registry
+
+![Regular Update](./regular_update.svg)
+
+1. Check the release notes in the [release page](https://github.com/docker/distribution/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+   - https://github.com/docker/distribution/blob/master/Dockerfile
+3. Update `REGISTRY_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
 ## rook
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the ceph image first.
