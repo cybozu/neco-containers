@@ -590,6 +590,9 @@ workflows:
           name: build-redis
           container-image: redis
       - build:
+          name: build-registry
+          container-image: registry
+      - build:
           name: build-rook
           container-image: rook
       - build:
