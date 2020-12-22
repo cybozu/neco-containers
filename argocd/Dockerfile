@@ -23,6 +23,11 @@ ENV KUSTOMIZE_VERSION=3.7.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
+# Install helm
+ENV HELM_VERSION=3.4.2
+RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
+    tar zxf - -C /usr/local/bin --strip-components 1
+
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.14-bionic AS argocd-build
 ENV ARGOCD_VERSION=1.7.7
@@ -67,6 +72,7 @@ RUN groupadd -g 10000 argocd && \
 
 COPY --from=builder /usr/local/bin/kubectl /usr/local/argocd/bin/kubectl
 COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
+COPY --from=builder /usr/local/bin/helm /usr/local/argocd/bin/helm
 
 # workaround ksonnet issue https://github.com/ksonnet/ksonnet/issues/298
 ENV USER=argocd
