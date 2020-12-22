@@ -58,11 +58,14 @@ The target container of these operations have the following badges, so check bef
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check the upstream's Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the releases of the following tools:
+   - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
+   - [Helm](https://github.com/helm/helm/releases)
+3. Check the upstream's Dockerfile. If there are any updates, update our `Dockefile`.
    - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
 4. Update version variables in `Dockefile`.
-   - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `PACKR_VERSION`.
-   - In the Kubernetes update: Update `KUSTOMIZE_VERSION`.
+   - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
+   - In the Kubernetes update: Update `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 5. Update `BRANCH` and `TAG` files.
 
 ## bird
