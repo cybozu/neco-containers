@@ -3,8 +3,8 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.15-bionic AS build
 
-ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.6.0
+ARG VICTORIAMETRICS_OPERATOR_SRCREPO=cybozu-go/VictoriaMetrics-operator
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.6.1-neco-20201223
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
