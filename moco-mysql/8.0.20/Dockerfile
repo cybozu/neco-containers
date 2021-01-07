@@ -1,6 +1,6 @@
 # moco-mysql container
 
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 ARG MOCO_VERSION=0.3.0
 
@@ -8,7 +8,7 @@ COPY workspace /usr/local/mysql/
 COPY ping.sh /ping.sh
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libjemalloc1 libnuma1 \
+  && apt-get install -y --no-install-recommends libjemalloc2 libnuma1 \
   && rm -rf /var/lib/apt/lists/* \
   && curl -sSL -o /entrypoint https://github.com/cybozu-go/moco/releases/download/v${MOCO_VERSION}/agent \
   && chmod +x /entrypoint \
