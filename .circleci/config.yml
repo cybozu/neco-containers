@@ -342,7 +342,7 @@ jobs:
       mysql-version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:18.04
+      - image: quay.io/cybozu/ubuntu-dev:20.04
     resource_class: 2xlarge+
     steps:
       - checkout
