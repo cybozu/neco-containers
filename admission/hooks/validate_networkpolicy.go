@@ -2,13 +2,12 @@ package hooks
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -48,15 +47,8 @@ func NewCalicoNetworkPolicyValidator(c client.Client, dec *admission.Decoder, mi
 
 // Handle implements admission.Handler interface.
 func (v *calicoNetworkPolicyValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	np := &calicov3.NetworkPolicy{}
-
-	// we cannot use decoder because libcalico-go's api/v3 is badly created.
-	// - It does not register resources by `AddToScheme`.
-	// - The Group and Version constants defined in the package is not used.
-	// Therefore, we need to manually decode the object.
-	// err := v.decoder.Decode(req, np)
-
-	if err := json.Unmarshal(req.Object.Raw, np); err != nil {
+	np := &unstructured.Unstructured{}
+	if err := v.decoder.Decode(req, np); err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
@@ -77,10 +69,27 @@ func (v *calicoNetworkPolicyValidator) Handle(ctx context.Context, req admission
 		}
 	}
 
+	val, found, err := unstructured.NestedFieldNoCopy(np.UnstructuredContent(), "spec", "order")
+	if err != nil {
+		return admission.Allowed(fmt.Sprintf("ignore bad manifest: %v", err))
+	}
+
 	// nil order is handled as positive infinity.
-	if np.Spec.Order != nil && *np.Spec.Order <= minOrder {
+	if !found {
+		return admission.Allowed("ok")
+	}
+
+	order, ok := val.(float64)
+	if !ok {
+		if intval, ok := val.(int64); ok {
+			order = float64(intval)
+		} else {
+			return admission.Allowed(fmt.Sprintf("ignore bad order value: %v", val))
+		}
+	}
+	if order <= minOrder {
 		return admission.Denied(fmt.Sprintf("order of %s/%s is smaller than required %f < %f",
-			req.Namespace, req.Name, *np.Spec.Order, minOrder))
+			req.Namespace, req.Name, order, minOrder))
 	}
 	return admission.Allowed("ok")
 }

@@ -19,23 +19,17 @@ The target container of these operations have the following badges, so check bef
 ![Kubernetes Update](./kubernetes_update.svg)
 ![Regular Update](./regular_update.svg)
 
+You should choose a contour version that has the right Kubernetes
+client library dependencies.
+
 1. Update version variables in `Makefile`.
 2. Update go modules.
-   - In the regular update:
-      ```bash
-      $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-      $ go get github.com/projectcalico/libcalico-go@v<LIBCALICO_VERSION>
-      $ go get github.com/projectcontour/contour@v<CONTOUR_VERSION>
-      $ go mod tidy
-      ```
-   - In the Kubernetes update:
-      ```bash
-      $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-      $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-      $ go get k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-      $ go get sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
-      $ go mod tidy
-      ```
+    ```bash
+    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
+    $ go get github.com/projectcontour/contour@v<CONTOUR_VERSION>
+    $ (update other dependencies too)
+    $ go mod tidy
+    ```
 3. Modify the code to match the new CRDs if CRDs are changed.
    - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/master/admission/hooks) directory.
    - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).

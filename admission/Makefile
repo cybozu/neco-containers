@@ -2,16 +2,14 @@
 
 KUBEBUILDER_VERSION = 2.3.0
 CTRLTOOLS_VERSION = 0.2.8
-CALICO_VERSION = 3.11
-CONTOUR_VERSION = 1.3.0
-ARGOCD_VERSION = 1.5.2
-GRAFANA_OPERATOR_VERSION = 3.2.0
+CALICO_VERSION = 3.16
+CONTOUR_VERSION = 1.9.0
+ARGOCD_VERSION = 1.7.7
+GRAFANA_OPERATOR_VERSION = 3.7.0
 
 SUDO=sudo
 GOOS := $(shell go env GOOS)
 GOARCH := $(shell go env GOARCH)
-GOFLAGS = -mod=vendor
-export GOFLAGS
 
 .PHONY: all
 all: build
@@ -19,11 +17,10 @@ all: build
 # Run tests
 .PHONY: test
 test: crds
-	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
+	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
-	test -z "$$(nilerr $$(go list ./... | grep -v /vendor/) 2>&1 | tee /dev/stderr)"
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | grep -v vendor/ | tee /dev/stderr)"
-	ineffassign .
+	test -z "$$(nilerr $$(go list ./...) 2>&1 | tee /dev/stderr)"
+	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
 	go test -race -v ./...
 

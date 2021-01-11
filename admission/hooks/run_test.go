@@ -1,11 +1,8 @@
 package hooks
 
 import (
-	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -18,12 +15,6 @@ var scheme = runtime.NewScheme()
 
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
-
-	// libcalico-go's api/v3 does not implement AddToScheme...
-	gv := schema.GroupVersion{Group: "crd.projectcalico.org", Version: "v1"}
-	scheme.AddKnownTypes(gv, &calicov3.NetworkPolicy{})
-	metav1.AddToGroupVersion(scheme, gv)
-
 	contourv1.AddKnownTypes(scheme)
 
 	// We cannot use AddToScheme() of argoproj/argo-cd
