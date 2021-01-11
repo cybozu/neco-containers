@@ -13,11 +13,10 @@ check-uncommitted:
 .PHONY: test
 test:
 	$(MAKE) -C scripts setup test
-	test -z "$$(gofmt -s -l . | grep -v '^vendor' | tee /dev/stderr)"
+	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | grep -v vendor/ | tee /dev/stderr)"
-	ineffassign .
+	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
 	$(SUDO_GO) test -race -v ./...
 

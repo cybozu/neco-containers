@@ -1,12 +1,12 @@
 # cke-tools container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
-ARG CNI_PLUGIN_VERSION=0.8.7
+FROM quay.io/cybozu/golang:1.15-focal AS build
+ARG CNI_PLUGIN_VERSION=0.9.0
 
 COPY src /work/src
 WORKDIR /work/src
-RUN go install -mod=vendor ./...
+RUN go install ./...
 
 WORKDIR /go/src/github.com/containernetworking/plugins
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -14,7 +14,7 @@ RUN curl -fsSL https://github.com/containernetworking/plugins/archive/v${CNI_PLU
     && ./build_linux.sh
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 ARG CNIDIR=/usr/local/cni
 ARG PLUGINDIR=/go/src/github.com/containernetworking/plugins

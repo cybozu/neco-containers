@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.7.4] - 2021-01-11
+
+### Changed
+
+- Update CNI plugin to 0.9.0
+- Build with Go 1.15 and Ubuntu 20.04
+- Update dependencies
+
+## [1.7.3]
+
+- Updated the base image
+
 ## [1.7.2] - 2020-09-09
 
 ### Changed
@@ -137,6 +149,7 @@ Nothing.
 ### Added
 - Add rivers: an TCP reverse proxy for kubernetes apiservers (#1).
 
+[1.7.3]: https://github.com/cybozu/neco-containers/pull/493
 [1.7.2]: https://github.com/cybozu/neco-containers/pull/421
 [1.7.1]: https://github.com/cybozu/neco-containers/pull/317
 [1.7.0]: https://github.com/cybozu/neco-containers/pull/314
