@@ -2,7 +2,7 @@
 # Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/golang:1.14-bionic AS builder
+FROM quay.io/cybozu/golang:1.15-focal AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -14,7 +14,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.18.9
+ENV KUBECTL_VERSION=1.19.6
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
@@ -29,7 +29,7 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.14-bionic AS argocd-build
+FROM quay.io/cybozu/golang:1.15-focal AS argocd-build
 ENV ARGOCD_VERSION=1.7.7
 ENV PACKAGE=github.com/argoproj/argo-cd
 
@@ -48,9 +48,11 @@ WORKDIR /go/src/github.com/argoproj/argo-cd
 RUN make cli-local server controller repo-server argocd-util
 
 # Install yarn for building Web UI
-RUN apt-get update && apt-get install -y --no-install-recommends npm \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm -g install yarn
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
+    && curl -sLf https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
+    && apt-get update && apt-get install -y --no-install-recommends yarn nodejs \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install
@@ -60,7 +62,7 @@ RUN NODE_ENV='production' yarn build
 
 
 # Final image
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
