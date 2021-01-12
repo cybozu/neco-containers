@@ -1,7 +1,7 @@
 # pause container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
+FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
 ARG PAUSE_VERSION=3.2
 
@@ -9,7 +9,7 @@ RUN mkdir /work
 
 WORKDIR /work
 
-RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/master/build/pause/pause.c \
+RUN curl -sSLf -O https://raw.githubusercontent.com/kubernetes/kubernetes/master/build/pause/linux/pause.c \
     && gcc -Os -Wall -Werror -static -DVERSION=v${PAUSE_VERSION} -o pause pause.c \
     && strip pause
 
