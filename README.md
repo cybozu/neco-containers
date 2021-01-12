@@ -24,8 +24,8 @@ CircleCI does the following each time commits are pushed to a branch.
     1. Read `TAG` file and check if the repository at [quay.io/cybozu][quay] with the same name of the directory.
     1. If the repository contains the same tag in `TAG`, continue to the next directory.
     1. Otherwise, build a Docker image using `Dockerfile` under the directory.
-1. If the branch is not `master`, CircleCI stops here without pushing.
-1. If the branch is `master`, for each directory with a built image:
+1. If the branch is not `main`, CircleCI stops here without pushing.
+1. If the branch is `main`, for each directory with a built image:
     1. Tag the built image with tag in `TAG` file.
     1. Push the tagged image to quay.io.
     1. If `TAG` represents a pre-release such as `1.2-rc.1`, continue to the  next directory.

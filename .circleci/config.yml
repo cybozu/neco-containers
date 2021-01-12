@@ -102,7 +102,7 @@ jobs:
       - deploy:
           name: Push Docker image to Quay.io
           command: |
-            if [ "${CIRCLE_BRANCH}" != "master" ]; then
+            if [ "${CIRCLE_BRANCH}" != "main" ]; then
                 exit 0
             fi
             if [ ! -f BUILDS ]; then
