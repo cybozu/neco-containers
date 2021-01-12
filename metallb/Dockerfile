@@ -1,9 +1,9 @@
 # metallb container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG METALLB_VERSION=0.9.3
+ARG METALLB_VERSION=0.9.5
 
 WORKDIR /work/metallb
 

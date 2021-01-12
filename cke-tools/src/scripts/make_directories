@@ -5,7 +5,7 @@ import os
 import sys
 
 
-def octint(v: str) ->int:
+def octint(v: str) -> int:
     return int(v, 8)
 
 

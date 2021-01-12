@@ -1,7 +1,7 @@
 # kube-state-metrics container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
 ARG KUBE_STATE_METRICS_VERSION=1.9.7
 WORKDIR /go/src/k8s.io/kube-state-metrics

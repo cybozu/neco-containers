@@ -7,7 +7,7 @@ import sys
 import tarfile
 
 
-def octint(v: str) ->int:
+def octint(v: str) -> int:
     return int(v, 8)
 
 

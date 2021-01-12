@@ -3,9 +3,11 @@ package hooks
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	calicov3 "github.com/projectcalico/libcalico-go/lib/apis/v3"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -13,6 +15,12 @@ const (
 	testNS1 = "ns1"
 	testNS2 = "ns2"
 )
+
+var networkPolicyGVK = schema.GroupVersionKind{
+	Group:   "crd.projectcalico.org",
+	Version: "v1",
+	Kind:    "NetworkPolicy",
+}
 
 func setupNetworkPolicyResources() {
 	// Namespaces
@@ -36,12 +44,18 @@ func setupNetworkPolicyResources() {
 	Expect(err).ShouldNot(HaveOccurred())
 }
 
-func testNewNetworkPolicy(ns, name string, order float64) *calicov3.NetworkPolicy {
-	np := &calicov3.NetworkPolicy{}
-	np.Namespace = ns
-	np.Name = name
+func newNetworkPolicy() *unstructured.Unstructured {
+	np := &unstructured.Unstructured{}
+	np.SetGroupVersionKind(networkPolicyGVK)
+	return np
+}
+
+func testNewNetworkPolicy(ns, name string, order float64) runtime.Object {
+	np := newNetworkPolicy()
+	np.SetNamespace(ns)
+	np.SetName(name)
 	if order > 0 {
-		np.Spec.Order = &order
+		unstructured.SetNestedField(np.UnstructuredContent(), order, "spec", "order")
 	}
 	return np
 }
@@ -72,23 +86,21 @@ var _ = Describe("validate networkpolicy webhook", func() {
 	})
 
 	It("should deny updating policy to have order < 1000", func() {
-		np := &calicov3.NetworkPolicy{}
+		np := newNetworkPolicy()
 		err := k8sClient.Get(testCtx, types.NamespacedName{Namespace: testNS1, Name: "np4"}, np)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		var order float64 = 10
-		np.Spec.Order = &order
+		unstructured.SetNestedField(np.UnstructuredContent(), 10.0, "spec", "order")
 		err = k8sClient.Update(testCtx, np)
 		Expect(err).Should(HaveOccurred())
 	})
 
 	It("should allow updating policy to have order > 1000", func() {
-		np := &calicov3.NetworkPolicy{}
+		np := newNetworkPolicy()
 		err := k8sClient.Get(testCtx, types.NamespacedName{Namespace: testNS1, Name: "np4"}, np)
 		Expect(err).ShouldNot(HaveOccurred())
 
-		var order float64 = 3000
-		np.Spec.Order = &order
+		unstructured.SetNestedField(np.UnstructuredContent(), 3000.0, "spec", "order")
 		err = k8sClient.Update(testCtx, np)
 		Expect(err).ShouldNot(HaveOccurred())
 	})
