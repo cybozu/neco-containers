@@ -31,7 +31,7 @@ client library dependencies.
     $ go mod tidy
     ```
 3. Modify the code to match the new CRDs if CRDs are changed.
-   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/master/admission/hooks) directory.
+   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
    - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
 4. Generate code and manifests.
    ```bash
