@@ -10,9 +10,12 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV GOPATH=/work/go
 RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
+COPY 208.patch /tmp/
+
 WORKDIR ${ROOK_DIR}
 
-RUN git checkout v${ROOK_VERSION}
+RUN git checkout v${ROOK_VERSION} && \
+    patch -p1 --no-backup-if-mismatch < /tmp/208.patch
 RUN make build IMAGES=""
 
 WORKDIR ${ROOK_DIR}/images/ceph
