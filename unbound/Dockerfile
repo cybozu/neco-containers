@@ -1,6 +1,6 @@
-FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
+FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
-ARG UNBOUND_VERSION=1.11.0
+ARG UNBOUND_VERSION=1.13.0
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -15,7 +15,7 @@ RUN mkdir -p /usr/local/unbound \
     && make install \
     && mv LICENSE /usr/local/unbound/LICENSE
 
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 COPY reload-unbound /usr/local/bin/reload-unbound
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
