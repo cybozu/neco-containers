@@ -87,9 +87,8 @@ func (v *calicoNetworkPolicyValidator) Handle(ctx context.Context, req admission
 			return admission.Allowed(fmt.Sprintf("ignore bad order value: %v", val))
 		}
 	}
-	if order <= minOrder {
-		return admission.Denied(fmt.Sprintf("order of %s/%s is smaller than required %f < %f",
-			req.Namespace, req.Name, order, minOrder))
+	if order < minOrder {
+		return admission.Denied(fmt.Sprintf("the allowed min order is < %f: the requested order of %s/%s is %f", minOrder, req.Namespace, req.Name, order))
 	}
 	return admission.Allowed("ok")
 }
