@@ -67,10 +67,10 @@ var _ = Describe("validate networkpolicy webhook", func() {
 		Expect(err).Should(HaveOccurred())
 	})
 
-	It("should deny policy having order == 1000", func() {
+	It("should allow policy having order == 1000", func() {
 		np := testNewNetworkPolicy(testNS1, "np2", 1000)
 		err := k8sClient.Create(testCtx, np)
-		Expect(err).Should(HaveOccurred())
+		Expect(err).ShouldNot(HaveOccurred())
 	})
 
 	It("should allow policy w/o order", func() {
