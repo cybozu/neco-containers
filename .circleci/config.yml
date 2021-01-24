@@ -396,10 +396,6 @@ workflows:
           name: test-bmc-reverse-proxy
           directory: bmc-reverse-proxy
       - test:
-          name: test-cke-tools
-          directory: cke-tools/src
-          targets: setup check-uncommitted test
-      - test:
           name: test-envoy
           directory: envoy
       - test:
@@ -462,9 +458,6 @@ workflows:
       - build:
           name: build-chrony
           container-image: chrony
-      - build:
-          name: build-cke-tools
-          container-image: cke-tools
       - build:
           name: build-configmap-reload
           container-image: configmap-reload
