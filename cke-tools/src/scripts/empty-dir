@@ -1,8 +1,0 @@
-#!/bin/sh -e
-
-if test -z "${1}"  ; then
-    >&2 echo "arg1 cannot be empty."
-    exit 1
-fi
-
-rm -f "${1}"/*

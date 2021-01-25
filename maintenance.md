@@ -130,16 +130,6 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
-## cke-tools
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/containernetworking/plugins/releases).
-2. Update `CNI_PLUGIN_VERSION` in `Dockerfile`
-3. Update `src/CHANGELOG.md`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
 ## configmap-reload
 
 1. Check the [release page](https://github.com/jimmidyson/configmap-reload/releases).

@@ -1,7 +1,0 @@
-#!/bin/sh -e
-
-HOSTBIN=/host/bin
-HOSTNETD=/host/net.d
-CNIDIR=/usr/local/cni
-
-cp -a $CNIDIR/bin/* $HOSTBIN/
