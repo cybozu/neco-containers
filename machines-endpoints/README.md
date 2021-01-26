@@ -10,7 +10,7 @@ This program works in kubernetes pods.
 Usage
 -----
 
-1. Prepare [dctest](https://github.com/cybozu-go/neco/blob/master/docs/dctest.md) environment.
+1. Prepare [dctest](https://github.com/cybozu-go/neco/blob/main/docs/dctest.md) environment.
 2. Deploy RBAC and CronJob resources for `machines-endpoints`.
 
    ```console
