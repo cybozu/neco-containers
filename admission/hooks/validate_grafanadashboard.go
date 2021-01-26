@@ -12,7 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-integreatly-org-grafanadashboard,mutating=false,failurePolicy=fail,groups=integreatly.org,resources=grafanadashboards,versions=v1alpha1,name=vgrafanadashboard.kb.io
+// +kubebuilder:webhook:path=/validate-integreatly-org-grafanadashboard,mutating=false,failurePolicy=fail,sideEffects=None,groups=integreatly.org,resources=grafanadashboards,verbs=create;update,versions=v1alpha1,name=vgrafanadashboard.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type grafanaDashboardValidator struct {
 	client  client.Client

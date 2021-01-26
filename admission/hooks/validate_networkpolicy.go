@@ -22,7 +22,7 @@ const (
 // cnpvlog is for logging in this package.
 var cnpvlog = logf.Log.WithName("calico-networkpolicy-validator")
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-projectcalico-org-networkpolicy,mutating=false,failurePolicy=fail,groups=crd.projectcalico.org,resources=networkpolicies,versions=v1,name=vnetworkpolicy.kb.io
+// +kubebuilder:webhook:path=/validate-projectcalico-org-networkpolicy,mutating=false,failurePolicy=fail,sideEffects=None,groups=crd.projectcalico.org,resources=networkpolicies,verbs=create;update,versions=v1,name=vnetworkpolicy.kb.io,admissionReviewVersions={v1,v1beta1}
 // +kubebuilder:rbac:groups="",resources=namespaces,verbs=get;list;watch
 
 // CalicoNetworkPolicyValidator is a validating webhook for Calico NetworkPolicy.

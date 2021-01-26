@@ -12,15 +12,23 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	admissionregistrationv1beta1 "k8s.io/api/admissionregistration/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	admissionv1 "k8s.io/api/admission/v1"
+	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+
+	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
+
+// These tests use Ginkgo (BDD-style Go testing framework). Refer to
+// http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var (
 	podMutatingWebhookPath              = "/mutate-pod"
@@ -36,271 +44,101 @@ var (
 var k8sClient client.Client
 var testEnv *envtest.Environment
 var testCtx = context.Background()
-var stopCh = make(chan struct{})
-
-func setupCommonResources() {
-}
+var testCancel context.CancelFunc
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
-	SetDefaultEventuallyTimeout(time.Minute)
 	RunSpecsWithDefaultAndCustomReporters(t,
-		"Controller Suite",
+		"Webhook Suite",
 		[]Reporter{printer.NewlineReporter{}})
 }
 
 var _ = BeforeSuite(func() {
-	logf.SetLogger(zap.New(zap.UseDevMode(true), zap.WriteTo(GinkgoWriter)))
+	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
+
+	testCtx, testCancel = context.WithCancel(context.TODO())
 
 	By("bootstrapping test environment")
-	failPolicy := admissionregistrationv1beta1.Fail
-	sideEffect := admissionregistrationv1beta1.SideEffectClassNone
-	webhookInstallOptions := envtest.WebhookInstallOptions{
-		MutatingWebhooks: []runtime.Object{
-			&admissionregistrationv1beta1.MutatingWebhookConfiguration{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "neco-admission",
-				},
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "MutatingWebhookConfiguration",
-					APIVersion: "admissionregistration.k8s.io/v1beta1",
-				},
-				Webhooks: []admissionregistrationv1beta1.MutatingWebhook{
-					{
-						Name:          "mpod.kb.io",
-						FailurePolicy: &failPolicy,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &podMutatingWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{""},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"pods"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "mhttpproxy.kb.io",
-						FailurePolicy: &failPolicy,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &contourMutatingWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{"projectcontour.io"},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"httpproxies"},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-		ValidatingWebhooks: []runtime.Object{
-			&admissionregistrationv1beta1.ValidatingWebhookConfiguration{
-				ObjectMeta: metav1.ObjectMeta{
-					Name: "neco-admission",
-				},
-				TypeMeta: metav1.TypeMeta{
-					Kind:       "ValidatingWebhookConfiguration",
-					APIVersion: "admissionregistration.k8s.io/v1beta1",
-				},
-				Webhooks: []admissionregistrationv1beta1.ValidatingWebhook{
-					{
-						Name:          "vnetworkpolicy.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &calicoValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-									admissionregistrationv1beta1.Update,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{"crd.projectcalico.org"},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"networkpolicies"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "vhttpproxy.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &contourValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-									admissionregistrationv1beta1.Update,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{"projectcontour.io"},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"httpproxies"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "vapplication.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &argocdValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-									admissionregistrationv1beta1.Update,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{"argoproj.io"},
-									APIVersions: []string{"v1alpha1"},
-									Resources:   []string{"applications"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "vgrafanadashboard.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &grafanaDashboardValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-									admissionregistrationv1beta1.Update,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{"integreatly.org"},
-									APIVersions: []string{"v1alpha1"},
-									Resources:   []string{"grafanadashboards"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "vdelete.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &deleteValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Delete,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{""},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"namespaces"},
-								},
-							},
-						},
-					},
-					{
-						Name:          "vservice.kb.io",
-						FailurePolicy: &failPolicy,
-						SideEffects:   &sideEffect,
-						ClientConfig: admissionregistrationv1beta1.WebhookClientConfig{
-							Service: &admissionregistrationv1beta1.ServiceReference{
-								Path: &serviceValidateWebhookPath,
-							},
-						},
-						Rules: []admissionregistrationv1beta1.RuleWithOperations{
-							{
-								Operations: []admissionregistrationv1beta1.OperationType{
-									admissionregistrationv1beta1.Create,
-									admissionregistrationv1beta1.Update,
-								},
-								Rule: admissionregistrationv1beta1.Rule{
-									APIGroups:   []string{""},
-									APIVersions: []string{"v1"},
-									Resources:   []string{"services"},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "config", "crd", "bases")},
-		WebhookInstallOptions: webhookInstallOptions,
+		CRDDirectoryPaths: []string{filepath.Join("..", "config", "crd", "bases")},
+		WebhookInstallOptions: envtest.WebhookInstallOptions{
+			Paths: []string{filepath.Join("..", "config", "webhook")},
+		},
 	}
 
-	var err error
 	cfg, err := testEnv.Start()
-	Expect(err).ToNot(HaveOccurred())
-	Expect(cfg).ToNot(BeNil())
+	Expect(err).NotTo(HaveOccurred())
+	Expect(cfg).NotTo(BeNil())
+
+	scheme := runtime.NewScheme()
+	err = clientgoscheme.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = admissionv1beta1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	err = admissionv1.AddToScheme(scheme)
+	Expect(err).NotTo(HaveOccurred())
+
+	//+kubebuilder:scaffold:scheme
 
 	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme})
-	Expect(err).ToNot(HaveOccurred())
-	Expect(k8sClient).ToNot(BeNil())
+	Expect(err).NotTo(HaveOccurred())
+	Expect(k8sClient).NotTo(BeNil())
 
 	By("setting up resources")
-	setupCommonResources()
 	setupNetworkPolicyResources()
 
-	By("running webhook server")
-	go run(stopCh, cfg, &testEnv.WebhookInstallOptions)
-	d := &net.Dialer{Timeout: time.Second}
+	// start webhook server using Manager
+	webhookInstallOptions := &testEnv.WebhookInstallOptions
+	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+		Scheme:             scheme,
+		Host:               webhookInstallOptions.LocalServingHost,
+		Port:               webhookInstallOptions.LocalServingPort,
+		CertDir:            webhookInstallOptions.LocalServingCertDir,
+		LeaderElection:     false,
+		MetricsBindAddress: "0",
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	dec, err := admission.NewDecoder(scheme)
+	Expect(err).NotTo(HaveOccurred())
+	wh := mgr.GetWebhookServer()
+	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec))
+	wh.Register(calicoValidateWebhookPath, NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
+	wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
+	wh.Register(contourValidateWebhookPath, NewContourHTTPProxyValidator(mgr.GetClient(), dec))
+	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
+	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
+	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
+	wh.Register(serviceValidateWebhookPath, NewServiceValidator(mgr.GetClient(), dec))
+
+	//+kubebuilder:scaffold:webhook
+
+	go func() {
+		err = mgr.Start(testCtx)
+		if err != nil {
+			Expect(err).NotTo(HaveOccurred())
+		}
+	}()
+
+	// wait for the webhook server to get ready
+	dialer := &net.Dialer{Timeout: time.Second}
+	addrPort := fmt.Sprintf("%s:%d", webhookInstallOptions.LocalServingHost, webhookInstallOptions.LocalServingPort)
 	Eventually(func() error {
-		serverURL := fmt.Sprintf("%s:%d", testEnv.WebhookInstallOptions.LocalServingHost, testEnv.WebhookInstallOptions.LocalServingPort)
-		conn, err := tls.DialWithDialer(d, "tcp", serverURL, &tls.Config{
-			InsecureSkipVerify: true,
-		})
+		conn, err := tls.DialWithDialer(dialer, "tcp", addrPort, &tls.Config{InsecureSkipVerify: true})
 		if err != nil {
 			return err
 		}
 		conn.Close()
 		return nil
 	}).Should(Succeed())
+
 }, 60)
 
 var _ = AfterSuite(func() {
-	By("tearing down the test environment")
-	close(stopCh)
+	testCancel()
 	time.Sleep(10 * time.Millisecond)
+	By("tearing down the test environment")
 	err := testEnv.Stop()
-	Expect(err).ToNot(HaveOccurred())
+	Expect(err).NotTo(HaveOccurred())
 })

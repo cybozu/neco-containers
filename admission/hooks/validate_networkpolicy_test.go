@@ -6,9 +6,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -50,7 +50,7 @@ func newNetworkPolicy() *unstructured.Unstructured {
 	return np
 }
 
-func testNewNetworkPolicy(ns, name string, order float64) runtime.Object {
+func testNewNetworkPolicy(ns, name string, order float64) client.Object {
 	np := newNetworkPolicy()
 	np.SetNamespace(ns)
 	np.SetName(name)

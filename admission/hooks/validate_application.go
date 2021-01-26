@@ -14,7 +14,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-argoproj-io-application,mutating=false,failurePolicy=fail,groups=argoproj.io,resources=applications,versions=v1alpha1,name=vapplication.kb.io
+// +kubebuilder:webhook:path=/validate-argoproj-io-application,mutating=false,failurePolicy=fail,sideEffects=None,groups=argoproj.io,resources=applications,verbs=create;update,versions=v1alpha1,name=vapplication.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type argocdApplicationValidator struct {
 	client  client.Client

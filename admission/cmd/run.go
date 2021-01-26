@@ -1,14 +1,12 @@
 package cmd
 
 import (
-	"context"
-
 	"github.com/cybozu/neco-containers/admission/hooks"
-	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
@@ -19,14 +17,13 @@ var (
 )
 
 func init() {
-	_ = clientgoscheme.AddToScheme(scheme)
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	// +kubebuilder:scaffold:scheme
-	contourv1.AddKnownTypes(scheme)
 }
 
 func run(addr string, port int, conf *hooks.Config) error {
-	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&config.zapOpts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:             scheme,
@@ -58,9 +55,12 @@ func run(addr string, port int, conf *hooks.Config) error {
 
 	// +kubebuilder:scaffold:builder
 
-	// pre-cache objects
-	if _, err := mgr.GetCache().GetInformer(context.Background(), &corev1.Namespace{}); err != nil {
-		setupLog.Error(err, "unable to setup informer for namespaces")
+	if err := mgr.AddHealthzCheck("health", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up health check")
+		return err
+	}
+	if err := mgr.AddReadyzCheck("check", healthz.Ping); err != nil {
+		setupLog.Error(err, "unable to set up ready check")
 		return err
 	}
 

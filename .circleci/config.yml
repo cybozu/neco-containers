@@ -330,8 +330,8 @@ jobs:
       - image: quay.io/cybozu/golang:1.15-focal
     steps:
       - checkout
-      - run: cd admission; make setup SUDO=
       - run: cd admission; make test
+      - run: cd admission; make check-generate
       - run: cd admission; make build
       - persist_to_workspace:
           root: admission/bin
