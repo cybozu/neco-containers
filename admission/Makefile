@@ -1,53 +1,17 @@
-# Makefile for custom Kubernetes admission controllers
-
-KUBEBUILDER_VERSION = 2.3.0
-CTRLTOOLS_VERSION = 0.2.8
+CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+CONTROLLER_TOOLS_VERSION = 0.4.1
+KUSTOMIZE_VERSION = 3.8.7
 CALICO_VERSION = 3.16
 CONTOUR_VERSION = 1.9.0
 ARGOCD_VERSION = 1.7.7
 GRAFANA_OPERATOR_VERSION = 3.7.0
 
-SUDO=sudo
-GOOS := $(shell go env GOOS)
-GOARCH := $(shell go env GOARCH)
+# Set the shell used to bash for better error handling.
+SHELL = /bin/bash
+.SHELLFLAGS = -e -o pipefail -c
 
 .PHONY: all
 all: build
-
-# Run tests
-.PHONY: test
-test: crds
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
-	test -z "$$(nilerr $$(go list ./...) 2>&1 | tee /dev/stderr)"
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
-	go test -race -v ./...
-
-
-# Build manager binary
-.PHONY: build
-build:
-	CGO_ENABLED=0 go build -o bin/neco-admission main.go
-
-# Generate manifests e.g. CRD, RBAC etc.
-.PHONY: manifests
-manifests:
-	controller-gen rbac:roleName=neco-admission webhook paths="./..."
-
-# Generate code
-.PHONY: generate
-generate:
-	controller-gen object:headerFile=./hack/boilerplate.go.txt paths="./..."
-
-.PHONY: setup
-setup:
-	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
-	$(SUDO) rm -rf /usr/local/kubebuilder
-	$(SUDO) mv /tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH) /usr/local/kubebuilder
-	$(SUDO) curl -o /usr/local/kubebuilder/bin/kustomize -sL https://go.kubebuilder.io/kustomize/$(GOOS)/$(GOARCH)
-	$(SUDO) chmod a+x /usr/local/kubebuilder/bin/kustomize
-	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
 
 .PHONY: crds
 crds:
@@ -57,6 +21,77 @@ crds:
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/integr8ly/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
 
+# Run tests, and set up envtest if not done already.
+ENVTEST_ASSETS_DIR := testbin
+ENVTEST_SCRIPT_URL := https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v$(CONTROLLER_RUNTIME_VERSION)/hack/setup-envtest.sh
+.PHONY: test
+test: crds simple-test
+ifeq (,$(wildcard $(ENVTEST_ASSETS_DIR)/setup-envtest.sh))
+	mkdir -p $(ENVTEST_ASSETS_DIR)
+	curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh $(ENVTEST_SCRIPT_URL)
+endif
+	{ \
+	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
+	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
+	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	go test ./... -coverprofile cover.out ; \
+	}
+
+.PHONY: simple-test
+simple-test:
+	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
+	staticcheck ./...
+	test -z "$$(nilerr $$(go list ./...) 2>&1 | tee /dev/stderr)"
+	go vet ./...
+
+.PHONY: check-generate
+check-generate:
+	$(MAKE) manifests
+	$(MAKE) generate
+	git diff --exit-code --name-only
+
+# Build manager binary
+.PHONY: build
+build:
+	CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
+
+# Generate manifests e.g. CRD, RBAC etc.
+.PHONY: manifests
+manifests: controller-gen
+	$(CONTROLLER_GEN) rbac:roleName=neco-admission webhook paths="./..."
+
+# Generate code
+.PHONY: generate
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
+
+# Download controller-gen locally if necessary
+CONTROLLER_GEN := $(PWD)/bin/controller-gen
+.PHONY: controller-gen
+controller-gen:
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
+
+# Download kustomize locally if necessary
+KUSTOMIZE := $(PWD)/bin/kustomize
+.PHONY: kustomize
+kustomize:
+	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
+
 .PHONY: clean
 clean:
-	rm -rf bin
+	rm -rf bin testbin
+	rm -f config/crd/bases/*
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef

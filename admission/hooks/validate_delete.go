@@ -12,7 +12,7 @@ import (
 
 const annotationForDelete = "i-am-sure-to-delete"
 
-// +kubebuilder:webhook:verbs=delete,path=/validate-delete,mutating=false,failurePolicy=fail,groups=apiextensions.k8s.io,resources=customresourcedefinitions,versions=v1;v1beta1,name=vdelete.kb.io
+// +kubebuilder:webhook:path=/validate-delete,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=namespaces,verbs=delete,versions=v1,name=vdelete.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type deleteValidator struct {
 	client  client.Client

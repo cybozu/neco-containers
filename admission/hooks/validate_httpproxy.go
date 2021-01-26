@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
-	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-projectcontour-io-httpproxy,mutating=false,failurePolicy=fail,groups=projectcontour.io,resources=httpproxies,versions=v1,name=vhttpproxy.kb.io
+// +kubebuilder:webhook:path=/validate-projectcontour-io-httpproxy,mutating=false,failurePolicy=fail,sideEffects=None,groups=projectcontour.io,resources=httpproxies,verbs=create;update,versions=v1,name=vhttpproxy.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type contourHTTPProxyValidator struct {
 	client  client.Client
@@ -25,24 +25,24 @@ func NewContourHTTPProxyValidator(c client.Client, dec *admission.Decoder) http.
 }
 
 func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	hp := &contourv1.HTTPProxy{}
+	hp := &unstructured.Unstructured{}
 	if err := v.decoder.Decode(req, hp); err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
-	newAnn := hp.Annotations
+	newAnn := hp.GetAnnotations()
 
 	switch req.Operation {
-	case admissionv1beta1.Create:
+	case admissionv1.Create:
 		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" {
 			return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
 		}
 
-	case admissionv1beta1.Update:
-		old := &contourv1.HTTPProxy{}
+	case admissionv1.Update:
+		old := &unstructured.Unstructured{}
 		if err := v.decoder.DecodeRaw(req.OldObject, old); err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
 		}
-		oldAnn := old.Annotations
+		oldAnn := old.GetAnnotations()
 
 		if newAnn[annotationKubernetesIngressClass] != oldAnn[annotationKubernetesIngressClass] {
 			return admission.Denied("chaning annotation " + annotationKubernetesIngressClass + " is not allowed")

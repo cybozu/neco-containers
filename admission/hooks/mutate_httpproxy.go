@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
@@ -16,7 +16,7 @@ const (
 	annotationContourIngressClass    = "projectcontour.io/ingress.class"
 )
 
-// +kubebuilder:webhook:verbs=create,path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,groups=projectcontour.io,resources=httpproxies,versions=v1,name=mhttpproxy.kb.io
+// +kubebuilder:webhook:path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,sideEffects=None,groups=projectcontour.io,resources=httpproxies,verbs=create,versions=v1,name=mhttpproxy.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type contourHTTPProxyMutator struct {
 	client       client.Client
@@ -30,26 +30,27 @@ func NewContourHTTPProxyMutator(c client.Client, dec *admission.Decoder, default
 }
 
 func (m *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Request) admission.Response {
-	hp := &contourv1.HTTPProxy{}
+	hp := &unstructured.Unstructured{}
 	err := m.decoder.Decode(req, hp)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
+	ann := hp.GetAnnotations()
 
-	if _, ok := hp.Annotations[annotationKubernetesIngressClass]; ok {
+	if _, ok := ann[annotationKubernetesIngressClass]; ok {
 		return admission.Allowed("ok")
 	}
-	if _, ok := hp.Annotations[annotationContourIngressClass]; ok {
+	if _, ok := ann[annotationContourIngressClass]; ok {
 		return admission.Allowed("ok")
 	}
 
-	hpPatched := hp.DeepCopy()
-	if hpPatched.Annotations == nil {
-		hpPatched.Annotations = make(map[string]string)
+	if ann == nil {
+		ann = make(map[string]string)
 	}
-	hpPatched.Annotations[annotationKubernetesIngressClass] = m.defaultClass
+	ann[annotationKubernetesIngressClass] = m.defaultClass
+	hp.SetAnnotations(ann)
 
-	marshaled, err := json.Marshal(hpPatched)
+	marshaled, err := json.Marshal(hp)
 	if err != nil {
 		return admission.Errored(http.StatusInternalServerError, err)
 	}

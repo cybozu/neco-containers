@@ -15,7 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create,path=/mutate-pod,mutating=true,failurePolicy=fail,groups="",resources=pods,versions=v1,name=mpod.kb.io
+// +kubebuilder:webhook:path=/mutate-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=create,versions=v1,name=mpod.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type podMutator struct {
 	client  client.Client

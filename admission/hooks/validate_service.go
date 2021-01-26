@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-// +kubebuilder:webhook:verbs=create;update,path=/validate-service,mutating=false,failurePolicy=fail,groups="",resources=services,versions=v1,name=vservice.kb.io
+// +kubebuilder:webhook:path=/validate-service,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=services,verbs=create;update,versions=v1,name=vservice.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type serviceValidator struct {
 	client  client.Client

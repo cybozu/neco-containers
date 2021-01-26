@@ -1,3 +1,5 @@
-version: "2"
 domain: cybozu.com
+layout: go.kubebuilder.io/v3
+projectName: admission
 repo: github.com/cybozu/neco-containers/admission
+version: 3-alpha

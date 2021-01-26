@@ -3,44 +3,54 @@ package hooks
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-func testHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPProxy {
-	hp := &contourv1.HTTPProxy{}
-	hp.Name = name
-	hp.Namespace = "default"
-	hp.Annotations = annotations
-	hp.Status.CurrentStatus = "dummy"
-	hp.Status.Description = "dummy"
+func testHTTPProxy(name string, annotations map[string]string) map[string]string {
+	hp := &unstructured.Unstructured{}
+	hp.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "projectcontour.io",
+		Version: "v1",
+		Kind:    "HTTPProxy",
+	})
+	hp.SetName(name)
+	hp.SetNamespace("default")
+	hp.SetAnnotations(annotations)
+	hp.UnstructuredContent()["spec"] = map[string]interface{}{}
 
 	err := k8sClient.Create(testCtx, hp)
-	Expect(err).NotTo(HaveOccurred())
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
-	ret := &contourv1.HTTPProxy{}
+	ret := &unstructured.Unstructured{}
+	ret.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "projectcontour.io",
+		Version: "v1",
+		Kind:    "HTTPProxy",
+	})
 	err = k8sClient.Get(testCtx, types.NamespacedName{Name: name, Namespace: "default"}, ret)
-	Expect(err).NotTo(HaveOccurred())
+	ExpectWithOffset(1, err).NotTo(HaveOccurred())
 
-	return ret
+	return ret.GetAnnotations()
 }
 
 var _ = Describe("mutate HTTPProxy webhook", func() {
 	It("should have default annotation", func() {
-		hp := testHTTPProxy("mhp1", map[string]string{})
-		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, "secured"))
-		Expect(hp.Annotations).ToNot(HaveKey(annotationContourIngressClass))
+		ann := testHTTPProxy("mhp1", map[string]string{})
+		Expect(ann).To(HaveKeyWithValue(annotationKubernetesIngressClass, "secured"))
+		Expect(ann).ToNot(HaveKey(annotationContourIngressClass))
 	})
 
 	It("should not mutate annotations", func() {
-		hp := testHTTPProxy("mhp2", map[string]string{annotationKubernetesIngressClass: "global"})
-		Expect(hp.Annotations).To(HaveKeyWithValue(annotationKubernetesIngressClass, "global"))
-		Expect(hp.Annotations).ToNot(HaveKey(annotationContourIngressClass))
+		ann := testHTTPProxy("mhp2", map[string]string{annotationKubernetesIngressClass: "global"})
+		Expect(ann).To(HaveKeyWithValue(annotationKubernetesIngressClass, "global"))
+		Expect(ann).ToNot(HaveKey(annotationContourIngressClass))
 	})
 
 	It("should not mutate annotations with projectcontour.io/ingress.class", func() {
-		hp := testHTTPProxy("mhp3", map[string]string{annotationContourIngressClass: "global"})
-		Expect(hp.Annotations).To(HaveKeyWithValue(annotationContourIngressClass, "global"))
-		Expect(hp.Annotations).ToNot(HaveKey(annotationKubernetesIngressClass))
+		ann := testHTTPProxy("mhp3", map[string]string{annotationContourIngressClass: "global"})
+		Expect(ann).To(HaveKeyWithValue(annotationContourIngressClass, "global"))
+		Expect(ann).ToNot(HaveKey(annotationKubernetesIngressClass))
 	})
 })

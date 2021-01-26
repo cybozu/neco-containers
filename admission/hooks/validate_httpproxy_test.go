@@ -3,16 +3,22 @@ package hooks
 import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	contourv1 "github.com/projectcontour/contour/apis/projectcontour/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func fillHTTPProxy(name string, annotations map[string]string) *contourv1.HTTPProxy {
-	hp := &contourv1.HTTPProxy{}
-	hp.Name = name
-	hp.Namespace = "default"
-	hp.Annotations = annotations
-	hp.Status.CurrentStatus = "dummy"
-	hp.Status.Description = "dummy"
+func fillHTTPProxy(name string, annotations map[string]string) client.Object {
+	hp := &unstructured.Unstructured{}
+	hp.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "projectcontour.io",
+		Version: "v1",
+		Kind:    "HTTPProxy",
+	})
+	hp.SetName(name)
+	hp.SetNamespace("default")
+	hp.SetAnnotations(annotations)
+	hp.UnstructuredContent()["spec"] = map[string]interface{}{}
 	return hp
 }
 
@@ -41,7 +47,9 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		hp.Annotations[annotationKubernetesIngressClass] = "forest"
+		ann := hp.GetAnnotations()
+		ann[annotationKubernetesIngressClass] = "forest"
+		hp.SetAnnotations(ann)
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
 	})
@@ -51,7 +59,9 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		hp.Annotations[annotationContourIngressClass] = "forest"
+		ann := hp.GetAnnotations()
+		ann[annotationContourIngressClass] = "forest"
+		hp.SetAnnotations(ann)
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
 	})
@@ -61,7 +71,7 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		hp.Annotations["foo"] = "forest"
+		hp.GetAnnotations()["foo"] = "forest"
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 	})

@@ -1,13 +1,15 @@
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   creationTimestamp: null
   name: mutating-webhook-configuration
 webhooks:
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -23,8 +25,11 @@ webhooks:
     - CREATE
     resources:
     - httpproxies
-- clientConfig:
-    caBundle: Cg==
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -40,16 +45,19 @@ webhooks:
     - CREATE
     resources:
     - pods
+  sideEffects: None
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
-- clientConfig:
-    caBundle: Cg==
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -66,8 +74,11 @@ webhooks:
     - UPDATE
     resources:
     - applications
-- clientConfig:
-    caBundle: Cg==
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -76,16 +87,18 @@ webhooks:
   name: vdelete.kb.io
   rules:
   - apiGroups:
-    - apiextensions.k8s.io
+    - ""
     apiVersions:
     - v1
-    - v1beta1
     operations:
     - DELETE
     resources:
-    - customresourcedefinitions
-- clientConfig:
-    caBundle: Cg==
+    - namespaces
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -102,8 +115,11 @@ webhooks:
     - UPDATE
     resources:
     - grafanadashboards
-- clientConfig:
-    caBundle: Cg==
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -120,8 +136,11 @@ webhooks:
     - UPDATE
     resources:
     - httpproxies
-- clientConfig:
-    caBundle: Cg==
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -138,8 +157,11 @@ webhooks:
     - UPDATE
     resources:
     - networkpolicies
-- clientConfig:
-    caBundle: Cg==
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
     service:
       name: webhook-service
       namespace: system
@@ -156,3 +178,4 @@ webhooks:
     - UPDATE
     resources:
     - services
+  sideEffects: None
