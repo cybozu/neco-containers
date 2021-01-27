@@ -26,12 +26,13 @@ func run(addr string, port int, conf *hooks.Config) error {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&config.zapOpts)))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:             scheme,
-		MetricsBindAddress: config.metricsAddr,
-		LeaderElection:     false,
-		Host:               addr,
-		Port:               port,
-		CertDir:            config.certDir,
+		Scheme:                 scheme,
+		MetricsBindAddress:     config.metricsAddr,
+		HealthProbeBindAddress: config.probeAddr,
+		LeaderElection:         false,
+		Host:                   addr,
+		Port:                   port,
+		CertDir:                config.certDir,
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
