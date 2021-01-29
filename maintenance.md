@@ -17,7 +17,6 @@ The target container of these operations have the following badges, so check bef
 ## admission (neco-admission)
 
 ![Kubernetes Update](./kubernetes_update.svg)
-![Regular Update](./regular_update.svg)
 
 You should choose a contour version that has the right Kubernetes
 client library dependencies.
@@ -48,19 +47,23 @@ client library dependencies.
 
 ## argocd
 
-![Kubernetes Update](./kubernetes_update.svg)
+![Kubernetes Update](./kubernetes_update.svg) 
+
+(only for `kubectl` inside Docker image)
+
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check the releases of the following tools:
-   - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
-   - [Helm](https://github.com/helm/helm/releases)
-3. Check the upstream's Dockerfile. If there are any updates, update our `Dockefile`.
-   - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
-4. Update version variables in `Dockefile`.
-   - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
-   - In the Kubernetes update: Update `KUSTOMIZE_VERSION` and `HELM_VERSION`.
-5. Update `BRANCH` and `TAG` files.
+2. Check [`hack/tool-versions.sh`](https://github.com/argoproj/argo-cd/blob/master/hack/tool-versions.sh) for the tools versions, especially the version of `packr`.
+3. Update tool versions in `Dockerfile`
+    - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
+    - [Helm](https://github.com/helm/helm/releases)
+4. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+    - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
+5. Update version variables in `Dockefile`.
+    - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
+    - In the Kubernetes update: Update `KUSTOMIZE_VERSION`.
+6. Update `BRANCH` and `TAG` files.
 
 ## bird
 
@@ -131,6 +134,8 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 4. Update `BRANCH` and `TAG` files.
 
 ## configmap-reload
+
+![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/jimmidyson/configmap-reload/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
@@ -213,7 +218,7 @@ Upgrading etcd needs a special procedure, so we do it as a special task.
 
 ## external-dns
 
-![Kubernetes Update](./kubernetes_update.svg)
+![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
@@ -240,10 +245,7 @@ Upgrading etcd needs a special procedure, so we do it as a special task.
 
 ## gorush
 
-1. Check the [release page](https://github.com/elastic/beats/releases).
-2. Update `GORUSH_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+Ignore!!!
 
 ## grafana
 
@@ -397,7 +399,9 @@ This container image contains 3 components(prometheus, alertmanager and pushgate
 
 ## prometheus-config-reloader
 
-T.B.D.
+![Regular Update](./regular_update.svg)
+
+https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prometheus-config-reloader
 
 ## redis
 
