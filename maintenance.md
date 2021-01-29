@@ -184,11 +184,10 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [dnsmasq-base package](https://packages.ubuntu.com/bionic/dnsmasq-base) in the Ubuntu packages.
-2. Check the [CHANGELOG](http://www.thekelleys.org.uk/dnsmasq/CHANGELOG) in the official website, if the `dnsmasq-base` package is updated.
-4. Update `DNSMASQ_VERSION` in `Dockerfile`.
-5. Update image tag in `README.md`.
-6. Update `BRANCH` and `TAG` files.
+1. Check the http://www.thekelleys.org.uk/dnsmasq/ and find the latest release.
+2. Update `DNSMASQ_VERSION` in `Dockerfile`.
+3. Update image tag in `README.md`.
+4. Update `BRANCH` and `TAG` files.
 
 ## envoy
 

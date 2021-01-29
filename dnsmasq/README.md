@@ -9,7 +9,7 @@ Usage
 To launch `dnsmasq` by `docker run`:
 
     $ docker run --rm --cap-drop ALL --cap-add=NET_ADMIN \
-         --net=host quay.io/cybozu/dnsmasq \
+         --net=host quay.io/cybozu/dnsmasq:2.84 \
          -d -q \
          --dhcp-range=192.168.1.3,192.168.1.254
  
