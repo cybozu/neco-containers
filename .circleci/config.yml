@@ -297,7 +297,7 @@ jobs:
       - run:
           name: Install Bazel
           environment:
-            BAZEL_VERSION: 2.2.0
+            BAZEL_VERSION: 3.7.2
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
@@ -447,7 +447,7 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.0.4
+          version: 1.1.0
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
