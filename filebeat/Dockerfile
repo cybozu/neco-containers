@@ -1,9 +1,9 @@
 # Filebeats container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS builder
+FROM quay.io/cybozu/golang:1.15-focal AS builder
 
-ARG BEATS_VERSION=7.9.2
+ARG BEATS_VERSION=7.10.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/elastic/beats/archive/v${BEATS_VERSION}.tar.gz | \
