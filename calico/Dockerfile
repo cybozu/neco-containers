@@ -1,9 +1,9 @@
 # calico container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.14-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG CALICO_VERSION=3.16.5
+ARG CALICO_VERSION=3.17.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
@@ -22,7 +22,7 @@ RUN GO111MODULE=on CGO_ENABLED=0 go install ./cmd/calico-typha
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 # Install remaining runtime deps required for felix from the global repository
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -58,7 +58,7 @@ COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/typha.cfg 
 COPY --from=build /go/src/github.com/projectcalico/typha/docker-image/nsswitch.conf /etc/nsswitch.conf
 
 # Since our binary isn't designed to run as PID 1, run it via the tini init daemon.
-ENV TINI_VERSION v0.18.0
+ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /usr/local/calico/bin/tini
 RUN chmod +x /usr/local/calico/bin/tini
 
