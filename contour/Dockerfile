@@ -1,9 +1,9 @@
 # Contour container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG CONTOUR_VERSION=1.10.0
+ARG CONTOUR_VERSION=1.11.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/projectcontour/contour/archive/v${CONTOUR_VERSION}.tar.gz | \
@@ -17,11 +17,11 @@ RUN make install \
     GOOS=linux
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM scratch
 
 COPY --from=build /go/bin/contour /bin/contour
-COPY --from=build /work/contour/LICENSE  /usr/local/contour/LICENSE
+COPY --from=build /work/contour/LICENSE  /LICENSE
 
 USER 10000:10000
 
-ENTRYPOINT ["contour"]
+ENTRYPOINT ["/bin/contour"]
