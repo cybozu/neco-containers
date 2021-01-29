@@ -205,8 +205,9 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 
 ## etcd
 
-***NOTE:*** The etcd is upgraded in neither the Regular Update nor the Kubernetes Update.
-Upgrading etcd needs a special procedure, so we do it as a special task.
+![Kubernetes Update](./kubernetes_update.svg)
+
+***NOTE:*** Upgrading to etcd 3.4+ will require modifications to CKE, so it should be done separately.
 
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
