@@ -1,10 +1,10 @@
 # testhttpd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 COPY src /work/src
 WORKDIR /work/src
-RUN CGO_ENABLED=0 go install ./testhttpd
+RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./testhttpd
 
 # Stage2: setup runtime container
 FROM scratch
