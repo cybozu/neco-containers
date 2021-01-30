@@ -58,9 +58,9 @@ client library dependencies.
 3. Update tool versions in `Dockerfile`
     - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
     - [Helm](https://github.com/helm/helm/releases)
-4. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
-5. Update version variables in `Dockefile`.
+5. Update version variables in `Dockerfile`.
     - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
     - In the Kubernetes update: Update `KUSTOMIZE_VERSION`.
 6. Update `BRANCH` and `TAG` files.
@@ -97,10 +97,10 @@ client library dependencies.
 ![Regular Update](./regular_update.svg)
 
 1. Check [the release notes](https://docs.projectcalico.org/release-notes/).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/projectcalico/node/blob/vX.Y.Z/Dockerfile.amd64
    - https://github.com/projectcalico/typha/blob/vX.Y.Z/docker-image/Dockerfile.amd64
-3. Update version variables (`CALICO_VERSION` and `TINI_VERSION`) in `Dockefile`.
+3. Update version variables (`CALICO_VERSION` and `TINI_VERSION`) in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
@@ -138,7 +138,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/jimmidyson/configmap-reload/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile
 3. Update `CONFIGMAP_RELOAD_VERSION` in `Dockerfile`
 4. Update `src/CHANGELOG.md`.
@@ -149,7 +149,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/projectcontour/contour/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -160,7 +160,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/coredns/coredns/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile
 3. Update `COREDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -174,7 +174,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
 
 1. Check the [release page](https://github.com/dexidp/dex/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/dexidp/dex/blob/vX.Y.Z/Dockerfile
 3. Update `DEX_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -210,7 +210,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ***NOTE:*** Upgrading to etcd 3.4+ will require modifications to CKE, so it should be done separately.
 
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile-release
 3. Update `ETCD_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -221,7 +221,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/Dockerfile
 3. Update `EXTERNALDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -252,7 +252,7 @@ Ignore!!!
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/grafana/grafana/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -263,7 +263,7 @@ Ignore!!!
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/integr8ly/grafana-operator/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/build/Dockerfile
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
@@ -273,7 +273,7 @@ Ignore!!!
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes/kube-state-metrics/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile
 3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
@@ -347,7 +347,7 @@ Ignore!!!
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/metallb/metallb/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/metallb/metallb/blob/vX.Y.Z/controller/Dockerfile
    - https://github.com/metallb/metallb/blob/vX.Y.Z/speaker/Dockerfile
 3. Update `METALLB_VERSION` in `Dockerfile`.
@@ -358,7 +358,7 @@ Ignore!!!
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes-sigs/metrics-server/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes-sigs/metrics-server/blob/vX.Y.Z/Dockerfile
    - NOTE: Dockerfile path is different between v0.3 and v0.4. So when upgrading from v0.3 to v0.4, check the following file.
    - https://github.com/kubernetes-sigs/metrics-server/blob/release-0.3/deploy/docker/Dockerfile
@@ -375,7 +375,7 @@ T.B.D.
 
 1. Check the changelog.
    - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile
 3. Update `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
@@ -390,7 +390,7 @@ This container image contains 3 components(prometheus, alertmanager and pushgate
    - https://github.com/prometheus/prometheus/releases
    - https://github.com/prometheus/alertmanager/releases
    - https://github.com/prometheus/pushgateway/releases
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/prometheus/prometheus/blob/vX.Y.Z/Dockerfile
    - https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile
    - https://github.com/prometheus/pushgateway/blob/vX.Y.Z/Dockerfile
@@ -411,7 +411,7 @@ https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prome
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
 
 1. Check the release notes in the [official site](https://redis.io/).
-2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockefile`.
+2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
    - v5.0: https://github.com/docker-library/redis/blob/master/5.0/Dockerfile
    - v6.0: https://github.com/docker-library/redis/blob/master/6.0/Dockerfile
 3. Update `REDIS_VERSION` in `Dockerfile`.
@@ -422,7 +422,7 @@ https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prome
 ![Regular Update](./regular_update.svg)
 
 1. Check the release notes in the [release page](https://github.com/docker/distribution/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/docker/distribution/blob/master/Dockerfile
 3. Update `REGISTRY_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
@@ -432,7 +432,7 @@ https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prome
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the ceph image first.
 
 1. Check the [release page](https://github.com/rook/rook/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile
 3. Check the `TINI_VERSION` in the following Makefile.
    - https://github.com/rook/rook/blob/vX.Y.Z/images/Makefile
@@ -445,7 +445,7 @@ https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prome
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/hashicorp/serf/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile
 3. Update `SERF_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
