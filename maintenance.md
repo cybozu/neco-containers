@@ -404,7 +404,12 @@ T.B.D.
 
 ![Regular Update](./regular_update.svg)
 
-https://github.com/prometheus-operator/prometheus-operator/tree/master/cmd/prometheus-config-reloader
+This is a part of [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator/).
+This is used by victoria-metrics operator too.
+
+1. Check the latest release of `prometheus-operator`
+2. Update version variable in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files.
 
 ## pushgateway
 
