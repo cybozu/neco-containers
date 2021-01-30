@@ -473,8 +473,9 @@ This is used by victoria-metrics operator too.
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [squid package](https://packages.ubuntu.com/bionic/squid) in the Ubuntu packages.
-2. Check the [ChangeLog](https://github.com/squid-cache/squid/blob/master/ChangeLog) in the official website, if the `squid` package is updated.
+1. Check the latest **stable** version at http://www.squid-cache.org/Versions/
+2. Check release notes if a new version is released.
+    - e.g., http://www.squid-cache.org/Versions/v4/squid-4.13-RELEASENOTES.html
 3. Update `SQUID_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
