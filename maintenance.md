@@ -431,7 +431,6 @@ This is used by victoria-metrics operator too.
 
 1. Check the release notes in the [official site](https://redis.io/).
 2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
-   - v5.0: https://github.com/docker-library/redis/blob/master/5.0/Dockerfile
    - v6.0: https://github.com/docker-library/redis/blob/master/6.0/Dockerfile
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
