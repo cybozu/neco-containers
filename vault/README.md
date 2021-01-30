@@ -22,17 +22,17 @@ To launch vault server by `docker run`:
 
     $ docker run -d --rm --read-only --name vault \
        --ulimit memlock=-1 \
-       --mount type=bind,source=/your/config.hcl,target=/vault/config/config.hcl \
+       -v /your/config.hcl:/vault/config/config.hcl:ro \
        -p 8200:8200 -p 8201:8201 \
-       quay.io/cybozu/vault:1.4 \
+       quay.io/cybozu/vault:1.6 \
          server -config=/vault/config/config.hcl
 
 To use vault cli, first install it in a host OS directory `DIR`:
 
     $ docker run --rm -u root:root \
       --entrypoint /usr/local/vault/install-tools \
-      --mount type=bind,source=DIR,target=/host \
-      quay.io/cybozu/vault:1.4
+      -v DIR:/host \
+      quay.io/cybozu/vault:1.6
 
 Then run `vault` as follows:
 

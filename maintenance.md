@@ -497,7 +497,9 @@ This is used by victoria-metrics operator too.
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/hashicorp/vault/releases) and the [ChangeLog](https://github.com/hashicorp/vault/blob/master/CHANGELOG.md).
+1. Check the [release page](https://github.com/hashicorp/vault/releases) and these notes:
+    - https://www.vaultproject.io/docs/upgrading
+    - https://www.vaultproject.io/docs/release-notes
 2. Update `VAULT_VERSION` in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
