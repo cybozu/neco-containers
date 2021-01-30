@@ -1,32 +1,24 @@
 # victoriametrics-xxx container
 
 ARG VICTORIAMETRICS_SRCREPO=VictoriaMetrics/VictoriaMetrics
-ARG VICTORIAMETRICS_SINGLE_VERSION=1.51.0
-ARG VICTORIAMETRICS_CLUSTER_VERSION=1.51.0-cluster
+ARG VICTORIAMETRICS_SINGLE_VERSION=1.52.0
+ARG VICTORIAMETRICS_CLUSTER_VERSION=1.52.0-cluster
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-bionic AS build-single
+FROM quay.io/cybozu/golang:1.15-focal AS build-single
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_SINGLE_VERSION
-
-# Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
-ENV USER=root
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 COPY download_and_build.sh /
 WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
 RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert
 
 #
-FROM quay.io/cybozu/golang:1.15-bionic AS build-cluster
+FROM quay.io/cybozu/golang:1.15-focal AS build-cluster
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_CLUSTER_VERSION
-
-# Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
-ENV USER=root
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 COPY download_and_build.sh /
 WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
@@ -34,7 +26,7 @@ RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_CLUSTER_VERSION} /download_and_bui
 
 
 # Stage2: setup runtime containers
-FROM quay.io/cybozu/ubuntu:18.04 AS vmsingle
+FROM quay.io/cybozu/ubuntu:20.04 AS vmsingle
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/victoria-metrics /
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
@@ -45,7 +37,7 @@ EXPOSE 8428
 ENTRYPOINT ["/victoria-metrics"]
 
 #
-FROM quay.io/cybozu/ubuntu:18.04 AS vmagent
+FROM quay.io/cybozu/ubuntu:20.04 AS vmagent
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmagent /
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
@@ -56,7 +48,7 @@ EXPOSE 8429
 ENTRYPOINT ["/vmagent"]
 
 #
-FROM quay.io/cybozu/ubuntu:18.04 AS vmalert
+FROM quay.io/cybozu/ubuntu:20.04 AS vmalert
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmalert /
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
@@ -67,7 +59,7 @@ EXPOSE 8880
 ENTRYPOINT ["/vmalert"]
 
 #
-FROM quay.io/cybozu/ubuntu:18.04 AS vminsert
+FROM quay.io/cybozu/ubuntu:20.04 AS vminsert
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vminsert /
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
@@ -78,7 +70,7 @@ EXPOSE 8480
 ENTRYPOINT ["/vminsert"]
 
 #
-FROM quay.io/cybozu/ubuntu:18.04 AS vmselect
+FROM quay.io/cybozu/ubuntu:20.04 AS vmselect
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmselect /
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
@@ -89,7 +81,7 @@ EXPOSE 8481
 ENTRYPOINT ["/vmselect"]
 
 #
-FROM quay.io/cybozu/ubuntu:18.04 AS vmstorage
+FROM quay.io/cybozu/ubuntu:20.04 AS vmstorage
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmstorage /
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
