@@ -1,7 +1,7 @@
 # serf container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.13-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
 ARG SERF_VERSION=0.9.5
 
@@ -12,10 +12,10 @@ tar -x -z -f - --strip-components 1 -C /go/src/github.com/hashicorp/serf
 
 WORKDIR /go/src/github.com/hashicorp/serf
 
-RUN go install ./...
+RUN go install -ldflags="-w -s" ./...
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 RUN apt-get update \
   && apt-get -y install --no-install-recommends \
