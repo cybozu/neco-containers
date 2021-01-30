@@ -1,5 +1,5 @@
-FROM quay.io/cybozu/golang:1.15-bionic as build
-ARG MACKEREL_AGENT_VERSION=0.69.3
+FROM quay.io/cybozu/golang:1.15-focal as build
+ARG MACKEREL_AGENT_VERSION=0.71.1
 
 RUN curl -sLfO https://github.com/mackerelio/mackerel-agent/archive/v${MACKEREL_AGENT_VERSION}.tar.gz \
     && tar xzf v${MACKEREL_AGENT_VERSION}.tar.gz \
@@ -7,7 +7,7 @@ RUN curl -sLfO https://github.com/mackerelio/mackerel-agent/archive/v${MACKEREL_
 WORKDIR /work/mackerel-agent
 RUN go build -o build/mackerel-agent -ldflags="-w -s -X github.com/mackerelio/mackerel-agent/version.VERSION=${MACKEREL_AGENT_VERSION}" .
 
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 COPY --from=build /work/mackerel-agent/build/mackerel-agent /usr/local/bin/mackerel-agent
 COPY --from=build /work/mackerel-agent/LICENSE /usr/local/bin/LICENSE
