@@ -360,8 +360,6 @@ Ignore!!!
 1. Check the [release page](https://github.com/kubernetes-sigs/metrics-server/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes-sigs/metrics-server/blob/vX.Y.Z/Dockerfile
-   - NOTE: Dockerfile path is different between v0.3 and v0.4. So when upgrading from v0.3 to v0.4, check the following file.
-   - https://github.com/kubernetes-sigs/metrics-server/blob/release-0.3/deploy/docker/Dockerfile
 3. Update `METRICS_SERVER_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
