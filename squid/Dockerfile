@@ -23,8 +23,7 @@ COPY --from=build /etc/squid /etc/squid
 
 # Redirect logs to stdout/stderr for the container
 RUN mkdir -p /var/log/squid \
-    && ln -sf /dev/stdout /var/log/squid/access.log \
-    && ln -sf /dev/stderr /var/log/squid/cache.log \
+    && chown 10000:10000 /var/log/squid \
     && echo 'pid_filename none' >>/etc/squid/squid.conf \
     && echo 'logfile_rotate 0' >>/etc/squid/squid.conf \
     && echo 'access_log stdio:/dev/stdout' >>/etc/squid/squid.conf \
