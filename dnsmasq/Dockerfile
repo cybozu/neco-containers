@@ -1,16 +1,24 @@
 # dnsmasq container
 
-FROM quay.io/cybozu/ubuntu:18.04
+# stage1: build
+FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
-ARG DNSMASQ_VERSION=2.79-1
+ARG DNSMASQ_VERSION=2.84
 
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-       dnsmasq-base=${DNSMASQ_VERSION} \
-    && rm -rf /var/lib/apt/lists/*
+WORKDIR /work
+RUN curl -sfLO http://www.thekelleys.org.uk/dnsmasq/dnsmasq-${DNSMASQ_VERSION}.tar.gz \
+    && tar xzf dnsmasq-${DNSMASQ_VERSION}.tar.gz \
+    && make -C dnsmasq-${DNSMASQ_VERSION} PREFIX=/usr/local/dnsmasq install \
+    && cp dnsmasq-${DNSMASQ_VERSION}/COPYING /usr/local/dnsmasq \
+    && cp dnsmasq-${DNSMASQ_VERSION}/COPYING-v3 /usr/local/dnsmasq
+
+# stage2: runtime
+FROM quay.io/cybozu/ubuntu:20.04
+
+COPY --from=build /usr/local/dnsmasq /usr/local/dnsmasq
 
 EXPOSE 67/udp
 
 VOLUME /var/lib/misc
 
-ENTRYPOINT ["/usr/sbin/dnsmasq"]
+ENTRYPOINT ["/usr/local/dnsmasq/sbin/dnsmasq"]

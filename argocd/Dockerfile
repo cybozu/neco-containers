@@ -2,7 +2,7 @@
 # Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/golang:1.15-focal AS builder
+FROM quay.io/cybozu/ubuntu:20.04 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -19,18 +19,18 @@ RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kube
     chmod +x /usr/local/bin/kubectl
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=3.7.0
+ENV KUSTOMIZE_VERSION=3.9.2
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.4.2
+ENV HELM_VERSION=3.5.1
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.15-focal AS argocd-build
-ENV ARGOCD_VERSION=1.7.7
+ENV ARGOCD_VERSION=1.8.3
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr

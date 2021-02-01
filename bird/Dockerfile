@@ -1,7 +1,7 @@
 # BIRD container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:18.04 AS build
+FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
 ARG BIRD_VERSION=2.0.7
 WORKDIR /work
@@ -32,7 +32,7 @@ COPY bird-copyright /usr/local/bird/copyright
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \

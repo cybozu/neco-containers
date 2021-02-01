@@ -138,7 +138,7 @@ spec:
     spec:
       containers:
         - name: ubuntu
-          image: quay.io/cybozu/ubuntu:18.04
+          image: quay.io/cybozu/ubuntu:20.04
           command: ["/usr/local/bin/pause"]
           volumeDevices:
             - name: sample-volume

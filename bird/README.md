@@ -7,7 +7,7 @@ that runs up-to-date [BIRD][] internet routing daemon.
 Features
 --------
 
-* BIRD 2.0 based on Ubuntu 18.04.
+* BIRD 2.0
 * Multi-stage build to minimize the container size.
 * Optimized for BGP.  RIP, OSPF, Babel, and RAdv are not built-in.
 

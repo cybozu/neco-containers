@@ -197,14 +197,9 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:18.04
+      - image: quay.io/cybozu/ubuntu-dev:20.04
     resource_class: 2xlarge+
     steps:
-      - run:
-          name: Install git command
-          command: |
-            apt-get update
-            apt-get -y install git
       - checkout
       - run:
           name: Check TAG file
@@ -228,24 +223,15 @@ jobs:
               curl \
               unzip \
               virtualenv \
-              python3-pip \
               zlib1g-dev
-            ln -s `which python3` /usr/local/bin/python
-      - run:
-          name: Install build tools
-          command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
-            curl -O -SL https://raw.githubusercontent.com/envoyproxy/envoy-build-tools/master/build_container/build_container_common.sh
-            curl -O -SL https://raw.githubusercontent.com/envoyproxy/envoy-build-tools/master/build_container/build_container_ubuntu.sh
-            chmod +x build_container_ubuntu.sh
-            ./build_container_ubuntu.sh
+            ln -s $(which python3) /usr/local/bin/python
       - run:
           name: Install Bazel
           environment:
             BAZEL_VERSION: 3.4.1
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+            curl -o /tmp/bazel.deb -sLf https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -260,12 +246,14 @@ jobs:
             fi
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
+            curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz
+            mkdir llvm
+            tar -C llvm --strip-components=1 -xf /tmp/clang.tar.xz
             cd envoy
-            bazel/setup_clang.sh /opt/llvm
+            bazel/setup_clang.sh $(pwd)/../llvm
             echo "build --config=clang" >> user.bazelrc
-            bazel build --jobs 20 --cxxopt=-DMEMORY_TEST_EXACT=1 -c opt //source/exe:envoy-static
-            strip --strip-debug bazel-bin/source/exe/envoy-static
-            mv bazel-bin/source/exe/envoy-static ../workspace/envoy
+            bazel --bazelrc=/dev/null build --jobs=20 -c opt //source/exe:envoy-static.stripped
+            mv bazel-bin/source/exe/envoy-static.stripped ../workspace/envoy
             mv LICENSE ../workspace
             mv ci/docker-entrypoint.sh ../workspace
       - persist_to_workspace:
@@ -297,7 +285,7 @@ jobs:
       - run:
           name: Install Bazel
           environment:
-            BAZEL_VERSION: 2.2.0
+            BAZEL_VERSION: 3.7.2
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
@@ -447,7 +435,7 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.0.4
+          version: 1.1.0
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
@@ -474,7 +462,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.16.1
+          version: 1.16.2
       - build:
           name: build-envoy-container
           container-image: envoy
@@ -559,6 +547,9 @@ workflows:
       - build:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
+      - build:
+          name: build-pushgateway
+          container-image: pushgateway
       - build:
           name: build-redis
           container-image: redis

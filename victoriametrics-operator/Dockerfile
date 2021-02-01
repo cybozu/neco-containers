@@ -1,10 +1,10 @@
 # victoriametrics-operator container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-bionic AS build
+FROM quay.io/cybozu/golang:1.15-focal AS build
 
 ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.7.3
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.7.4
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
@@ -17,14 +17,11 @@ RUN curl -fsSL -o victoriametrics-operator.tar.gz "https://github.com/${VICTORIA
     && CGO_ENABLED=0 GO111MODULE=on go build -trimpath -ldflags "-w -s -X main.Version=${VICTORIAMETRICS_OPERATOR_VERSION} -X main.BuildData=$(date +%FT%T%z)" -o bin/manager main.go
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM scratch
 
-ENV OPERATOR=/usr/local/bin/manager \
-    USER_UID=10000 \
-    USER_NAME=10000
-COPY --from=build /go/src/github.com/VictoriaMetrics/operator/bin/manager /usr/local/bin
+COPY --from=build /go/src/github.com/VictoriaMetrics/operator/bin/manager /
 COPY --from=build /go/src/github.com/VictoriaMetrics/operator/LICENSE /
 
 USER 10000:10000
 
-ENTRYPOINT ["/usr/local/bin/manager"]
+ENTRYPOINT ["/manager"]

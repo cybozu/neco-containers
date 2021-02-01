@@ -4,16 +4,24 @@
 
 ## Usage
 
+### Run with the default configuration
+
+    $ docker run -d --read-only quay.io/cybozu/squid:4
 ### Launch Squid with specific config file
 
-Prepare configuration file `squid.conf` at working directory, then execute following command.
+Prepare `squid.conf`, then execute following command.
 
-    $  mkdir -m 777 /tmp/squid
-    $  docker run -it \
-        --mount type=bind,source=/tmp/squid,target=/var/log/squid \
-        --mount type=bind,source="$(pwd)"/squid.conf,target=/etc/squid/squid.conf \
-        quay.io/cybozu/squid:3.5
- 
+    $  docker run -d --read-only \
+        -v /path/to/your/squid.conf:/etc/squid/squid.conf:ro \
+        quay.io/cybozu/squid:4
+
+Your `squid.conf` must have the following configurations:
+
+    pid_filename   none
+    logfile_rotate 0
+    access_log     stdio:/dev/stdout
+    cache_log      stdio:/dev/stderr
+
 ## Docker images
 
 Docker images are available on [Quay.io](https://quay.io/repository/cybozu/squid)
