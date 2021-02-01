@@ -80,7 +80,7 @@ COPY --from=builder /usr/local/bin/helm /usr/local/argocd/bin/helm
 ENV USER=argocd
 
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
-COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app /shared/argocd/app
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app /shared/app
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
