@@ -24,7 +24,7 @@ RUN curl -fsSL -o prometheus.tar.gz "https://github.com/prometheus/prometheus/ar
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04
 
-COPY --from=build /work/prometheus /usr/local/prometheus/bin
+COPY --from=build /work/prometheus /usr/local/prometheus/bin/prometheus
 COPY --from=build /work/LICENSE /usr/local/prometheus/LICENSE
 COPY --from=build /work/console_libraries /usr/share/prometheus/console_libraries
 COPY --from=build /work/consoles /usr/share/prometheus/consoles
@@ -38,7 +38,8 @@ USER 10000:10000
 EXPOSE 9090
 
 ENTRYPOINT ["/usr/local/prometheus/bin/prometheus"]
-CMD        ["--config.file=/etc/prometheus/prometheus.yml", \
+CMD        ["--config.file=/etc/prometheus/prometheus.yaml", \
             "--storage.tsdb.path=/data", \
+            "--web.enable-admin-api", \
             "--web.console.libraries=/usr/share/prometheus/console_libraries", \
             "--web.console.templates=/usr/share/prometheus/consoles"]
