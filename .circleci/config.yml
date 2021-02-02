@@ -507,6 +507,9 @@ workflows:
           requires:
             - test-local-pv-provisioner
       - build:
+          name: build-loki
+          container-image: loki
+      - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
