@@ -13,10 +13,10 @@ RUN curl -fsSL -o prometheus-operator.tar.gz "https://github.com/prometheus-oper
 # Stage2: setup runtime container
 FROM scratch
 
-COPY --from=build /go/bin/prometheus-config-reloader /
+COPY --from=build /go/bin/prometheus-config-reloader /bin/prometheus-config-reloader
 COPY --from=build /work/LICENSE /
 COPY --from=build /work/NOTICE /
 
 USER 10000:10000
 
-ENTRYPOINT ["/prometheus-config-reloader"]
+ENTRYPOINT ["/bin/prometheus-config-reloader"]
