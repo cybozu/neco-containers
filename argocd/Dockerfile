@@ -19,7 +19,7 @@ RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kube
     chmod +x /usr/local/bin/kubectl
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=3.9.2
+ENV KUSTOMIZE_VERSION=3.7.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
