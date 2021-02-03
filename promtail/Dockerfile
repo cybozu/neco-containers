@@ -4,7 +4,6 @@ ARG SYSTEMD_VERSION=246
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 
 # Dependencies for systemd copied from Build-Depends section written in the control file of groovy systemd package.
 # Archived in https://launchpad.net/ubuntu/+archive/primary/+sourcefiles/systemd/246.6-1ubuntu1/systemd_246.6-1ubuntu1.debian.tar.xz
@@ -56,32 +55,31 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     iproute2 \
     zstd
 
-RUN git clone --depth=1 -b v${SYSTEMD_VERSION} https://github.com/systemd/systemd /work/systemd && \
-    cd /work/systemd && \
+RUN git clone --depth=1 -b v${SYSTEMD_VERSION} https://github.com/systemd/systemd /work/systemd
+RUN cd /work/systemd && \
     meson setup build/ && \
-    meson configure -Dstatic-libsystemd=true build/ && \
+    meson configure build/ && \
     meson compile && \
     meson install -C build/
 
+RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 RUN make -C /work/loki touch-protos && \
     make -C /work/loki BUILD_IN_CONTAINER=false promtail
 
 FROM quay.io/cybozu/ubuntu:20.04
 
 # tzdata required for the timestamp stage to work
-# Backports repo required to get a libsystemd version 246 or newer which is required to handle journal +ZSTD compression
-# RUN echo "deb http://deb.debian.org/debian focal-backports main" >> /etc/apt/sources.list
+# libcap2 and libpcre2-8-0 required to use libsystemd
 RUN apt-get update && \
-    apt-get install --no-install-recommends -y tzdata gdb libcap-dev libpcre2-dev && \
+    apt-get install --no-install-recommends -y tzdata libcap2 libpcre2-8-0 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-# apt-get install --no-install-recommends -y -t focal-backports libsystemd-dev && \
 
-COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so.0.29.0 /usr/x86_64-linux-gnu/libsystemd.so.0.29.0
-COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so.0 /usr/x86_64-linux-gnu/libsystemd.so.0
 COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so /usr/x86_64-linux-gnu/libsystemd.so
 COPY --from=build /work/loki/cmd/promtail/promtail /usr/bin/promtail
 COPY --from=build /work/loki/cmd/promtail/promtail-docker-config.yaml /etc/promtail/config.yml
+
+ENV LD_LIBRARY_PATH=/usr/x86_64-linux-gnu
 
 USER 10000:10000
 ENTRYPOINT ["/usr/bin/promtail"]

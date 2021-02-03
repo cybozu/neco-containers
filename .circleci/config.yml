@@ -551,6 +551,9 @@ workflows:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
       - build:
+          name: build-promtail
+          container-image: promtail
+      - build:
           name: build-pushgateway
           container-image: pushgateway
       - build:
