@@ -11,8 +11,7 @@ $ docker run -d --read-only \
       --name prometheus \                                          
       --mount type=volume,source=myvolume,target=/data \           
       --mount type=bind,source=/home/cybozu/config,target=/etc/prometheus \
-      quay.io/cybozu/prometheus:2.24.1.1 \
-      --web.enable-lifecycle
+      quay.io/cybozu/prometheus:2.24
 ```
 
 ## Docker images
