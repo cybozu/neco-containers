@@ -326,6 +326,12 @@ Ignore!!!
 5. Update image tag in `local-pv-provisioner.yaml`.
 6. Update `TAG` file.
 
+## loki
+
+1. Check the [release page](https://github.com/grafana/loki/releases).
+2. Update `LOKI_VERSION` in `Dockerfile`.
+3. Update `TAG` file.
+
 ## machines-endpoints
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -410,6 +416,16 @@ This is used by victoria-metrics operator too.
 1. Check the latest release of `prometheus-operator`
 2. Update version variable in `Dockerfile`.
 3. Update `BRANCH` and `TAG` files.
+
+## promtail
+
+Promtail contains two versions, one for promtail and the other for libsystemd.
+The promtail version should be the same with [loki](##loki).
+The libsystemd version should be the same with the one running on the host OS.
+
+1. Update `LOKI_VERSION` in `Dockerfile`.
+2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
+3. Update `TAG` file.
 
 ## pushgateway
 

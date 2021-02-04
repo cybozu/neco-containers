@@ -456,6 +456,9 @@ workflows:
           requires:
             - test-local-pv-provisioner
       - build:
+          name: build-loki
+          container-image: loki
+      - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
@@ -476,6 +479,9 @@ workflows:
       - build:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
+      - build:
+          name: build-promtail
+          container-image: promtail
       - build:
           name: build-pushgateway
           container-image: pushgateway
