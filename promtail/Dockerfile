@@ -56,11 +56,8 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     zstd
 
 RUN git clone --depth=1 -b v${SYSTEMD_VERSION} https://github.com/systemd/systemd /work/systemd
-RUN cd /work/systemd && \
-    meson setup build/ && \
-    meson configure build/ && \
-    meson compile && \
-    meson install -C build/
+RUN meson setup /work/systemd/build/ /work/systemd/ && \
+    meson install -C /work/systemd/build/
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 RUN make -C /work/loki touch-protos && \
