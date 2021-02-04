@@ -72,15 +72,15 @@ FROM quay.io/cybozu/ubuntu:20.04
 # libcap2 and libpcre2-8-0 required to use libsystemd
 RUN apt-get update && \
     apt-get install --no-install-recommends -y tzdata libcap2 libpcre2-8-0 && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so /usr/x86_64-linux-gnu/libsystemd.so
-COPY --from=build /work/loki/cmd/promtail/promtail /usr/bin/promtail
-COPY --from=build /work/loki/cmd/promtail/promtail-docker-config.yaml /etc/promtail/config.yml
+COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so.0 /usr/local/systemd/lib/libsystemd.so.0
+COPY --from=build /work/systemd/LICENSE.GPL2 /usr/local/systemd/LICENSE.GPL2
+COPY --from=build /work/systemd/LICENSE.LGPL2.1 /usr/local/systemd/LICENSE.LGPL2.1
+COPY --from=build /work/loki/cmd/promtail/promtail /usr/local/loki/bin/promtail
+COPY --from=build /work/loki/LICENSE /usr/local/loki/LICENSE
 
-ENV LD_LIBRARY_PATH=/usr/x86_64-linux-gnu
+ENV LD_LIBRARY_PATH=/usr/local/systemd/lib
 
 USER 10000:10000
-ENTRYPOINT ["/usr/bin/promtail"]
-CMD ["-config.file=/etc/promtail/config.yml"]
+ENTRYPOINT ["/usr/local/loki/bin/promtail"]
