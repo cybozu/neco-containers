@@ -60,8 +60,7 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
     meson install -C /work/systemd/build/
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-RUN make -C /work/loki touch-protos && \
-    make -C /work/loki BUILD_IN_CONTAINER=false promtail
+RUN make -C /work/loki BUILD_IN_CONTAINER=false touch-protos promtail
 
 FROM quay.io/cybozu/ubuntu:20.04
 

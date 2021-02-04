@@ -5,7 +5,7 @@ WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-RUN make -C /work/loki BUILD_IN_CONTAINER=false loki logcli
+RUN make -C /work/loki BUILD_IN_CONTAINER=false touch-protos loki logcli
 
 FROM quay.io/cybozu/ubuntu:20.04
 
