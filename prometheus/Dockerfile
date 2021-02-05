@@ -28,7 +28,6 @@ COPY --from=build /work/prometheus /usr/local/prometheus/bin/prometheus
 COPY --from=build /work/LICENSE /usr/local/prometheus/LICENSE
 COPY --from=build /work/console_libraries /usr/share/prometheus/console_libraries
 COPY --from=build /work/consoles /usr/share/prometheus/consoles
-# hadolint ignore=DL3010
 COPY --from=build /work/npm_licenses.tar.bz2 /usr/local/prometheus/npm_licenses.tar.bz2
 
 RUN mkdir -m 755 /data && chown 10000:10000 /data
