@@ -1,7 +1,7 @@
 # Ceph container image
 
 # Stage1: setup environment & install
-FROM quay.io/cybozu/ubuntu:18.04 AS build
+FROM quay.io/cybozu/ubuntu:20.04 AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
@@ -9,8 +9,6 @@ ENV DEBIAN_FRONTEND noninteractive
 COPY workspace/*.deb /tmp/
 
 RUN mkdir -p /var/run/ceph && \
-    apt-get update && apt-get install --no-install-recommends -y software-properties-common && \
-    add-apt-repository ppa:ubuntu-toolchain-r/test && \
     apt-get update && apt-get install --no-install-recommends -y \
         libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
         /tmp/*.deb && \
@@ -33,7 +31,6 @@ RUN mkdir -p /var/run/ceph && \
         /var/log/* \
         /var/tmp/* && \
     find / -xdev \( -name "*.pyc" -o -name "*.pyo" \) -exec rm -f {} \; && \
-    ln -s /sbin/sgdisk /usr/sbin/sgdisk && \
     mkdir -p /usr/local/share/doc/ceph
 
 COPY workspace/COPYING* /usr/local/share/doc/ceph/
