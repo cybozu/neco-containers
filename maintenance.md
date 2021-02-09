@@ -474,6 +474,16 @@ The libsystemd version should be the same with the one running on the host OS.
 5. Update ceph image tag in `Dockerfile`.
 6. Update `BRANCH` and `TAG` files.
 
+## sealed-secrets
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/bitnami-labs/sealed-secrets/releases).
+2. Check the upstream Dockerfile and compare with ours especially on the runtime stage. If there are any updates, update our `Dockerfile`.
+    - https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/Dockerfile
+3. Update `SEALED_SECRETS_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
 ## serf
 
 ![Regular Update](./regular_update.svg)
