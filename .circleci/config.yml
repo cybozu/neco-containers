@@ -489,6 +489,9 @@ workflows:
           name: build-rook
           container-image: rook
       - build:
+          name: build-sealed-secrets
+          container-image: sealed-secrets
+      - build:
           name: build-serf
           container-image: serf
       - build:
