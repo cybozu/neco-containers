@@ -1,7 +1,7 @@
 # Build stage
 FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG METRICS_SERVER_VERSION=0.4.1
+ARG METRICS_SERVER_VERSION=0.4.2
 # Need to clone with git because tar-ball does not contain `.git` directory and
 # `.git` is needed in the building sequence.
 RUN git clone https://github.com/kubernetes-sigs/metrics-server
