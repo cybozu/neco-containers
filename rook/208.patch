@@ -1,31 +1,35 @@
 diff --git a/go.mod b/go.mod
-index bd001b670..a550cc602 100644
+index be569b963..0ba88b1a6 100644
 --- a/go.mod
 +++ b/go.mod
+@@ -17,7 +17,7 @@ require (
+ 	github.com/hashicorp/vault/api v1.0.5-0.20200902155336-f9d5ce5a171a
+ 	github.com/icrowley/fake v0.0.0-20180203215853-4178557ae428
+ 	github.com/k8snetworkplumbingwg/network-attachment-definition-client v1.1.0
+-	github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20201218194517-2e9d6aa76d58
++	github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20210127170128-83a4fdf6edd6
+ 	github.com/libopenstorage/secrets v0.0.0-20201006135900-af310b01fe47
+ 	github.com/miekg/dns v1.1.34 // indirect
+ 	github.com/openshift/cluster-api v0.0.0-20191129101638-b09907ac6668
 @@ -37,7 +37,7 @@ require (
- 	k8s.io/apiserver v0.19.3
+ 	k8s.io/apiserver v0.20.0
  	k8s.io/client-go v12.0.0+incompatible
- 	k8s.io/cloud-provider v0.19.3
--	k8s.io/code-generator v0.19.3
+ 	k8s.io/cloud-provider v0.20.0
+-	k8s.io/code-generator v0.20.0
 +	k8s.io/code-generator v0.20.1
- 	k8s.io/kube-controller-manager v0.19.3
- 	k8s.io/kubernetes v1.19.3
- 	k8s.io/utils v0.0.0-20200729134348-d5654de09c73
-@@ -79,3 +79,5 @@ replace (
- 	k8s.io/sample-cli-plugin => k8s.io/sample-cli-plugin v0.19.3
- 	k8s.io/sample-controller => k8s.io/sample-controller v0.19.3
- )
-+
-+replace github.com/kube-object-storage/lib-bucket-provisioner => github.com/cybozu-go/lib-bucket-provisioner v0.0.0-20210112024504-6ef39b387309
+ 	k8s.io/kube-controller-manager v0.20.0
+ 	k8s.io/kubernetes v1.20.0
+ 	k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 diff --git a/go.sum b/go.sum
-index 6d998ad83..730a2ee39 100644
+index 4894f4f04..0123b05ac 100644
 --- a/go.sum
 +++ b/go.sum
-@@ -348,6 +348,7 @@ github.com/cpuguy83/go-md2man v1.0.10/go.mod h1:SmD6nW6nTyfqj6ABTjUi3V3JVMnlJmwc
- github.com/cpuguy83/go-md2man/v2 v2.0.0-20190314233015-f79a8a8ca69d/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
- github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsrgA7czyZG/E6dU=
- github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7DoTY=
-+github.com/cybozu-go/lib-bucket-provisioner v0.0.0-20210112024504-6ef39b387309/go.mod h1:XpQ9HGG9uF5aJCBP+s6w5kSiyTIVSqCV8+XAE4qms5E=
- github.com/cyphar/filepath-securejoin v0.2.2/go.mod h1:FpkQEhXnPnOthhzymB7CGsFk2G9VLXONKD9G7QGMM+4=
- github.com/cznic/b v0.0.0-20180115125044-35e9bbe41f07/go.mod h1:URriBxXwVq5ijiJ12C7iIZqlA69nTlI+LgI6/pwftG8=
- github.com/cznic/fileutil v0.0.0-20180108211300-6a051e75936f/go.mod h1:8S58EK26zhXSxzv7NQFpnliaOQsmDUxvoQO3rt154Vg=
+@@ -1099,6 +1099,8 @@ github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
+ github.com/kshvakov/clickhouse v1.3.5/go.mod h1:DMzX7FxRymoNkVgizH0DWAL8Cur7wHLgx3MUnGwJqpE=
+ github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20201218194517-2e9d6aa76d58 h1:oWkAP3zmqwL9ULYPGMAbhBstzyzSwgi5gK66SvSaoyk=
+ github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20201218194517-2e9d6aa76d58/go.mod h1:i+faT/nMoHqzCx95vZsh/82TDNO7CtWWLOIT4iECXI4=
++github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20210127170128-83a4fdf6edd6 h1:WGdB9TmeZCSuo+Jiqyb8WvelTZ44LVtZIQZFBccIvGs=
++github.com/kube-object-storage/lib-bucket-provisioner v0.0.0-20210127170128-83a4fdf6edd6/go.mod h1:XpQ9HGG9uF5aJCBP+s6w5kSiyTIVSqCV8+XAE4qms5E=
+ github.com/kylelemons/godebug v0.0.0-20160406211939-eadb3ce320cb/go.mod h1:B69LEHPfb2qLo0BaaOLcbitczOKLWTsrBG9LczfCD4k=
+ github.com/kylelemons/godebug v0.0.0-20170820004349-d65d576e9348/go.mod h1:B69LEHPfb2qLo0BaaOLcbitczOKLWTsrBG9LczfCD4k=
+ github.com/kylelemons/godebug v1.1.0/go.mod h1:9/0rRGxNHcop5bhtWyNeEfOS8JIWk580+fNqagV/RAw=
