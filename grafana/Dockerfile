@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.15-focal AS build
-ARG GRAFANA_VERSION=7.3.7
+ARG GRAFANA_VERSION=7.4.1
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -11,16 +11,16 @@ RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.ta
 
 RUN go run build.go build
 
-# Install Node 12.x & yarn
+# Install Node 14.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
 RUN yarn install --pure-lockfile --no-progress
 ENV NODE_ENV production
-RUN ./node_modules/.bin/grunt build
+RUN yarn build
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v7.3.7/Dockerfile#L35-L80

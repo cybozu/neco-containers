@@ -265,6 +265,7 @@ Ignore!!!
 1. Check the [release page](https://github.com/grafana/grafana/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile
+   - Check `NODEVERSION` in https://github.com/grafana/grafana/blob/vX.Y.Z/scripts/build/ci-build/Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
