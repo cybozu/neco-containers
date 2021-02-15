@@ -30,7 +30,7 @@ func (v *preventDeleteValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	if obj.GetAnnotations()["prevent"] == "delete" {
+	if obj.GetAnnotations()[annotatePrefix+"prevent"] == "delete" {
 		return admission.Denied(obj.GetName() + " is protected from deletion")
 	}
 

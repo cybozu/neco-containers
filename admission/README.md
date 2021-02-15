@@ -66,13 +66,13 @@ DeleteValidator
 This is to protect important resources from accidental deletion by human errors.
 
 Every resource passed to this validation webhook will be denied for DELETE
-unless it has this special annotation `i-am-sure-to-delete: <name of the resource>`.
+unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>`.
 
 PreventDeleteValidator
 ----------------------
 
 Unlike DeleteValidator, this prevents resources from accidental deletion only
-if the resource is annotated with `prevent: delete`.
+if the resource is annotated with `admission.cybozu.com/prevent: delete`.
 
 PodMutator
 ----------

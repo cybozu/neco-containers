@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	annMinimumPolicyOrder = "admission.cybozu.com/min-policy-order"
+	annMinimumPolicyOrder = annotatePrefix + "min-policy-order"
 )
 
 // cnpvlog is for logging in this package.

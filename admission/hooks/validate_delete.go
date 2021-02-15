@@ -2,6 +2,7 @@ package hooks
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -10,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-const annotationForDelete = "i-am-sure-to-delete"
+const annotationForDelete = annotatePrefix + "i-am-sure-to-delete"
 
 // +kubebuilder:webhook:path=/validate-delete,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=namespaces,verbs=delete,versions=v1,name=vdelete.kb.io,admissionReviewVersions={v1,v1beta1}
 
@@ -38,5 +39,5 @@ func (v *deleteValidator) Handle(ctx context.Context, req admission.Request) adm
 		return admission.Allowed("confirmed valid annotation")
 	}
 
-	return admission.Denied(`add "i-am-sure-to-delete: <name>" annotation to delete this`)
+	return admission.Denied(fmt.Sprintf(`add "%si-am-sure-to-delete: %s" annotation to delete this`, annotatePrefix, name))
 }

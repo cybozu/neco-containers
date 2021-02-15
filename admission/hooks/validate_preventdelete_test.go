@@ -31,7 +31,7 @@ var _ = Describe("prevent DELETE requests", func() {
 		pvc := &corev1.PersistentVolumeClaim{}
 		pvc.Name = "foo2"
 		pvc.Namespace = "default"
-		pvc.Annotations = map[string]string{"prevent": "delete"}
+		pvc.Annotations = map[string]string{"admission.cybozu.com/prevent": "delete"}
 		pvc.Spec.Resources.Requests = corev1.ResourceList{
 			corev1.ResourceStorage: *resource.NewQuantity(1<<30, resource.DecimalSI),
 		}

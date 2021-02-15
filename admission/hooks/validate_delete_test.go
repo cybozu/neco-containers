@@ -21,7 +21,7 @@ var _ = Describe("validate DELETE requests", func() {
 		ns := &corev1.Namespace{}
 		ns.Name = "foo2"
 		ns.Annotations = map[string]string{
-			"i-am-sure-to-delete": "bad",
+			"admission.cybozu.com/i-am-sure-to-delete": "bad",
 		}
 		err := k8sClient.Create(testCtx, ns)
 		Expect(err).NotTo(HaveOccurred())
@@ -34,7 +34,7 @@ var _ = Describe("validate DELETE requests", func() {
 		ns := &corev1.Namespace{}
 		ns.Name = "foo3"
 		ns.Annotations = map[string]string{
-			"i-am-sure-to-delete": "foo3",
+			"admission.cybozu.com/i-am-sure-to-delete": "foo3",
 		}
 		err := k8sClient.Create(testCtx, ns)
 		Expect(err).NotTo(HaveOccurred())
