@@ -82,6 +82,15 @@ The purpose of this mutator is to prevent Pods from unexpected death by writing 
 
 However, Pods that already have another volumes mounted under `/tmp/*` are excluded from the mutating target.
 
+PodValidator
+------------
+
+PodValidator validates Pod specifications as follows:
+
+- Check that the container images have a valid prefix such as `quay.io/cybozu/`.
+    - Valid prefixes are given through `--valid-image-prefix` command-line flags.
+    - If `VPOD_IMAGE_PERMISSIVE=true` envvar is set, this does not deny Pods but issues an warning.
+
 GrafanaDashboardValidator
 -------------------------
 
