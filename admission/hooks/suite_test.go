@@ -14,6 +14,7 @@ import (
 
 	admissionv1 "k8s.io/api/admission/v1"
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	storagev1 "k8s.io/api/storage/v1"
 
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
@@ -38,6 +39,7 @@ var (
 	argocdValidateWebhookPath           = "/validate-argoproj-io-application"
 	grafanaDashboardValidateWebhookPath = "/validate-integreatly-org-grafanadashboard"
 	deleteValidateWebhookPath           = "/validate-delete"
+	preventDeleteValidateWebhookPath    = "/validate-preventdelete"
 	serviceValidateWebhookPath          = "/validate-service"
 )
 
@@ -87,6 +89,13 @@ var _ = BeforeSuite(func() {
 
 	By("setting up resources")
 	setupNetworkPolicyResources()
+	sc := &storagev1.StorageClass{}
+	sc.Name = "local-storage"
+	sc.Provisioner = "kubernetes.io/no-provisioner"
+	waitForFirstConsumer := storagev1.VolumeBindingWaitForFirstConsumer
+	sc.VolumeBindingMode = &waitForFirstConsumer
+	err = k8sClient.Create(testCtx, sc)
+	Expect(err).NotTo(HaveOccurred())
 
 	// start webhook server using Manager
 	webhookInstallOptions := &testEnv.WebhookInstallOptions
@@ -110,6 +119,7 @@ var _ = BeforeSuite(func() {
 	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
+	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(serviceValidateWebhookPath, NewServiceValidator(mgr.GetClient(), dec))
 
 	//+kubebuilder:scaffold:webhook
