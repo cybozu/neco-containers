@@ -165,6 +165,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-preventdelete
+  failurePolicy: Fail
+  name: vpreventdelete.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - DELETE
+    resources:
+    - persistentvolumeclaims
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-service
   failurePolicy: Fail
   name: vservice.kb.io

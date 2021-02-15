@@ -5,14 +5,6 @@ neco-admission
 
 It has the following webhooks / controllers.
 
-DeleteValidator
----------------
-
-This is to protect important resources from accidental deletion by human errors.
-
-Every resource passed to this validation webhook will be denied for DELETE
-unless it has this special annotation `i-am-sure-to-delete: <name of the resource>`.
-
 ArgoCDApplicationValidator
 --------------------------
 
@@ -67,6 +59,20 @@ The default value can be configured with the `--httpproxy-default-class` option 
 The validating webhook prevents creating `HTTPProxy` without the annotations, and prevents updating `HTTPProxy` to change the annotation values.
 
 `neco-admission` does not watch `IngressRoute` because it is deprecated.
+
+DeleteValidator
+---------------
+
+This is to protect important resources from accidental deletion by human errors.
+
+Every resource passed to this validation webhook will be denied for DELETE
+unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>`.
+
+PreventDeleteValidator
+----------------------
+
+Unlike DeleteValidator, this prevents resources from accidental deletion only
+if the resource is annotated with `admission.cybozu.com/prevent: delete`.
 
 PodMutator
 ----------
