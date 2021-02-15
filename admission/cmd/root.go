@@ -22,6 +22,8 @@ var config struct {
 	certDir               string
 	httpProxyDefaultClass string
 	configPath            string
+	validImagePrefixes    []string
+	imagePermissive       bool
 	zapOpts               zap.Options
 }
 
@@ -76,6 +78,8 @@ func init() {
 	fs.StringVar(&config.certDir, "cert-dir", "", "certificate directory")
 	fs.StringVar(&config.httpProxyDefaultClass, "httpproxy-default-class", "", "Default Ingress class of HTTPProxy")
 	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
+	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
+	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)

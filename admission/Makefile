@@ -36,6 +36,12 @@ endif
 	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
 	go test ./... -coverprofile cover.out ; \
 	}
+	{ \
+	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
+	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
+	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	TEST_PERMISSIVE=true go test -v -count 1 ./... ; \
+	}
 
 .PHONY: simple-test
 simple-test:
