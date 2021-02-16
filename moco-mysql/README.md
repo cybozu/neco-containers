@@ -1,8 +1,6 @@
 # MySQL container
 
-This directory provides a Dockerfile to build a MySQL container
-that runs [mysql/mysql-server](https://github.com/mysql/mysql-server)
-for [MOCO](https://github.com/cybozu-go/moco).
+This directory provides a Dockerfile to build a MySQL container for [MOCO](https://github.com/cybozu-go/moco).
 
 ## Usage
 
