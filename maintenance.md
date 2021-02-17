@@ -383,7 +383,13 @@ Ignore!!!
 
 ## moco-mysql
 
-T.B.D.
+![Regular Update](./regular_update.svg)
+
+moco-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
+The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
+In the regular update, only update the ubuntu base image.
+
+1. Update all `TAG` files in sub directory.
 
 ## pause
 
