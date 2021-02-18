@@ -413,6 +413,15 @@ In the regular update, only update the ubuntu base image.
 3. Update version variables in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+## prometheus-adapter
+
+![Regular Update](./regular_update.svg)
+
+1. Check the release page.
+   - https://github.com/kubernetes-sigs/prometheus-adapter/releases
+2. Update version variables in `Dockerfile`.
+3. Update `TAG` file.
+
 ## prometheus-config-reloader
 
 ![Regular Update](./regular_update.svg)

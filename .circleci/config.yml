@@ -542,6 +542,9 @@ workflows:
           name: build-prometheus
           container-image: prometheus
       - build:
+          name: build-prometheus-adapter
+          container-image: prometheus-adapter
+      - build:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
       - build:
