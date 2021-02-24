@@ -1,0 +1,103 @@
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: dctest
+spec:
+  privileged: true
+  allowPrivilegeEscalation: true
+  allowedCapabilities:
+  - '*'
+  volumes:
+  - '*'
+  hostNetwork: true
+  hostPorts:
+  - min: 0
+    max: 65535
+  hostIPC: true
+  hostPID: true
+  runAsUser:
+    rule: 'RunAsAny'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'RunAsAny'
+  fsGroup:
+    rule: 'RunAsAny'
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dctest
+  namespace: sandbox
+rules:
+- apiGroups: ['policy']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - dctest
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dctest
+  namespace: sandbox
+roleRef:
+  kind: Role
+  name: dctest
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: dctest
+  namespace: sandbox
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dctest
+  namespace: sandbox
+automountServiceAccountToken: false
+---
+# hostPath /dev and /lib/modules are required, since custom-installer runs modprobe nbd and access to /dev/nbd0.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dctest
+  namespace: sandbox
+  annotations:
+    egress.coil.cybozu.com/internet-egress: nat
+spec:
+  containers:
+  - name: dctest
+    securityContext:
+      privileged: true
+    image: quay.io/ysksuzuki/dctest:0.2.3
+    volumeMounts:
+    - name: scratch
+      mountPath: /var/scratch
+    - name: bird
+      mountPath: /var/run/bird
+    - name: modules
+      mountPath: /lib/modules
+    - name: dev
+      mountPath: /dev
+      readOnly: false
+  volumes:
+    - name: bird
+      emptyDir: {}
+    - name: modules
+      hostPath:
+        path: /lib/modules
+    - name: dev
+      hostPath:
+        path: /dev
+    - name: scratch
+      ephemeral:
+        volumeClaimTemplate:
+          spec:
+            storageClassName: topolvm-provisioner
+            accessModes: [ "ReadWriteOnce" ]
+            resources:
+              requests:
+                storage: 300Gi
+  serviceAccountName: dctest
+
