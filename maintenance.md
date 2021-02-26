@@ -280,6 +280,14 @@ Ignore!!!
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
 
+## kube-metrics-adapter
+
+![Kubernetes Update](./kubernetes_update.svg)
+
+1. Check the [release page](https://github.com/zalando-incubator/kube-metrics-adapter/releases).
+2. Update `KMA_VERSION` in `Dockerfile`.
+3. Update `TAG` file.
+
 ## kube-state-metrics
 
 ![Kubernetes Update](./kubernetes_update.svg)
