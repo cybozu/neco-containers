@@ -81,6 +81,6 @@ RUN curl -L https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kub
 
 COPY entrypoint_wrapper.sh .
 
-USER runner
+USER 10000:10000
 ENTRYPOINT ["/usr/local/bin/dumb-init", "--"]
 CMD ["/entrypoint_wrapper.sh"]
