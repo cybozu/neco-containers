@@ -493,6 +493,9 @@ workflows:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
       - build:
+          name: build-kube-metrics-adapter
+          container-image: kube-metrics-adapter
+      - build:
           name: build-kubernetes
           container-image: kubernetes
       - build:
