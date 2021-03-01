@@ -41,9 +41,6 @@ RUN apt-get update -y && \
     wget \
     zip \
     zstd \
-    # this is required by https://github.com/actions/runner
-    libyaml-dev \
-  && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
 RUN curl -L -o /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v${DUMB_INIT_VERSION}/dumb-init_${DUMB_INIT_VERSION}_amd64 \
@@ -71,11 +68,16 @@ RUN mkdir -p "${RUNNER_ASSETS_DIR}" \
   && tar xzf ./runner.tar.gz \
   && rm runner.tar.gz \
   && ./bin/installdependencies.sh \
-  && mv ./externals ./externalstmp
+  && mv ./externals ./externalstmp \
+  && apt-get install -y libyaml-dev \
+  && rm -rf /var/lib/apt/lists/* \
+  && curl -sSLf https://github.com/actions/runner/blob/v${RUNNER_VERSION}/LICENSE -o /runnertmp/LICENSE
 
 RUN curl -L https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && \
     chmod a+x /usr/local/bin/kubectl
 
+
+COPY --from=base /work/actions-runner-controller/LICENSE /
 COPY --from=base /work/actions-runner-controller/runner/entrypoint.sh /
 COPY --from=base --chown=runner:docker /work/actions-runner-controller/runner/patched $RUNNER_ASSETS_DIR/patched
 COPY entrypoint_wrapper.sh .

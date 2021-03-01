@@ -14,6 +14,7 @@ FROM quay.io/cybozu/ubuntu:20.04
 
 WORKDIR /
 
+COPY --from=build /workspace/actions-runner-controller/LICENSE /
 COPY --from=build /workspace/actions-runner-controller/manager .
 
 USER 10000:10000
