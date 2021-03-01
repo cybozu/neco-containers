@@ -14,9 +14,6 @@ ARG RUNNER_VERSION=2.274.2
 ARG DOCKER_VERSION=19.03.12
 ARG DUMB_INIT_VERSION=1.2.2
 
-COPY --from=base /work/actions-runner-controller/runner/entrypoint.sh /
-COPY --from=base --chown=runner:docker /work/actions-runner-controller/runner/patched $RUNNER_ASSETS_DIR/patched
-
 RUN apt-get update -y && \
   apt-get install -y --no-install-recommends \
     build-essential \
@@ -79,6 +76,8 @@ RUN mkdir -p "${RUNNER_ASSETS_DIR}" \
 RUN curl -L https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kubectl -o /usr/local/bin/kubectl && \
     chmod a+x /usr/local/bin/kubectl
 
+COPY --from=base /work/actions-runner-controller/runner/entrypoint.sh /
+COPY --from=base --chown=runner:docker /work/actions-runner-controller/runner/patched $RUNNER_ASSETS_DIR/patched
 COPY entrypoint_wrapper.sh .
 
 USER 10000:10000
