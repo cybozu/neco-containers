@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/ubuntu:20.04 AS base
+FROM quay.io/cybozu/golang:1.15-focal AS base
 
 ARG ACTIONS_RUNNER_CONTROLLER_VERSION=0.17.0
 
@@ -6,6 +6,12 @@ WORKDIR /work
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends git
 RUN git clone -b v${ACTIONS_RUNNER_CONTROLLER_VERSION}  https://github.com/summerwind/actions-runner-controller.git
+
+WORKDIR /work/register-actions
+
+COPY pkg/go.mod .
+COPY pkg/main.go .
+RUN go build .
 
 FROM quay.io/cybozu/ubuntu:20.04
 
@@ -80,6 +86,7 @@ RUN curl -L https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kub
 COPY --from=base /work/actions-runner-controller/LICENSE /
 COPY --from=base /work/actions-runner-controller/runner/entrypoint.sh /
 COPY --from=base --chown=runner:docker /work/actions-runner-controller/runner/patched $RUNNER_ASSETS_DIR/patched
+COPY --from=base /work/register-actions/register-actions /usr/local/bin/
 COPY job-failed /usr/local/bin/
 COPY job-started /usr/local/bin/
 COPY entrypoint_wrapper.sh .

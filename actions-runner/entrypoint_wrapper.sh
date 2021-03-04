@@ -3,6 +3,9 @@
 echo "Run placemat"
 echo "Nothing to do right now, so skip"
 
+echo "Register myself as self-hosted runner"
+export RUNNER_TOKEN=$(register-actions)
+
 echo "Run entrypoint"
 ./entrypoint.sh
 
