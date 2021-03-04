@@ -399,9 +399,6 @@ workflows:
       - build:
           name: build-actions-runner
           container-image: actions-runner
-      - build:
-          name: build-actions-runner-controller
-          container-image: actions-runner-controller
       - build-admission
       - build:
           name: build-admission-image
