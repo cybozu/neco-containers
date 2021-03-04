@@ -493,6 +493,9 @@ workflows:
           name: build-grafana
           container-image: grafana
       - build:
+          name: build-grafana_plugins_init
+          container-image: grafana_plugins_init
+      - build:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:

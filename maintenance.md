@@ -291,6 +291,19 @@ Ignore!!!
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## grafana_plugins_init
+
+![Regular Update](./regular_update.svg)
+
+grafana_plugins_init does not create [release](https://github.com/integr8ly/grafana_plugins_init/releases). Use the revision which the operator uses.
+
+1. Check `PluginsInitContainerTag` in [pkg/controller/config/controller_config.go of grafana-operator](https://github.com/integr8ly/grafana-operator/blob/master/pkg/controller/config/controller_config.go).
+2. Check [the commit history](https://github.com/integr8ly/grafana_plugins_init/commits/master) and identify which revision correspond to `PluginsInitContainerTag`.
+3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/integr8ly/grafana_plugins_init/blob/xxxxxxxx/Dockerfile
+4. Update `REVISION` in `Dockerfile`.
+5. Update `BRANCH` and `TAG`.
+
 ## grafana-operator
 
 ![Regular Update](./regular_update.svg)
