@@ -14,6 +14,27 @@ The target container of these operations have the following badges, so check bef
 
 ---
 
+## actions-runner-controller/actions-runner
+
+![Kubernetes Update](./kubernetes_update.svg)
+
+(only for `kubectl` inside Docker image)
+
+![Regular Update](./regular_update.svg)
+
+1. Check the `actions-runner-controller` release page and choose the latest semantic version.
+   - https://github.com/summerwind/actions-runner-controller/releases
+2. Check `Dockerfile` for `actions-runner-controller`. If there are any update, update our `Dockefile`.
+   - https://github.com/summerwind/actions-runner-controller/blob/vX.Y.Z/Dockerfile
+3. Update the version variable in the `Dockerfile`.
+4. Check the `actions-runner` version which `actions-runner-controller` uses in `Dockerfile` and check the `actions-runner` release page.
+   - https://github.com/actions/runner/releases
+5. Check `Dockerfile` for `actions-runner`. If there are any updates, update our `Dockefile`.
+   - https://github.com/summerwind/actions-runner-controller/blob/vX.Y.Z/runner/Dockerfile
+6. Update `RUNNER_VERSION` and `DUMB_INIT_VERSION` in the `Dockerfile`.
+7. Update `BRANCH` and `TAG` files.
+
+
 ## admission (neco-admission)
 
 ![Kubernetes Update](./kubernetes_update.svg)
