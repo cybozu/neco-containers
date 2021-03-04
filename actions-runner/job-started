@@ -1,0 +1,5 @@
+#! /bin/sh
+
+for key in `echo $DEPLOYMENT_LABEL_KEYS | tr , ' '`; do
+    kubectl label pod ${POD_NAME} ${key}-
+done

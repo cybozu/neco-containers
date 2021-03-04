@@ -80,6 +80,8 @@ RUN curl -L https://dl.k8s.io/release/v${KUBERNETES_VERSION}/bin/linux/amd64/kub
 COPY --from=base /work/actions-runner-controller/LICENSE /
 COPY --from=base /work/actions-runner-controller/runner/entrypoint.sh /
 COPY --from=base --chown=runner:docker /work/actions-runner-controller/runner/patched $RUNNER_ASSETS_DIR/patched
+COPY job-failed /usr/local/bin/
+COPY job-started /usr/local/bin/
 COPY entrypoint_wrapper.sh .
 
 USER 10000:10000
