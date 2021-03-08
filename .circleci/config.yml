@@ -584,6 +584,9 @@ workflows:
           name: build-squid
           container-image: squid
       - build:
+          name: build-teleport-node
+          container-image: teleport-node
+      - build:
           name: build-testhttpd
           container-image: testhttpd
       - build:
