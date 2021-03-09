@@ -499,6 +499,9 @@ workflows:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:
+          name: build-heartbeat
+          container-image: heartbeat
+      - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
       - build:
@@ -518,9 +521,6 @@ workflows:
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
-      - build:
-          name: build-mackerel-agent
-          container-image: mackerel-agent
       - build:
           name: build-metallb
           container-image: metallb
