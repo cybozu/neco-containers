@@ -522,9 +522,6 @@ workflows:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
-          name: build-mackerel-agent
-          container-image: mackerel-agent
-      - build:
           name: build-metallb
           container-image: metallb
       - build:
