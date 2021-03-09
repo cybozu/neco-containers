@@ -499,6 +499,9 @@ workflows:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:
+          name: build-heartbeat
+          container-image: heartbeat
+      - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
       - build:
