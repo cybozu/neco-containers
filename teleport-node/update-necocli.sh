@@ -1,5 +1,3 @@
-#! /bin/sh -ex
-
 export KUBERNETES_SERVICE_PORT_HTTPS="443"
 export KUBERNETES_SERVICE_PORT="443"
 export KUBERNETES_PORT_443_TCP="tcp://kubernetes.default.svc:443"
