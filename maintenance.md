@@ -321,6 +321,7 @@ grafana_plugins_init does not create [release](https://github.com/integr8ly/graf
 Only the base image should be updated.
 
 1. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+
 ## kube-metrics-adapter
 
 ![Kubernetes Update](./kubernetes_update.svg)

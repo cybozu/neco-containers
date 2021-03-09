@@ -9,5 +9,6 @@ RUN go build -ldflags="-w -s" .
 FROM quay.io/cybozu/ubuntu:20.04
 
 COPY --from=build /work/heartbeat /usr/local/bin/heartbeat
+USER 10000:10000
 
 ENTRYPOINT ["/usr/local/bin/heartbeat"]
