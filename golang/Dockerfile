@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:20.04
 
-ARG GO_VERSION=1.15.9
+ARG GO_VERSION=1.16.2
 WORKDIR /work
 
 ENV GOPATH=/go
@@ -24,7 +24,7 @@ RUN curl -s -f -O https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
 
 COPY ./analyzer /work/analyzer
 WORKDIR /work/analyzer
-RUN GOBIN=/usr/local/bin go install ./cmd/...
+RUN go mod tidy && GOBIN=/usr/local/bin go install ./cmd/...
 
 WORKDIR /work
 RUN rm -r /work/analyzer
