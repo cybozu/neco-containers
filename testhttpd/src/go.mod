@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/testhttpd/src
 
-go 1.15
+go 1.16
 
 require (
 	github.com/cybozu-go/log v1.6.0

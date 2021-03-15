@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/bmc-reverse-proxy
 
-go 1.13
+go 1.16
 
 require (
 	github.com/cybozu-go/log v1.6.0
