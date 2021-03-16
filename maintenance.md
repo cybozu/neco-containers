@@ -259,13 +259,17 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 4. Update image tag in `README.md`.
 5. Update `TAG` file.
 
-## filebeat
+## fluent-bit
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/elastic/beats/releases).
-2. Update `BEATS_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG`.
+Fluent Bit contains two versions, one for Fluent Bit and the other for libsystemd.
+The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://kinvolk.io/flatcar-container-linux/releases/).
+
+1. Check the [release page](https://github.com/fluent/fluent-bit/releases).
+2. Update `FLUENT_BIT_VERSION` in `Dockerfile`.
+3. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
+4. Update `BRANCH` and `TAG`.
 
 ## golang / golang-bionic
 
@@ -477,9 +481,11 @@ This is used by victoria-metrics operator too.
 
 ## promtail
 
+![Regular Update](./regular_update.svg)
+
 Promtail contains two versions, one for promtail and the other for libsystemd.
 The promtail version should be the same with [loki](##loki).
-The libsystemd version should be the same with the one running on the host OS.
+The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://kinvolk.io/flatcar-container-linux/releases/).
 
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
