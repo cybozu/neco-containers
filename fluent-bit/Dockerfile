@@ -63,6 +63,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
 RUN mkdir -p /work \
     && git clone --depth=1 -b v${SYSTEMD_VERSION} https://github.com/systemd/systemd /work/systemd \
     && meson setup /work/systemd/build/ /work/systemd/ \
+    && meson configure -Drootlibdir=/usr/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH) /work/systemd/build/ \
     && meson install -C /work/systemd/build/
 
 RUN mkdir -p /work/fluent-bit \
@@ -90,7 +91,16 @@ RUN mkdir -p /work/fluent-bit \
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04
 
+# libsystemd depends on libcap2.
+RUN apt-get update \
+    && apt-get -y install --no-install-recommends \
+       libcap2 \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY --from=builder /fluent-bit /fluent-bit
+COPY --from=builder /lib/x86_64-linux-gnu/libsystemd.so.0.30.0 /lib/x86_64-linux-gnu/libsystemd.so.0.30.0
+
+RUN ln -snf /lib/x86_64-linux-gnu/libsystemd.so.0.30.0 /lib/x86_64-linux-gnu/libsystemd.so.0
 
 EXPOSE 2020
 
