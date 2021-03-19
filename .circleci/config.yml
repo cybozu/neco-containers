@@ -551,9 +551,6 @@ workflows:
           name: build-pause
           container-image: pause
       - build:
-          name: build-prometheus
-          container-image: prometheus
-      - build:
           name: build-prometheus-adapter
           container-image: prometheus-adapter
       - build:

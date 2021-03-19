@@ -448,17 +448,6 @@ In the regular update, only update the ubuntu base image.
 3. Update `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## prometheus
-
-![Regular Update](./regular_update.svg)
-
-1. Check the release page.
-   - https://github.com/prometheus/prometheus/releases
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/prometheus/prometheus/blob/vX.Y.Z/Dockerfile
-3. Update version variables in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## prometheus-adapter
 
 ![Regular Update](./regular_update.svg)
