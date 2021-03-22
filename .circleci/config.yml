@@ -324,7 +324,7 @@ jobs:
       mysql-version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:20.04
+      - image: quay.io/cybozu/golang:1.16-focal
     resource_class: 2xlarge+
     steps:
       - checkout
@@ -363,6 +363,11 @@ jobs:
             cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1
             make -j 20
             make install
+      - run:
+          name: Build moco-init
+          command: |
+            cd moco-mysql/moco-init
+            GOBIN=/usr/local/mysql/bin go install -ldflags="-w -s" .
       - persist_to_workspace:
           root: /usr/local/mysql
           paths:
