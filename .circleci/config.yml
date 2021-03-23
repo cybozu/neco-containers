@@ -553,6 +553,9 @@ workflows:
           requires:
             - build-moco-mysql-8020
       - build:
+          name: build-mysqld_exporter
+          container-image: mysqld_exporter
+      - build:
           name: build-pause
           container-image: pause
       - build:

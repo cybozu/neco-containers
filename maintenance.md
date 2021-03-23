@@ -437,6 +437,16 @@ In the regular update, only update the ubuntu base image.
 
 1. Update all `TAG` files in sub directory.
 
+## mysqld_exporter
+
+![Regular Update](./regular_update.svg)
+
+mysqld_exporter 0.12.1 was released in Jul. 2019.
+To run with MySQL 8, we are building the master branch for the time being.
+
+Anyway, check the latest status on https://github.com/prometheus/mysqld_exporter
+To rebuild with the latest master branch, update the last number of `TAG` file.
+
 ## pause
 
 ![Kubernetes Update](./kubernetes_update.svg)
