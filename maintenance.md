@@ -155,6 +155,12 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 4. Update `src/CHANGELOG.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## consul
+
+1. Check the [release page](https://github.com/hashicorp/consul/releases).
+2. Update `CONSUL_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` file.
+
 ## contour
 
 ![Regular Update](./regular_update.svg)
@@ -362,9 +368,13 @@ Only the base image should be updated.
 
 ## loki
 
+![Regular Update](./regular_update.svg)
+
 1. Check the [release page](https://github.com/grafana/loki/releases).
-2. Update `LOKI_VERSION` in `Dockerfile`.
-3. Update `TAG` file.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/grafana/loki/blob/vX.Y.Z/cmd/loki/Dockerfile
+3. Update `LOKI_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
 
 ## machines-endpoints
 
@@ -386,7 +396,7 @@ Only the base image should be updated.
 5. Update `TAG` file.
 
 
-## memcahed
+## memcached
 
 1. Check the [release page](https://github.com/memcached/memcached/wiki/ReleaseNotes).
 2. Update `MEMCACHED_VERSION` in `Dockerfile`.
