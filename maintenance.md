@@ -385,6 +385,13 @@ Only the base image should be updated.
 4. Update image tag in `machines-endpoints.yaml`.
 5. Update `TAG` file.
 
+
+## memcahed
+
+1. Check the [release page](https://github.com/memcached/memcached/wiki/ReleaseNotes).
+2. Update `MEMCACHED_VERSION` in `Dockerfile`.
+3. Update `TAG` file.
+
 ## metallb
 
 ![Regular Update](./regular_update.svg)
