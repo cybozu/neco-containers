@@ -449,6 +449,9 @@ workflows:
           name: build-configmap-reload
           container-image: configmap-reload
       - build:
+          name: build-consul
+          container-image: consul
+      - build:
           name: build-contour
           container-image: contour
       - build:
@@ -520,6 +523,12 @@ workflows:
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
+      - build:
+          name: build-memcached
+          container-image: memcached
+      - build:
+          name: build-memcached_exporter
+          container-image: memcached_exporter
       - build:
           name: build-metallb
           container-image: metallb
