@@ -29,6 +29,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /usr/local/memcached /usr/local/memcached/
+COPY --from=build /work/memcached/LICENSE* /
 
 USER 10000:10000
 EXPOSE 11211

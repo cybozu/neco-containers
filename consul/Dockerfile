@@ -16,6 +16,7 @@ RUN CGO_ENABLED=0 go install -ldflags="-w -s"
 FROM quay.io/cybozu/ubuntu:20.04
 
 COPY --from=build /go/bin/consul /bin/consul
+COPY --from=build /work/consul/LICENSE /LICENSE
 RUN mkdir -p /consul/data && \
     mkdir -p /consul/config && \
     chown -R 10000:10000 /consul

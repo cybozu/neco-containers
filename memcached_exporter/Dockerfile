@@ -16,6 +16,7 @@ RUN make build
 FROM scratch
 
 COPY --from=build /work/memcached_exporter/memcached_exporter /bin/memcached_exporter
+COPY --from=build /work/memcached_exporter/LICENSE /LICENSE
 
 USER 10000:10000
 EXPOSE 9150
