@@ -527,8 +527,8 @@ workflows:
           name: build-memcached
           container-image: memcached
       - build:
-          name: build-memcached_exporter
-          container-image: memcached_exporter
+          name: build-memcached-exporter
+          container-image: memcached-exporter
       - build:
           name: build-metallb
           container-image: metallb
