@@ -5,12 +5,13 @@ WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-RUN make -C /work/loki BUILD_IN_CONTAINER=false touch-protos loki logcli
+RUN make -C /work/loki BUILD_IN_CONTAINER=false touch-protos loki logcli loki-canary
 
 FROM quay.io/cybozu/ubuntu:20.04
 
 COPY --from=build /work/loki/cmd/loki/loki /usr/local/loki/bin/loki
 COPY --from=build /work/loki/cmd/logcli/logcli /usr/local/loki/bin/logcli
+COPY --from=build /work/loki/cmd/loki-canary/loki-canary /usr/local/loki/bin/loki-canary
 COPY --from=build /work/loki/LICENSE /usr/local/loki/LICENSE
 COPY --from=build /work/loki/cmd/loki/loki-docker-config.yaml /usr/local/loki/etc/local-config.yaml
 
