@@ -14,7 +14,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.19.7
+ENV KUBECTL_VERSION=1.21.0
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 
@@ -29,7 +29,7 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.15-focal AS argocd-build
+FROM quay.io/cybozu/golang:1.16-focal AS argocd-build
 ENV ARGOCD_VERSION=1.8.3
 ENV PACKAGE=github.com/argoproj/argo-cd
 
