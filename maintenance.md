@@ -18,17 +18,8 @@ The target container of these operations have the following badges, so check bef
 
 ![Kubernetes Update](./kubernetes_update.svg)
 
-You should choose a contour version that has the right Kubernetes
-client library dependencies.
-
 1. Update version variables in `Makefile`.
 2. Update go modules.
-    ```bash
-    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-    $ go get github.com/projectcontour/contour@v<CONTOUR_VERSION>
-    $ (update other dependencies too)
-    $ go mod tidy
-    ```
 3. Modify the code to match the new CRDs if CRDs are changed.
    - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
    - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
