@@ -1,5 +1,5 @@
 # Build stage
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.16-focal AS build
 
 ARG METRICS_SERVER_VERSION=0.4.2
 # Need to clone with git because tar-ball does not contain `.git` directory and
