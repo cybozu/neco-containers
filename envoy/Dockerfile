@@ -1,13 +1,13 @@
 # Envoy container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.16-focal AS build
 
 COPY . /work
 
 WORKDIR /work
 
-RUN GO111MODULE=on go install -ldflags="-w -s" ./pkg/livenessprobe
+RUN go install -ldflags="-w -s" ./pkg/livenessprobe
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04

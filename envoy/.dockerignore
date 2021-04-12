@@ -3,3 +3,4 @@
 !envoy.yaml
 !pkg
 !go.mod
+!go.sum
