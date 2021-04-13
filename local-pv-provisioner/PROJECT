@@ -1,3 +1,12 @@
 domain: cybozu.com
+layout:
+- go.kubebuilder.io/v3
+projectName: local-pv-provisioner
 repo: github.com/cybozu/neco-containers/local-pv-provisioner
-version: "2"
+resources:
+- controller: true
+  group: core
+  kind: PersistentVolume
+  path: k8s.io/api/core/v1
+  version: v1
+version: "3"

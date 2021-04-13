@@ -4,41 +4,35 @@ import (
 	"context"
 	"time"
 
-	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/labels"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
+	"sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
 
-const (
-	releasedPVField = "status.phase"
-	watcherInterval = 1 * time.Hour
-)
+const watcherInterval = 1 * time.Hour
 
-// PersistentVolumeReconciler reconciles local PersistentVolume
+// PersistentVolumeReconciler reconciles a local PersistentVolume
 type PersistentVolumeReconciler struct {
-	Cli      client.Client
-	Log      logr.Logger
+	client.Client
 	NodeName string
 	Deleter  Deleter
 }
 
-// +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;delete
+//+kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;delete
 
 // Reconcile cleans up released local PV
-func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
-	log := r.Log.WithValues("persistentvolume", req.NamespacedName.Name)
+func (r *PersistentVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+	logger := log.FromContext(ctx)
 
 	var pv corev1.PersistentVolume
-	if err := r.Cli.Get(ctx, req.NamespacedName, &pv); err != nil {
-		log.Error(err, "unable to fetch PersistentVolume")
+	if err := r.Get(ctx, req.NamespacedName, &pv); err != nil {
+		logger.Error(err, "unable to fetch PersistentVolume")
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
@@ -51,22 +45,22 @@ func (r *PersistentVolumeReconciler) Reconcile(req ctrl.Request) (ctrl.Result, e
 	}
 
 	path := pv.Spec.Local.Path
-	log.Info("cleaning PersistentVolume", "path", path)
+	logger.Info("cleaning PersistentVolume", "path", path)
 	if err := r.Deleter.Delete(path); err != nil {
-		log.Error(err, "unable to clean the device of PersistentVolume")
+		logger.Error(err, "unable to clean the device of PersistentVolume")
 	}
 
-	log.Info("deleting PersistentVolume from api server")
-	if err := r.Cli.Delete(context.Background(), &pv); err != nil {
-		log.Error(err, "unable to delete PersistentVolume")
+	logger.Info("deleting PersistentVolume from api server")
+	if err := r.Delete(context.Background(), &pv); err != nil {
+		logger.Error(err, "unable to delete PersistentVolume")
 		return ctrl.Result{}, err
 	}
 
-	log.Info("successful to cleanup PersistentVolume")
+	logger.Info("successful to cleanup PersistentVolume")
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager sets up Reconciler with Manager.
+// SetupWithManager sets up the controller with the Manager.
 func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName string) error {
 	ch := make(chan event.GenericEvent)
 	watcher := &persistentVolumeWatcher{
@@ -105,12 +99,12 @@ type persistentVolumeWatcher struct {
 }
 
 // Start implements Runnable.Start
-func (w *persistentVolumeWatcher) Start(ch <-chan struct{}) error {
+func (w *persistentVolumeWatcher) Start(ctx context.Context) error {
 	ticker := time.NewTicker(w.tick)
 	defer ticker.Stop()
 	for {
 		select {
-		case <-ch:
+		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
 			err := w.fireEvent(context.Background())
@@ -135,9 +129,7 @@ func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 			continue
 		}
 		w.ch <- event.GenericEvent{
-			Meta: &metav1.ObjectMeta{
-				Name: pv.Name,
-			},
+			Object: &pv,
 		}
 	}
 	return nil

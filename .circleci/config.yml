@@ -375,6 +375,13 @@ jobs:
             - bin
             - lib
             - share
+  test-local-pv-provisioner:
+    docker:
+      - image: quay.io/cybozu/golang:1.16-focal
+    steps:
+      - checkout
+      - run: cd local-pv-provisioner; make check-generate
+      - run: cd local-pv-provisioner; make test
 
 workflows:
   main:
@@ -391,10 +398,7 @@ workflows:
       - test:
           name: test-golang-bionic-analyzer
           directory: golang-bionic/analyzer
-      - test:
-          name: test-local-pv-provisioner
-          directory: local-pv-provisioner
-          targets: setup check-uncommitted test
+      - test-local-pv-provisioner
       - test:
           name: test-machines-endpoints
           directory: machines-endpoints
