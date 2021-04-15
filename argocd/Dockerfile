@@ -14,7 +14,7 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
 
 # Install kubectl
 # NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.21.0
+ENV KUBECTL_VERSION=1.20.5
 RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
     chmod +x /usr/local/bin/kubectl
 

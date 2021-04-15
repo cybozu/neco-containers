@@ -25,7 +25,7 @@ endif
 	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
 	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
 	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
-	go test -v -count 1 ./... ; \
+	go test -race -v -count 1 ./... ; \
 	}
 
 .PHONY: simple-test

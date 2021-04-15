@@ -129,7 +129,7 @@ func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 			continue
 		}
 		w.ch <- event.GenericEvent{
-			Object: &pv,
+			Object: pv.DeepCopy(),
 		}
 	}
 	return nil
