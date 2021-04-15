@@ -10,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 	"k8s.io/klog"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var config struct {
@@ -19,6 +20,7 @@ var config struct {
 	deviceNameFilter string
 	development      bool
 	pollingInterval  time.Duration
+	zapOpts          zap.Options
 }
 
 var rootCmd = &cobra.Command{
@@ -63,5 +65,7 @@ func init() {
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)
+	config.zapOpts.BindFlags(goflags)
+
 	fs.AddGoFlagSet(goflags)
 }

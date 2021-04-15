@@ -6,6 +6,6 @@ require (
 	github.com/cybozu-go/log v1.6.0
 	github.com/cybozu-go/well v1.10.0
 	github.com/imdario/mergo v0.3.8 // indirect
-	k8s.io/apimachinery v0.19.7
-	k8s.io/client-go v0.19.7
+	k8s.io/apimachinery v0.20.5
+	k8s.io/client-go v0.20.5
 )

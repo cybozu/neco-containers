@@ -1,7 +1,7 @@
 # kube-metrics-adapter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.16-focal AS build
 
 ARG KMA_VERSION=0.1.10
 

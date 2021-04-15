@@ -78,7 +78,7 @@ type DeviceDetector struct {
 }
 
 // Start implements controller-runtime's manager.Runnable.
-func (dd *DeviceDetector) Start(ch <-chan struct{}) error {
+func (dd *DeviceDetector) Start(ctx context.Context) error {
 	err := dd.do()
 	if err != nil {
 		return err
@@ -94,7 +94,7 @@ func (dd *DeviceDetector) Start(ch <-chan struct{}) error {
 			if err != nil {
 				return err
 			}
-		case <-ch:
+		case <-ctx.Done():
 			return nil
 		}
 	}

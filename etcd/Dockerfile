@@ -1,7 +1,7 @@
 # etcd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.16-focal AS build
 
 ARG ETCD_VERSION=3.3.25
 
@@ -12,7 +12,7 @@ RUN mkdir -p /go/src/github.com/coreos/ && \
     mv /go/src/github.com/coreos/etcd-${ETCD_VERSION} /go/src/github.com/coreos/etcd
 
 WORKDIR /go/src/github.com/coreos/etcd
-RUN ./build
+RUN GO111MODULE=off ./build
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04

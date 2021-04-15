@@ -10,52 +10,51 @@ import (
 	"github.com/cybozu/neco-containers/local-pv-provisioner/controllers"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var (
-	scheme = runtime.NewScheme()
+	scheme   = runtime.NewScheme()
+	setupLog = ctrl.Log.WithName("setup")
 )
 
 func init() {
-	if err := clientgoscheme.AddToScheme(scheme); err != nil {
-		panic(err)
-	}
+	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
 
 func run() error {
-	ctrl.SetLogger(zap.New(zap.UseDevMode(config.development)))
-	log := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
+	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&config.zapOpts)))
 
 	ctx := context.Background()
 
 	if len(config.nodeName) == 0 {
 		err := errors.New("node-name must not be empty")
-		log.Error(err, "validation error")
+		setupLog.Error(err, "validation error")
 		return err
 	}
 	if !filepath.IsAbs(config.deviceDir) {
 		err := errors.New("device-dir must be an absolute path")
-		log.Error(err, "device-dir must be an absolute path")
+		setupLog.Error(err, "device-dir must be an absolute path")
 		return err
 	}
 	info, err := os.Stat(config.deviceDir)
 	if err != nil {
-		log.Error(err, "unable to get status of device directory", "device-dir", config.deviceDir)
+		setupLog.Error(err, "unable to get status of device directory", "device-dir", config.deviceDir)
 		return err
 	}
 	if !info.Mode().IsDir() {
 		err = errors.New("device-dir is not a directory")
-		log.Error(err, "device-dir is not a directory")
+		setupLog.Error(err, "device-dir is not a directory")
 		return err
 	}
 	re, err := regexp.Compile(config.deviceNameFilter)
 	if err != nil {
-		log.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
+		setupLog.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
 		return err
 	}
 
@@ -65,7 +64,7 @@ func run() error {
 		LeaderElection:     false,
 	})
 	if err != nil {
-		log.Error(err, "unable to start manager")
+		setupLog.Error(err, "unable to start manager")
 		return err
 	}
 
@@ -74,23 +73,23 @@ func run() error {
 		FillCount:     100,
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(), log,
+	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(),
+		ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName),
 		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
 	err = mgr.Add(dd)
 	if err != nil {
-		log.Error(err, "unable to add device-detector to manager")
+		setupLog.Error(err, "unable to add device-detector to manager")
 		return err
 	}
 
 	pc := &controllers.PersistentVolumeReconciler{
-		Cli:      mgr.GetClient(),
-		Log:      log,
+		Client:   mgr.GetClient(),
 		NodeName: config.nodeName,
 		Deleter:  &deleter,
 	}
 	err = pc.SetupWithManager(mgr, config.nodeName)
 	if err != nil {
-		log.Error(err, "unable to register PersistentVolumeReconciler to mgr")
+		setupLog.Error(err, "unable to register PersistentVolumeReconciler to mgr")
 		return err
 	}
 
@@ -102,9 +101,9 @@ func run() error {
 		return err
 	}
 
-	log.Info("starting manager")
+	setupLog.Info("starting manager")
 	if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-		log.Error(err, "problem running manager")
+		setupLog.Error(err, "problem running manager")
 		return err
 	}
 	return nil

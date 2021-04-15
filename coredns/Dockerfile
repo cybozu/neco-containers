@@ -1,6 +1,6 @@
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.16-focal AS build
 
-ARG COREDNS_VERSION=1.8.0
+ARG COREDNS_VERSION=1.8.3
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \

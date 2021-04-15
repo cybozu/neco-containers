@@ -222,7 +222,7 @@ jobs:
       - run:
           name: Install Bazel
           environment:
-            BAZEL_VERSION: 3.4.1
+            BAZEL_VERSION: 3.7.2
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             curl -o /tmp/bazel.deb -sLf https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
@@ -309,7 +309,7 @@ jobs:
             - "*"
   build-admission:
     docker:
-      - image: quay.io/cybozu/golang:1.15-focal
+      - image: quay.io/cybozu/golang:1.16-focal
     steps:
       - checkout
       - run: cd admission; make test
@@ -375,6 +375,13 @@ jobs:
             - bin
             - lib
             - share
+  test-local-pv-provisioner:
+    docker:
+      - image: quay.io/cybozu/golang:1.16-focal
+    steps:
+      - checkout
+      - run: cd local-pv-provisioner; make check-generate
+      - run: cd local-pv-provisioner; make test
 
 workflows:
   main:
@@ -391,10 +398,7 @@ workflows:
       - test:
           name: test-golang-bionic-analyzer
           directory: golang-bionic/analyzer
-      - test:
-          name: test-local-pv-provisioner
-          directory: local-pv-provisioner
-          targets: setup check-uncommitted test
+      - test-local-pv-provisioner
       - test:
           name: test-machines-endpoints
           directory: machines-endpoints
@@ -464,7 +468,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.16.2
+          version: 1.17.1
       - build:
           name: build-envoy-container
           container-image: envoy

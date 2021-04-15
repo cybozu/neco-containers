@@ -6,7 +6,7 @@
 
 To launch server with specific config file.
 
-    $ docker run quay.io/cybozu/coredns:1.7 -v Corefile:/etc/coredns/Corefile -- \
+    $ docker run quay.io/cybozu/coredns:1.8 -v Corefile:/etc/coredns/Corefile -- \
         -conf /etc/coredns/Corefile
  
 ## Docker images

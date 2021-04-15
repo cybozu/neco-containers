@@ -13,4 +13,4 @@
 
 # ignore tools
 /bin
-/build
+/testbin

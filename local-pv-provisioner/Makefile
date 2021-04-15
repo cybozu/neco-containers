@@ -2,26 +2,44 @@
 
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = quay.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
-KUBEBUILDER_VERSION = 2.3.1
-CTRLTOOLS_VERSION = 0.4.0
+CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+CONTROLLER_TOOLS_VERSION = 0.5.0
 
-SUDO = sudo
-SUDO_GO = $(SUDO) $(shell which go)
-GOOS := $(shell go env GOOS)
-GOARCH := $(shell go env GOARCH)
+# Set the shell used to bash for better error handling.
+SHELL = /bin/bash
+.SHELLFLAGS = -e -o pipefail -c
 
 .PHONY: all
 all: build
 
-# Run tests
+# Run tests, and set up envtest if not done already.
+ENVTEST_ASSETS_DIR := testbin
+ENVTEST_SCRIPT_URL := https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v$(CONTROLLER_RUNTIME_VERSION)/hack/setup-envtest.sh
 .PHONY: test
-test:
+test: simple-test
+ifeq (,$(wildcard $(ENVTEST_ASSETS_DIR)/setup-envtest.sh))
+	mkdir -p $(ENVTEST_ASSETS_DIR)
+	curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh $(ENVTEST_SCRIPT_URL)
+endif
+	{ \
+	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
+	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
+	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	go test -race -v -count 1 ./... ; \
+	}
+
+.PHONY: simple-test
+simple-test:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
-	test -z "$$(nilerr ./... 2>&1 | tee /dev/stderr)"
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
+	test -z "$$(nilerr $$(go list ./...) 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	$(SUDO_GO) test -race -v ./...
+
+.PHONY: check-generate
+check-generate:
+	$(MAKE) manifests
+	$(MAKE) generate
+	git diff --exit-code --name-only
 
 # Build manager binary
 .PHONY: build
@@ -30,32 +48,38 @@ build:
 
 # Generate manifests e.g. RBAC etc.
 .PHONY: manifests
-manifests:
-	controller-gen rbac:roleName=local-pv-provisioner paths="./..."
+manifests: controller-gen
+	$(CONTROLLER_GEN) rbac:roleName=local-pv-provisioner paths="./..."
 
 # Generate code
 .PHONY: generate
-generate:
-	controller-gen object:headerFile=./hack/boilerplate.go.txt paths="./..."
+generate: controller-gen
+	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
-.PHONY: check-uncommitted
-check-uncommitted:
-	$(MAKE) manifests
-	$(MAKE) generate
-	go mod tidy
-	git diff --exit-code --name-only
+# Download controller-gen locally if necessary
+CONTROLLER_GEN := $(PWD)/bin/controller-gen
+.PHONY: controller-gen
+controller-gen:
+	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 .PHONY: docker
 docker: build
 	docker build . -t $(IMAGE_TAG)
 
-.PHONY: setup
-setup:
-	curl -sfL https://go.kubebuilder.io/dl/$(KUBEBUILDER_VERSION)/$(GOOS)/$(GOARCH) | tar -xz -C /tmp/
-	$(SUDO) rm -rf /usr/local/kubebuilder
-	$(SUDO) mv /tmp/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH) /usr/local/kubebuilder
-	cd /tmp; GO111MODULE=on GOFLAGS= go get sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CTRLTOOLS_VERSION)
-
 .PHONY: clean
 clean:
-	rm -rf bin
+	rm -rf bin testbin
+
+# go-get-tool will 'go get' any package $2 and install it to $1.
+PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
+define go-get-tool
+@[ -f $(1) ] || { \
+set -e ;\
+TMP_DIR=$$(mktemp -d) ;\
+cd $$TMP_DIR ;\
+go mod init tmp ;\
+echo "Downloading $(2)" ;\
+GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+rm -rf $$TMP_DIR ;\
+}
+endef
