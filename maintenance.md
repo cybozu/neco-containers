@@ -202,7 +202,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 ![Regular Update](./regular_update.svg)
 
 ***NOTE:*** Envoy is managed by Contour so update to the supported version. See the below.
-- [Envoy Support Matrix](https://projectcontour.io/resources/envoy/)
+- [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
 2. Update the `version` argument on the `build-envoy` job in the CircleCI `main` workflow.
