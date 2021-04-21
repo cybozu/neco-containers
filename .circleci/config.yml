@@ -545,6 +545,9 @@ workflows:
       - build-moco-mysql:
           name: build-moco-mysql-8020
           mysql-version: 8.0.20
+      - build-moco-mysql:
+          name: build-moco-mysql-8024
+          mysql-version: 8.0.24
       - build:
           name: build-moco-mysql-container-8018
           container-image: moco-mysql
@@ -559,6 +562,13 @@ workflows:
           dir: moco-mysql/8.0.20
           requires:
             - build-moco-mysql-8020
+      - build:
+          name: build-moco-mysql-container-8024
+          container-image: moco-mysql
+          attach: true
+          dir: moco-mysql/8.0.24
+          requires:
+            - build-moco-mysql-8024
       - build:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
