@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG VAULT_VERSION=1.6.3
+ARG VAULT_VERSION=1.6.4
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
