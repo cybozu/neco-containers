@@ -15,7 +15,8 @@ import (
 )
 
 const (
-	defaultBaseDir = "/var/mysql"
+	defaultBaseDir = "/usr/local/mysql"
+	defaultDataDir = "/var/mysql"
 	defaultConfDir = "/etc/mysql-conf.d"
 
 	initializedFile = "moco-initialized"
@@ -23,6 +24,7 @@ const (
 
 var config struct {
 	baseDir string
+	dataDir string
 	confDir string
 
 	podName  string
@@ -95,7 +97,7 @@ func subMain(serverIDBase string) error {
 }
 
 func initMySQL(mysqld string) error {
-	dataDir := filepath.Join(config.baseDir, "data")
+	dataDir := filepath.Join(config.dataDir, "data")
 	if err := os.RemoveAll(dataDir); err != nil {
 		return fmt.Errorf("failed to remove dir %s: %w", dataDir, err)
 	}
@@ -107,7 +109,7 @@ func initMySQL(mysqld string) error {
 		return err
 	}
 
-	dotFile := filepath.Join(config.baseDir, "."+initializedFile)
+	dotFile := filepath.Join(config.dataDir, "."+initializedFile)
 	if err := os.Remove(dotFile); err != nil && !os.IsNotExist(err) {
 		return err
 	}
@@ -158,6 +160,7 @@ func createConf() error {
 }
 
 func init() {
-	rootCmd.Flags().StringVar(&config.baseDir, "base-dir", defaultBaseDir, "The base directory for MySQL.  Data will be stored in a subdirectory named 'data'")
+	rootCmd.Flags().StringVar(&config.baseDir, "base-dir", defaultBaseDir, "The base directory for MySQL.")
+	rootCmd.Flags().StringVar(&config.dataDir, "data-dir", defaultDataDir, "The data directory for MySQL.  Data will be stored in a subdirectory named 'data'")
 	rootCmd.Flags().StringVar(&config.confDir, "conf-dir", defaultConfDir, "The directory where configuration file is created.")
 }
