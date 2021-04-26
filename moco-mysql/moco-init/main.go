@@ -83,7 +83,7 @@ func subMain(serverIDBase string) error {
 	}
 	config.baseID = uint32(baseUint64)
 
-	_, err = os.Stat(filepath.Join(config.baseDir, initializedFile))
+	_, err = os.Stat(filepath.Join(config.dataDir, initializedFile))
 	if err != nil {
 		if !os.IsNotExist(err) {
 			return err
@@ -124,11 +124,11 @@ func initMySQL(mysqld string) error {
 		return fmt.Errorf("failed to sync fs: %w", err)
 	}
 
-	if err := os.Rename(dotFile, filepath.Join(config.baseDir, initializedFile)); err != nil {
+	if err := os.Rename(dotFile, filepath.Join(config.dataDir, initializedFile)); err != nil {
 		return err
 	}
 
-	g, err := os.OpenFile(config.baseDir, os.O_RDONLY, 0755)
+	g, err := os.OpenFile(config.dataDir, os.O_RDONLY, 0755)
 	if err != nil {
 		return err
 	}
