@@ -428,17 +428,44 @@ moco-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
 The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
 In the regular update, only update the ubuntu base image.
 
-1. Update all `TAG` files in sub directory.
+1. Update all `TAG` files in sub directories.
+
+### moco-backup
+
+`moco-mysql/moco-backup` directory contains a container image used for MOCO's backup/restore feature.
+It should include `mysql` and `mysqlbinlog` binaries from the latest MySQL and MySQL shell of the
+same version.
+
+The image tag in `TAG` file should therefore be named after the latest MySQL.  For instance,
+if the latest MySQL version is 8.0.24, the TAG should be `8.0.24.x` where x is an integer >= 1.
+
+The URL of the MySQL shell debian package can be found in https://dev.mysql.com/downloads/shell/ .
+
+1. Choose "Ubuntu Linux"
+2. Choose `mysql-shell_*ubuntu*_amd64.deb` (not a `dbgsym` image) and click "Download" button.
+3. Copy the URL from the link whose text reads `No thanks, just start my download.`.
+4. Update `MYSQLSH_VERSION` in `moco-mysql/moco-backup/Dockerfile`.
+
+When the latest MySQL version changes, edit `.circleci/config.yml` and update the required job.
+
+```yaml
+      - build:
+          name: build-moco-backup
+          container-image: moco-backup
+          attach: true
+          dir: moco-mysql/moco-backup
+          requires:
+            # Update this
+            - build-moco-mysql-8024
+```
 
 ## mysqld_exporter
 
 ![Regular Update](./regular_update.svg)
 
-mysqld_exporter 0.12.1 was released in Jul. 2019.
-To run with MySQL 8, we are building the master branch for the time being.
-
-Anyway, check the latest status on https://github.com/prometheus/mysqld_exporter
-To rebuild with the latest master branch, update the last number of `TAG` file.
+1. Check the [release page](https://github.com/prometheus/mysqld_exporter/releases).
+2. Update `MYSQLD_EXPORTER_VERSION` in `Dockerfile`.
+3. Update `TAG` file.
 
 ## pause
 

@@ -1,5 +1,3 @@
-# moco-mysql container
-
 FROM quay.io/cybozu/ubuntu:20.04
 
 ARG MYSQLSH_VERSION=8.0.24-1
