@@ -335,6 +335,11 @@ jobs:
             c="$(./tag_exists moco-mysql moco-mysql/$d)"
             if [ "$c" = ng ]; then
                 echo moco-mysql > BUILDS
+                exit 0
+            fi
+            c="$(./tag_exists moco-backup moco-mysql/moco-backup)"
+            if [ "$c" = ng ] && cat moco-mysql/moco-backup/TAG | grep -q -F $d; then
+                echo moco-mysql > BUILDS
             fi
       - run:
           name: Install dependency packages
@@ -567,6 +572,13 @@ workflows:
           container-image: moco-mysql
           attach: true
           dir: moco-mysql/8.0.24
+          requires:
+            - build-moco-mysql-8024
+      - build:
+          name: build-moco-backup
+          container-image: moco-backup
+          attach: true
+          dir: moco-mysql/moco-backup
           requires:
             - build-moco-mysql-8024
       - build:

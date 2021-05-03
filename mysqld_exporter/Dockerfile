@@ -3,9 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.16-focal AS build
 
-## we use the master branch because there has been
-## no release since Jul. 2019.
-ARG MYSQLD_EXPORTER_VERSION=master
+ARG MYSQLD_EXPORTER_VERSION=v0.13.0-rc.0
 
 RUN git clone -b ${MYSQLD_EXPORTER_VERSION} --depth 1 https://github.com/prometheus/mysqld_exporter \
     && make -C mysqld_exporter build
