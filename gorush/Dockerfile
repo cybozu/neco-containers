@@ -3,14 +3,14 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.15-bionic AS build
 
-ARG GORUSH_VERSION="1.13.0.3"
+ARG GORUSH_VERSION="1.13.0.cybozu.1"
 
 WORKDIR /work
 RUN git clone https://github.com/cybozu/gorush.git -b "v${GORUSH_VERSION}" . \
     && make build
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:18.04
+FROM quay.io/cybozu/ubuntu:20.04
 
 COPY --from=build /work/release/gorush /usr/local/gorush/bin/gorush
 COPY --from=build /work/LICENSE /usr/local/gorush/LICENSE
