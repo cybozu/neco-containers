@@ -12,7 +12,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=contour \
-    quay.io/cybozu/contour:1.14 serve
+    quay.io/cybozu/contour:1.15 serve
 ```
 
 [Contour]: https://github.com/heptio/contour
