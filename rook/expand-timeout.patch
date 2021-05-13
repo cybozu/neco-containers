@@ -1,13 +1,13 @@
 diff --git a/pkg/daemon/ceph/client/command.go b/pkg/daemon/ceph/client/command.go
-index 32f68e256..ae0e548b9 100644
+index 6c11f1a26..a14648cbe 100644
 --- a/pkg/daemon/ceph/client/command.go
 +++ b/pkg/daemon/ceph/client/command.go
-@@ -41,7 +41,7 @@ const (
+@@ -42,7 +42,7 @@ const (
+ 	Kubectl = "kubectl"
  	// CrushTool is the name of the CLI tool for 'crushtool'
- 	CrushTool             = "crushtool"
- 	CmdExecuteTimeout     = 1 * time.Minute
--	CephConnectionTimeout = "15" // in seconds
-+	CephConnectionTimeout = "300" // in seconds
+ 	CrushTool          = "crushtool"
+-	CephCommandTimeout = 15 * time.Second
++	CephCommandTimeout = 300 * time.Second
  	// DefaultPGCount will cause Ceph to use the internal default PG count
  	DefaultPGCount = "0"
  )
