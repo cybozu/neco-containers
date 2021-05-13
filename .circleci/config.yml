@@ -468,7 +468,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.17.3
+          version: 1.18.3
       - build:
           name: build-envoy-container
           container-image: envoy
