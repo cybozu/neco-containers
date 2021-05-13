@@ -120,6 +120,7 @@ jobs:
             for image in $images; do
               docker tag quay.io/cybozu/$image:latest quay.io/cybozu/$image:$TAG
               docker push quay.io/cybozu/$image:$TAG
+              docker push quay.io/cybozu/$image:latest
             done
             if echo $TAG | grep -q -e - ; then
                 echo ===== Skip pushing branch tags for pre-release $TAG =====
