@@ -73,8 +73,7 @@ The target container of these operations have the following badges, so check bef
 
 1. Check the [releases page](https://bird.network.cz/?download) in the official website.
 2. Update `BIRD_VERSION` variable in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## bmc-reverse-proxy
 
@@ -91,8 +90,7 @@ The target container of these operations have the following badges, so check bef
    ```bash
    $ make test
    ```
-3. Update image tag in `bmc-reverse-proxy.yaml`.
-4. Update `TAG` file.
+3. Update `TAG` file.
 
 ## calico
 
@@ -103,8 +101,7 @@ The target container of these operations have the following badges, so check bef
    - https://github.com/projectcalico/node/blob/vX.Y.Z/Dockerfile.amd64
    - https://github.com/projectcalico/typha/blob/vX.Y.Z/docker-image/Dockerfile.amd64
 3. Update version variables (`CALICO_VERSION` and `TINI_VERSION`) in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## ceph
 
@@ -123,8 +120,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
 2. Update the `version` argument on the `build-cert-manager` job in the CircleCI `main` workflow.
    - If the build fails, please check the Bazel version which is defined as `BAZEL_VERSION` in `build-cert-manager` job.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## chrony
 
@@ -132,8 +128,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 
 1. Check the [release note](https://chrony.tuxfamily.org/news.html).
 2. Update `CHRONY_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## configmap-reload
 
@@ -160,8 +155,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## coredns
 
@@ -171,8 +165,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile
 3. Update `COREDNS_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## dex
 
@@ -185,8 +178,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/dexidp/dex/blob/vX.Y.Z/Dockerfile
 3. Update `DEX_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## dnsmasq
 
@@ -194,8 +186,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 
 1. Check the http://www.thekelleys.org.uk/dnsmasq/ and find the latest release.
 2. Update `DNSMASQ_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## envoy
 
@@ -208,8 +199,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Update the `version` argument on the `build-envoy` job in the CircleCI `main` workflow.
 3. Update `BAZEL_VERSION` in `build-envoy` job. The required version is written in the following file.
    - https://github.com/envoyproxy/envoy/blob/vX.Y.Z/.bazelversion
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## etcd
 
@@ -221,8 +211,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile-release
 3. Update `ETCD_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## external-dns
 
@@ -232,8 +221,7 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/Dockerfile
 3. Update `EXTERNALDNS_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `TAG` file.
+4. Update `TAG` file.
 
 ## fluent-bit
 
@@ -268,8 +256,7 @@ Ignore!!!
    - https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile
    - Check `NODEVERSION` in https://github.com/grafana/grafana/blob/vX.Y.Z/scripts/build/ci-build/Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## grafana_plugins_init
 
@@ -318,8 +305,7 @@ Only the base image should be updated.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile
 3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## kubernetes
 
@@ -327,8 +313,7 @@ Only the base image should be updated.
 
 1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
 2. Update `K8S_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## local-pv-provisioner
 
@@ -354,8 +339,7 @@ Only the base image should be updated.
    ```bash
    $ make build test
    ```
-5. Update image tag in `local-pv-provisioner.yaml`.
-6. Update `TAG` file.
+5. Update `TAG` file.
 
 ## loki
 
@@ -383,8 +367,7 @@ Only the base image should be updated.
    ```bash
    $ make test
    ```
-4. Update image tag in `machines-endpoints.yaml`.
-5. Update `TAG` file.
+4. Update `TAG` file.
 
 
 ## memcached
@@ -575,8 +558,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile
 3. Update `SERF_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## squid
 
@@ -586,8 +568,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 2. Check release notes if a new version is released.
     - e.g., http://www.squid-cache.org/Versions/v4/squid-4.13-RELEASENOTES.html
 3. Update `SQUID_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## testhttpd
 
@@ -599,8 +580,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the [download page](https://www.nlnetlabs.nl/projects/unbound/download/).
 2. Update `UNBOUND_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## vault
 
@@ -610,8 +590,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
     - https://www.vaultproject.io/docs/upgrading
     - https://www.vaultproject.io/docs/release-notes
 2. Update `VAULT_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `BRANCH` and `TAG` files.
 
 ## victoriametrics
 

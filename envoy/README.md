@@ -14,7 +14,7 @@ Usage
     $ docker run -d -p 10000:10000 --read-only --name=envoy \
     --mount type=bind,source=/your/envoy.yaml,target=/etc/envoy/envoy.yaml,readonly \
     --mount type=tmpfs,target=/tmp \ 
-    quay.io/cybozu/envoy:1.17
+    quay.io/cybozu/envoy:latest
     ```
 
 Livenessprobe

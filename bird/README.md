@@ -27,7 +27,7 @@ $ docker run -d --read-only --cap-drop ALL \
     --network host --name bird \
     --mount type=tmpfs,destination=/run/bird \
     --mount type=bind,source=/your/bird.conf,target=/etc/bird/bird.conf \
-    quay.io/cybozu/bird:2.0
+    quay.io/cybozu/bird:latest
 ```
 
 For rkt:
@@ -36,7 +36,7 @@ sudo rkt run \
     --volume run,kind=empty,readOnly=false \
     --volume etc,kind=host,source=/your/bird.conf,readOnly=true \
     --net=host \
-    quay.io/cybozu/bird:2.0 \
+    quay.io/cybozu/bird:latest \
         --readonly-rootfs=true \
         --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \
         --name bird \

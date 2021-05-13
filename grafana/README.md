@@ -8,7 +8,7 @@ Usage
 
 1. Run the container
     ```console
-    $ docker run --net=host quay.io/cybozu/grafana:7.4
+    $ docker run --net=host quay.io/cybozu/grafana:latest
     ```
 2. Access the browser `localhost:3000`
 3. Input user/password, the default values are admin/admin

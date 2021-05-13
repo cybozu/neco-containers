@@ -25,7 +25,7 @@ Usage
     --cap-drop ALL \
     --cap-add SYS_TIME \
     --cap-add NET_BIND_SERVICE \
-    quay.io/cybozu/chrony:4.0
+    quay.io/cybozu/chrony:latest
     ```
 
 ### Use `chronyc`
