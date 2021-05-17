@@ -430,35 +430,6 @@ In the regular update, only update the ubuntu base image.
 
 1. Update all `TAG` files in sub directories.
 
-### moco-backup
-
-`moco-mysql/moco-backup` directory contains a container image used for MOCO's backup/restore feature.
-It should include `mysql` and `mysqlbinlog` binaries from the latest MySQL and MySQL shell of the
-same version.
-
-The image tag in `TAG` file should therefore be named after the latest MySQL.  For instance,
-if the latest MySQL version is 8.0.24, the TAG should be `8.0.24.x` where x is an integer >= 1.
-
-The URL of the MySQL shell debian package can be found in https://dev.mysql.com/downloads/shell/ .
-
-1. Choose "Ubuntu Linux"
-2. Choose `mysql-shell_*ubuntu*_amd64.deb` (not a `dbgsym` image) and click "Download" button.
-3. Copy the URL from the link whose text reads `No thanks, just start my download.`.
-4. Update `MYSQLSH_VERSION` in `moco-mysql/moco-backup/Dockerfile`.
-
-When the latest MySQL version changes, edit `.circleci/config.yml` and update the required job.
-
-```yaml
-      - build:
-          name: build-moco-backup
-          container-image: moco-backup
-          attach: true
-          dir: moco-mysql/moco-backup
-          requires:
-            # Update this
-            - build-moco-mysql-8024
-```
-
 ## mysqld_exporter
 
 ![Regular Update](./regular_update.svg)
