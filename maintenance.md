@@ -49,10 +49,6 @@ The target container of these operations have the following badges, so check bef
 
 ## argocd
 
-![Kubernetes Update](./kubernetes_update.svg) 
-
-(only for `kubectl` inside Docker image)
-
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
@@ -63,8 +59,7 @@ The target container of these operations have the following badges, so check bef
 4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
 5. Update version variables in `Dockerfile`.
-    - In the regular update: Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
-    - In the Kubernetes update: Update `KUSTOMIZE_VERSION`.
+    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 
 ## bird
