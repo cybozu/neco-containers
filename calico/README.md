@@ -15,11 +15,11 @@ Run the container
 ```console
 # Run as calico-node
 $ docker run -d --read-only --name=calico \
-    quay.io/cybozu/calico:3.17 start_runit
+    quay.io/cybozu/calico:3.19 start_runit
 
 # Run as calico-typha
 $ docker run -d --read-only --name=calico --entrypoint="tini --"\
-    quay.io/cybozu/calico:3.17 calico-typha
+    quay.io/cybozu/calico:3.19 calico-typha
 ```
 
 [BIRD]: https://github.com/projectcalico/bird
