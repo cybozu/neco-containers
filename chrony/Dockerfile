@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
-ARG CHRONY_VERSION=4.0
+ARG CHRONY_VERSION=4.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
