@@ -12,25 +12,19 @@ RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VER
     tar zxf - -C /tmp/ && \
     mv /tmp/packr /usr/local/bin/packr
 
-# Install kubectl
-# NOTE: keep the version synced with https://storage.googleapis.com/kubernetes-release/release/stable.txt
-ENV KUBECTL_VERSION=1.20.6
-RUN curl -sSLf -o /usr/local/bin/kubectl -LO https://storage.googleapis.com/kubernetes-release/release/v${KUBECTL_VERSION}/bin/linux/amd64/kubectl && \
-    chmod +x /usr/local/bin/kubectl
-
 # Install kustomize
-ENV KUSTOMIZE_VERSION=3.7.0
+ENV KUSTOMIZE_VERSION=4.1.2
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.5.1
+ENV HELM_VERSION=3.5.4
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.16-focal AS argocd-build
-ENV ARGOCD_VERSION=1.8.3
+ENV ARGOCD_VERSION=2.0.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
@@ -45,7 +39,7 @@ RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN make cli-local server controller repo-server argocd-util
+RUN make argocd-all
 
 # Install yarn for building Web UI
 RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
@@ -58,7 +52,7 @@ WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install
 
 ENV ARGO_VERSION=$ARGOCD_VERSION
-RUN NODE_ENV='production' yarn build
+RUN NODE_ENV='production' NODE_ONLINE_ENV='online' yarn build
 
 
 # Final image
@@ -72,7 +66,6 @@ RUN groupadd -g 10000 argocd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=builder /usr/local/bin/kubectl /usr/local/argocd/bin/kubectl
 COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
 COPY --from=builder /usr/local/bin/helm /usr/local/argocd/bin/helm
 
@@ -85,6 +78,12 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.s
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
+
+RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-util
+RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-server
+RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-repo-server
+RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-application-controller
+RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-dex
 
 COPY install-tools /usr/local/argocd/install-tools
 ENV PATH=/usr/local/argocd/bin:"$PATH"
