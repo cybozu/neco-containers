@@ -143,6 +143,8 @@ TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstrea
 
 ## consul
 
+![Regular Update](./regular_update.svg)
+
 1. Check the [release page](https://github.com/hashicorp/consul/releases).
 2. Update `CONSUL_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG` file.
