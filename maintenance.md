@@ -187,7 +187,7 @@ The target container of these operations have the following badges, so check bef
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** This image is used by ArgoCD. So browse the following manifest and check the required version.
+***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
 
 1. Check the [release page](https://github.com/dexidp/dex/releases).
