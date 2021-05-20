@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.16-focal AS build
 
-ARG CONSUL_VERSION=1.9.4
+ARG CONSUL_VERSION=1.9.5
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
