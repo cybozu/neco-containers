@@ -178,7 +178,8 @@ jobs:
             sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
             sed -i -e 's/usr\/share\/java\/libcephfs-test.jar//' debian/ceph-test.install
             rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
-            dpkg-buildpackage --build=binary -uc -us -j20
+            # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
+            dpkg-buildpackage --build=binary -uc -us -j10
             rm ../*-dbg_*.deb ../*-dev_*.deb
             mv ../*.deb ../workspace/
             mv COPYING* ../workspace
@@ -429,7 +430,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-ceph:
-          version: 15.2.8
+          version: 16.2.4
       - build:
           name: build-ceph-container
           container-image: ceph
