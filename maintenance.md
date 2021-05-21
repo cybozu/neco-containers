@@ -12,6 +12,9 @@ The target container of these operations have the following badges, so check bef
 2 Regular Update (![Regular Update](./regular_update.svg))
    - Update in every quarter. Keeping up with the upstream version and updating the ubuntu base image.
 
+3 CSA Update  (![CSA Update](./csa_update.svg))
+   - Update by CSA team.
+
 ---
 
 ## admission (neco-admission)
@@ -105,13 +108,16 @@ The target container of these operations have the following badges, so check bef
 
 ## ceph
 
+![CSA Update](./csa_update.svg)
+
 1. Check the [release page](https://docs.ceph.com/en/latest/releases/).
-2. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow.
-3. Update `BRANCH` and `TAG` files.
+2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document.
+   1. If other instructions are needed for CircleCI `.config.yml`, add the instructions.
+   2. If there are ceph runtime packages or required tool changes, update Dockerfile.
+3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow.
+4. Update `BRANCH` and `TAG` files.
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the rook image next.
-
-TODO: Please add how to maintain Dockerfile. I don't know the URL of the upstream Dockerfile.
 
 ## cert-manager
 
@@ -517,7 +523,9 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ## rook
 
-***NOTE:*** The rook image is based on the ceph image. So upgrade the ceph image first.
+![CSA Update](./csa_update.svg)
+
+***NOTE:*** Rook update requires two phases. First phase, update rook image solely to update rook version, then release it by neco-apps. Second phase, update Ceph image, and then update Rook base image.
 
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
