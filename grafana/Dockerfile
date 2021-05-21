@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
-ARG GRAFANA_VERSION=7.4.1
+FROM quay.io/cybozu/golang:1.16-focal AS build
+ARG GRAFANA_VERSION=7.5.7
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -11,7 +11,7 @@ RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.ta
 
 RUN go run build.go build
 
-# Install Node 14.x & yarn
+# Install Node.js 14.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
 RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
