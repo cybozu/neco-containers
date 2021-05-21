@@ -373,6 +373,8 @@ Only the base image should be updated.
 3. Update `LOKI_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+***NOTE:*** Keep the version of promtail the same as that of loki.
+
 ## machines-endpoints
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -480,12 +482,12 @@ This is used by victoria-metrics operator too.
 ![Regular Update](./regular_update.svg)
 
 Promtail contains two versions, one for promtail and the other for libsystemd.
-The promtail version should be the same with [loki](##loki).
+The promtail version should be the same with [loki](#loki).
 The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://kinvolk.io/flatcar-container-linux/releases/).
 
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
-3. Update `TAG` file.
+3. Update `BRANCH` and `TAG` files.
 
 ## pushgateway
 
