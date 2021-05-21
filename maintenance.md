@@ -52,7 +52,9 @@ The target container of these operations have the following badges, so check bef
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check [`hack/tool-versions.sh`](https://github.com/argoproj/argo-cd/blob/master/hack/tool-versions.sh) for the tools versions, especially the version of `packr`.
+2. Check `hack/tool-versions.sh` for the tools versions, especially the version of `packr`.
+    - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh
+    - Note that the use of `packr` may be removed at some future point.
 3. Update tool versions in `Dockerfile`
     - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
     - [Helm](https://github.com/helm/helm/releases)
