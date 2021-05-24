@@ -121,7 +121,7 @@ The target container of these operations have the following badges, so check bef
 3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** The rook image is based on the ceph image. So upgrade the rook image next.
+***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
 
 ## cert-manager
 
@@ -164,6 +164,9 @@ The target container of these operations have the following badges, so check bef
 ## contour
 
 ![Regular Update](./regular_update.svg)
+
+***NOTE:*** Contour uses Envoy as a "data plane." Keep version correspondence between the contour and [envoy](#envoy) images. Check the compatibility matrix below.
+- [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/projectcontour/contour/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
@@ -210,7 +213,7 @@ The target container of these operations have the following badges, so check bef
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** Envoy is managed by Contour so update to the supported version. See the below.
+***NOTE:*** Envoy is managed by [Contour](#contour) so update to the supported version. See the below.
 - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
@@ -380,7 +383,7 @@ Only the base image should be updated.
 3. Update `LOKI_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** Keep the version of promtail the same as that of loki.
+***NOTE:*** Keep the version of [promtail](#promtail) the same as that of loki.
 
 ## machines-endpoints
 
