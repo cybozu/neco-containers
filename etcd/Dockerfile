@@ -7,8 +7,8 @@ ARG ETCD_VERSION=3.4.16
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/etcd-io/etcd/archive/v${ETCD_VERSION}.tar.gz | \
-        tar zxf - -C /work/ \
-    && mv etcd-${ETCD_VERSION} /work/etcd
+        tar zxf - \
+    && mv etcd-${ETCD_VERSION} etcd
 
 WORKDIR /work/etcd
 RUN ./build
