@@ -537,9 +537,6 @@ workflows:
       - build:
           name: build-metallb
           container-image: metallb
-      - build:
-          name: build-metrics-server
-          container-image: metrics-server
       - build-moco-mysql:
           name: build-moco-mysql-8018
           mysql-version: 8.0.18
