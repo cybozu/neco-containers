@@ -67,6 +67,10 @@ The target container of these operations have the following badges, so check bef
     - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 
+***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.
+- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
+- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
+
 ## bird
 
 ![Regular Update](./regular_update.svg)
@@ -504,12 +508,12 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** This image is used by ArgoCD. So browse the following manifest and check the required version.
+***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
 
 1. Check the release notes in the [official site](https://redis.io/).
 2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
-   - v6.0: https://github.com/docker-library/redis/blob/master/6.0/Dockerfile
+   - v6.2.x: https://github.com/docker-library/redis/blob/master/6.2/Dockerfile
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
