@@ -621,6 +621,9 @@ The libsystemd version should be the same with the one running on [the stable Fl
    - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/Makefile
    - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/Makefile
    - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/deployment/Dockerfile
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/Makefile
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/Makefile
+   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/deployment/Dockerfile
 3. Update `VICTORIAMETRICS_SINGLE_VERSION` and `VICTORIAMETRICS_CLUSTER_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
