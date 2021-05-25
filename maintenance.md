@@ -577,6 +577,17 @@ The libsystemd version should be the same with the one running on [the stable Fl
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## teleport-node
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/gravitational/teleport/releases).
+2. Check the upstream `Makefile` and `docker/Dockerfile`. If they have been updated significantly, update our `Dockerfile`.
+   - https://github.com/gravitational/teleport/blob/vX.Y.Z/Makefile
+   - https://github.com/gravitational/teleport/blob/vX.Y.Z/docker/Dockerfile
+3. Update `TELEPORT_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
 ## testhttpd
 
 1. Update `BRANCH` and `TAG` files.
