@@ -432,16 +432,6 @@ Only the base image should be updated.
 3. Update `METALLB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## metrics-server
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/kubernetes-sigs/metrics-server/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes-sigs/metrics-server/blob/vX.Y.Z/Dockerfile
-3. Update `METRICS_SERVER_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## moco-mysql
 
 ![Regular Update](./regular_update.svg)
