@@ -221,7 +221,8 @@ The target container of these operations have the following badges, so check bef
 3. Update `BAZEL_VERSION` in `build-envoy` job. The required version is written in the following file.
    - https://github.com/envoyproxy/envoy/blob/vX.Y.Z/.bazelversion
 4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+5. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+6. Update `BRANCH` and `TAG` files.
 
 ## etcd
 
@@ -265,7 +266,8 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the [release history](https://golang.org/doc/devel/release.html).
 2. Update `GO_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG`.
+3. Upgrade direct dependencies listed in `analyzer/go.mod`. Use `go get` or your editor's function.
+4. Update `BRANCH` and `TAG`.
 
 ## gorush
 
@@ -314,9 +316,10 @@ grafana_plugins_init does not create [release](https://github.com/integr8ly/graf
 
 ![Regular Update](./regular_update.svg)
 
-Only the base image should be updated.
+Only the base image and module dependency should be updated.
 
-1. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## kube-metrics-adapter
 
@@ -438,9 +441,10 @@ Only the base image should be updated.
 
 moco-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
 The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
-In the regular update, only update the ubuntu base image.
+In the regular update, only update the ubuntu base image and module dependency.
 
-1. Update all `TAG` files in sub directories.
+1. Upgrade direct dependencies listed in `moco-init/go.mod`. Use `go get` or your editor's function.
+2. Update all `TAG` files in sub directories.
 
 ## mysqld_exporter
 
@@ -587,7 +591,10 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ## testhttpd
 
-1. Update `BRANCH` and `TAG` files.
+![Regular Update](./regular_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update `BRANCH` and `TAG` files.
 
 ## unbound
 
