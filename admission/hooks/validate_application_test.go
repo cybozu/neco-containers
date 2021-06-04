@@ -31,13 +31,16 @@ func fillApplication(name, project, repoURL string) (*unstructured.Unstructured,
 }
 
 const (
-	adminRepoURL  = "https://github.com/cybozu/admin-apps.git"
-	tenantRepoURL = "https://github.com/cybozu/tenant-apps.git"
+	adminRepoURL        = "https://github.com/cybozu/admin-apps.git"
+	tenantRepoURL       = "https://github.com/cybozu/tenant-apps.git"
+	adminPrefixRepoURL  = "https://github.com/cybozu-prefix/admin-apps.git"
+	tenantPrefixRepoURL = "https://github.com/cybozu-prefix/tenant-apps.git"
+	adminRepoPrefix     = "https://github.com/cybozu-prefix/admin"
 )
 
 var applicationValidatorConfig = &ArgoCDApplicationValidatorConfig{
 	[]ArgoCDApplicationRule{
-		{adminRepoURL, []string{"default", "admin"}},
+		{adminRepoURL, adminRepoPrefix, []string{"default", "admin"}},
 	},
 }
 
@@ -63,6 +66,32 @@ var _ = Describe("validate Application WebHook with ", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantRepoURL, "spec", "source", "repoURL")
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Update(testCtx, app)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("should allow admin App on admin repo with prefix", func() {
+		app, err := fillApplication("test4", "admin", adminPrefixRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should deny admin App on tenant repo with prefix", func() {
+		app, err := fillApplication("test5", "admin", tenantPrefixRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("should deny updating App with invalid repoURL prefix", func() {
+		app, err := fillApplication("test6", "admin", adminPrefixRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantPrefixRepoURL, "spec", "source", "repoURL")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
 		Expect(err).To(HaveOccurred())

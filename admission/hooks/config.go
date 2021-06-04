@@ -12,6 +12,7 @@ type ArgoCDApplicationValidatorConfig struct {
 
 // ArgoCDApplicationRule is a rule for applications
 type ArgoCDApplicationRule struct {
-	Repository string   `json:"repository"`
-	Projects   []string `json:"projects"`
+	Repository       string   `json:"repository"`
+	RepositoryPrefix string   `json:"repositoryPrefix"`
+	Projects         []string `json:"projects"`
 }

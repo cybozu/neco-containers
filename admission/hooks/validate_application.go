@@ -60,12 +60,16 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 }
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {
+	var projects []string
 	for _, r := range v.config.Rules {
 		if v.ignoreGitSuffix(r.Repository) == v.ignoreGitSuffix(repo) {
-			return r.Projects
+			projects = append(projects, r.Projects...)
+		}
+		if r.RepositoryPrefix != "" && strings.HasPrefix(repo, r.RepositoryPrefix) {
+			projects = append(projects, r.Projects...)
 		}
 	}
-	return nil
+	return projects
 }
 
 func (v *argocdApplicationValidator) ignoreGitSuffix(s string) string {
