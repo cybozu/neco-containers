@@ -16,10 +16,11 @@ The configuration of `ArgoCDApplicationValidator` is a map with the following ke
 Each rule represents the restriction on the applications in a certain repository.  
 If neco-admission has no rule for a given App's repoURL, neco-admission denies the API request.
 
-| Name       | Type       | Description                                                               |
-| ---------- | ---------- | ------------------------------------------------------------------------- |
-| repository | string     | A URL of the repository to be matched with `applications.spec.source.repoURL`.                                                   |
-| projects   | \[\]string | A list of `applications.spec.project`s allowed for the applications in the repository. |
+| Name             | Type       | Description                                                                             |
+| ---------------- | ---------- | --------------------------------------------------------------------------------------- |
+| repository       | string     | A URL of the repository to be matched with `applications.spec.source.repoURL`.          |
+| repositoryPrefix | string     | A URL prefix of the repositories to be matched with `applications.spec.source.repoURL`. |
+| projects         | \[\]string | A list of `applications.spec.project`s allowed for the applications in the repository.  |
 
 ### `.git` suffix in `repository`
 
