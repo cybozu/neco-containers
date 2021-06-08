@@ -13,7 +13,7 @@ Environment variables
 - `AWS_ACCESS_KEY_ID`: access key ID
 - `AWS_SECRET_ACCESS_KEY`: access key secret
 
-`BUCKET_HOST`,  `BUCKET_NAME`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are required. `BUCKET_PORT` and `BUCKET_REGION` are optional.
+`BUCKET_HOST`, `BUCKET_NAME`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` are required. `BUCKET_PORT` and `BUCKET_REGION` are optional.
 
 Options
 -------
@@ -27,16 +27,32 @@ Options
 Supported API
 -------------
 
-- `/health`: health endpoint. note: it does not represent the upstream S3 API health.
-- `/metrics`: metrics endpoint.
-- `/bucket/`: bucket objects listing (see below)
-- `/bucket/<object-key>`: bucket objects operation. you can `GET`/`PUT`/`DELETE` objects.
+Unless otherwise stated, only `GET` method is supported. Other methods may return `405 Method not Allowed` or work as of `GET`.
 
-## bucket objects listing
+### `/health`: health endpoint
 
-`/bucket/` returns a JSON like this:
+It returns the health status of this GW.
 
-```
+note: it does not return the health status of the upstream S3 API.
+
+### `/metrics`: metrics endpoint
+
+In addition to standard promhttp metrics which begin with `go_` and `promhttp_`,  it returns the following metrics:
+
+- `s3gw_request_count_total` counter
+- `s3gw_request_duration_seconds` histogram
+
+both of those metrics have the following labels:
+
+- `code`: HTTP status code
+- `method`: HTTP request method
+- `handler`: request handler type. `"list"` for bucket objects listing requests or `"object"` for bucket objects operation.
+
+### `/bucket/`: bucket objects listing
+
+It returns the list of objects stored in the bucket as the following JSON format:
+
+```json
 {
     "objects": [
         {
@@ -52,6 +68,12 @@ Supported API
 ```
 
 If there are no objects, `objects` is empty array `[]`, not `null`.
+
+### `/bucket/<object-key>`: bucket objects operation
+
+You can `GET`/`PUT`/`DELETE` objects.
+
+As with S3 API, `<object-key>` is not a path-style string. i.e. `/bucket/foo` and `/bucket//foo` represent different objects.
 
 Restrictions
 ------------
