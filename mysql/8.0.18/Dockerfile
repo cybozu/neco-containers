@@ -5,7 +5,7 @@ FROM quay.io/cybozu/ubuntu:20.04
 COPY workspace /usr/local/mysql/
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends libjemalloc2 libnuma1 \
+  && apt-get install -y --no-install-recommends libjemalloc2 libnuma1 libaio1 \
   && rm -rf /var/lib/apt/lists/* \
   && mkdir -p /var/lib/mysql \
   && chown -R 10000:10000 /var/lib/mysql
