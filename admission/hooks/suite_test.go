@@ -32,7 +32,6 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var (
-	podMutatingWebhookPath              = "/mutate-pod"
 	podValidatingWebhookPath            = "/validate-pod"
 	contourMutatingWebhookPath          = "/mutate-projectcontour-io-httpproxy"
 	calicoValidateWebhookPath           = "/validate-projectcalico-org-networkpolicy"
@@ -111,7 +110,6 @@ var _ = BeforeSuite(func() {
 	dec, err := admission.NewDecoder(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	wh := mgr.GetWebhookServer()
-	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec))
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 	wh.Register(podValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
 	wh.Register(calicoValidateWebhookPath, NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))

@@ -43,7 +43,6 @@ func run(addr string, port int, conf *hooks.Config) error {
 	// admission.NewDecoder never returns non-nil error
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
-	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec))
 	wh.Register("/validate-pod", hooks.NewPodValidator(mgr.GetClient(), dec, config.validImagePrefixes, config.imagePermissive))
 	wh.Register("/validate-projectcalico-org-networkpolicy", hooks.NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	if config.httpProxyDefaultClass != "" {
