@@ -77,11 +77,10 @@ if the resource is annotated with `admission.cybozu.com/prevent: delete`.
 PodMutator
 ----------
 
-PodMutator mutates Pod manifests to specify local ephemeral storage limit to 1GiB and request to 200MiB for each container.
-The purpose of this mutator is to prevent Pods from overuse of local ephemeral storage.
+PodMutator mutates Pod manifests to mount writable emptyDir to `/tmp` for each containers.
+The purpose of this mutator is to prevent Pods from unexpected death by writing to read-only filesystem. 
 
-If you want to use more ephemeral storage than the limit, you can use generic ephemeral volume instead of
-local ephemeral storage.
+However, Pods that already have another volumes mounted under `/tmp/*` are excluded from the mutating target.
 
 PodValidator
 ------------
