@@ -320,7 +320,7 @@ jobs:
           root: admission/bin
           paths:
             - neco-admission
-  build-moco-mysql:
+  build-mysql:
     parameters:
       mysql-version:
         type: string
@@ -333,16 +333,16 @@ jobs:
           name: Check TAG file
           command: |
             d=<< parameters.mysql-version >>
-            c="$(./tag_exists moco-mysql moco-mysql/$d)"
+            c="$(./tag_exists mysql mysql/$d)"
             if [ "$c" = ng ]; then
-                echo moco-mysql > BUILDS
+                echo mysql > BUILDS
             fi
       - run:
           name: Install dependency packages
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             apt-get update
-            apt-get -y install cmake libncurses5-dev libjemalloc-dev libnuma-dev pkg-config
+            apt-get -y install cmake libncurses5-dev libjemalloc-dev libnuma-dev libaio-dev pkg-config
       - run:
           name: Build MySQL
           command: |
@@ -367,7 +367,7 @@ jobs:
       - run:
           name: Build moco-init
           command: |
-            cd moco-mysql/moco-init
+            cd mysql/moco-init
             GOBIN=/usr/local/mysql/bin go install -ldflags="-w -s" .
       - persist_to_workspace:
           root: /usr/local/mysql
@@ -537,26 +537,26 @@ workflows:
       - build:
           name: build-metallb
           container-image: metallb
-      - build-moco-mysql:
-          name: build-moco-mysql-8018
+      - build-mysql:
+          name: build-mysql-8018
           mysql-version: 8.0.18
-      - build-moco-mysql:
-          name: build-moco-mysql-8025
+      - build-mysql:
+          name: build-mysql-8025
           mysql-version: 8.0.25
       - build:
-          name: build-moco-mysql-container-8018
-          container-image: moco-mysql
+          name: build-mysql-container-8018
+          container-image: mysql
           attach: true
-          dir: moco-mysql/8.0.18
+          dir: mysql/8.0.18
           requires:
-            - build-moco-mysql-8018
+            - build-mysql-8018
       - build:
-          name: build-moco-mysql-container-8025
-          container-image: moco-mysql
+          name: build-mysql-container-8025
+          container-image: mysql
           attach: true
-          dir: moco-mysql/8.0.25
+          dir: mysql/8.0.25
           requires:
-            - build-moco-mysql-8025
+            - build-mysql-8025
       - build:
           name: build-mysqld_exporter
           container-image: mysqld_exporter

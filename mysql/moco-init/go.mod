@@ -1,4 +1,4 @@
-module github.com/cybozu/neco-containers/moco-mysql/moco-init
+module github.com/cybozu/neco-containers/mysql/moco-init
 
 go 1.16
 
