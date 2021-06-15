@@ -42,4 +42,15 @@ var _ = Describe("validate DELETE requests", func() {
 		err = k8sClient.Delete(testCtx, ns)
 		Expect(err).NotTo(HaveOccurred())
 	})
+
+	It("should allow to delete a namespace with name starting with dev-", func() {
+		ns := &corev1.Namespace{}
+		ns.Name = "dev-foo"
+
+		err := k8sClient.Create(testCtx, ns)
+		Expect(err).NotTo(HaveOccurred())
+
+		err = k8sClient.Delete(testCtx, ns)
+		Expect(err).NotTo(HaveOccurred())
+	})
 })
