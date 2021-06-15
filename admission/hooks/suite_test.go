@@ -32,16 +32,17 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var (
-	podMutatingWebhookPath              = "/mutate-pod"
-	podValidatingWebhookPath            = "/validate-pod"
-	contourMutatingWebhookPath          = "/mutate-projectcontour-io-httpproxy"
-	calicoValidateWebhookPath           = "/validate-projectcalico-org-networkpolicy"
-	contourValidateWebhookPath          = "/validate-projectcontour-io-httpproxy"
-	argocdValidateWebhookPath           = "/validate-argoproj-io-application"
-	grafanaDashboardValidateWebhookPath = "/validate-integreatly-org-grafanadashboard"
-	deleteValidateWebhookPath           = "/validate-delete"
-	preventDeleteValidateWebhookPath    = "/validate-preventdelete"
-	serviceValidateWebhookPath          = "/validate-service"
+	podMutatingWebhookPath                = "/mutate-pod"
+	podValidatingWebhookPath              = "/validate-pod"
+	contourMutatingWebhookPath            = "/mutate-projectcontour-io-httpproxy"
+	calicoValidateWebhookPath             = "/validate-projectcalico-org-networkpolicy"
+	contourValidateWebhookPath            = "/validate-projectcontour-io-httpproxy"
+	argocdValidateWebhookPath             = "/validate-argoproj-io-application"
+	grafanaDashboardValidateWebhookPath   = "/validate-integreatly-org-grafanadashboard"
+	deleteValidateWebhookPath             = "/validate-delete"
+	preventDeleteValidateWebhookPath      = "/validate-preventdelete"
+	serviceValidateWebhookPath            = "/validate-service"
+	subnamespaceAnchorValidateWebhookPath = "/validate-hnc-x-k8s-io-subnamespaceanchors"
 )
 
 var k8sClient client.Client
@@ -122,6 +123,7 @@ var _ = BeforeSuite(func() {
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(serviceValidateWebhookPath, NewServiceValidator(mgr.GetClient(), dec))
+	wh.Register(subnamespaceAnchorValidateWebhookPath, NewSubnamespaceAnchorValidator(mgr.GetClient(), dec))
 
 	//+kubebuilder:scaffold:webhook
 
