@@ -36,7 +36,7 @@ func (v *deleteValidator) Handle(ctx context.Context, req admission.Request) adm
 	ann := obj.GetAnnotations()
 	name := obj.GetName()
 
-	if strings.HasPrefix(name, "dev-") {
+	if obj.GroupVersionKind().Kind == "Namespace" && strings.HasPrefix(name, "dev-") {
 		return admission.Allowed("confirmed name started with dev-")
 	}
 
