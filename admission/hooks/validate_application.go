@@ -10,9 +10,13 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
+
+// applog is for logging in this package.
+var applog = logf.Log.WithName("application-validator")
 
 // +kubebuilder:webhook:path=/validate-argoproj-io-application,mutating=false,failurePolicy=fail,sideEffects=None,groups=argoproj.io,resources=applications,verbs=create;update,versions=v1alpha1,name=vapplication.kb.io,admissionReviewVersions={v1,v1beta1}
 
@@ -62,6 +66,12 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 func (v *argocdApplicationValidator) findProjects(repo string) []string {
 	var projects []string
 	for _, r := range v.config.Rules {
+		if r.Repository != "" && r.RepositoryPrefix != "" {
+			// ignore rules specifying both the repository and repositoryPrefix,
+			// because it is not what people want to do.
+			applog.Info("ignored the rule specifying both the repository and repositoryPrefix", "repository", r.Repository, "repositoryPrefix", r.RepositoryPrefix)
+			continue
+		}
 		if v.ignoreGitSuffix(r.Repository) == v.ignoreGitSuffix(repo) {
 			projects = append(projects, r.Projects...)
 		}
