@@ -68,14 +68,14 @@ var _ = Describe("validate Application WebHook with ", func() {
 	})
 
 	It("should deny admin App on tenant organization", func() {
-		app, err := fillApplication("test5", "admin", tenantOrgRepoURL)
+		app, err := fillApplication("test4", "admin", tenantOrgRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).To(HaveOccurred())
 	})
 
 	It("should deny updating App with invalid repoURL", func() {
-		app, err := fillApplication("test4", "admin", adminRepoURL)
+		app, err := fillApplication("test5", "admin", adminRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
