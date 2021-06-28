@@ -22,6 +22,8 @@ If neco-admission has no rule for a given App's repoURL, neco-admission denies t
 | repositoryPrefix | string     | A URL prefix of the repositories to be matched with `applications.spec.source.repoURL`. |
 | projects         | \[\]string | A list of `applications.spec.project`s allowed for the applications in the repository.  |
 
+If both the `repository` and `repositoryPrefix` are specified, the rule is considered erroneous and ignored.
+
 ### `.git` suffix in `repository`
 
 In GitHub, `.git` suffix is set at repository URL automatically. However, this suffix is optional. In fact, you can access the repository without the suffix.

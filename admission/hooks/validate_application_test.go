@@ -31,16 +31,17 @@ func fillApplication(name, project, repoURL string) (*unstructured.Unstructured,
 }
 
 const (
-	adminRepoURL        = "https://github.com/cybozu/admin-apps.git"
-	tenantRepoURL       = "https://github.com/cybozu/tenant-apps.git"
-	adminPrefixRepoURL  = "https://github.com/cybozu-prefix/admin-apps.git"
-	tenantPrefixRepoURL = "https://github.com/cybozu-prefix/tenant-apps.git"
-	adminRepoPrefix     = "https://github.com/cybozu-prefix/admin"
+	adminRepoURL     = "https://github.com/cybozu/admin-apps.git"
+	adminOrgURL      = "https://github.com/cybozu-admin"
+	adminOrgRepoURL  = "https://github.com/cybozu-admin/admin-apps.git"
+	tenantRepoURL    = "https://github.com/cybozu/tenant-apps.git"
+	tenantOrgRepoURL = "https://github.com/cybozu-tenant/tenant-apps.git"
 )
 
 var applicationValidatorConfig = &ArgoCDApplicationValidatorConfig{
 	[]ArgoCDApplicationRule{
-		{adminRepoURL, adminRepoPrefix, []string{"default", "admin"}},
+		{adminRepoURL, "", []string{"default", "admin"}},
+		{"", adminOrgRepoURL, []string{"default", "admin"}},
 	},
 }
 
@@ -52,15 +53,29 @@ var _ = Describe("validate Application WebHook with ", func() {
 		Expect(err).NotTo(HaveOccurred())
 	})
 
+	It("should allow admin App on admin organization", func() {
+		app, err := fillApplication("test2", "admin", adminOrgRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
 	It("should deny admin App on tenant repo", func() {
-		app, err := fillApplication("test2", "admin", tenantRepoURL)
+		app, err := fillApplication("test3", "admin", tenantRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).To(HaveOccurred())
+	})
+
+	It("should deny admin App on tenant organization", func() {
+		app, err := fillApplication("test4", "admin", tenantOrgRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).To(HaveOccurred())
 	})
 
 	It("should deny updating App with invalid repoURL", func() {
-		app, err := fillApplication("test3", "admin", adminRepoURL)
+		app, err := fillApplication("test5", "admin", adminRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
@@ -71,27 +86,13 @@ var _ = Describe("validate Application WebHook with ", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
-	It("should allow admin App on admin repo with prefix", func() {
-		app, err := fillApplication("test4", "admin", adminPrefixRepoURL)
-		Expect(err).NotTo(HaveOccurred())
-		err = k8sClient.Create(testCtx, app)
-		Expect(err).NotTo(HaveOccurred())
-	})
-
-	It("should deny admin App on tenant repo with prefix", func() {
-		app, err := fillApplication("test5", "admin", tenantPrefixRepoURL)
-		Expect(err).NotTo(HaveOccurred())
-		err = k8sClient.Create(testCtx, app)
-		Expect(err).To(HaveOccurred())
-	})
-
-	It("should deny updating App with invalid repoURL prefix", func() {
-		app, err := fillApplication("test6", "admin", adminPrefixRepoURL)
+	It("should deny updating App with invalid organization repoURL", func() {
+		app, err := fillApplication("test6", "admin", adminOrgRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 
-		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantPrefixRepoURL, "spec", "source", "repoURL")
+		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantOrgRepoURL, "spec", "source", "repoURL")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
 		Expect(err).To(HaveOccurred())
