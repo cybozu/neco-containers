@@ -11,11 +11,13 @@ ENV GOPATH=/work/go
 RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
 COPY expand-timeout.patch /tmp/
+COPY fix-liveness-probe.patch /tmp/
 
 WORKDIR ${ROOK_DIR}
 
 RUN git checkout v${ROOK_VERSION}
 RUN patch -p1 --no-backup-if-mismatch < /tmp/expand-timeout.patch
+RUN patch -p1 --no-backup-if-mismatch < /tmp/fix-liveness-probe.patch
 RUN make build IMAGES=""
 
 WORKDIR ${ROOK_DIR}/images/ceph
