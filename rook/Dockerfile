@@ -45,6 +45,10 @@ COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /tini
 RUN chmod 755 /tini
 
+# create or modify owner and permissions to make a watch-active container of a MGR work properly
+RUN install -d -o 10000 -g 10000 -m 0700 /var/lib/rook
+RUN chown 10000:10000 /etc/ceph
+
 USER 10000:10000
 
 ENTRYPOINT ["/tini", "--", "/usr/local/bin/rook"]
