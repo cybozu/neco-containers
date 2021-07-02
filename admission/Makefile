@@ -5,7 +5,6 @@ CALICO_VERSION = 3.18
 CONTOUR_VERSION = 1.15.1
 ARGOCD_VERSION = 1.8.6
 GRAFANA_OPERATOR_VERSION = 3.9.0
-HNC_VERSION = 0.8.0
 
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
@@ -21,7 +20,6 @@ crds:
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/integr8ly/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
-	curl -fsL -o config/crd/bases/subnamespaceanchor.yaml https://raw.githubusercontent.com/kubernetes-sigs/hierarchical-namespaces/hnc-v$(HNC_VERSION)/incubator/hnc/config/crd/bases/hnc.x-k8s.io_subnamespaceanchors.yaml
 
 # Run tests, and set up envtest if not done already.
 ENVTEST_ASSETS_DIR := testbin
