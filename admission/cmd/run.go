@@ -55,7 +55,6 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/validate-delete", hooks.NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-preventdelete", hooks.NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-service", hooks.NewServiceValidator(mgr.GetClient(), dec))
-	wh.Register("/validate-hnc-x-k8s-io-subnamespaceanchors", hooks.NewSubnamespaceAnchorValidator(mgr.GetClient(), dec))
 
 	// +kubebuilder:scaffold:builder
 

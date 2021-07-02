@@ -66,16 +66,7 @@ DeleteValidator
 This is to protect important resources from accidental deletion by human errors.
 
 Every resource passed to this validation webhook will be denied for DELETE
-unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>` or it is a namespace resource with the prefix `dev-*` in its name.
-
-GrafanaDashboardValidator
--------------------------
-
-GrafanaDashboardValidator validates [GrafanaDashboard](https://github.com/integr8ly/grafana-operator/blob/v3.2.0/documentation/dashboards.md).
-
-This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` is empty.
-
-The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.
+unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>`.
 
 PreventDeleteValidator
 ----------------------
@@ -100,6 +91,15 @@ PodValidator validates Pod specifications as follows:
     - Valid prefixes are given through `--valid-image-prefix` command-line flags.
     - If `VPOD_IMAGE_PERMISSIVE=true` envvar is set, this does not deny Pods but issues an warning.
 
+GrafanaDashboardValidator
+-------------------------
+
+GrafanaDashboardValidator validates [GrafanaDashboard](https://github.com/integr8ly/grafana-operator/blob/v3.2.0/documentation/dashboards.md).
+
+This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` is empty.
+
+The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.
+
 ServiceValidator
 ----------------
 
@@ -110,13 +110,6 @@ This validating webhook ensures the Service resource's `spec.externalIPs` is emp
 The purpose of this validator is a workaround for [CVE-2020-8554](https://github.com/kubernetes/kubernetes/issues/97076).
 
 The status of Service cannot be updated manually by tenant users, so this just focuses on the externalIPs field.
-
-SubnamespaceAnchorValidator
----------------------------
-
-SubnamespaceAnchorValidator validates SubnamespaceAnchor.
-
-This validating webhook disallows creation of SubnamespaceAnchor, unless its name is `dev-*`.
 
 Docker images
 -------------

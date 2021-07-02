@@ -219,24 +219,3 @@ webhooks:
     resources:
     - services
   sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-hnc-x-k8s-io-subnamespaceanchors
-  failurePolicy: Fail
-  name: vsubnamespaceanchors.kb.io
-  rules:
-  - apiGroups:
-    - hnc.x-k8s.io
-    apiVersions:
-    - v1alpha2
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - subnamespaceanchors
-  sideEffects: None
