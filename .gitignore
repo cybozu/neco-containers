@@ -4,3 +4,5 @@
 .*.swp
 /.vscode
 cover.out
+vendor
+/.idea
