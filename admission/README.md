@@ -66,7 +66,7 @@ DeleteValidator
 This is to protect important resources from accidental deletion by human errors.
 
 Every resource passed to this validation webhook will be denied for DELETE
-unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>` or it is a namespace resource with the prefix `dev-*` in its name.
+unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>` or its name is `dev-*`.
 
 GrafanaDashboardValidator
 -------------------------
