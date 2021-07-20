@@ -1,0 +1,12 @@
+diff --git a/src/kv/RocksDBStore.cc b/src/kv/RocksDBStore.cc
+index b7fa258638f..54ba0bd2712 100644
+--- a/src/kv/RocksDBStore.cc
++++ b/src/kv/RocksDBStore.cc
+@@ -908,6 +908,7 @@ int RocksDBStore::verify_sharding(const rocksdb::Options& opt,
+   status = rocksdb::DB::ListColumnFamilies(rocksdb::DBOptions(opt),
+ 					   path, &rocksdb_cfs);
+   if (!status.ok()) {
++    derr << __func__ << " unable to list column families: " << status.ToString() << dendl;
+     return -EIO;
+   }
+   dout(5) << __func__ << " column families from rocksdb: " << rocksdb_cfs << dendl;

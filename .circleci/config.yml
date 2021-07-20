@@ -149,40 +149,16 @@ jobs:
                 echo ceph > BUILDS
             fi
       - run:
-          name: Checkout Ceph source
-          command: |
-            mkdir -p src/workspace
-            if [ ! -f BUILDS ]; then exit 0; fi
-            cd src
-            git clone https://github.com/ceph/ceph.git
-            cd ceph
-            git checkout v<< parameters.version >>
-            git submodule update --init --recursive
-      - run:
-          name: Install dependencies
-          command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
-            apt-get update
-            cd src/ceph
-            ./install-deps.sh
-      - run:
           name: Build Ceph packages
           command: |
+            mkdir -p src/workspace
             if [ ! -f BUILDS ]; then
               # fake for the next step
               cd src/workspace
               touch COPYING
               exit 0
             fi
-            cd src/ceph
-            sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
-            sed -i -e 's/usr\/share\/java\/libcephfs-test.jar//' debian/ceph-test.install
-            rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
-            # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
-            dpkg-buildpackage --build=binary -uc -us -j10
-            rm ../*-dbg_*.deb ../*-dev_*.deb
-            mv ../*.deb ../workspace/
-            mv COPYING* ../workspace
+            ceph/deb.sh << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
