@@ -26,6 +26,12 @@ func NewDeleteValidator(c client.Client, dec *admission.Decoder) http.Handler {
 }
 
 func (v *deleteValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
+	// Service accounts authenticate with the username system:serviceaccount:(NAMESPACE):(SERVICEACCOUNT)
+	// https://kubernetes.io/docs/reference/access-authn-authz/authentication/#service-account-tokens
+	if req.UserInfo.Username == "system:serviceaccount:accurate:accurate-controller-manager" {
+		return admission.Allowed("accurate service account is allowed")
+	}
+
 	obj := &unstructured.Unstructured{}
 	err := v.decoder.DecodeRaw(req.OldObject, obj)
 	if err != nil {
