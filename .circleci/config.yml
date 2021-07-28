@@ -522,6 +522,9 @@ workflows:
       - build-mysql:
           name: build-mysql-8025
           mysql-version: 8.0.25
+      - build-mysql:
+          name: build-mysql-8026
+          mysql-version: 8.0.26
       - build:
           name: build-mysql-container-8018
           container-image: mysql
@@ -536,6 +539,13 @@ workflows:
           dir: mysql/8.0.25
           requires:
             - build-mysql-8025
+      - build:
+          name: build-mysql-container-8026
+          container-image: mysql
+          attach: true
+          dir: mysql/8.0.26
+          requires:
+            - build-mysql-8026
       - build:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
