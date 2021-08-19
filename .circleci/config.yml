@@ -337,7 +337,7 @@ jobs:
             cd mysql-<< parameters.mysql-version >>
             mkdir bld
             cd bld
-            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1
+            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1 -DWITH_PACKAGE_FLAGS=0
             make -j 20
             make install
       - run:
