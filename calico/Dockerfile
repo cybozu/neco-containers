@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.15-focal AS build
 
-ARG CALICO_VERSION=3.19.0
+ARG CALICO_VERSION=3.20.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/projectcalico && \
