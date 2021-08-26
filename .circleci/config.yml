@@ -439,6 +439,9 @@ workflows:
           name: build-coredns
           container-image: coredns
       - build:
+          name: build-dctest-meows-runner
+          container-image: dctest-meows-runner
+      - build:
           name: build-dex
           container-image: dex
       - build:

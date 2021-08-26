@@ -186,6 +186,15 @@ The target container of these operations have the following badges, so check bef
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## dctest-meows-runner
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cybozu-go/meows/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
+3. Update `BRANCH` and `TAG` files.
+
 ## dex
 
 ![Regular Update](./regular_update.svg)
