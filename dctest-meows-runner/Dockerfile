@@ -62,6 +62,6 @@ RUN apt-get update \
     && chown -R actions:actions /opt/hostedtoolcache \
     && chown -R actions:actions ${HOME}
 
-COPY bootstrap.sh ${HOME}
+COPY --chown=actions:actions bootstrap.sh ${HOME}
 
 USER actions
