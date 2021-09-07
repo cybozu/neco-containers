@@ -56,10 +56,6 @@ RUN apt-get update \
     && curl -sfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && dpkg -i ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && rm ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
-    && git clone -b ${NECO_BRANCH:-release} https://github.com/cybozu-go/neco.git ${NECO_DIR} \
-    && make -C ${NECO_DIR}/dctest setup \
-    && git clone -b ${NECO_APPS_BRANCH:-release} https://github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR} \
-    && make -C ${NECO_APPS_DIR}/test setup \
     && echo "actions ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
     && adduser --disabled-password --gecos "" --uid 10000 actions \
     && mkdir -p /opt/hostedtoolcache \

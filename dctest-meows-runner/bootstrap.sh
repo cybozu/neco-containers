@@ -1,5 +1,11 @@
 #!/bin/sh -xe
 
+echo "setup neco and neco-apps"
+git clone -b ${NECO_BRANCH:-release} https://github.com/cybozu-go/neco.git ${NECO_DIR}
+make -C ${NECO_DIR}/dctest setup
+git clone -b ${NECO_APPS_BRANCH:-release} https://github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
+make -C ${NECO_APPS_DIR}/test setup
+
 echo "setup secret for cloud dns"
 cp /secrets/account.json ${NECO_APPS_DIR}/test/
 
