@@ -5,8 +5,10 @@ USER root
 ENV GO_VERSION=1.16.6
 ENV PLACEMAT_VERSION=2.0.5
 
-ENV GOPATH=/root/go
-ENV PATH=${GOPATH}/bin:/usr/local/go/bin:${PATH}
+ENV HOME=/home/actions
+ENV GOPATH=${HOME}/go
+ENV GOBIN=${GOPATH}/bin
+ENV PATH=${GOBIN}:/usr/local/go/bin:${PATH}
 ENV NECO_DIR=${GOPATH}/src/github.com/cybozu-go/neco
 ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-go/neco-apps
 
@@ -48,14 +50,18 @@ RUN apt-get update \
             iptables \
             openssh-client \
             sudo \
+            hub \
     && rm -rf /var/lib/apt/lists/* \
     && curl -sSLf https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
     && curl -sfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && dpkg -i ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && rm ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && echo "actions ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
-    && adduser --disabled-password --gecos "" --uid 10000 actions 
+    && adduser --disabled-password --gecos "" --uid 10000 actions \
+    && mkdir -p /opt/hostedtoolcache \
+    && chown -R actions:actions /opt/hostedtoolcache \
+    && chown -R actions:actions ${HOME}
 
-COPY bootstrap.sh /root/
+COPY --chown=actions:actions bootstrap.sh ${HOME}
 
 USER actions
