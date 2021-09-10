@@ -5,11 +5,11 @@
 FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
 ARG GOSU_VERSION=1.12
-ARG REDIS_VERSION=6.2.3
+ARG REDIS_VERSION=6.2.5
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends wget \
+    && apt-get install -y --no-install-recommends wget pkg-config \
     && rm -rf /var/lib/apt/lists/* \
     && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
     && chmod +x /usr/local/bin/gosu \
