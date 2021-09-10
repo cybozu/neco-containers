@@ -65,10 +65,5 @@ Branch naming
 If the image is built for an upstream version X.Y.Z, the branch name _should_ be X.Y
 for X > 0, or "0" for X == 0.
 
-License
--------
-
-MIT
-
 [quay]: https://quay.io/organization/cybozu
 [semver]: https://semver.org/
