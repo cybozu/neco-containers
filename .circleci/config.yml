@@ -236,7 +236,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/golang:1.16-bionic
+      - image: quay.io/cybozu/golang:1.17-bionic
     resource_class: xlarge
     steps:
       - checkout
@@ -276,9 +276,9 @@ jobs:
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/jetstack/cert-manager
             cd cert-manager
             make cainjector controller webhook
-            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/cainjector/cainjector_/cainjector ../workspace
-            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/controller/controller_/controller ../workspace
-            mv bazel-out/k8-fastbuild-ST-*/bin/cmd/webhook/webhook_/webhook ../workspace
+            mv bazel-out/k8-fastbuild/bin/cmd/cainjector/cainjector_/cainjector ../workspace
+            mv bazel-out/k8-fastbuild/bin/cmd/controller/controller_/controller ../workspace
+            mv bazel-out/k8-fastbuild/bin/cmd/webhook/webhook_/webhook ../workspace
             mv LICENSE ../workspace
       - persist_to_workspace:
           root: src/workspace
@@ -415,7 +415,7 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.3.2
+          version: 1.5.3
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
