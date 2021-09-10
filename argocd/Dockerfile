@@ -6,28 +6,21 @@ FROM quay.io/cybozu/ubuntu:20.04 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-# Install packr
-ENV PACKR_VERSION=1.21.9
-RUN curl -sSLf https://github.com/gobuffalo/packr/releases/download/v${PACKR_VERSION}/packr_${PACKR_VERSION}_linux_amd64.tar.gz | \
-    tar zxf - -C /tmp/ && \
-    mv /tmp/packr /usr/local/bin/packr
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=4.1.3
+ENV KUSTOMIZE_VERSION=4.2.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.5.4
+ENV HELM_VERSION=3.6.0
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.16-focal AS argocd-build
-ENV ARGOCD_VERSION=2.0.3
+FROM quay.io/cybozu/golang:1.17-focal AS argocd-build
+ENV ARGOCD_VERSION=2.1.2
 ENV PACKAGE=github.com/argoproj/argo-cd
-
-COPY --from=builder /usr/local/bin/packr /usr/local/bin/packr
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -41,12 +34,12 @@ RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
 WORKDIR /go/src/github.com/argoproj/argo-cd
 RUN make argocd-all
 
-# Install yarn for building Web UI
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
-    && curl -sLf https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
-    && apt-get update && apt-get install -y --no-install-recommends yarn nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# Install Node.js 12.x and yarn
+# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
+RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && npm install --global yarn
 
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install
