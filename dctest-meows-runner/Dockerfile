@@ -2,7 +2,7 @@ FROM quay.io/cybozu/meows-runner:0.3.1
 
 USER root
 
-ENV GO_VERSION=1.16.6
+ENV GO_VERSION=1.17.1
 ENV PLACEMAT_VERSION=2.0.5
 
 ENV HOME=/home/actions
