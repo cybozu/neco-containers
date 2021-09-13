@@ -1,9 +1,9 @@
 # prometheus-adapter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG PROMETHEUS_ADAPTER_VERSION=0.8.4
+ARG PROMETHEUS_ADAPTER_VERSION=0.9.0
 
 RUN curl -fsSL -o pa.tar.gz https://github.com/kubernetes-sigs/prometheus-adapter/archive/v${PROMETHEUS_ADAPTER_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f pa.tar.gz \
@@ -13,7 +13,7 @@ RUN curl -fsSL -o pa.tar.gz https://github.com/kubernetes-sigs/prometheus-adapte
 # Stage2: setup runtime container
 FROM scratch
 
-COPY --from=build /work/_output/amd64/adapter /adapter
+COPY --from=build /work/adapter /adapter
 COPY --from=build /work/LICENSE /LICENSE
 
 USER 10000:10000
