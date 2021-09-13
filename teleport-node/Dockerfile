@@ -1,7 +1,7 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG TELEPORT_VERSION=6.2.0
+ARG TELEPORT_VERSION=6.2.11
 RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravitational/teleport && \
     cd teleport && \
     make build/teleport OS=linux
