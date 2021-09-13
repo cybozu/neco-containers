@@ -444,11 +444,11 @@ Only the base image and module dependency should be updated.
 3. Update `METALLB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## moco-mysql
+## mysql
 
 ![Regular Update](./regular_update.svg)
 
-moco-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
+mysql is used for [MOCO](https://github.com/cybozu-go/moco).
 The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
 In the regular update, only update the ubuntu base image and module dependency.
 
