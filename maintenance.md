@@ -555,6 +555,15 @@ The libsystemd version should be the same with the one running on [the stable Fl
 5. Update ceph image tag in `Dockerfile`.
 6. Update `BRANCH` and `TAG` files.
 
+## s3gw
+
+![Regular Update](./regular_update.svg)
+
+Only the base image and module dependency should be updated.
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+
 ## sealed-secrets
 
 ![Regular Update](./regular_update.svg)
