@@ -1,9 +1,9 @@
 # ExternalDNS container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG EXTERNALDNS_VERSION=0.8.0
+ARG EXTERNALDNS_VERSION=0.9.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-sigs/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
