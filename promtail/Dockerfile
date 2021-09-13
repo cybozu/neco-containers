@@ -1,5 +1,5 @@
-FROM quay.io/cybozu/golang:1.16-focal AS build
-ARG LOKI_VERSION=2.2.1
+FROM quay.io/cybozu/golang:1.17-focal AS build
+ARG LOKI_VERSION=2.3.0
 ARG SYSTEMD_VERSION=247
 
 WORKDIR /work
@@ -73,7 +73,7 @@ RUN apt-get update && \
 COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so.0 /usr/local/systemd/lib/libsystemd.so.0
 COPY --from=build /work/systemd/LICENSE.GPL2 /usr/local/systemd/LICENSE.GPL2
 COPY --from=build /work/systemd/LICENSE.LGPL2.1 /usr/local/systemd/LICENSE.LGPL2.1
-COPY --from=build /work/loki/cmd/promtail/promtail /usr/local/loki/bin/promtail
+COPY --from=build /work/loki/clients/cmd/promtail/promtail /usr/local/loki/bin/promtail
 COPY --from=build /work/loki/LICENSE /usr/local/loki/LICENSE
 
 ENV LD_LIBRARY_PATH=/usr/local/systemd/lib
