@@ -469,6 +469,10 @@ workflows:
           name: build-golang
           container-image: golang
       - build:
+          name: build-golang-1.16
+          container-image: golang
+          dir: golang-1.16
+      - build:
           name: build-golang-bionic
           container-image: golang
           dir: golang-bionic
