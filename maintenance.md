@@ -115,7 +115,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/bmc-reverse-proxy
    $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
+   $ go get -d k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
    $ go mod tidy
    ```
 2. Confirm test are green.
