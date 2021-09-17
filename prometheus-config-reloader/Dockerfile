@@ -1,9 +1,9 @@
 # prometheus-config-reloader container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG PROMETHEUS_OPERATOR_VERSION=0.42.1
+ARG PROMETHEUS_OPERATOR_VERSION=0.50.0
 
 RUN curl -fsSL -o prometheus-operator.tar.gz "https://github.com/prometheus-operator/prometheus-operator/archive/v${PROMETHEUS_OPERATOR_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f prometheus-operator.tar.gz \

@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
-ARG GRAFANA_VERSION=7.5.7
+FROM quay.io/cybozu/golang:1.17-focal AS build
+ARG GRAFANA_VERSION=7.5.10
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -13,12 +13,14 @@ RUN go run build.go build
 
 # Install Node.js 14.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
-RUN yarn install --pure-lockfile --no-progress
+# `--network-concurrency 1` is a (possibly incomplete) workaround for
+# "Extracting tar content of undefined failed, the file appears to be corrupt" random error
+RUN yarn install --pure-lockfile --no-progress --network-concurrency 1
 ENV NODE_ENV production
 RUN yarn build
 

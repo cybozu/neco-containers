@@ -3,7 +3,7 @@
 # stage1: build
 FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
-ARG DNSMASQ_VERSION=2.85
+ARG DNSMASQ_VERSION=2.86
 
 WORKDIR /work
 RUN curl -sfLO http://www.thekelleys.org.uk/dnsmasq/dnsmasq-${DNSMASQ_VERSION}.tar.gz \

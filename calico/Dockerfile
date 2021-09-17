@@ -1,7 +1,7 @@
 # calico container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
 ARG CALICO_VERSION=3.20.0
 

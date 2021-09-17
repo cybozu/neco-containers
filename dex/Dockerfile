@@ -1,7 +1,7 @@
 # dex container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
 ARG DEX_VERSION=2.27.0
 

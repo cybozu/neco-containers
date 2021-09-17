@@ -1,5 +1,5 @@
 # Build stage
-FROM quay.io/cybozu/golang:1.15-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
 ARG SEALED_SECRETS_VERSION=0.16.0
 
