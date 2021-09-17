@@ -13,7 +13,7 @@ RUN go run build.go build
 
 # Install Node.js 14.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_14.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn

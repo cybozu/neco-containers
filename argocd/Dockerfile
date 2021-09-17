@@ -36,7 +36,7 @@ RUN make argocd-all
 
 # Install Node.js 12.x and yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_12.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
