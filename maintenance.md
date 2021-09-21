@@ -158,8 +158,9 @@ The target container of these operations have the following badges, so check bef
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/hashicorp/consul/releases).
-2. Update `CONSUL_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG` file.
+2. Check the upstream Dockerfile in [separated repo](https://github.com/hashicorp/docker-consul). Note that this repo creates neither branches nor tags at all. Check commit history carefully.
+3. Update `CONSUL_VERSION` and `DOCKER_CONSUL_REVISION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` file.
 
 ## contour
 
