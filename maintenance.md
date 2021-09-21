@@ -20,24 +20,49 @@ The target container of these operations have the following badges, so check bef
 ## admission (neco-admission)
 
 ![Kubernetes Update](./kubernetes_update.svg)
+![Regular Update](./regular_update.svg)
 
-1. Update version variables in `Makefile`.
+In Kubernetes update:
+
+1. Update the following version variables in `Makefile`.
+   - `CONTROLLER_TOOLS_VERSION`
+   - `KUSTOMIZE_VERSION`
 2. Update go modules.
-3. Modify the code to match the new CRDs if CRDs are changed.
-   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
-   - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
-4. Generate code and manifests.
+3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
    $ make setup
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
-5. Confirm build and test are green.
+4. Confirm build and test are green.
    ```bash
    $ make build test
    ```
-6. Update `TAG` file.
+5. Update `TAG` file.
+
+In Regular update, do the following as part of the update of each CRD-providing product:
+
+1. Update a matching version variable from the following in `Makefile`.
+   - `CALICO_VERSION`
+   - `CONTOUR_VERSION`
+   - `ARGOCD_VERSION`
+   - `GRAFANA_OPERATOR_VERSION`
+2. Modify the code to match the new CRDs if CRDs are changed.
+   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
+   - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
+3. Generate code and manifests.
+   ```bash
+   $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
+   $ make setup
+   $ make generate manifests
+   # Commit, if there are any updated files.
+   ```
+3. Confirm build and test are green.
+   ```bash
+   $ make build test
+   ```
+4. Update `TAG` file.
 
 ## alertmanager
 
@@ -70,6 +95,8 @@ The target container of these operations have the following badges, so check bef
 ***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
+
+***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## bird
 
@@ -109,6 +136,8 @@ The target container of these operations have the following badges, so check bef
 3. Update version variables (`CALICO_VERSION` and `TINI_VERSION`) in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
+
+***NOTE:*** Calico's NetworkPolicy objects are validated by [neco-admission](#admission-neco-admission).  If NetworkPolicy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## ceph
 
@@ -175,6 +204,8 @@ The target container of these operations have the following badges, so check bef
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
+
+***NOTE:*** Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).  If HTTPProxy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## coredns
 
@@ -306,6 +337,9 @@ Ignore!!!
    - Note that the path of Dockerfile may be changed to https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/Dockerfile at some future point.
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
+
+***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+
 
 ## grafana_plugins_init
 
