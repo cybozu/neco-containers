@@ -32,6 +32,12 @@ test: crds simple-test setup-envtest
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	TEST_PERMISSIVE=true go test -v -count 1 ./... ; \
 	}
+	{ \
+	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
+	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
+	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	NO_HTTPPROXY_MUTATION=true go test -v -count 1 ./... ; \
+	}
 
 .PHONY: simple-test
 simple-test:

@@ -30,10 +30,11 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	newAnn := hp.GetAnnotations()
+	newIngressClassNameField, _, _ := getHTTPProxyIngressClassNameField(hp)
 
 	switch req.Operation {
 	case admissionv1.Create:
-		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" {
+		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" && newIngressClassNameField == "" {
 			return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
 		}
 
@@ -43,12 +44,16 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 		oldAnn := old.GetAnnotations()
+		oldIngressClassNameField, _, _ := getHTTPProxyIngressClassNameField(old)
 
 		if newAnn[annotationKubernetesIngressClass] != oldAnn[annotationKubernetesIngressClass] {
-			return admission.Denied("chaning annotation " + annotationKubernetesIngressClass + " is not allowed")
+			return admission.Denied("changing annotation " + annotationKubernetesIngressClass + " is not allowed")
 		}
 		if newAnn[annotationContourIngressClass] != oldAnn[annotationContourIngressClass] {
-			return admission.Denied("chaning annotation " + annotationContourIngressClass + " is not allowed")
+			return admission.Denied("changing annotation " + annotationContourIngressClass + " is not allowed")
+		}
+		if newIngressClassNameField != oldIngressClassNameField {
+			return admission.Denied("changing field .spec.ingressClassName is not allowed")
 		}
 	}
 

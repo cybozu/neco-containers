@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -53,6 +54,16 @@ func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
 
 	RunSpecs(t, "Webhook Suite")
+}
+
+func isHTTPProxyMutationDisabled() bool {
+	return os.Getenv("NO_HTTPPROXY_MUTATION") == "true"
+}
+
+type nullWebhook struct{}
+
+func (wh *nullWebhook) Handle(ctx context.Context, req admission.Request) admission.Response {
+	return admission.Allowed("ok")
 }
 
 var _ = BeforeSuite(func() {
@@ -115,7 +126,11 @@ var _ = BeforeSuite(func() {
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 	wh.Register(podValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
 	wh.Register(calicoValidateWebhookPath, NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
-	wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
+	if isHTTPProxyMutationDisabled() {
+		wh.Register(contourMutatingWebhookPath, &webhook.Admission{Handler: &nullWebhook{}})
+	} else {
+		wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
+	}
 	wh.Register(contourValidateWebhookPath, NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig))
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))

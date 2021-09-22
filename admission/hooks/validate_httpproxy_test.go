@@ -5,10 +5,9 @@ import (
 	. "github.com/onsi/gomega"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
-func fillHTTPProxy(name string, annotations map[string]string) client.Object {
+func fillHTTPProxy(name string, annotations map[string]string, ingressClassNameField *string) *unstructured.Unstructured {
 	hp := &unstructured.Unstructured{}
 	hp.SetGroupVersionKind(schema.GroupVersionKind{
 		Group:   "projectcontour.io",
@@ -19,31 +18,45 @@ func fillHTTPProxy(name string, annotations map[string]string) client.Object {
 	hp.SetNamespace("default")
 	hp.SetAnnotations(annotations)
 	hp.UnstructuredContent()["spec"] = map[string]interface{}{}
+	if ingressClassNameField != nil {
+		unstructured.SetNestedField(hp.UnstructuredContent(), *ingressClassNameField, "spec", fieldIngressClassName)
+	}
 	return hp
 }
 
 var _ = Describe("validate HTTPProxy webhook with ", func() {
 	It("should allow httpproxy with kubernetes.io/ingress.class", func() {
-		hp := fillHTTPProxy("vhp1", map[string]string{annotationKubernetesIngressClass: "global"})
+		hp := fillHTTPProxy("vhp1", map[string]string{annotationKubernetesIngressClass: "global"}, nil)
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should allow httpproxy with projectcontour.io/ingress.class", func() {
-		hp := fillHTTPProxy("vhp2", map[string]string{annotationContourIngressClass: "global"})
+		hp := fillHTTPProxy("vhp2", map[string]string{annotationContourIngressClass: "global"}, nil)
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
-	It("should deny httpproxy with no ingress.class annotations", func() {
-		hp := fillHTTPProxy("vhp2", nil)
+	It("should allow httpproxy with .spec.ingressClassName", func() {
+		ingressClassName := "global"
+		hp := fillHTTPProxy("vhp6", map[string]string{}, &ingressClassName)
 		err := k8sClient.Create(testCtx, hp)
-		Expect(err).Should(HaveOccurred())
-
+		Expect(err).NotTo(HaveOccurred())
 	})
 
+	if isHTTPProxyMutationDisabled() {
+		// Mutation precedes validation.
+		// Mutation sets default ingress class if not set by user.
+		// So this test should not run if mutation is enabled.
+		It("should deny httpproxy with no ingress class name", func() {
+			hp := fillHTTPProxy("vhp8", nil, nil)
+			err := k8sClient.Create(testCtx, hp)
+			Expect(err).Should(HaveOccurred())
+		})
+	}
+
 	It("should deny httpproxy to update kubernetes.io/ingress.class value", func() {
-		hp := fillHTTPProxy("vhp3", map[string]string{annotationKubernetesIngressClass: "global"})
+		hp := fillHTTPProxy("vhp3", map[string]string{annotationKubernetesIngressClass: "global"}, nil)
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -55,7 +68,7 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 	})
 
 	It("should deny httpproxy to update projectcontour.io/ingress.class value", func() {
-		hp := fillHTTPProxy("vhp4", map[string]string{annotationContourIngressClass: "global"})
+		hp := fillHTTPProxy("vhp4", map[string]string{annotationContourIngressClass: "global"}, nil)
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
@@ -66,8 +79,20 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		Expect(err).To(HaveOccurred())
 	})
 
+	It("should deny httpproxy to update .spec.ingressClassName value", func() {
+		ingressClassName := "global"
+		hp := fillHTTPProxy("vhp7", map[string]string{}, &ingressClassName)
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+
+		spec := hp.UnstructuredContent()["spec"].(map[string]interface{})
+		spec[fieldIngressClassName] = "forest"
+		err = k8sClient.Update(testCtx, hp)
+		Expect(err).To(HaveOccurred())
+	})
+
 	It("should allow httpproxy to update other annotations", func() {
-		hp := fillHTTPProxy("vhp5", map[string]string{annotationContourIngressClass: "global"})
+		hp := fillHTTPProxy("vhp5", map[string]string{annotationContourIngressClass: "global"}, nil)
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
