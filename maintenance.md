@@ -382,7 +382,7 @@ Only the base image and module dependency should be updated.
    - https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile
 3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+5. Update `TAG` files.
 
 ## kubernetes
 
