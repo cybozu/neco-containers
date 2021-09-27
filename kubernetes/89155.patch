@@ -1,19 +1,18 @@
-From c763c7cbf99acd0d769920f09986dba6b7aed698 Mon Sep 17 00:00:00 2001
+From af41a6baac7c983e1d5f0da55e163923004f9d7b Mon Sep 17 00:00:00 2001
 From: Ted Yu <yuzhihong@gmail.com>
-Date: Sat, 21 Mar 2020 07:03:20 -0700
-Subject: [PATCH] Enable reconciliation in manager#syncPod
+Date: Tue, 9 Mar 2021 10:49:45 -0800
+Subject: [PATCH] manager#syncPod should cover reconciliation
 
-Signed-off-by: Ted Yu <yuzhihong@gmail.com>
 ---
- pkg/kubelet/status/status_manager.go      | 19 +++++++++++--------
+ pkg/kubelet/status/status_manager.go      | 18 +++++++++++-------
  pkg/kubelet/status/status_manager_test.go |  2 +-
- 2 files changed, 12 insertions(+), 9 deletions(-)
+ 2 files changed, 12 insertions(+), 8 deletions(-)
 
 diff --git a/pkg/kubelet/status/status_manager.go b/pkg/kubelet/status/status_manager.go
-index 9ca4a49ebcf35..008e8f6cc4b4c 100644
+index 28b086e30a8fa..1f97eda012382 100644
 --- a/pkg/kubelet/status/status_manager.go
 +++ b/pkg/kubelet/status/status_manager.go
-@@ -55,6 +55,10 @@ type versionedPodStatus struct {
+@@ -54,6 +54,10 @@ type versionedPodStatus struct {
  type podStatusSyncRequest struct {
  	podUID types.UID
  	status versionedPodStatus
@@ -24,25 +23,25 @@ index 9ca4a49ebcf35..008e8f6cc4b4c 100644
  }
  
  // Updates pod statuses in apiserver. Writes only when new status has changed.
-@@ -165,7 +169,7 @@ func (m *manager) Start() {
- 			case syncRequest := <-m.podStatusChannel:
- 				klog.V(5).Infof("Status Manager: syncing pod: %q, with status: (%d, %v) from podStatusChannel",
- 					syncRequest.podUID, syncRequest.status.version, syncRequest.status.status)
+@@ -166,7 +170,7 @@ func (m *manager) Start() {
+ 					"podUID", syncRequest.podUID,
+ 					"statusVersion", syncRequest.status.version,
+ 					"status", syncRequest.status.status)
 -				m.syncPod(syncRequest.podUID, syncRequest.status)
 +				m.syncPod(syncRequest.podUID, syncRequest.status, true)
  			case <-syncTicker:
- 				klog.V(5).Infof("Status Manager: syncing batch")
+ 				klog.V(5).InfoS("Status Manager: syncing batch")
  				// remove any entries in the status channel since the batch will handle them
-@@ -445,7 +449,7 @@ func (m *manager) updateStatusInternal(pod *v1.Pod, status v1.PodStatus, forceUp
+@@ -447,7 +451,7 @@ func (m *manager) updateStatusInternal(pod *v1.Pod, status v1.PodStatus, forceUp
  	m.podStatuses[pod.UID] = newStatus
  
  	select {
 -	case m.podStatusChannel <- podStatusSyncRequest{pod.UID, newStatus}:
 +	case m.podStatusChannel <- podStatusSyncRequest{pod.UID, newStatus, true}:
- 		klog.V(5).Infof("Status Manager: adding pod: %q, with status: (%d, %v) to podStatusChannel",
- 			pod.UID, newStatus.version, newStatus.status)
- 		return true
-@@ -519,31 +523,30 @@ func (m *manager) syncBatch() {
+ 		klog.V(5).InfoS("Status Manager: adding pod with new status to podStatusChannel",
+ 			"pod", klog.KObj(pod),
+ 			"podUID", pod.UID,
+@@ -527,27 +531,27 @@ func (m *manager) syncBatch() {
  				syncedUID = mirrorUID
  			}
  			if m.needsUpdate(types.UID(syncedUID), status) {
@@ -61,7 +60,7 @@ index 9ca4a49ebcf35..008e8f6cc4b4c 100644
  	}()
  
  	for _, update := range updatedStatuses {
- 		klog.V(5).Infof("Status Manager: syncPod in syncbatch. pod UID: %q", update.podUID)
+ 		klog.V(5).InfoS("Status Manager: syncPod in syncbatch", "podUID", update.podUID)
 -		m.syncPod(update.podUID, update.status)
 +		m.syncPod(update.podUID, update.status, update.checkNeedsUpdate)
  	}
@@ -72,15 +71,11 @@ index 9ca4a49ebcf35..008e8f6cc4b4c 100644
 -	if !m.needsUpdate(uid, status) {
 +func (m *manager) syncPod(uid types.UID, status versionedPodStatus, checkNeedsUpdate bool) {
 +	if checkNeedsUpdate && !m.needsUpdate(uid, status) {
- 		klog.V(1).Infof("Status for pod %q is up-to-date; skipping", uid)
+ 		klog.V(1).InfoS("Status for pod is up-to-date; skipping", "podUID", uid)
  		return
  	}
--
- 	// TODO: make me easier to express from client code
- 	pod, err := m.kubeClient.CoreV1().Pods(status.podNamespace).Get(context.TODO(), status.podName, metav1.GetOptions{})
- 	if errors.IsNotFound(err) {
 diff --git a/pkg/kubelet/status/status_manager_test.go b/pkg/kubelet/status/status_manager_test.go
-index eb3684ca87b2a..3392beb19a24c 100644
+index 26e8db867173c..66a1f4fa41589 100644
 --- a/pkg/kubelet/status/status_manager_test.go
 +++ b/pkg/kubelet/status/status_manager_test.go
 @@ -127,7 +127,7 @@ func (m *manager) consumeUpdates() int {
