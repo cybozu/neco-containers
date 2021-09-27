@@ -403,14 +403,13 @@ Only the base image and module dependency should be updated.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
    $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-   $ go get sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
+   $ go get -d k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
+   $ go get -d sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
    $ go mod tidy
    ```
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
-   $ make setup
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
