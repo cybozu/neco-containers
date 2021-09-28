@@ -1,7 +1,7 @@
 # etcd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
 ARG ETCD_VERSION=3.4.16
 
