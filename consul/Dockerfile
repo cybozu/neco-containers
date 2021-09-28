@@ -10,7 +10,9 @@ WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN git clone --depth=1 -b v${CONSUL_VERSION} https://github.com/hashicorp/consul /work/consul
 
+# docker-entrypoint.sh contains non- bourne shell compatible variable substitution
 RUN curl -sSfL -o docker-entrypoint.sh https://raw.githubusercontent.com/hashicorp/docker-consul/${DOCKER_CONSUL_REVISION}/0.X/docker-entrypoint.sh \
+    && sed -i -e '1s,/bin/sh,/bin/bash,' docker-entrypoint.sh \
     && chmod +x docker-entrypoint.sh
 RUN curl -sSfL -o LICENSE-docker-consul https://raw.githubusercontent.com/hashicorp/docker-consul/${DOCKER_CONSUL_REVISION}/LICENSE
 
