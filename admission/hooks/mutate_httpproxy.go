@@ -56,7 +56,10 @@ func (m *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Requ
 		return admission.Allowed("ok")
 	}
 
-	setHTTPProxyIngressClassNameField(hp, m.defaultClass)
+	err = setHTTPProxyIngressClassNameField(hp, m.defaultClass)
+	if err != nil {
+		return admission.Errored(http.StatusInternalServerError, err)
+	}
 
 	marshaled, err := json.Marshal(hp)
 	if err != nil {

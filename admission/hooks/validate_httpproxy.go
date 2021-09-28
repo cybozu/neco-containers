@@ -35,7 +35,7 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 	switch req.Operation {
 	case admissionv1.Create:
 		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" && newIngressClassNameField == "" {
-			return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
+			return admission.Denied(fmt.Sprintf("either %s or %s annotation or .spec.ingressClassName field should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
 		}
 
 	case admissionv1.Update:
