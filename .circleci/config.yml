@@ -286,7 +286,7 @@ jobs:
             - "*"
   build-admission:
     docker:
-      - image: quay.io/cybozu/golang:1.16-focal
+      - image: quay.io/cybozu/golang:1.17-focal
     steps:
       - checkout
       - run: cd admission; make test
@@ -354,7 +354,7 @@ jobs:
             - share
   test-local-pv-provisioner:
     docker:
-      - image: quay.io/cybozu/golang:1.16-focal
+      - image: quay.io/cybozu/golang:1.17-focal
     steps:
       - checkout
       - run: cd local-pv-provisioner; make check-generate

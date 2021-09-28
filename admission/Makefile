@@ -1,10 +1,10 @@
-CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
-CONTROLLER_TOOLS_VERSION = 0.5.0
-KUSTOMIZE_VERSION = 3.8.10
-CALICO_VERSION = 3.18
-CONTOUR_VERSION = 1.17.1
-ARGOCD_VERSION = 1.8.6
-GRAFANA_OPERATOR_VERSION = 3.9.0
+CONTROLLER_TOOLS_VERSION = 0.6.2
+KUSTOMIZE_VERSION = 4.2.0
+CALICO_VERSION = 3.20
+CONTOUR_VERSION = 1.18.1
+ARGOCD_VERSION = 2.1.2
+GRAFANA_OPERATOR_VERSION = 3.10.3
+ENVTEST_K8S_VERSION = 1.21.4
 
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
@@ -22,24 +22,14 @@ crds:
 	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/integr8ly/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
 
 # Run tests, and set up envtest if not done already.
-ENVTEST_ASSETS_DIR := testbin
-ENVTEST_SCRIPT_URL := https://raw.githubusercontent.com/kubernetes-sigs/controller-runtime/v$(CONTROLLER_RUNTIME_VERSION)/hack/setup-envtest.sh
 .PHONY: test
-test: crds simple-test
-ifeq (,$(wildcard $(ENVTEST_ASSETS_DIR)/setup-envtest.sh))
-	mkdir -p $(ENVTEST_ASSETS_DIR)
-	curl -sSLo $(ENVTEST_ASSETS_DIR)/setup-envtest.sh $(ENVTEST_SCRIPT_URL)
-endif
+test: crds simple-test setup-envtest
 	{ \
-	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
-	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
-	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	go test ./... -coverprofile cover.out ; \
 	}
 	{ \
-	source $(ENVTEST_ASSETS_DIR)/setup-envtest.sh && \
-	fetch_envtest_tools $(ENVTEST_ASSETS_DIR) && \
-	setup_envtest_env $(PWD)/$(ENVTEST_ASSETS_DIR) && \
+	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	TEST_PERMISSIVE=true go test -v -count 1 ./... ; \
 	}
 
@@ -75,29 +65,35 @@ generate: controller-gen
 CONTROLLER_GEN := $(PWD)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
-	$(call go-get-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
+	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download kustomize locally if necessary
 KUSTOMIZE := $(PWD)/bin/kustomize
 .PHONY: kustomize
 kustomize:
-	$(call go-get-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
+
+# Download setup-envtest locally if necessary
+SETUP_ENVTEST = $(PWD)/bin/setup-envtest
+.PHONY: setup-envtest
+setup-envtest:
+	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
 
 .PHONY: clean
 clean:
-	rm -rf bin testbin
+	rm -rf bin
 	rm -f config/crd/bases/*
 
-# go-get-tool will 'go get' any package $2 and install it to $1.
+# go-install-tool will 'go install' any package $2 and install it to $1.
 PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-define go-get-tool
+define go-install-tool
 @[ -f $(1) ] || { \
 set -e ;\
 TMP_DIR=$$(mktemp -d) ;\
 cd $$TMP_DIR ;\
 go mod init tmp ;\
 echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go get $(2) ;\
+GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
 rm -rf $$TMP_DIR ;\
 }
 endef

@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
-ARG PAUSE_VERSION=3.2
+ARG PAUSE_VERSION=3.6
 
 RUN mkdir /work
 
@@ -21,5 +21,7 @@ FROM scratch
 
 COPY --from=build /work/pause /pause
 COPY --from=build /work/LICENSE /LICENSE
+
+USER 65535:65535
 
 ENTRYPOINT ["/pause"]

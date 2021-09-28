@@ -115,7 +115,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/bmc-reverse-proxy
    $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
+   $ go get -d k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
    $ go mod tidy
    ```
 2. Confirm test are green.
@@ -382,16 +382,17 @@ Only the base image and module dependency should be updated.
    - https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile
 3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+5. Update `TAG` files.
 
 ## kubernetes
 
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
-2. Update `K8S_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+2. Check if each of the patches is still necessary.
+3. Update `K8S_VERSION` in `Dockerfile`.
+4. Update image tag in `README.md`.
+5. Update `BRANCH` and `TAG` files.
 
 ## local-pv-provisioner
 
@@ -402,14 +403,13 @@ Only the base image and module dependency should be updated.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
    $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-   $ go get sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
+   $ go get -d k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
+   $ go get -d sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
    $ go mod tidy
    ```
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
-   $ make setup
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
@@ -441,7 +441,7 @@ Only the base image and module dependency should be updated.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/machines-endpoints
    $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
+   $ go get -d k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
    $ go mod tidy
    ```
 3. Confirm test is green.
