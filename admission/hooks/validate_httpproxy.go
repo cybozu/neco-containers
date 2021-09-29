@@ -30,9 +30,12 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	newAnn := hp.GetAnnotations()
-	newIngressClassNameField, _, err := getHTTPProxyIngressClassNameField(hp)
+	newIngressClassNameField, ok, err := getHTTPProxyIngressClassNameField(hp)
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
+	}
+	if !ok {
+		newIngressClassNameField = ""
 	}
 
 	switch req.Operation {
@@ -47,9 +50,12 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 		oldAnn := old.GetAnnotations()
-		oldIngressClassNameField, _, err := getHTTPProxyIngressClassNameField(old)
+		oldIngressClassNameField, ok, err := getHTTPProxyIngressClassNameField(old)
 		if err != nil {
 			return admission.Errored(http.StatusBadRequest, err)
+		}
+		if !ok {
+			oldIngressClassNameField = ""
 		}
 
 		if newAnn[annotationKubernetesIngressClass] != oldAnn[annotationKubernetesIngressClass] {
