@@ -30,11 +30,18 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 	newAnn := hp.GetAnnotations()
+	newIngressClassNameField, ok, err := getHTTPProxyIngressClassNameField(hp)
+	if err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
+	}
+	if !ok {
+		newIngressClassNameField = ""
+	}
 
 	switch req.Operation {
 	case admissionv1.Create:
-		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" {
-			return admission.Denied(fmt.Sprintf("either %s or %s annotation should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
+		if newAnn[annotationKubernetesIngressClass] == "" && newAnn[annotationContourIngressClass] == "" && newIngressClassNameField == "" {
+			return admission.Denied(fmt.Sprintf("either %s or %s annotation or .spec.ingressClassName field should be set", annotationKubernetesIngressClass, annotationContourIngressClass))
 		}
 
 	case admissionv1.Update:
@@ -43,12 +50,22 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 			return admission.Errored(http.StatusBadRequest, err)
 		}
 		oldAnn := old.GetAnnotations()
+		oldIngressClassNameField, ok, err := getHTTPProxyIngressClassNameField(old)
+		if err != nil {
+			return admission.Errored(http.StatusBadRequest, err)
+		}
+		if !ok {
+			oldIngressClassNameField = ""
+		}
 
 		if newAnn[annotationKubernetesIngressClass] != oldAnn[annotationKubernetesIngressClass] {
-			return admission.Denied("chaning annotation " + annotationKubernetesIngressClass + " is not allowed")
+			return admission.Denied("changing annotation " + annotationKubernetesIngressClass + " is not allowed")
 		}
 		if newAnn[annotationContourIngressClass] != oldAnn[annotationContourIngressClass] {
-			return admission.Denied("chaning annotation " + annotationContourIngressClass + " is not allowed")
+			return admission.Denied("changing annotation " + annotationContourIngressClass + " is not allowed")
+		}
+		if newIngressClassNameField != oldIngressClassNameField {
+			return admission.Denied("changing field .spec.ingressClassName is not allowed")
 		}
 	}
 

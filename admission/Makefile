@@ -28,9 +28,11 @@ test: crds simple-test setup-envtest
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	go test ./... -coverprofile cover.out ; \
 	}
+	# TEST_PERMISSIVE test and NO_HTTPPROXY_MUTATION test can run at the same time
+	# because they do not affect each other.
 	{ \
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
-	TEST_PERMISSIVE=true go test -v -count 1 ./... ; \
+	TEST_PERMISSIVE=true NO_HTTPPROXY_MUTATION=true go test -v -count 1 ./... ; \
 	}
 
 .PHONY: simple-test
