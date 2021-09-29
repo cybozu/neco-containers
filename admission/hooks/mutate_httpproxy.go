@@ -52,7 +52,11 @@ func (m *contourHTTPProxyMutator) Handle(ctx context.Context, req admission.Requ
 	if _, ok := ann[annotationContourIngressClass]; ok {
 		return admission.Allowed("ok")
 	}
-	if _, ok, _ := getHTTPProxyIngressClassNameField(hp); ok {
+	_, ok, err := getHTTPProxyIngressClassNameField(hp)
+	if err != nil {
+		return admission.Errored(http.StatusBadRequest, err)
+	}
+	if ok {
 		return admission.Allowed("ok")
 	}
 

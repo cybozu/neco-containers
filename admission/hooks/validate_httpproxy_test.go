@@ -85,8 +85,7 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		spec := hp.UnstructuredContent()["spec"].(map[string]interface{})
-		spec[fieldIngressClassName] = "forest"
+		unstructured.SetNestedField(hp.UnstructuredContent(), "forest", "spec", fieldIngressClassName)
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
 	})
