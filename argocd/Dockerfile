@@ -24,16 +24,6 @@ ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-WORKDIR /work
-RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
-    tar zxf - -C /work/ \
-    && mkdir -p "${GOPATH}/src/github.com/argoproj/" \
-    && mv "argo-cd-${ARGOCD_VERSION}" "${GOPATH}/src/${PACKAGE}"
-
-# Perform the build
-WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN make argocd-all
-
 # Install Node.js 12.x and yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
 RUN curl -sSLf https://deb.nodesource.com/setup_12.x | bash - \
@@ -41,11 +31,22 @@ RUN curl -sSLf https://deb.nodesource.com/setup_12.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
+WORKDIR /work
+RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
+    tar zxf - -C /work/ \
+    && mkdir -p "${GOPATH}/src/github.com/argoproj/" \
+    && mv "argo-cd-${ARGOCD_VERSION}" "${GOPATH}/src/${PACKAGE}"
+
+# UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install
 
 ENV ARGO_VERSION=$ARGOCD_VERSION
 RUN NODE_ENV='production' NODE_ONLINE_ENV='online' yarn build
+
+# Perform the build
+WORKDIR /go/src/github.com/argoproj/argo-cd
+RUN make argocd-all
 
 
 # Final image
@@ -66,13 +67,11 @@ COPY --from=builder /usr/local/bin/helm /usr/local/argocd/bin/helm
 ENV USER=argocd
 
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
-COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/ui/dist/app /shared/app
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
 
-RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-util
 RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-server
 RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-repo-server
 RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-application-controller
