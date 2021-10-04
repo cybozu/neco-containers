@@ -98,17 +98,6 @@ This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` i
 
 The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.
 
-ServiceValidator
-----------------
-
-ServiceValidator validates Service.
-
-This validating webhook ensures the Service resource's `spec.externalIPs` is empty.
-
-The purpose of this validator is a workaround for [CVE-2020-8554](https://github.com/kubernetes/kubernetes/issues/97076).
-
-The status of Service cannot be updated manually by tenant users, so this just focuses on the externalIPs field.
-
 Docker images
 -------------
 
