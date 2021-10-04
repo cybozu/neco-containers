@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.16-focal AS build
 
-ARG ROOK_VERSION=1.6.3
+ARG ROOK_VERSION=1.7.4
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -11,17 +11,16 @@ ENV GOPATH=/work/go
 RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
 COPY expand-timeout.patch /tmp/
-COPY fix-liveness-probe.patch /tmp/
 
 WORKDIR ${ROOK_DIR}
 
 RUN git checkout v${ROOK_VERSION}
 RUN patch -p1 --no-backup-if-mismatch < /tmp/expand-timeout.patch
-RUN patch -p1 --no-backup-if-mismatch < /tmp/fix-liveness-probe.patch
-RUN make build IMAGES=""
+RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false
 
 WORKDIR ${ROOK_DIR}/images/ceph
-RUN make generate-csv-ceph-templates
+RUN mkdir /tmp/csv_template_dir
+RUN make CSV_TEMPLATE_DIR=/tmp/csv_template_dir generate-csv-templates
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ceph:16.2.4.1
@@ -39,7 +38,7 @@ COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/csi/template /etc
 COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/monitoring /etc/ceph-monitoring
 COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/create-external-cluster-resources.* /etc/rook-external/
 COPY --from=build ${ROOK_DIR}/cluster/examples/kubernetes/ceph/test-data/ceph-status-out /etc/rook-external/test-data/
-COPY --from=build ${ROOK_DIR}/cluster/olm/ceph/templates /etc/ceph-csv-templates
+COPY --from=build /tmp/csv_template_dir/cluster/olm/ceph/templates /etc/ceph-csv-templates
 COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64 /tini
