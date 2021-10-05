@@ -2,11 +2,11 @@
 
 FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
-ARG SQUID_VERSION=4.16
+ARG SQUID_VERSION=5.2
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
-RUN curl -sfLO http://www.squid-cache.org/Versions/v4/squid-${SQUID_VERSION}.tar.xz \
+RUN curl -sfLO http://www.squid-cache.org/Versions/v5/squid-${SQUID_VERSION}.tar.xz \
     && tar --strip-components=1 -xf /work/squid-${SQUID_VERSION}.tar.xz \
     && ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
