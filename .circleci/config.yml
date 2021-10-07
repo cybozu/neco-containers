@@ -231,6 +231,125 @@ jobs:
           root: src/workspace
           paths:
             - "*"
+  build-cilium:
+    parameters:
+      envoy-version:
+        type: string
+      image-tools-version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:20.04
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists cilium)"
+            if [ "$c" = ng ]; then
+                echo cilium > BUILDS
+            fi
+      - run:
+          name: Install package dependencies
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            apt-get install -y --no-install-recommends autoconf \
+              automake \
+              binutils \
+              bison \
+              build-essential \
+              clang-10 \
+              cmake \
+              coreutils \
+              curl \
+              flex \
+              g++ \
+              gcc \
+              git \
+              libc6-dev \
+              libelf-dev \
+              libmnl-dev \
+              libtool \
+              lld-10 \
+              llvm-10-dev \
+              make \
+              ninja-build \
+              patch \
+              pkg-config \
+              python2 \
+              python3 \
+              python3-pip \
+              unzip \
+              virtualenv \
+              wget \
+              zip
+            ln /usr/bin/clang-10 /usr/bin/clang
+            ln /usr/bin/clang++-10 /usr/bin/clang++
+            ln /usr/bin/lld-10 /usr/bin/lld
+            update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+      - run:
+          name: Download cilium/proxy
+          command: |
+            mkdir -p src/workspace src/cilium-proxy
+            if [ ! -f BUILDS ]; then exit 0; fi
+            curl -sSLf https://github.com/cilium/proxy/archive/<< parameters.envoy-version >>.tar.gz | \
+              tar zxf - --strip-components 1 -C src/cilium-proxy
+      - run:
+          name: Download cilium/image-tools
+          command: |
+            mkdir -p src/workspace/bin src/workspace/usr/local/bin src/workspace/usr/lib src/image-tools
+            if [ ! -f BUILDS ]; then exit 0; fi
+            curl -sSLf https://github.com/cilium/image-tools/archive/<< parameters.image-tools-version >>.tar.gz | \
+              tar zxf - --strip-components 1 -C src/image-tools
+      - run:
+          name: Install bazel
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            BAZEL_VERSION="$(cat src/cilium-proxy/.bazelversion)"
+            curl -o /tmp/bazel.deb -sfL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+            dpkg -i /tmp/bazel.deb
+            rm -rf /tmp/bazel.deb
+      - run:
+          name: Build cilium-envoy
+          environment:
+            BAZEL_BUILD_OPTS: "--remote_upload_local_results=false --disk_cache=/tmp/bazel-cache"
+            PKG_BUILD: 1
+            DESTDIR: /tmp/install
+          command: |
+            cd src/cilium-proxy
+            make bazel-bin/cilium-envoy
+            ./tools/get_workspace_status
+            make install
+            mv /tmp/install ../workspace
+      - run:
+          name: Build llvm
+          command: |
+            cd src/image-tools
+            images/llvm/checkout-llvm.sh
+            images/llvm/build-llvm-native.sh
+            mv /out/linux/amd64/bin/clang /out/linux/amd64/bin/llc /out/linux/amd64/bin/llvm-objcopy ../workspace/bin
+      - run:
+          name: Build bpftool
+          command: |
+            cd src/image-tools
+            images/bpftool/checkout-linux.sh
+            images/bpftool/build-bpftool-native.sh
+            mv /out/linux/amd64/bin/bpftool ../workspace/usr/local/bin/
+      - run:
+          name: Build iproute2
+          command: |
+            cd src/image-tools
+            images/iproute2/checkout-libbpf.sh
+            images/iproute2/build-libbpf-native.sh
+            images/iproute2/checkout-iproute2.sh
+            images/iproute2/build-iproute2-native.sh
+            mv /out/linux/amd64/lib64/libbpf* ../workspace/usr/lib/
+            mv /out/linux/amd64/bin/ip /out/linux/amd64/bin/tc /out/linux/amd64/bin/ss ../workspace/usr/local/bin/
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
   build-cert-manager:
     parameters:
       version:
@@ -426,6 +545,19 @@ workflows:
       - build:
           name: build-chrony
           container-image: chrony
+      - build-cilium:
+          envoy-version: 9b1701da9cc035a1696f3e492ee2526101262e56
+          image-tools-version: d5c220c956e559562bcc4f42462746a153234107
+      - build:
+          name: build-cilium
+          container-image: cilium
+          attach: true
+          dir: cilium
+          requires:
+            - build-cilium
+      - build:
+          name: build-cilium-operator-generic
+          container-image: cilium-operator-generic
       - build:
           name: build-configmap-reload
           container-image: configmap-reload
@@ -491,6 +623,9 @@ workflows:
       - build:
           name: build-heartbeat
           container-image: heartbeat
+      - build:
+          name: build-hubble-relay
+          container-image: hubble-relay
       - build:
           name: build-hnc
           container-image: hnc
