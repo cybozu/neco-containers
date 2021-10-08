@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG METALLB_VERSION=0.10.2
+ARG METALLB_VERSION=0.10.3
 
 WORKDIR /work/metallb
 
