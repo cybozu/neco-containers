@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.16-focal AS build
 
-ARG ROOK_VERSION=1.7.4
+ARG ROOK_VERSION=1.7.5
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
