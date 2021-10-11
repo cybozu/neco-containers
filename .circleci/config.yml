@@ -624,11 +624,15 @@ workflows:
           name: build-heartbeat
           container-image: heartbeat
       - build:
+          name: build-hnc
+          container-image: hnc
+      - build:
           name: build-hubble-relay
           container-image: hubble-relay
       - build:
-          name: build-hnc
-          container-image: hnc
+          name: build-hubble-ui
+          container-image: hubble-ui
+          targets: hubble-ui hubble-ui-backend
       - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics

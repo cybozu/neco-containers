@@ -1,4 +1,3 @@
-ARG BASE_IMAGE=quay.io/cybozu/ubuntu:20.04
 ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.17-focal
 ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 ARG DESTDIR=/tmp/install/linux/amd64
@@ -70,7 +69,7 @@ ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock
 COPY --from=build-base /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=build-base /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build-base /out/linux/amd64/bin/hubble /usr/bin/hubble
-COPY --from=build-base ${DESTDIR} /
+COPY --from=builder ${DESTDIR} /
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libelf1 \
@@ -81,9 +80,10 @@ RUN apt-get update \
     && apt-get purge --auto-remove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && /configure-iptables-wrapper.sh
+    && /configure-iptables-wrapper.sh \
+    && groupadd -f cilium
 
 WORKDIR /home/cilium
 
 ENV INITSYSTEM="SYSTEMD"
-ENTRYPOINT ["/cilium"]
+ENTRYPOINT ["/usr/bin/cilium"]
