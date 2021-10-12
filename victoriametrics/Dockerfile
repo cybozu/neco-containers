@@ -12,7 +12,7 @@ ARG VICTORIAMETRICS_SINGLE_VERSION
 
 COPY download_and_build.sh /
 WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
-RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert
+RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert vmbackup vmrestore vmctl
 
 #
 FROM quay.io/cybozu/golang:1.17-focal AS build-cluster
@@ -57,6 +57,36 @@ USER 10000:10000
 EXPOSE 8880
 
 ENTRYPOINT ["/vmalert"]
+
+#
+FROM quay.io/cybozu/ubuntu:20.04 AS vmbackup
+
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmbackup /
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
+
+USER 10000:10000
+
+ENTRYPOINT ["/vmbackup"]
+
+#
+FROM quay.io/cybozu/ubuntu:20.04 AS vmrestore
+
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmrestore /
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
+
+USER 10000:10000
+
+ENTRYPOINT ["/vmrestore"]
+
+#
+FROM quay.io/cybozu/ubuntu:20.04 AS vmctl
+
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmctl /
+COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/LICENSE /
+
+USER 10000:10000
+
+ENTRYPOINT ["/vmctl"]
 
 #
 FROM quay.io/cybozu/ubuntu:20.04 AS vminsert

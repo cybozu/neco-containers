@@ -610,4 +610,4 @@ workflows:
       - build:
           name: build-victoriametrics
           container-image: victoriametrics
-          targets: vmsingle vmagent vmalert vminsert vmselect vmstorage
+          targets: vmsingle vmagent vmalert vmbackup vmrestore vmctl vminsert vmselect vmstorage
