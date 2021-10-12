@@ -41,7 +41,7 @@ RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o backend \
     && ./build-gops.sh
 
 # Stage 2: hubble-ui runtime
-FROM ${UBUNTU_IMAGE} as hubble-ui
+FROM ${UBUNTU_IMAGE} as frontend
 ARG NGINX_VERSION
 ARG NJS_VERSION
 ARG PKG_RELEASE
@@ -130,7 +130,7 @@ USER $UID
 CMD ["nginx", "-g", "daemon off;"]
 
 # Stage 2: hubble-ui-backend runtime
-FROM ${BACKEND_IMAGE} as hubble-ui-backend
+FROM ${BACKEND_IMAGE} as backend
 COPY --from=build-hubble-ui-backend /app/backend/backend /
 COPY --from=build-hubble-ui-backend /out/linux/amd64/bin/gops /usr/bin/gops
 

@@ -401,7 +401,7 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly for both `hubble-ui` and `hubble-ui-backend`.
+2. Update the `BRANCH` and `TAG` files accordingly.
 3. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
    1. `NGINX_VERSION`
    2. `NJS_VERSION`
