@@ -16,9 +16,6 @@ cd src
 git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules https://github.com/ceph/ceph.git
 cd ceph
 
-# Apply patches
-patch -p1 --no-backup-if-mismatch < ${CEPH_DIR}/report-error.patch
-
 # Install dependencies
 apt-get update
 ./install-deps.sh
