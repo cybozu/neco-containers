@@ -171,6 +171,26 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
+## cilium
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
+2. If necessary, update the `envoy-version` and `image-tools-version` parameters for the `build-cilium` job in the CircleCI `main` workflow.
+   1. The `envoy-version` is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
+   2. For `image-tools-version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
+3. Check whether manually applied patches have been included in the new release and remove them accordingly.
+4. Update the `BRANCH` and `TAG` files accordingly.
+
+## cilium-operator-generic
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
+2. Update the `BRANCH` and `TAG` files accordingly.
+
+***NOTE:*** The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
+
 ## configmap-reload
 
 ![Regular Update](./regular_update.svg)
@@ -364,6 +384,29 @@ Only the base image and module dependency should be updated.
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+
+
+## hubble-relay
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
+2. Update the `BRANCH` and `TAG` files accordingly.
+
+***NOTE:*** The hubble-relay image should be updated at the same time as the cilium image for consistency.
+
+
+## hubble-ui
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
+2. Update the `BRANCH` and `TAG` files accordingly.
+3. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
+   1. `NGINX_VERSION`
+   2. `NJS_VERSION`
+   3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
+
 
 ## kube-metrics-adapter
 
