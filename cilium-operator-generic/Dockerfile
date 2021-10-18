@@ -15,7 +15,8 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && make licenses-all \
     && apt-get update \
     && apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu \
-    && images/runtime/build-gops.sh
+    && images/runtime/build-gops.sh \
+    && mkdir -p /etc/gops
 
 # operator-generic
 WORKDIR /go/src/github.com/cilium/cilium/operator
@@ -25,12 +26,13 @@ RUN make cilium-operator-generic
 FROM ${BASE_IMAGE}
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
+COPY --from=build --chown=10000:10000 /etc/gops /etc/gops
 COPY --from=build /go/src/github.com/cilium/cilium/LICENSE.all /LICENSE
-COPY --from=build /go/src/github.com/cilium/cilium/operator/cilium-operator-generic /
+COPY --from=build /go/src/github.com/cilium/cilium/operator/cilium-operator-generic /usr/bin/cilium-operator-generic
 
 USER 10000:10000
 
 WORKDIR /
-ENV GOPS_CONFIG_DIR=/
+ENV GOPS_CONFIG_DIR=/etc/gops
 
-ENTRYPOINT ["/cilium-operator-generic"]
+ENTRYPOINT ["/usr/bin/cilium-operator-generic"]
