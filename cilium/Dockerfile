@@ -62,6 +62,7 @@ FROM ${UBUNTU_IMAGE}
 ARG DESTDIR
 COPY workspace/bin/clang workspace/bin/llc /bin/
 COPY workspace/usr/local/bin /usr/local/bin
+COPY workspace/usr/bin /usr/bin
 COPY workspace/usr/lib /usr/lib
 # When used within the Cilium container, Hubble CLI should target the
 # local unix domain socket instead of Hubble Relay.

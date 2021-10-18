@@ -298,7 +298,7 @@ jobs:
       - run:
           name: Download cilium/image-tools
           command: |
-            mkdir -p src/workspace/bin src/workspace/usr/local/bin src/workspace/usr/lib src/image-tools
+            mkdir -p src/workspace/bin src/workspace/usr/bin src/workspace/usr/local/bin src/workspace/usr/lib src/image-tools
             if [ ! -f BUILDS ]; then exit 0; fi
             curl -sSLf https://github.com/cilium/image-tools/archive/<< parameters.image-tools-version >>.tar.gz | \
               tar zxf - --strip-components 1 -C src/image-tools
@@ -318,10 +318,11 @@ jobs:
             DESTDIR: /tmp/install
           command: |
             cd src/cilium-proxy
+            echo "<< parameters.envoy-version >>" > SOURCE_VERSION
             make bazel-bin/cilium-envoy
             ./tools/get_workspace_status
             make install
-            mv /tmp/install ../workspace
+            mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
       - run:
           name: Build llvm
           command: |
