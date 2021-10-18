@@ -22,7 +22,9 @@ Usage
 
    ```console
    kubectl get endpoints prometheus-node-targets
+   kubectl get endpointslice prometheus-node-targets
    kubectl get endpoints bootserver-etcd-metrics
+   kubectl get endpointslice bootserver-etcd-metrics
    kubectl get configmap bmc-proxy
    ```
  

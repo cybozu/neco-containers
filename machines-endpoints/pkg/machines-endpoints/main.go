@@ -17,6 +17,7 @@ import (
 	serfclient "github.com/hashicorp/serf/client"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -199,8 +200,40 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 	_, err = c.k8s.CoreV1().Endpoints(ns).Update(ctx, &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: target,
+			Labels: map[string]string{
+				"endpointslice.kubernetes.io/skip-mirror": "true",
+			},
 		},
 		Subsets: []corev1.EndpointSubset{subset},
+	}, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
+
+	addresses := make([]string, len(targetIPs))
+	for i, ip := range targetIPs {
+		addresses[i] = ip.String()
+	}
+	_, err = c.k8s.DiscoveryV1().EndpointSlices(ns).Update(ctx, &discoveryv1.EndpointSlice{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: target,
+			Labels: map[string]string{
+				"endpointslice.kubernetes.io/managed-by": "machines-endpoints.cybozu.com",
+				"kubernetes.io/service-name":             target,
+			},
+		},
+		AddressType: discoveryv1.AddressTypeIPv4,
+		Endpoints: []discoveryv1.Endpoint{
+			{
+				Addresses: addresses,
+			},
+		},
+		Ports: []discoveryv1.EndpointPort{
+			{
+				Name: &portName,
+				Port: &port,
+			},
+		},
 	}, metav1.UpdateOptions{})
 	return err
 }
