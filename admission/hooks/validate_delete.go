@@ -3,6 +3,7 @@ package hooks
 import (
 	"context"
 	"fmt"
+	corev1 "k8s.io/api/core/v1"
 	"net/http"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -12,8 +13,9 @@ import (
 )
 
 const annotationForDelete = annotatePrefix + "i-am-sure-to-delete"
+const labelDevelopment = "development"
 
-// +kubebuilder:webhook:path=/validate-delete,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=namespaces,verbs=delete,versions=v1,name=vdelete.kb.io,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/validate-delete,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=namespaces;resourcequotas,verbs=delete,versions=v1,name=vdelete.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type deleteValidator struct {
 	client  client.Client
@@ -43,6 +45,18 @@ func (v *deleteValidator) Handle(ctx context.Context, req admission.Request) adm
 
 	if val, ok := ann[annotationForDelete]; ok && val == name {
 		return admission.Allowed("confirmed valid annotation")
+	}
+
+	ns := obj.GetNamespace()
+	if len(ns) != 0 {
+		namespace := &corev1.Namespace{}
+		err := v.client.Get(ctx, client.ObjectKey{Name: ns}, namespace)
+		if err != nil {
+			return admission.Errored(http.StatusInternalServerError, err)
+		}
+		if val, ok := namespace.Labels[labelDevelopment]; ok && val == "true" {
+			return admission.Allowed("ignore in dev namespaces")
+		}
 	}
 
 	return admission.Denied(fmt.Sprintf(`add "%si-am-sure-to-delete: %s" annotation to delete this`, annotatePrefix, name))
