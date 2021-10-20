@@ -176,9 +176,9 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. If necessary, update the `envoy-version` and `image-tools-version` parameters for the `build-cilium` job in the CircleCI `main` workflow.
-   1. The `envoy-version` is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
-   2. For `image-tools-version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
+2. If necessary, update the `version` parameters for the `build-cilium-envoy` and `build-cilium-image-tools` jobs in the CircleCI `main` workflow.
+   1. The `version` for envoy is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
+   2. For image-tools' `version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
 3. Check whether manually applied patches have been included in the new release and remove them accordingly.
 4. Update the `BRANCH` and `TAG` files accordingly.
 

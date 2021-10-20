@@ -231,11 +231,9 @@ jobs:
           root: src/workspace
           paths:
             - "*"
-  build-cilium:
+  build-cilium-envoy:
     parameters:
-      envoy-version:
-        type: string
-      image-tools-version:
+      version:
         type: string
     docker:
       - image: quay.io/cybozu/ubuntu-dev:20.04
@@ -291,17 +289,10 @@ jobs:
       - run:
           name: Download cilium/proxy
           command: |
-            mkdir -p src/workspace src/cilium-proxy
+            mkdir -p src/workspace/usr/bin src/cilium-proxy
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -sSLf https://github.com/cilium/proxy/archive/<< parameters.envoy-version >>.tar.gz | \
+            curl -sSLf https://github.com/cilium/proxy/archive/<< parameters.version >>.tar.gz | \
               tar zxf - --strip-components 1 -C src/cilium-proxy
-      - run:
-          name: Download cilium/image-tools
-          command: |
-            mkdir -p src/workspace/bin src/workspace/usr/bin src/workspace/usr/local/bin src/workspace/usr/lib src/image-tools
-            if [ ! -f BUILDS ]; then exit 0; fi
-            curl -sSLf https://github.com/cilium/image-tools/archive/<< parameters.image-tools-version >>.tar.gz | \
-              tar zxf - --strip-components 1 -C src/image-tools
       - run:
           name: Install bazel
           command: |
@@ -317,15 +308,69 @@ jobs:
             PKG_BUILD: 1
             DESTDIR: /tmp/install
           command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
             cd src/cilium-proxy
-            echo "<< parameters.envoy-version >>" > SOURCE_VERSION
+            echo "<< parameters.version >>" > SOURCE_VERSION
             make bazel-bin/cilium-envoy
             ./tools/get_workspace_status
             make install
             mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
+  build-cilium-image-tools:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:20.04
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists cilium)"
+            if [ "$c" = ng ]; then
+                echo cilium > BUILDS
+            fi
+      - run:
+          name: Install package dependencies
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            apt-get install -y --no-install-recommends automake \
+              binutils \
+              bison \
+              build-essential \
+              cmake \
+              curl \
+              flex \
+              g++ \
+              gcc \
+              git \
+              libelf-dev \
+              libmnl-dev \
+              libtool \
+              make \
+              ninja-build \
+              pkg-config \
+              python2 \
+              python3 \
+              python3-pip \
+              unzip
+      - run:
+          name: Download cilium/image-tools
+          command: |
+            mkdir -p src/workspace/bin src/workspace/usr/local/bin src/workspace/usr/lib src/image-tools
+            if [ ! -f BUILDS ]; then exit 0; fi
+            curl -sSLf https://github.com/cilium/image-tools/archive/<< parameters.version >>.tar.gz | \
+              tar zxf - --strip-components 1 -C src/image-tools
       - run:
           name: Build llvm
           command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
             cd src/image-tools
             images/llvm/checkout-llvm.sh
             images/llvm/build-llvm-native.sh
@@ -333,6 +378,7 @@ jobs:
       - run:
           name: Build bpftool
           command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
             cd src/image-tools
             images/bpftool/checkout-linux.sh
             images/bpftool/build-bpftool-native.sh
@@ -340,6 +386,7 @@ jobs:
       - run:
           name: Build iproute2
           command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
             cd src/image-tools
             images/iproute2/checkout-libbpf.sh
             images/iproute2/build-libbpf-native.sh
@@ -546,16 +593,18 @@ workflows:
       - build:
           name: build-chrony
           container-image: chrony
-      - build-cilium:
-          envoy-version: 9b1701da9cc035a1696f3e492ee2526101262e56
-          image-tools-version: d5c220c956e559562bcc4f42462746a153234107
+      - build-cilium-envoy:
+          version: 9b1701da9cc035a1696f3e492ee2526101262e56
+      - build-cilium-image-tools:
+          version: d5c220c956e559562bcc4f42462746a153234107
       - build:
           name: build-cilium
           container-image: cilium
           attach: true
           dir: cilium
           requires:
-            - build-cilium
+            - build-cilium-envoy
+            - build-cilium-image-tools
       - build:
           name: build-cilium-operator-generic
           container-image: cilium-operator-generic
