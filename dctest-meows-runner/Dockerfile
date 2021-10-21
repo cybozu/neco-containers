@@ -62,6 +62,8 @@ RUN apt-get update \
     && chown -R actions:actions /opt/hostedtoolcache \
     && chown -R actions:actions ${HOME}
 
-COPY --chown=actions:actions bootstrap.sh ${HOME}
+COPY --chown=actions:actions dctest-bootstrap /usr/local/bin
+
+RUN chmod +x /usr/local/bin/dctest-bootstrap
 
 USER actions
