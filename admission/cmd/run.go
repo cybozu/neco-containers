@@ -54,7 +54,6 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/validate-integreatly-org-grafanadashboard", hooks.NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-delete", hooks.NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-preventdelete", hooks.NewPreventDeleteValidator(mgr.GetClient(), dec))
-	wh.Register("/validate-service", hooks.NewServiceValidator(mgr.GetClient(), dec))
 
 	// +kubebuilder:scaffold:builder
 
