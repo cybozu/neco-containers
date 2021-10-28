@@ -73,6 +73,8 @@ PreventDeleteValidator
 Unlike DeleteValidator, this prevents resources from accidental deletion only
 if the resource is annotated with `admission.cybozu.com/prevent: delete`.
 
+However, topolvm-controller can remove PersistentVolumeClaims, even if they are annotated with the above.
+
 PodMutator
 ----------
 
