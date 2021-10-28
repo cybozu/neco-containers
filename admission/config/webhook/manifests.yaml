@@ -94,6 +94,7 @@ webhooks:
     - DELETE
     resources:
     - namespaces
+    - resourcequotas
   sideEffects: None
 - admissionReviewVersions:
   - v1

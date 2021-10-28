@@ -65,6 +65,8 @@ This is to protect important resources from accidental deletion by human errors.
 Every resource passed to this validation webhook will be denied for DELETE
 unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete: <name of the resource>`.
 
+However, resources in namespaces that have `development: true` label can be deleted without the annotation.
+
 PreventDeleteValidator
 ----------------------
 
