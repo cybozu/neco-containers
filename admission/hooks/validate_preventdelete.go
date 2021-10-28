@@ -30,6 +30,11 @@ func (v *preventDeleteValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
+	if obj.GetKind() == "PersistentVolumeClaim" &&
+		req.UserInfo.Username == "system:serviceaccount:topolvm-system:topolvm-controller" {
+		return admission.Allowed("topolvm-controller service account is allowed to delete PVCs")
+	}
+
 	if obj.GetAnnotations()[annotatePrefix+"prevent"] == "delete" {
 		return admission.Denied(obj.GetName() + " is protected from deletion")
 	}
