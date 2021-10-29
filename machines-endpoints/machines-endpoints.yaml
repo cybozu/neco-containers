@@ -14,6 +14,10 @@ rules:
       - endpoints
       - configmaps
     verbs: ["get", "update", "create"]
+  - apiGroups: ["discovery.k8s.io"]
+    resources:
+      - endpointslices
+    verbs: ["get", "update", "create"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
     verbs: ["use"]
@@ -93,7 +97,7 @@ spec:
         spec:
           containers:
             - name: machines-endpoints
-              image: quay.io/cybozu/machines-endpoints:0.4.10
+              image: quay.io/cybozu/machines-endpoints:0.5.0
               imagePullPolicy: IfNotPresent
               args:
                 - --monitoring-endpoints
