@@ -210,9 +210,9 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 		return err
 	}
 
-	addresses := make([]string, len(targetIPs))
+	endpoints := make([]discoveryv1.Endpoint, len(targetIPs))
 	for i, ip := range targetIPs {
-		addresses[i] = ip.String()
+		endpoints[i] = discoveryv1.Endpoint{Addresses: []string{ip.String()}}
 	}
 	_, err = c.k8s.DiscoveryV1().EndpointSlices(ns).Update(ctx, &discoveryv1.EndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
@@ -223,11 +223,7 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 			},
 		},
 		AddressType: discoveryv1.AddressTypeIPv4,
-		Endpoints: []discoveryv1.Endpoint{
-			{
-				Addresses: addresses,
-			},
-		},
+		Endpoints:   endpoints,
 		Ports: []discoveryv1.EndpointPort{
 			{
 				Name: &portName,
