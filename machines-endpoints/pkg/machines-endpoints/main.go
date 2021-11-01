@@ -290,15 +290,15 @@ func (c client) GetMembers() ([]member, error) {
 	}
 
 	members := make([]member, len(serfMembers))
-	for _, s := range serfMembers {
-		members = append(members, member{name: s.Name, addr: s.Addr, tags: s.Tags})
+	for i, s := range serfMembers {
+		members[i] = member{name: s.Name, addr: s.Addr, tags: s.Tags}
 	}
 	return members, nil
 }
 
-func getBootServers(members *[]member) []net.IP {
+func getBootServers(members []member) []net.IP {
 	var bootservers []net.IP
-	for _, member := range *members {
+	for _, member := range members {
 		if member.tags["boot-server"] == "true" {
 			bootservers = append(bootservers, member.addr)
 		}
@@ -353,7 +353,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	bootservers := getBootServers(&members)
+	bootservers := getBootServers(members)
 	machines, err := client.getMachinesFromSabakan(bootservers)
 	if err != nil {
 		log.ErrorExit(err)
