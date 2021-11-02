@@ -1,0 +1,8 @@
+#!/bin/sh -xe
+
+git clone -b ${NECO_APPS_BRANCH:-release} https://github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
+
+cp /secrets/account.json ${NECO_APPS_DIR}/test/
+
+make -C ${NECO_APPS_DIR}/test setup
+make -C ${NECO_APPS_DIR}/test dctest SUITE=bootstrap OVERLAY=neco-dev

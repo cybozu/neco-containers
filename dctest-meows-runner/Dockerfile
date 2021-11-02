@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/meows-runner:0.3.1
+FROM quay.io/cybozu/meows-runner:0.4.0
 
 USER root
 
@@ -63,7 +63,11 @@ RUN apt-get update \
     && chown -R actions:actions ${HOME}
 
 COPY --chown=actions:actions dctest-bootstrap /usr/local/bin
+COPY --chown=actions:actions neco-bootstrap /usr/local/bin
+COPY --chown=actions:actions neco-apps-bootstrap /usr/local/bin
 
-RUN chmod +x /usr/local/bin/dctest-bootstrap
+RUN chmod +x /usr/local/bin/dctest-bootstrap \
+    && chmod +x /usr/local/bin/neco-bootstrap \
+    && chmod +x /usr/local/bin/neco-apps-bootstrap
 
 USER actions
