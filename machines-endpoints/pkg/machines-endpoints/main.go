@@ -210,9 +210,9 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 		return err
 	}
 
-	addresses := make([]string, len(targetIPs))
+	endpoints := make([]discoveryv1.Endpoint, len(targetIPs))
 	for i, ip := range targetIPs {
-		addresses[i] = ip.String()
+		endpoints[i] = discoveryv1.Endpoint{Addresses: []string{ip.String()}}
 	}
 	_, err = c.k8s.DiscoveryV1().EndpointSlices(ns).Update(ctx, &discoveryv1.EndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
@@ -223,11 +223,7 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 			},
 		},
 		AddressType: discoveryv1.AddressTypeIPv4,
-		Endpoints: []discoveryv1.Endpoint{
-			{
-				Addresses: addresses,
-			},
-		},
+		Endpoints:   endpoints,
 		Ports: []discoveryv1.EndpointPort{
 			{
 				Name: &portName,
@@ -294,15 +290,15 @@ func (c client) GetMembers() ([]member, error) {
 	}
 
 	members := make([]member, len(serfMembers))
-	for _, s := range serfMembers {
-		members = append(members, member{name: s.Name, addr: s.Addr, tags: s.Tags})
+	for i, s := range serfMembers {
+		members[i] = member{name: s.Name, addr: s.Addr, tags: s.Tags}
 	}
 	return members, nil
 }
 
-func getBootServers(members *[]member) []net.IP {
+func getBootServers(members []member) []net.IP {
 	var bootservers []net.IP
-	for _, member := range *members {
+	for _, member := range members {
 		if member.tags["boot-server"] == "true" {
 			bootservers = append(bootservers, member.addr)
 		}
@@ -357,7 +353,7 @@ func main() {
 		log.ErrorExit(err)
 	}
 
-	bootservers := getBootServers(&members)
+	bootservers := getBootServers(members)
 	machines, err := client.getMachinesFromSabakan(bootservers)
 	if err != nil {
 		log.ErrorExit(err)
