@@ -2,7 +2,9 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG GRAFANA_VERSION=8.1.5
+ARG GRAFANA_VERSION=8.2.3
+
+ENV NODE_OPTIONS=--max_old_space_size=4096
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -23,7 +25,7 @@ ENV NODE_ENV production
 RUN yarn build
 
 RUN go mod verify
-RUN go run build.go build
+RUN make build-go
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v7.3.7/Dockerfile#L35-L80
@@ -48,6 +50,8 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
     useradd -r -u $GF_UID -g grafana grafana && \
     mkdir -p "$GF_PATHS_PROVISIONING/datasources" \
              "$GF_PATHS_PROVISIONING/dashboards" \
+             "$GF_PATHS_PROVISIONING/notifiers" \
+             "$GF_PATHS_PROVISIONING/plugins" \
              "$GF_PATHS_PROVISIONING/access-control" \
              "$GF_PATHS_LOGS" \
              "$GF_PATHS_PLUGINS" \
