@@ -33,10 +33,14 @@ jobs:
       targets:
         type: string
         default: ""
+      resource-class:
+        type: string
+        default: medium
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
       - image: docker:stable
+    resource_class: << parameters.resource-class >>
     steps:
       - run:
           name: Install tools
@@ -664,6 +668,7 @@ workflows:
       - build:
           name: build-grafana
           container-image: grafana
+          resource-class: medium+
       - build:
           name: build-grafana_plugins_init
           container-image: grafana_plugins_init
