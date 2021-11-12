@@ -616,9 +616,6 @@ workflows:
           name: build-configmap-reload
           container-image: configmap-reload
       - build:
-          name: build-consul
-          container-image: consul
-      - build:
           name: build-contour
           container-image: contour
       - build:

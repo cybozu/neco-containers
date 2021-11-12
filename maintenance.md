@@ -202,15 +202,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
 4. Update `src/CHANGELOG.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## consul
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/hashicorp/consul/releases).
-2. Check the upstream Dockerfile in [separated repo](https://github.com/hashicorp/docker-consul). Note that this repo creates neither branches nor tags at all. Check commit history carefully.
-3. Update `CONSUL_VERSION` and `DOCKER_CONSUL_REVISION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` file.
-
 ## contour
 
 ![Regular Update](./regular_update.svg)
