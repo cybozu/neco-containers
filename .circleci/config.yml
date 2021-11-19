@@ -574,6 +574,9 @@ workflows:
           name: build-bmc-reverse-proxy
           container-image: bmc-reverse-proxy
       - build:
+          name: build-cadvisor
+          container-image: cadvisor
+      - build:
           name: build-calico
           container-image: calico
       - build-ceph:

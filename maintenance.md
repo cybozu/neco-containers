@@ -125,6 +125,19 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update image tag in `bmc-reverse-proxy.yaml`.
 4. Update `TAG` file.
 
+## cadvisor
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/google/cadvisor/releases).
+2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
+   - https://github.com/google/cadvisor/blob/vX.Y.Z/Makefile
+   - https://github.com/google/cadvisor/blob/vX.Y.Z/build/release.sh
+   - https://github.com/google/cadvisor/blob/vX.Y.Z/build/build.sh
+   - https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile
+3. Update `CADVISOR_VERSION` in `Dockerfile`
+4. Update `TAG` file.
+
 ## calico
 
 ![Regular Update](./regular_update.svg)
@@ -199,8 +212,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile
 3. Update `CONFIGMAP_RELOAD_VERSION` in `Dockerfile`
-4. Update `src/CHANGELOG.md`.
-5. Update `BRANCH` and `TAG` files.
+4. Update `BRANCH` and `TAG` files.
 
 ## contour
 
