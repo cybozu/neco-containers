@@ -689,11 +689,16 @@ workflows:
           container-image: hubble-ui
           targets: frontend backend
       - build:
+          name: build-kube-metrics-adapter
+          container-image: kube-metrics-adapter
+      - build:
           name: build-kube-state-metrics
           container-image: kube-state-metrics
       - build:
-          name: build-kube-metrics-adapter
-          container-image: kube-metrics-adapter
+          name: build-kube-storage-version-migrator
+          container-image: storage-version-migration
+          dir: kube-storage-version-migrator
+          targets: initializer migrator trigger
       - build:
           name: build-kubernetes
           container-image: kubernetes
