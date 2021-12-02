@@ -35,7 +35,6 @@ RUN apt-get update \
             cloud-utils \
             bird2 \
             squid \
-            chrony \
             dnsmasq \
             xauth \
             bash-completion \
