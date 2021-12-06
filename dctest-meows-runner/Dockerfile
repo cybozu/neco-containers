@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/meows-runner:0.4.2
+FROM quay.io/cybozu/meows-runner:0.5.0
 
 USER root
 
