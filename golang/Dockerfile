@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:20.04
 
-ARG GO_VERSION=1.17.3
+ARG GO_VERSION=1.17.4
 
 ENV GOPATH=/go
 ENV PATH=/go/bin:/usr/local/go/bin:"$PATH"
