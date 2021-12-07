@@ -679,9 +679,6 @@ workflows:
           name: build-heartbeat
           container-image: heartbeat
       - build:
-          name: build-hnc
-          container-image: hnc
-      - build:
           name: build-hubble-relay
           container-image: hubble-relay
       - build:
