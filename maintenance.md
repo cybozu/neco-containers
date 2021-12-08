@@ -54,7 +54,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   $ make setup
+   $ make clean
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
@@ -360,6 +360,8 @@ Ignore!!!
    - Note that the path of Dockerfile may be changed to https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/Dockerfile at some future point.
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
+5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
+6. Follow maintenance instructions for neco-admission if needed.
 
 ***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
