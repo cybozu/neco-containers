@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu:20.04
 
-ARG SRCREPO=integr8ly/grafana_plugins_init
+ARG SRCREPO=grafana-operator/grafana_plugins_init
 ARG REVISION=586394f88c1d6f3b2a83ba1c2e67c7f056e564fd
 
 RUN apt-get update && \
