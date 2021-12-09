@@ -54,7 +54,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   $ make setup
+   $ make clean
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
@@ -354,12 +354,14 @@ Ignore!!!
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/integr8ly/grafana-operator/releases).
+1. Check the [release page](https://github.com/grafana-operator/grafana-operator/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/build/Dockerfile
-   - Note that the path of Dockerfile may be changed to https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/Dockerfile at some future point.
+   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/build/Dockerfile
+   - Note that the path of Dockerfile may be changed to https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/Dockerfile at some future point.
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
+5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
+6. Follow maintenance instructions for neco-admission if needed.
 
 ***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
@@ -368,14 +370,14 @@ Ignore!!!
 
 ![Regular Update](./regular_update.svg)
 
-grafana_plugins_init does not create [release](https://github.com/integr8ly/grafana_plugins_init/releases). Use the revision which the operator uses.
+grafana_plugins_init does not create [release](https://github.com/grafana-operator/grafana_plugins_init/releases). Use the revision which the operator uses.
 
 1. Check `PluginsInitContainerTag` in `pkg/controller/config/controller_config.go` of grafana-operator.
-   - https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/pkg/controller/config/controller_config.go
-   - Note that the path of the Go file may be changed to [`controllers/config/controller_config.go`](https://github.com/integr8ly/grafana-operator/blob/vX.Y.Z/controllers/config/controller_config.go) at some future point.
-2. Check [the commit history of Makefile](https://github.com/integr8ly/grafana_plugins_init/commits/master/Makefile) and find the commit where the line of `TAG=A.B.C` was changed to the value of `PluginsInitContainerTag`. The ID of the commit will be used as `REVISION` later.
+   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/pkg/controller/config/controller_config.go
+   - Note that the path of the Go file may be changed to [`controllers/config/controller_config.go`](https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/controllers/config/controller_config.go) at some future point.
+2. Check [the commit history of Makefile](https://github.com/grafana-operator/grafana_plugins_init/commits/master/Makefile) and find the commit where the line of `TAG=A.B.C` was changed to the value of `PluginsInitContainerTag`. The ID of the commit will be used as `REVISION` later.
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/integr8ly/grafana_plugins_init/blob/xxxxxxxx/Dockerfile
+   - https://github.com/grafana-operator/grafana_plugins_init/blob/xxxxxxxx/Dockerfile
 4. Update `REVISION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` according to the value of `PluginsInitContainerTag`.
 
