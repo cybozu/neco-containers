@@ -47,6 +47,7 @@ RUN apt-get update \
             time \
             kmod \
             iptables \
+            iproute2 \
             openssh-client \
             sudo \
             hub \
