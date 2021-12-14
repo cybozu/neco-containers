@@ -281,9 +281,9 @@ In Regular update, do the following as part of the update of each CRD-providing 
 - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
-2. Update the `version` argument on the `build-envoy` job in the CircleCI `main` workflow.
-3. Update `BAZEL_VERSION` in `build-envoy` job. The required version is written in the following file.
+2. Check the required bazel version in the following file.
    - https://github.com/envoyproxy/envoy/blob/vX.Y.Z/.bazelversion
+3. Update the `version` and `bazel-version` arguments on the `build-envoy` job in the CircleCI `main` workflow.
 4. Update image tag in `README.md`.
 5. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 6. Update `BRANCH` and `TAG` files.
