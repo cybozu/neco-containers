@@ -169,10 +169,11 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
-2. Update the `version` argument on the `build-cert-manager` job in the CircleCI `main` workflow.
-   - If the build fails, please check the Bazel version which is defined as `BAZEL_VERSION` in `build-cert-manager` job.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+2. Check the minimum Bazel version in the `WORKSPACE` file. (e.g. `check_min_bazel_version("4.0.0"))`
+   - https://github.com/jetstack/cert-manager/blob/vX.Y.Z/WORKSPACE
+3. Update the `version` and `bazel-version` arguments on the `build-cert-manager` job in the CircleCI `main` workflow.
+4. Update image tag in `README.md`.
+5. Update `BRANCH` and `TAG` files.
 
 ## chrony
 
