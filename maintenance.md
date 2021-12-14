@@ -80,16 +80,15 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check `hack/tool-versions.sh` for the tools versions, especially the version of `packr`.
+2. Check `hack/tool-versions.sh` for the tools versions.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh
-    - Note that the use of `packr` may be removed at some future point.
-3. Update tool versions in `Dockerfile`
+3. Update tool versions in `Dockerfile`.
     - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
     - [Helm](https://github.com/helm/helm/releases)
 4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
 5. Update version variables in `Dockerfile`.
-    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
+    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 
 ***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.
@@ -170,10 +169,11 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
-2. Update the `version` argument on the `build-cert-manager` job in the CircleCI `main` workflow.
-   - If the build fails, please check the Bazel version which is defined as `BAZEL_VERSION` in `build-cert-manager` job.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+2. Check the minimum Bazel version in the `WORKSPACE` file. (e.g. `check_min_bazel_version("4.0.0"))`
+   - https://github.com/jetstack/cert-manager/blob/vX.Y.Z/WORKSPACE
+3. Update the `version` and `bazel-version` arguments on the `build-cert-manager` job in the CircleCI `main` workflow.
+4. Update image tag in `README.md`.
+5. Update `BRANCH` and `TAG` files.
 
 ## chrony
 
@@ -281,9 +281,9 @@ In Regular update, do the following as part of the update of each CRD-providing 
 - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
-2. Update the `version` argument on the `build-envoy` job in the CircleCI `main` workflow.
-3. Update `BAZEL_VERSION` in `build-envoy` job. The required version is written in the following file.
+2. Check the required bazel version in the following file.
    - https://github.com/envoyproxy/envoy/blob/vX.Y.Z/.bazelversion
+3. Update the `version` and `bazel-version` arguments on the `build-envoy` job in the CircleCI `main` workflow.
 4. Update image tag in `README.md`.
 5. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 6. Update `BRANCH` and `TAG` files.

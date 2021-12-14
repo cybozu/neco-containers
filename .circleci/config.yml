@@ -171,6 +171,8 @@ jobs:
     parameters:
       version:
         type: string
+      bazel-version:
+        type: string
     docker:
       - image: quay.io/cybozu/ubuntu-dev:20.04
     resource_class: 2xlarge+
@@ -202,11 +204,9 @@ jobs:
             ln -s $(which python3) /usr/local/bin/python
       - run:
           name: Install Bazel
-          environment:
-            BAZEL_VERSION: 4.1.0
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -o /tmp/bazel.deb -sLf https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+            curl -o /tmp/bazel.deb -sLf https://github.com/bazelbuild/bazel/releases/download/<< parameters.bazel-version >>/bazel_<< parameters.bazel-version >>-linux-x86_64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -406,6 +406,8 @@ jobs:
     parameters:
       version:
         type: string
+      bazel-version:
+        type: string
     docker:
       - image: quay.io/cybozu/golang:1.17-bionic
     resource_class: xlarge
@@ -426,11 +428,9 @@ jobs:
             apt-get -y install unzip pkg-config zlib1g-dev python
       - run:
           name: Install Bazel
-          environment:
-            BAZEL_VERSION: 3.7.2
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
-            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
+            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/<< parameters.bazel-version >>/bazel_<< parameters.bazel-version >>-linux-x86_64.deb
             dpkg -i /tmp/bazel.deb
             rm -f /tmp/bazel.deb
       - run:
@@ -589,7 +589,8 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.5.4
+          version: 1.6.1
+          bazel-version: 4.0.0
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
@@ -635,6 +636,7 @@ workflows:
           container-image: dnsmasq
       - build-envoy:
           version: 1.19.1
+          bazel-version: 4.1.0
       - build:
           name: build-envoy-container
           container-image: envoy

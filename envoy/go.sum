@@ -64,6 +64,8 @@ github.com/cpuguy83/go-md2man/v2 v2.0.0/go.mod h1:maD7wRr/U5Z6m/iR4s+kqSMx2CaBsr
 github.com/cybozu-go/log v1.5.0/go.mod h1:zpfovuCgUx+a/ErvQrThoT+/z1RVQoLDOf95wkBeRiw=
 github.com/cybozu-go/log v1.6.0 h1:4pFNEdcdfDg2NpvdQhetROskivCyJemwL/i1RpzL4/s=
 github.com/cybozu-go/log v1.6.0/go.mod h1:2iAEvn2cL5dy/1uP5Jfb0Ao9+DUnDr//V0Bk3WDJX1U=
+github.com/cybozu-go/log v1.6.1 h1:m5cllWuOckvyLpH3TJAOMC76dydP6fVFjtrU/9NhQUA=
+github.com/cybozu-go/log v1.6.1/go.mod h1:U342hYYWUxWPOw0g5EhiS5BaO/c8c5YT+A14xQRbEd8=
 github.com/cybozu-go/netutil v1.2.0/go.mod h1:Wx92iF1dPrtuSzLUMEidtrKTFiDWpLcsYvbQ1lHSmxY=
 github.com/cybozu-go/netutil v1.4.2 h1:EMYBS6ifb+gkzC/0YMWjl8BXdScKSU89LD7R/NtZDl0=
 github.com/cybozu-go/netutil v1.4.2/go.mod h1:XJIodENSBDGg7ddH6BOLAGQ9CpmHtXrii0n6qvwJ3ds=

@@ -20,6 +20,6 @@ COPY --from=build /go/bin/livenessprobe /usr/local/bin/livenessprobe
 
 EXPOSE 9901
 
-USER 10000:10000
+USER nobody
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["envoy", "-c", "/etc/envoy/envoy.yaml"]
