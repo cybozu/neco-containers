@@ -80,16 +80,15 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check `hack/tool-versions.sh` for the tools versions, especially the version of `packr`.
+2. Check `hack/tool-versions.sh` for the tools versions.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh
-    - Note that the use of `packr` may be removed at some future point.
-3. Update tool versions in `Dockerfile`
+3. Update tool versions in `Dockerfile`.
     - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
     - [Helm](https://github.com/helm/helm/releases)
 4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
 5. Update version variables in `Dockerfile`.
-    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `PACKR_VERSION`.
+    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 
 ***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.

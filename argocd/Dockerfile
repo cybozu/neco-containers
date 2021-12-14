@@ -19,7 +19,7 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.17-focal AS argocd-build
-ENV ARGOCD_VERSION=2.1.2
+ENV ARGOCD_VERSION=2.1.8
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
