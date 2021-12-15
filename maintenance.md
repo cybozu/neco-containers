@@ -653,7 +653,7 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/bitnami-labs/sealed-secrets/releases).
 2. Check the upstream Dockerfile and compare with ours especially on the runtime stage. If there are any updates, update our `Dockerfile`.
-    - https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/Dockerfile
+    - https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/Dockerfile
 3. Update `SEALED_SECRETS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
