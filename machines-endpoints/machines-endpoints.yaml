@@ -97,7 +97,7 @@ spec:
         spec:
           containers:
             - name: machines-endpoints
-              image: quay.io/cybozu/machines-endpoints:0.5.2
+              image: quay.io/cybozu/machines-endpoints:0.5.3
               imagePullPolicy: IfNotPresent
               args:
                 - --monitoring-endpoints
