@@ -164,6 +164,7 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 		return err
 	}
 
+	// Create Service if not exists
 	services := c.k8s.CoreV1().Services(ns)
 	_, err = services.Get(ctx, target, metav1.GetOptions{})
 	switch {
@@ -187,6 +188,7 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 		return err
 	}
 
+	// Create or update Endpoints
 	subset := corev1.EndpointSubset{
 		Addresses: make([]corev1.EndpointAddress, len(targetIPs)),
 		Ports: []corev1.EndpointPort{
@@ -196,8 +198,7 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 	for i, ip := range targetIPs {
 		subset.Addresses[i].IP = ip.String()
 	}
-
-	_, err = c.k8s.CoreV1().Endpoints(ns).Update(ctx, &corev1.Endpoints{
+	ep := &corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: target,
 			Labels: map[string]string{
@@ -205,16 +206,22 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 			},
 		},
 		Subsets: []corev1.EndpointSubset{subset},
-	}, metav1.UpdateOptions{})
+	}
+	endpointInterface := c.k8s.CoreV1().Endpoints(ns)
+	_, err = endpointInterface.Update(ctx, ep, metav1.UpdateOptions{})
+	if k8serrors.IsNotFound(err) {
+		_, err = endpointInterface.Create(ctx, ep, metav1.CreateOptions{})
+	}
 	if err != nil {
 		return err
 	}
 
+	// Create or update EndpointSlice
 	endpoints := make([]discoveryv1.Endpoint, len(targetIPs))
 	for i, ip := range targetIPs {
 		endpoints[i] = discoveryv1.Endpoint{Addresses: []string{ip.String()}}
 	}
-	_, err = c.k8s.DiscoveryV1().EndpointSlices(ns).Update(ctx, &discoveryv1.EndpointSlice{
+	endpointSlice := &discoveryv1.EndpointSlice{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: target,
 			Labels: map[string]string{
@@ -230,7 +237,12 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 				Port: &port,
 			},
 		},
-	}, metav1.UpdateOptions{})
+	}
+	endpointSliceInterface := c.k8s.DiscoveryV1().EndpointSlices(ns)
+	_, err = endpointSliceInterface.Update(ctx, endpointSlice, metav1.UpdateOptions{})
+	if k8serrors.IsNotFound(err) {
+		_, err = endpointSliceInterface.Create(ctx, endpointSlice, metav1.CreateOptions{})
+	}
 	return err
 }
 
