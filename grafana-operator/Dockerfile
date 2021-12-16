@@ -2,14 +2,14 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG VERSION=3.10.4
+ARG VERSION=4.1.1
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana-operator/grafana-operator/archive/v${VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana-operator
 
-RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator ./cmd/manager
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # https://github.com/grafana-operator/grafana-operator/blob/master/.gitmodules
 RUN git clone --depth 1 https://github.com/grafana/grafonnet-lib
@@ -23,3 +23,5 @@ COPY --from=build /work/grafana-operator/grafonnet-lib/grafonnet/ /opt/jsonnet/g
 COPY --from=build /work/grafana-operator/grafonnet-lib/LICENSE /opt/jsonnet/LICENSE.grafonnet
 COPY --from=build /usr/local/bin/grafana-operator /usr/local/bin/grafana-operator
 COPY --from=build /work/grafana-operator/LICENSE /usr/local/grafana-operator/LICENSE
+
+ENTRYPOINT ["/usr/local/bin/grafana-operator"]

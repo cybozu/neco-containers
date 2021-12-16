@@ -356,8 +356,7 @@ Ignore!!!
 
 1. Check the [release page](https://github.com/grafana-operator/grafana-operator/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/build/Dockerfile
-   - Note that the path of Dockerfile may be changed to https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/Dockerfile at some future point.
+   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/Dockerfile
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
