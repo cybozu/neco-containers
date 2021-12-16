@@ -415,7 +415,7 @@ Only the base image and module dependency should be updated.
 
 ## kube-metrics-adapter
 
-![Regular Update](./regular_update.svg)
+![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/zalando-incubator/kube-metrics-adapter/releases).
 2. Update `KMA_VERSION` in `Dockerfile`.
