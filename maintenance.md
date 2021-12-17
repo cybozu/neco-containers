@@ -324,6 +324,9 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 4. Update `BRANCH` and `TAG`.
 
+This image is referenced in `cybozu-go/moco`. So update the following as well.
+- https://github.com/cybozu-go/moco/blob/main/version.go
+
 ## golang / golang-bionic
 
 ![Regular Update](./regular_update.svg)
@@ -545,6 +548,9 @@ In the regular update, only update the ubuntu base image and module dependency.
 1. Check the [release page](https://github.com/prometheus/mysqld_exporter/releases).
 2. Update `MYSQLD_EXPORTER_VERSION` in `Dockerfile`.
 3. Update `TAG` file.
+
+This image is referenced in `cybozu-go/moco`. So update the following as well.
+- https://github.com/cybozu-go/moco/blob/main/version.go
 
 ## pause
 
