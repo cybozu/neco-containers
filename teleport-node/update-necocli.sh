@@ -14,11 +14,15 @@ FILE="neco-operation-cli-linux_${DATE}_amd64.deb"
 
 if [ ! -f ${HOME}/deb/${FILE} ]; then
     echo "Downloading and extracting Neco CLI tools..."
-    curl -sLf -O https://github.com/cybozu-go/neco/releases/download/release-${DATE}/${FILE}
-    mkdir -p ${HOME}/neco-operation-cli
-    dpkg -x ${FILE} ${HOME}/neco-operation-cli
-    mkdir -p ${HOME}/deb
-    mv ${FILE} ${HOME}/deb/
+    curl -sLf --retry 3 -O https://github.com/cybozu-go/neco/releases/download/release-${DATE}/${FILE}
+    if [ $? -eq 0 ]; then
+        mkdir -p ${HOME}/neco-operation-cli
+        dpkg -x ${FILE} ${HOME}/neco-operation-cli
+        mkdir -p ${HOME}/deb
+        mv ${FILE} ${HOME}/deb/
+    else
+        echo "Download failed. Please reconnect to the node pod to update Neco CLI tools."
+    fi
 fi
 
 unset HTTPS_PROXY
