@@ -3,80 +3,53 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS builder
 
-ARG FLUENT_BIT_VERSION=1.8.6
-ARG SYSTEMD_VERSION=247
+ARG FLUENT_BIT_VERSION=1.8.11
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+# https://github.com/fluent/fluent-bit/blob/master/dockerfiles/Dockerfile.x86_64
+ARG FLB_TARBALL=https://github.com/fluent/fluent-bit/archive/v$FLUENT_BIT_VERSION.tar.gz
+ENV FLB_SOURCE $FLB_TARBALL
+RUN mkdir -p /fluent-bit/bin /fluent-bit/etc /fluent-bit/log /tmp/fluent-bit-master/
+
+ENV DEBIAN_FRONTEND noninteractive
+
 RUN apt-get update && apt-get -y install --no-install-recommends \
-    pkg-config \
-    xsltproc \
-    docbook-xsl \
-    docbook-xml \
-    m4 \
-    meson \
-    gettext \
-    gperf \
-    gnu-efi \
-    libcap-dev \
-    libpam0g-dev \
-    libapparmor-dev \
-    libidn2-dev \
-    libiptc-dev \
-    libaudit-dev \
-    libdbus-1-dev \
-    libcryptsetup-dev \
-    libselinux1-dev \
-    libacl1-dev \
-    liblzma-dev \
-    liblz4-dev \
-    liblz4-tool \
-    libbz2-dev \
-    zlib1g-dev \
-    libcurl4-gnutls-dev \
-    libmicrohttpd-dev \
-    libgnutls28-dev \
-    libpcre2-dev \
-    libgcrypt20-dev \
-    libkmod-dev \
-    libblkid-dev \
-    libmount-dev \
-    libseccomp-dev \
-    libdw-dev \
-    libpolkit-gobject-1-dev \
-    libzstd-dev \
-    linux-base \
-    acl \
-    python3:native \
-    python3-lxml:native \
-    python3-pyparsing \
-    python3-evdev \
-    tzdata \
-    libcap2-bin \
-    iproute2 \
-    zstd \
+    build-essential \
+    curl \
+    ca-certificates \
     cmake \
+    make \
+    tar \
+    libssl-dev \
+    libsasl2-dev \
+    pkg-config \
+    zlib1g-dev \
+    libpq-dev \
     flex \
     bison \
-    && rm -rf /var/lib/apt/lists/*
+    && curl -L -o "/tmp/fluent-bit.tar.gz" ${FLB_SOURCE} \
+    && cd tmp/ && mkdir fluent-bit \
+    && tar zxfv fluent-bit.tar.gz -C ./fluent-bit --strip-components=1 \
+    && cd fluent-bit/build/ \
+    && rm -rf /tmp/fluent-bit/build/*
 
-RUN mkdir -p /work \
-    && git clone --depth=1 -b v${SYSTEMD_VERSION} https://github.com/systemd/systemd /work/systemd \
-    && meson setup /work/systemd/build/ /work/systemd/ \
-    && meson configure -Drootlibdir=/usr/lib/$(dpkg-architecture -q DEB_BUILD_MULTIARCH) /work/systemd/build/ \
-    && meson install -C /work/systemd/build/
-
-RUN mkdir -p /work/fluent-bit \
-    && curl -sSLf https://github.com/fluent/fluent-bit/archive/v${FLUENT_BIT_VERSION}.tar.gz | \
-         tar -x -f - -z --strip-components=1 -C /work/fluent-bit \
-    && cd /work/fluent-bit/build \
-    && cmake .. \
-    && make -j $(nproc) \
+WORKDIR /tmp/fluent-bit/build/
+RUN cmake -DFLB_RELEASE=On \
+          -DFLB_TRACE=Off \
+          -DFLB_JEMALLOC=On \
+          -DFLB_TLS=On \
+          -DFLB_SHARED_LIB=Off \
+          -DFLB_EXAMPLES=Off \
+          -DFLB_HTTP_SERVER=On \
+          -DFLB_IN_SYSTEMD=Off \
+          -DFLB_OUT_KAFKA=On .. \
+    && make -j $(getconf _NPROCESSORS_ONLN) \
     && strip bin/fluent-bit \
     && mkdir -p /fluent-bit/bin \
     && cp bin/fluent-bit /fluent-bit/bin/ \
     && mkdir -p /fluent-bit/etc \
-    && cd /work/fluent-bit \
+    && cd /tmp/fluent-bit \
     && cp -a conf/fluent-bit.conf \
         conf/parsers.conf \
         conf/parsers_ambassador.conf \
@@ -91,16 +64,7 @@ RUN mkdir -p /work/fluent-bit \
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04
 
-# libsystemd depends on libcap2.
-RUN apt-get update \
-    && apt-get -y install --no-install-recommends \
-       libcap2 \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY --from=builder /fluent-bit /fluent-bit
-COPY --from=builder /lib/x86_64-linux-gnu/libsystemd.so.0.30.0 /lib/x86_64-linux-gnu/libsystemd.so.0.30.0
-
-RUN ln -snf /lib/x86_64-linux-gnu/libsystemd.so.0.30.0 /lib/x86_64-linux-gnu/libsystemd.so.0
 
 EXPOSE 2020
 
