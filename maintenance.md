@@ -241,15 +241,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## dctest-meows-runner
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/cybozu-go/meows/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
-3. Update `BRANCH` and `TAG` files.
-
 ## dex
 
 ![Regular Update](./regular_update.svg)
@@ -517,6 +508,26 @@ Only the base image and module dependency should be updated.
 1. Check the [release page](https://github.com/prometheus/memcached_exporter/releases).
 2. Update `MEMCACHED_EXPORTER_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG` file.
+
+## meows-dctest-runner
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cybozu-go/meows/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
+3. Update `MEOWS_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
+## dctest-neco-runner
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cybozu-go/meows/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
+3. Update `MEOWS_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
 
 ## metallb
 

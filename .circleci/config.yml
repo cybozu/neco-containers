@@ -626,9 +626,6 @@ workflows:
           name: build-coredns
           container-image: coredns
       - build:
-          name: build-dctest-meows-runner
-          container-image: dctest-meows-runner
-      - build:
           name: build-dex
           container-image: dex
       - build:
@@ -713,6 +710,12 @@ workflows:
       - build:
           name: build-memcached-exporter
           container-image: memcached-exporter
+      - build:
+          name: build-meows-dctest-runner
+          container-image: meows-dctest-runner
+      - build:
+          name: build-meows-neco-runner
+          container-image: meows-neco-runner
       - build:
           name: build-metallb
           container-image: metallb

@@ -1,4 +1,4 @@
-dctest-meows-runner container
+meows-dctest-runner container
 =================
 
 Build Docker container image for [meows][], which is GitHub Actions self-hosted runner for running dctest.
