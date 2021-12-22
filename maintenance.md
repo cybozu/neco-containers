@@ -519,7 +519,7 @@ Only the base image and module dependency should be updated.
 3. Update `MEOWS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## dctest-neco-runner
+## meows-neco-runner
 
 ![Regular Update](./regular_update.svg)
 
