@@ -604,7 +604,7 @@ workflows:
       - build-cilium-envoy:
           version: 9b1701da9cc035a1696f3e492ee2526101262e56
       - build-cilium-image-tools:
-          version: d5c220c956e559562bcc4f42462746a153234107
+          version: f1f9fb9ad52663553594475ec486f0bae1b7ca05
       - build:
           name: build-cilium
           container-image: cilium
