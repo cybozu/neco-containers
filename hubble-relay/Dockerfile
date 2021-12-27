@@ -26,12 +26,12 @@ FROM ${BASE_IMAGE}
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build /go/src/github.com/cilium/cilium/LICENSE.all /LICENSE
-COPY --from=build /go/src/github.com/cilium/cilium/hubble-relay/hubble-relay /
+COPY --from=build /go/src/github.com/cilium/cilium/hubble-relay/hubble-relay /usr/bin/hubble-relay
 
 USER 10000:10000
 
 WORKDIR /
 ENV GOPS_CONFIG_DIR=/
 
-ENTRYPOINT ["/hubble-relay"]
+ENTRYPOINT ["/usr/bin/hubble-relay"]
 CMD ["serve"]
