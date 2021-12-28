@@ -617,6 +617,9 @@ workflows:
           name: build-cilium-operator-generic
           container-image: cilium-operator-generic
       - build:
+          name: build-cilium-certgen
+          container-image: cilium-certgen
+      - build:
           name: build-configmap-reload
           container-image: configmap-reload
       - build:

@@ -204,6 +204,15 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
 
+## cilium-certgen
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile
+3. Update the `BRANCH` and `TAG` files accordingly.
+
 ## configmap-reload
 
 ![Regular Update](./regular_update.svg)
