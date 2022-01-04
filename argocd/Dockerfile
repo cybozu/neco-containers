@@ -1,5 +1,4 @@
 # Argo CD container
-# Refer to this Dockerfile: https://github.com/argoproj/argo-cd/blob/v0.12.1/Dockerfile
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
 FROM quay.io/cybozu/ubuntu:20.04 AS builder
@@ -13,13 +12,13 @@ RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/ku
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.6.0
+ENV HELM_VERSION=3.7.1
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.17-focal AS argocd-build
-ENV ARGOCD_VERSION=2.1.8
+ENV ARGOCD_VERSION=2.2.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
