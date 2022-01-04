@@ -374,14 +374,12 @@ Ignore!!!
 
 grafana_plugins_init does not create [release](https://github.com/grafana-operator/grafana_plugins_init/releases). Use the revision which the operator uses.
 
-1. Check `PluginsInitContainerTag` in `pkg/controller/config/controller_config.go` of grafana-operator.
-   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/pkg/controller/config/controller_config.go
-   - Note that the path of the Go file may be changed to [`controllers/config/controller_config.go`](https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/controllers/config/controller_config.go) at some future point.
-2. Check [the commit history of Makefile](https://github.com/grafana-operator/grafana_plugins_init/commits/master/Makefile) and find the commit where the line of `TAG=A.B.C` was changed to the value of `PluginsInitContainerTag`. The ID of the commit will be used as `REVISION` later.
-3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana-operator/grafana_plugins_init/blob/xxxxxxxx/Dockerfile
-4. Update `REVISION` in `Dockerfile`.
-5. Update `BRANCH` and `TAG` according to the value of `PluginsInitContainerTag`.
+1. Check `PluginsInitContainerTag` in `controllers/config/controller_config.go` of grafana-operator.
+   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/controllers/config/controller_config.go
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/grafana-operator/grafana_plugins_init/blob/A.B.C/Dockerfile
+3. Update `GRAFANA_PLUGINS_INIT_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` according to the value of `PluginsInitContainerTag`.
 
 ## heartbeat
 
