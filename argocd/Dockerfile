@@ -59,25 +59,23 @@ RUN groupadd -g 10000 argocd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=builder /usr/local/bin/kustomize /usr/local/argocd/bin/kustomize
-COPY --from=builder /usr/local/bin/helm /usr/local/argocd/bin/helm
+COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
+COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
 
 # workaround ksonnet issue https://github.com/ksonnet/ksonnet/issues/298
 ENV USER=argocd
 
-COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/argocd/bin/
-COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/argocd/bin/git-ask-pass.sh
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/bin/
+COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
 
-RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-server
-RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-repo-server
-RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-application-controller
-RUN ln -s /usr/local/argocd/bin/argocd /usr/local/argocd/bin/argocd-dex
-
-COPY install-tools /usr/local/argocd/install-tools
-ENV PATH=/usr/local/argocd/bin:"$PATH"
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-cmp-server
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-application-controller
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-dex
 
 USER 10000:10000
 
