@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG GRAFANA_VERSION=8.2.3
+ARG GRAFANA_VERSION=8.3.3
 
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
@@ -33,7 +33,7 @@ FROM quay.io/cybozu/ubuntu:20.04
 ARG GF_UID="10000"
 ARG GF_GID="10000"
 
-ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+ENV PATH=/usr/share/grafana/bin:$PATH \
     GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
     GF_PATHS_DATA="/var/lib/grafana" \
     GF_PATHS_HOME="/usr/share/grafana" \
