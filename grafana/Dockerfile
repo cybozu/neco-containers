@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG GRAFANA_VERSION=8.2.3
+ARG GRAFANA_VERSION=8.3.3
 
 ENV NODE_OPTIONS=--max_old_space_size=4096
 
@@ -18,9 +18,7 @@ RUN curl -sSLf https://deb.nodesource.com/setup_16.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
-# `--network-concurrency 1` is a (possibly incomplete) workaround for
-# "Extracting tar content of undefined failed, the file appears to be corrupt" random error
-RUN yarn install --pure-lockfile --no-progress --network-concurrency 1
+RUN yarn install
 ENV NODE_ENV production
 RUN yarn build
 
@@ -33,7 +31,7 @@ FROM quay.io/cybozu/ubuntu:20.04
 ARG GF_UID="10000"
 ARG GF_GID="10000"
 
-ENV PATH=/usr/share/grafana/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+ENV PATH=/usr/share/grafana/bin:$PATH \
     GF_PATHS_CONFIG="/etc/grafana/grafana.ini" \
     GF_PATHS_DATA="/var/lib/grafana" \
     GF_PATHS_HOME="/usr/share/grafana" \
