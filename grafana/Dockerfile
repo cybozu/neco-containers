@@ -18,9 +18,7 @@ RUN curl -sSLf https://deb.nodesource.com/setup_16.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
-# `--network-concurrency 1` is a (possibly incomplete) workaround for
-# "Extracting tar content of undefined failed, the file appears to be corrupt" random error
-RUN yarn install --pure-lockfile --no-progress --network-concurrency 1
+RUN yarn install
 ENV NODE_ENV production
 RUN yarn build
 
