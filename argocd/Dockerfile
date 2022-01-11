@@ -38,7 +38,7 @@ RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
 
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
-RUN yarn install
+RUN yarn install --frozen-lockfile
 
 ENV ARGO_VERSION=$ARGOCD_VERSION
 RUN NODE_ENV='production' NODE_ONLINE_ENV='online' yarn build
