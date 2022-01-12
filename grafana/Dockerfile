@@ -18,7 +18,7 @@ RUN curl -sSLf https://deb.nodesource.com/setup_16.x | bash - \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
-RUN yarn install
+RUN yarn install --immutable
 ENV NODE_ENV production
 RUN yarn build
 
