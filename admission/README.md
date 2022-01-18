@@ -20,6 +20,8 @@ To enforce this, `ArgoCDApplicationValidator` validates Application resources.
 See the [document](docs/configuration.md#argocdapplicationvalidator) for
 the configuration of `ArgoCDApplicationValitor`.
 
+If `VAPPLICATION_REPOSITORY_PERMISSIVE=true` envvar is set, this does not deny Applications but issues an warning.
+
 CalicoNetworkPolicyValidator
 ----------------------------
 

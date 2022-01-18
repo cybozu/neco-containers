@@ -21,14 +21,21 @@ var applog = logf.Log.WithName("application-validator")
 // +kubebuilder:webhook:path=/validate-argoproj-io-application,mutating=false,failurePolicy=fail,sideEffects=None,groups=argoproj.io,resources=applications,verbs=create;update,versions=v1alpha1,name=vapplication.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type argocdApplicationValidator struct {
-	client  client.Client
-	decoder *admission.Decoder
-	config  *ArgoCDApplicationValidatorConfig
+	client               client.Client
+	decoder              *admission.Decoder
+	config               *ArgoCDApplicationValidatorConfig
+	repositoryPermissive bool
 }
 
 // NewArgoCDApplicationValidator creates a webhook handler for ArgoCD Application.
-func NewArgoCDApplicationValidator(c client.Client, dec *admission.Decoder, config *ArgoCDApplicationValidatorConfig) http.Handler {
-	return &webhook.Admission{Handler: &argocdApplicationValidator{c, dec, config}}
+func NewArgoCDApplicationValidator(c client.Client, dec *admission.Decoder, config *ArgoCDApplicationValidatorConfig, repositoryPermissive bool) http.Handler {
+	v := &argocdApplicationValidator{
+		client:               c,
+		decoder:              dec,
+		config:               config,
+		repositoryPermissive: repositoryPermissive,
+	}
+	return &webhook.Admission{Handler: v}
 }
 
 func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.Request) admission.Response {
@@ -60,7 +67,12 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 			return admission.Allowed("ok")
 		}
 	}
-	return admission.Denied(fmt.Sprintf("project %q is not allowed for the repository %q", project, repoURL))
+
+	reason := fmt.Sprintf("project %q is not allowed for the repository %q", project, repoURL)
+	if v.repositoryPermissive {
+		return admission.Allowed("warning").WithWarnings(reason)
+	}
+	return admission.Denied(reason)
 }
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {

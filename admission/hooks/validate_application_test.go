@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
@@ -64,14 +65,16 @@ var _ = Describe("validate Application WebHook with ", func() {
 		app, err := fillApplication("test3", "admin", tenantRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
-		Expect(err).To(HaveOccurred())
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		Expect(err == nil).To(Equal(permissive))
 	})
 
 	It("should deny admin App on tenant organization", func() {
 		app, err := fillApplication("test4", "admin", tenantOrgRepoURL)
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
-		Expect(err).To(HaveOccurred())
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		Expect(err == nil).To(Equal(permissive))
 	})
 
 	It("should deny updating App with invalid repoURL", func() {
@@ -83,7 +86,8 @@ var _ = Describe("validate Application WebHook with ", func() {
 		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantRepoURL, "spec", "source", "repoURL")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
-		Expect(err).To(HaveOccurred())
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		Expect(err == nil).To(Equal(permissive))
 	})
 
 	It("should deny updating App with invalid organization repoURL", func() {
@@ -95,7 +99,8 @@ var _ = Describe("validate Application WebHook with ", func() {
 		err = unstructured.SetNestedField(app.UnstructuredContent(), tenantOrgRepoURL, "spec", "source", "repoURL")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
-		Expect(err).To(HaveOccurred())
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		Expect(err == nil).To(Equal(permissive))
 	})
 })
 
