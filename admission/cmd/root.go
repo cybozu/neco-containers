@@ -81,7 +81,7 @@ func init() {
 	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
 	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
-	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE=true") == "true"
+	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE") == "true"
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)
