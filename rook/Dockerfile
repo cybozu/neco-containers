@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.16-focal AS build
 
-ARG ROOK_VERSION=1.8.2
+ARG ROOK_VERSION=1.8.3
 # These version parameters are copied from rook/build/makelib/golang.mk and helm.mk
 ARG HELM_VERSION=3.6.2
 ARG YQ_VERSION=4.14.2
