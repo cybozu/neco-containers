@@ -533,8 +533,9 @@ Only the base image and module dependency should be updated.
 1. Check the [release page](https://github.com/cybozu-go/meows/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
-3. Update `MEOWS_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
+4. Update `MEOWS_VERSION` in `Dockerfile`.
+5. Update `BRANCH` and `TAG` files.
 
 ## metallb
 
