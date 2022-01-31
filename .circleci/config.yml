@@ -681,6 +681,9 @@ workflows:
           name: build-heartbeat
           container-image: heartbeat
       - build:
+          name: build-hubble
+          container-image: hubble
+      - build:
           name: build-hubble-relay
           container-image: hubble-relay
       - build:
