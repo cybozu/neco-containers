@@ -391,6 +391,14 @@ Only the base image and module dependency should be updated.
 2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 
+## hubble
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
+2. Update the `BRANCH` and `TAG` files accordingly.
+
+
 ## hubble-relay
 
 ![Regular Update](./regular_update.svg)
