@@ -580,7 +580,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-ceph:
-          version: 16.2.6
+          version: 16.2.7
       - build:
           name: build-ceph-container
           container-image: ceph

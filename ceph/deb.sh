@@ -16,6 +16,11 @@ cd src
 git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules https://github.com/ceph/ceph.git
 cd ceph
 
+# Apply temporary patch
+git apply ${CEPH_DIR}/43581.patch
+git apply ${CEPH_DIR}/44413.patch
+git apply ${CEPH_DIR}/fix_pytest_version.patch
+
 # Install dependencies
 apt-get update
 ./install-deps.sh

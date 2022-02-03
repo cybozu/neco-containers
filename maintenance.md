@@ -164,6 +164,16 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
 
+***NOTE:*** Patch 43581 and 44413 are temporary. Please remove them after the PR below will be released upstream.
+
+- https://github.com/ceph/ceph/pull/43581
+- https://github.com/ceph/ceph/pull/44413
+
+***NOTE:*** Patch fix_pytest_version.patch is temporary. Please remove it after resolving the pytest version problem in the file below.
+- src/pybind/mgr/dashboard/requirements-lint.txt
+- ref: https://github.com/ceph/ceph/pull/43646/commits/32d844511e2616e1015df86757014f1dd5ad684b
+- ref: https://github.com/rhcs-dashboard/ceph/commit/eab195566d54122f826debd8efb7f36db78fa4e1
+
 ## cert-manager
 
 ![Regular Update](./regular_update.svg)
