@@ -450,6 +450,19 @@ Only the base image and module dependency should be updated.
 4. Update image tag in `README.md`.
 5. Update `TAG` files.
 
+## kube-storage-version-migrator
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/kubernetes-sigs/kube-storage-version-migrator/releases).
+2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
+   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/Makefile
+   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/initializer/Dockerfile
+   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/migrator/Dockerfile
+   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/trigger/Dockerfile
+3. Update `MIGRATOR_VERSION` in `Dockerfile`
+4. Update `TAG` file.
+
 ## kubernetes
 
 ![Kubernetes Update](./kubernetes_update.svg)
