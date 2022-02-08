@@ -36,6 +36,9 @@ jobs:
       resource-class:
         type: string
         default: medium
+      suffix:
+        type: string
+        default: ""
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
@@ -67,7 +70,8 @@ jobs:
               for target in $targets; do break; done # get first element
               image=$image-$target
             fi
-            c="$(./tag_exists $image $dir)"
+            suffix=<< parameters.suffix >>
+            c="$(./tag_exists $image $dir $suffix)"
             if [ "$c" = ng ]; then
                 echo << parameters.container-image >> > BUILDS
             fi
@@ -120,7 +124,7 @@ jobs:
                 images="$images << parameters.container-image >>-$target"
               done
             fi
-            TAG=$(cat $dir/TAG)
+            TAG=$(cat $dir/TAG)<< parameters.suffix >>
             for image in $images; do
               docker tag quay.io/cybozu/$image:latest quay.io/cybozu/$image:$TAG
               docker push quay.io/cybozu/$image:$TAG
@@ -163,6 +167,39 @@ jobs:
               exit 0
             fi
             ceph/deb.sh << parameters.version >>
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
+  build-ceph-asan:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:20.04
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            c="$(./tag_exists ceph ceph -asan)"
+            if [ "$c" = ng ]; then
+                echo ceph-asan > BUILDS
+            fi
+      - run:
+          name: Build Ceph packages with ASAN enabled
+          no_output_timeout: 20m
+          command: |
+            mkdir -p src/workspace
+            if [ ! -f BUILDS ]; then
+              # fake for the next step
+              cd src/workspace
+              touch COPYING
+              exit 0
+            fi
+            # set WITH_ASAN flag to ON
+            ceph/deb.sh -a << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
@@ -588,6 +625,16 @@ workflows:
           dir: ceph
           requires:
             - build-ceph
+      - build-ceph-asan:
+          version: 16.2.7
+      - build:
+          name: build-ceph-asan-container
+          container-image: ceph
+          attach: true
+          dir: ceph
+          suffix: "-asan"
+          requires:
+            - build-ceph-asan
       - build-cert-manager:
           version: 1.6.1
           bazel-version: 4.0.0

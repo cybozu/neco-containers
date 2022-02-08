@@ -7,12 +7,17 @@ fi
 
 API=https://quay.io/api/v1
 NAME="$1"
-if [ $# -eq 2 ]; then
+if [ $# -ge 2 ]; then
     DIR="$2"
+    if [ $# -ge 3 ]; then
+        SUFFIX="$3"
+    else
+        SUFFIX=""
+    fi
 else
     DIR="$NAME"
 fi
-TAG=$(cat "$DIR"/TAG)
+TAG=$(cat "$DIR"/TAG)$SUFFIX
 STATUS=$(curl -s "$API/repository/cybozu/$NAME/tag/$TAG/images" -o /dev/null -w '%{http_code}\n')
 
 if [ "$STATUS" = "200" ]; then
