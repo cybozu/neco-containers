@@ -802,8 +802,8 @@ workflows:
           name: build-redis
           container-image: redis
       - build:
-          name: build-registry
-          container-image: registry
+          name: build-distribution
+          container-image: distribution
       - build:
           name: build-rook
           container-image: rook

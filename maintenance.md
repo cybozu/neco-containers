@@ -668,14 +668,14 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## registry
+## distribution
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the release notes in the [release page](https://github.com/docker/distribution/releases).
+1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/docker/distribution/blob/master/Dockerfile
-3. Update `REGISTRY_VERSION` in `Dockerfile`.
+3. Update `DISTRIBUTION_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## rook
