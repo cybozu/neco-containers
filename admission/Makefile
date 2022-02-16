@@ -2,7 +2,6 @@ CONTROLLER_TOOLS_VERSION = 0.7.0
 KUSTOMIZE_VERSION = 4.2.0
 CALICO_VERSION = 3.20
 CONTOUR_VERSION = 1.19.1
-ARGOCD_VERSION = 2.2.5
 GRAFANA_OPERATOR_VERSION = 3.10.4
 ENVTEST_K8S_VERSION = 1.22.1
 
@@ -18,7 +17,6 @@ crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
-	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafanadashboard.yaml https://github.com/grafana-operator/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/crds/GrafanaDashboard.yaml
 
 # Run tests, and set up envtest if not done already.

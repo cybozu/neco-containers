@@ -95,8 +95,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
 
-***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
-
 ## bird
 
 ![Regular Update](./regular_update.svg)
