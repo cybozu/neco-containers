@@ -272,16 +272,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## distribution
-
-![Regular Update](./regular_update.svg)
-
-1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/docker/distribution/blob/master/Dockerfile
-3. Update `DISTRIBUTION_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## dnsmasq
 
 ![Regular Update](./regular_update.svg)
@@ -674,6 +664,16 @@ The libsystemd version should be the same with the one running on [the stable Fl
 2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
    - v6.2.x: https://github.com/docker-library/redis/blob/master/6.2/Dockerfile
 3. Update `REDIS_VERSION` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
+## registry
+
+![Regular Update](./regular_update.svg)
+
+1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/docker/distribution/blob/master/Dockerfile
+3. Update `REGISTRY_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## rook

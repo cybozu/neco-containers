@@ -679,9 +679,6 @@ workflows:
           name: build-dex
           container-image: dex
       - build:
-          name: build-distribution
-          container-image: distribution
-      - build:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
@@ -851,6 +848,9 @@ workflows:
       - build:
           name: build-redis
           container-image: redis
+      - build:
+          name: build-registry
+          container-image: registry
       - build:
           name: build-rook
           container-image: rook
