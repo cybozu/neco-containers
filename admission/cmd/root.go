@@ -3,13 +3,16 @@ package cmd
 import (
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"os"
 	"strconv"
 
+	"github.com/cybozu/neco-containers/admission/hooks"
 	"github.com/spf13/cobra"
 	klog "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"sigs.k8s.io/yaml"
 )
 
 var config struct {
@@ -18,6 +21,7 @@ var config struct {
 	webhookAddr           string
 	certDir               string
 	httpProxyDefaultClass string
+	configPath            string
 	validImagePrefixes    []string
 	imagePermissive       bool
 	repositoryPermissive  bool
@@ -38,8 +42,25 @@ var rootCmd = &cobra.Command{
 		if err != nil {
 			return fmt.Errorf("invalid webhook address: %s, %v", config.webhookAddr, err)
 		}
-		return run(h, numPort)
+		conf, err := parseConfig(config.configPath)
+		if err != nil {
+			return err
+		}
+		return run(h, numPort, conf)
 	},
+}
+
+func parseConfig(configPath string) (*hooks.Config, error) {
+	data, err := ioutil.ReadFile(configPath)
+	if err != nil {
+		return nil, err
+	}
+	var conf hooks.Config
+	err = yaml.Unmarshal(data, &conf)
+	if err != nil {
+		return nil, err
+	}
+	return &conf, nil
 }
 
 // Execute executes the command.
@@ -57,6 +78,7 @@ func init() {
 	fs.StringVar(&config.webhookAddr, "webhook-addr", ":9443", "Listen address for the webhook endpoint")
 	fs.StringVar(&config.certDir, "cert-dir", "", "certificate directory")
 	fs.StringVar(&config.httpProxyDefaultClass, "httpproxy-default-class", "", "Default Ingress class of HTTPProxy")
+	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
 	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
 	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE") == "true"
