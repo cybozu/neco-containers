@@ -1,0 +1,19 @@
+diff --git a/pkg/daemon/util/cmdreporter.go b/pkg/daemon/util/cmdreporter.go
+index f1cc77624..d2cb6cf06 100644
+--- a/pkg/daemon/util/cmdreporter.go
++++ b/pkg/daemon/util/cmdreporter.go
+@@ -168,6 +168,14 @@ func (r *CmdReporter) runCommand() (stdout, stderr string, retcode int, err erro
+ 	c.Stdout = stdoutTee
+ 	c.Stderr = stderrTee
+ 
++	if c.Path == "/usr/bin/ceph" {
++		// Set environment variable for ASAN-enabled `ceph` command
++		c.Env = []string{
++			"LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5",
++			"ASAN_OPTIONS=detect_leaks=0:verify_asan_link_order=false",
++		}
++	}
++
+ 	cmdStr := fmt.Sprintf("%s %s", c.Path, strings.Join(c.Args, " "))
+ 	logger.Infof("running command: %s", cmdStr)
+ 

@@ -8,6 +8,7 @@ ARG ROOK_VERSION=1.8.3
 ARG HELM_VERSION=3.6.2
 ARG YQ_VERSION=4.14.2
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
+ARG USE_CEPH_WITH_ASAN="OFF"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV GOPATH=/work/go
@@ -21,6 +22,11 @@ RUN ln -s ${ROOK_DIR}/.cache/tools/linux_amd64/yq-v${YQ_VERSION} ${ROOK_DIR}/.ca
 RUN ln -s ${ROOK_DIR}/.cache/tools/linux_amd64/helm-v${HELM_VERSION} ${ROOK_DIR}/.cache/tools/linux_amd64/helm
 
 RUN git checkout v${ROOK_VERSION}
+COPY rook_asan.patch /tmp/
+RUN if [ "$USE_CEPH_WITH_ASAN" = "ON" ]; then \
+        echo "USE_CEPH_WITH_ASAN is ON. rook_asan.patch will be applied."; \
+        git apply /tmp/rook_asan.patch; \
+    fi
 RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false
 
 WORKDIR ${ROOK_DIR}/images/ceph
