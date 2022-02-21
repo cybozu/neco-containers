@@ -33,6 +33,7 @@ git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules htt
 cd ceph
 
 # Apply temporary patch
+git apply ${CEPH_DIR}/41498.patch
 git apply ${CEPH_DIR}/43581.patch
 git apply ${CEPH_DIR}/44413.patch
 git apply ${CEPH_DIR}/fix_pytest_version.patch

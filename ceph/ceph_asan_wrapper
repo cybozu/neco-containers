@@ -1,0 +1,3 @@
+#!/bin/sh
+
+LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.6 ASAN_OPTIONS=detect_leaks=0 ceph_internal $@

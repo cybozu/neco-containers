@@ -39,6 +39,9 @@ jobs:
       suffix:
         type: string
         default: ""
+      build-arg:
+        type: string
+        default: ""
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
@@ -93,11 +96,11 @@ jobs:
             echo "building << parameters.container-image >> ..."
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
-            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest $dir
+            docker build -t quay.io/cybozu/<< parameters.container-image >>:latest << parameters.build-arg >> $dir
             targets="<< parameters.targets >>"
             if [ "$targets" != "" ]; then
               for target in $targets; do
-                docker build -t quay.io/cybozu/<< parameters.container-image >>-$target:latest --target $target $dir
+                docker build -t quay.io/cybozu/<< parameters.container-image >>-$target:latest --target $target << parameters.build-arg >> $dir
               done
             fi
             docker images
@@ -636,6 +639,7 @@ workflows:
           attach: true
           dir: ceph
           suffix: "-asan"
+          build-arg: "--build-arg WITH_ASAN=ON"
           requires:
             - build-ceph-asan
       - build-cert-manager:

@@ -5,12 +5,16 @@ FROM quay.io/cybozu/ubuntu:20.04 AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
+ARG WITH_ASAN="OFF"
 
 COPY workspace/*.deb /tmp/
 
 RUN mkdir -p /var/run/ceph && \
+    echo -e "\
+deb http://security.ubuntu.com/ubuntu hirsute-security main universe\n\
+deb http://cz.archive.ubuntu.com/ubuntu hirsute main" > /etc/apt/sources.list.d/gcc11.list && \
     apt-get update && apt-get install --no-install-recommends -y \
-        libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
+        libstdc++-11-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
         /tmp/*.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -34,6 +38,13 @@ RUN mkdir -p /var/run/ceph && \
     mkdir -p /usr/local/share/doc/ceph
 
 COPY workspace/COPYING* /usr/local/share/doc/ceph/
+
+COPY ceph_asan_wrapper /usr/bin/ceph_asan_wrapper
+RUN if [ "$WITH_ASAN" = "ON" ]; then \
+        echo "WITH_ASAN is ON. The ceph executable will be replaced with a wrapper."; \
+        mv /usr/bin/ceph /usr/bin/ceph_internal; \
+        mv /usr/bin/ceph_asan_wrapper /usr/bin/ceph; \
+    fi
 
 # Stage2: runtime container with squashing layers
 
