@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG VERSION=4.1.1
+ARG VERSION=4.2.0
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
