@@ -1,5 +1,8 @@
 # Argo CD container
 
+# note: Argo CD Notifications will be part of Argo CD since Argo CD v2.3.0.
+#       argocd-notifications container will no longer needed at that time.
+
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
 FROM quay.io/cybozu/ubuntu:20.04 AS builder
 WORKDIR /tmp
