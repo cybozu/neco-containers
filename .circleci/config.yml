@@ -605,6 +605,9 @@ workflows:
           name: build-argocd
           container-image: argocd
       - build:
+          name: build-argocd-notifications
+          container-image: argocd-notifications
+      - build:
           name: build-bird
           container-image: bird
       - build:
