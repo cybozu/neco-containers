@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG CADVISOR_VERSION=0.43.0
+ARG CADVISOR_VERSION=0.44.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
