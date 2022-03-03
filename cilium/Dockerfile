@@ -7,12 +7,16 @@ FROM ${GOLANG_IMAGE} as build-base
 ARG DESTDIR
 ENV DESTDIR=${DESTDIR}
 COPY TAG /
+COPY 17930.patch /tmp/
+COPY 18336.patch /tmp/
 
 WORKDIR /go/src/github.com/cilium/cilium
 RUN mkdir -p ${DESTDIR} \
     && VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
       tar xzf - --strip-components 1 \
+    && patch -p1 --no-backup-if-mismatch < /tmp/17930.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/18336.patch \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
     && apt-get update \

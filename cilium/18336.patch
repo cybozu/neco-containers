@@ -1,0 +1,187 @@
+From 2769f6f647df6b6e66214963b483ab5df4c581b8 Mon Sep 17 00:00:00 2001
+From: Yusuke Suzuki <yusuke-suzuki@cybozu.co.jp>
+Date: Thu, 23 Dec 2021 15:59:40 +0900
+Subject: [PATCH] bpf: Fix maglev hash with hostServices.hostNamespaceOnly
+
+This fixes the bug that Cilium drops packets destined to ClusterIP.
+Cilium tries to resolve ClusterIP to Pod IP using Maglev hash when
+hostServices.hostNamespaceOnly is enabled. However, it doesn't provision
+the Maglev LUT for ClusterIP. So it drops the packet.
+This commit fixes this problem by forcing bpf_lxc to use the random
+backend selection for ClusterIP. Also, Cilium will populate the Maglev
+LUT for ClusterIP if bpf.lbExternalClusterIP is set to true so that
+the external ingress traffic connecting ClusterIP will be properly
+handled.
+
+Fixes: #17474
+
+Signed-off-by: Yusuke Suzuki <yusuke-suzuki@cybozu.co.jp>
+---
+ bpf/bpf_lxc.c               |  8 +++++
+ pkg/service/service.go      |  6 +++-
+ pkg/service/service_test.go | 70 ++++++++++++++++++++++++++++++++-----
+ test/k8sT/Services.go       |  6 ++++
+ 4 files changed, 81 insertions(+), 9 deletions(-)
+
+diff --git a/bpf/bpf_lxc.c b/bpf/bpf_lxc.c
+index a73f1e86f7c6..aa7b2fbe3188 100644
+--- a/bpf/bpf_lxc.c
++++ b/bpf/bpf_lxc.c
+@@ -30,6 +30,14 @@
+ #include "lib/nat46.h"
+ #include "lib/identity.h"
+ #include "lib/policy.h"
++
++/* Override LB_SELECTION initially defined in node_config.h to force bpf_lxc to use the random backend selection
++ * algorithm for in-cluster traffic. Otherwise, it will fail with the Maglev hash algorithm because Cilium doesn't provision
++ * the Maglev table for ClusterIP unless bpf.lbExternalClusterIP is set to true.
++ */
++#undef LB_SELECTION
++#define LB_SELECTION LB_SELECTION_RANDOM
++
+ #include "lib/lb.h"
+ #include "lib/drop.h"
+ #include "lib/dbg.h"
+diff --git a/pkg/service/service.go b/pkg/service/service.go
+index 9c81658e14f8..a0c2591c07af 100644
+--- a/pkg/service/service.go
++++ b/pkg/service/service.go
+@@ -116,7 +116,11 @@ func (svc *svcInfo) useMaglev() bool {
+ 	return option.Config.NodePortAlg == option.NodePortAlgMaglev &&
+ 		((svc.svcType == lb.SVCTypeNodePort && !isWildcardAddr(svc.frontend)) ||
+ 			svc.svcType == lb.SVCTypeExternalIPs ||
+-			svc.svcType == lb.SVCTypeLoadBalancer)
++			svc.svcType == lb.SVCTypeLoadBalancer ||
++			// Provision the Maglev LUT for ClusterIP only if ExternalClusterIP is enabled
++			// because ClusterIP can also be accessed from outside with this setting.
++			// We don't do it unconditionally to avoid increasing memory footprint.
++			(option.Config.ExternalClusterIP && svc.svcType == lb.SVCTypeClusterIP))
+ }
+ 
+ // Service is a service handler. Its main responsibility is to reflect
+diff --git a/pkg/service/service_test.go b/pkg/service/service_test.go
+index bd11008dc8a1..4026ce11fcdf 100644
+--- a/pkg/service/service_test.go
++++ b/pkg/service/service_test.go
+@@ -22,14 +22,15 @@ import (
+ )
+ 
+ type ManagerTestSuite struct {
+-	svc                       *Service
+-	lbmap                     *mockmaps.LBMockMap // for accessing public fields
+-	svcHealth                 *healthserver.MockHealthHTTPServerFactory
+-	prevOptionSessionAffinity bool
+-	prevOptionLBSourceRanges  bool
+-	prevOptionNPAlgo          string
+-	prevOptionDPMode          string
+-	ipv6                      bool
++	svc                         *Service
++	lbmap                       *mockmaps.LBMockMap // for accessing public fields
++	svcHealth                   *healthserver.MockHealthHTTPServerFactory
++	prevOptionSessionAffinity   bool
++	prevOptionLBSourceRanges    bool
++	prevOptionNPAlgo            string
++	prevOptionDPMode            string
++	prevOptionExternalClusterIP bool
++	ipv6                        bool
+ }
+ 
+ var _ = Suite(&ManagerTestSuite{})
+@@ -53,6 +54,7 @@ func (m *ManagerTestSuite) SetUpTest(c *C) {
+ 
+ 	m.prevOptionNPAlgo = option.Config.NodePortAlg
+ 	m.prevOptionDPMode = option.Config.DatapathMode
++	m.prevOptionExternalClusterIP = option.Config.ExternalClusterIP
+ 
+ 	m.ipv6 = option.Config.EnableIPv6
+ }
+@@ -64,6 +66,7 @@ func (m *ManagerTestSuite) TearDownTest(c *C) {
+ 	option.Config.EnableSVCSourceRangeCheck = m.prevOptionLBSourceRanges
+ 	option.Config.NodePortAlg = m.prevOptionNPAlgo
+ 	option.Config.DatapathMode = m.prevOptionDPMode
++	option.Config.ExternalClusterIP = m.prevOptionExternalClusterIP
+ 	option.Config.EnableIPv6 = m.ipv6
+ }
+ 
+@@ -765,6 +768,57 @@ func (m *ManagerTestSuite) TestUpsertServiceWithTerminatingBackends(c *C) {
+ 	c.Assert(len(m.lbmap.AffinityMatch[uint16(id1)]), Equals, 0)
+ }
+ 
++// Tests whether upsert service provisions the Maglev LUT for ClusterIP,
++// if ExternalClusterIP is true
++func (m *ManagerTestSuite) TestUpsertServiceWithExternalClusterIP(c *C) {
++	option.Config.NodePortAlg = option.NodePortAlgMaglev
++	option.Config.ExternalClusterIP = true
++	p := &lb.SVC{
++		Frontend:      frontend1,
++		Backends:      backends1,
++		Type:          lb.SVCTypeClusterIP,
++		TrafficPolicy: lb.SVCTrafficPolicyCluster,
++		Name:          "svc1",
++		Namespace:     "ns1",
++	}
++
++	created, id1, err := m.svc.UpsertService(p)
++
++	c.Assert(err, IsNil)
++	c.Assert(created, Equals, true)
++	c.Assert(id1, Equals, lb.ID(1))
++	c.Assert(len(m.lbmap.ServiceByID[uint16(id1)].Backends), Equals, 2)
++	c.Assert(len(m.lbmap.BackendByID), Equals, 2)
++	c.Assert(m.svc.svcByID[id1].svcName, Equals, "svc1")
++	c.Assert(m.svc.svcByID[id1].svcNamespace, Equals, "ns1")
++	c.Assert(m.lbmap.DummyMaglevTable[uint16(id1)], Equals, len(backends1))
++}
++
++// Tests whether upsert service doesn't provision the Maglev LUT for ClusterIP,
++// if ExternalClusterIP is false
++func (m *ManagerTestSuite) TestUpsertServiceWithOutExternalClusterIP(c *C) {
++	option.Config.NodePortAlg = option.NodePortAlgMaglev
++	p := &lb.SVC{
++		Frontend:      frontend1,
++		Backends:      backends1,
++		Type:          lb.SVCTypeClusterIP,
++		TrafficPolicy: lb.SVCTrafficPolicyCluster,
++		Name:          "svc1",
++		Namespace:     "ns1",
++	}
++
++	created, id1, err := m.svc.UpsertService(p)
++
++	c.Assert(err, IsNil)
++	c.Assert(created, Equals, true)
++	c.Assert(id1, Equals, lb.ID(1))
++	c.Assert(len(m.lbmap.ServiceByID[uint16(id1)].Backends), Equals, 2)
++	c.Assert(len(m.lbmap.BackendByID), Equals, 2)
++	c.Assert(m.svc.svcByID[id1].svcName, Equals, "svc1")
++	c.Assert(m.svc.svcByID[id1].svcNamespace, Equals, "ns1")
++	c.Assert(m.lbmap.DummyMaglevTable[uint16(id1)], Equals, 0)
++}
++
+ // Tests terminating backend entries are removed after service restore.
+ func (m *ManagerTestSuite) TestRestoreServiceWithTerminatingBackends(c *C) {
+ 	option.Config.NodePortAlg = option.NodePortAlgMaglev
+diff --git a/test/k8sT/Services.go b/test/k8sT/Services.go
+index 73949638a593..0f354736402f 100644
+--- a/test/k8sT/Services.go
++++ b/test/k8sT/Services.go
+@@ -456,6 +456,9 @@ var _ = SkipDescribeIf(helpers.RunsOn54Kernel, "K8sServicesTest", func() {
+ 			BeforeAll(func() {
+ 				DeployCiliumOptionsAndDNS(kubectl, ciliumFilename, map[string]string{
+ 					"bpf.lbExternalClusterIP": "true",
++					// Enable Maglev to check if the Maglev LUT for ClusterIP is properly populated,
++					// and external clients can access ClusterIP with it.
++					"loadBalancer.algorithm": "maglev",
+ 				})
+ 				clusterIP, _, err := kubectl.GetServiceHostPort(helpers.DefaultNamespace, appServiceName)
+ 				svcIP = clusterIP
+@@ -489,6 +492,9 @@ var _ = SkipDescribeIf(helpers.RunsOn54Kernel, "K8sServicesTest", func() {
+ 		BeforeAll(func() {
+ 			DeployCiliumOptionsAndDNS(kubectl, ciliumFilename, map[string]string{
+ 				"hostServices.hostNamespaceOnly": "true",
++				// Enable Maglev to check if traffic destined to ClusterIP from Pod is properly handled
++				// by bpf_lxc.c using LB_SELECTION_RANDOM even if Maglev is enabled.
++				"loadBalancer.algorithm": "maglev",
+ 			})
+ 			demoDSYAML = helpers.ManifestGet(kubectl.BasePath(), "demo_ds.yaml")
+ 			res := kubectl.ApplyDefault(demoDSYAML)
