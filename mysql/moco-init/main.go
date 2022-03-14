@@ -3,12 +3,12 @@ package main
 import (
 	_ "embed"
 	"fmt"
-	"html/template"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/sys/unix"

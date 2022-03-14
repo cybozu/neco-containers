@@ -4,12 +4,17 @@ SUDO = sudo
 SUDO_GO = $(SUDO) $(shell which go)
 
 .PHONY: all
-all: test build
+all: check-generate test build
 
 .PHONY: setup
 setup:
 	go get -u golang.org/x/tools/cmd/goimports
 	go get -u golang.org/x/lint/golint
+
+.PHONY: check-generate
+check-generate:
+	go mod tidy
+	git diff --exit-code --name-only
 
 .PHONY: build
 build: $(TARGET)
