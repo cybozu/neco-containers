@@ -6,9 +6,6 @@ jobs:
     parameters:
       directory:
         type: string
-      targets:
-        type: string
-        default: test
     description: "test at << parameters.directory >>"
     docker:
       - image: quay.io/cybozu/golang:1.17-focal
@@ -17,7 +14,8 @@ jobs:
     steps:
       - checkout
       - run: apt-get update
-      - run: make -C << parameters.directory >> << parameters.targets >> SUDO=
+      - run: make -C << parameters.directory >> check-generate SUDO=
+      - run: make -C << parameters.directory >> test SUDO=
   build:
     # This is a parameterized job
     # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
@@ -581,12 +579,24 @@ workflows:
           name: test-golang-analyzer
           directory: golang/analyzer
       - test:
+          name: test-golang-1.16-analyzer
+          directory: golang-1.16/analyzer
+      - test:
           name: test-golang-bionic-analyzer
           directory: golang-bionic/analyzer
+      - test:
+          name: test-heartbeat
+          directory: heartbeat
       - test-local-pv-provisioner
       - test:
           name: test-machines-endpoints
           directory: machines-endpoints
+      - test:
+          name: test-moco-init
+          directory: mysql/moco-init
+      - test:
+          name: test-s3gw
+          directory: s3gw
       - test:
           name: test-testhttpd
           directory: testhttpd/src
@@ -757,8 +767,6 @@ workflows:
       - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
-          requires:
-            - test-local-pv-provisioner
       - build:
           name: build-loki
           container-image: loki
