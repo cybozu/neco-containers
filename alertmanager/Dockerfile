@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG ALERTMANAGER_VERSION=0.23.0
+ARG ALERTMANAGER_VERSION=0.24.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
