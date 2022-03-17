@@ -689,6 +689,21 @@ workflows:
           name: build-coredns
           container-image: coredns
       - build:
+          name: build-csi-attacher
+          container-image: csi-attacher
+      - build:
+          name: build-csi-node-driver-registrar
+          container-image: csi-node-driver-registrar
+      - build:
+          name: build-csi-provisioner
+          container-image: csi-provisioner
+      - build:
+          name: build-csi-resizer
+          container-image: csi-resizer
+      - build:
+          name: build-csi-snapshotter
+          container-image: csi-snapshotter
+      - build:
           name: build-dex
           container-image: dex
       - build:

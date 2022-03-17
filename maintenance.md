@@ -266,6 +266,30 @@ If Argo CD is updated to v2.3.0 or later, argocd-notifications container will be
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## csi sidecars
+
+![CSA Update](./csa_update.svg)
+
+This section applies to the following containers. These containers are maintained similarly.
+
+- csi-attacher
+- csi-node-driver-registrar
+- csi-provisioner
+- csi-resizer
+- csi-snapshotter
+
+1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of csi sidecars.
+2. Update `VERSION` in Dockerfile with the value which you checked in the previous step.
+3. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is listed below.
+   - [csi-attacher](https://github.com/kubernetes-csi/external-attacher/blob/master/Dockerfile)
+   - [csi-node-driver-registrar](https://github.com/kubernetes-csi/node-driver-registrar/blob/master/Dockerfile)
+   - [csi-provisioner](https://github.com/kubernetes-csi/external-provisioner/blob/master/Dockerfile)
+   - [csi-resizer](https://github.com/kubernetes-csi/external-resizer/blob/master/Dockerfile)
+   - [csi-snapshotter](https://github.com/kubernetes-csi/external-snapshotter/blob/master/cmd/csi-snapshotter/Dockerfile)
+4. Update `BRANCH` and `TAG` files.
+
+***NOTE:*** These softwares are sensitive to the Go version. When you run the CI, warnings about the Go version may occur in `Build images` job. In that case, consider about changing the base container in Dockerfile.
+
 ## dex
 
 ![Regular Update](./regular_update.svg)
@@ -689,6 +713,14 @@ The libsystemd version should be the same with the one running on [the stable Fl
 ![CSA Update](./csa_update.svg)
 
 ***NOTE:*** Rook update requires two phases. First phase, update rook image solely to update rook version, then release it by neco-apps. Second phase, update Ceph image, and then update Rook base image.
+
+***NOTE:*** A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
+
+- csi-attacher
+- csi-node-driver-registrar
+- csi-provisioner
+- csi-resizer
+- csi-snapshotter
 
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
