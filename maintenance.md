@@ -97,12 +97,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
-## argocd-notifications
-
-argocd-notifications container built in this repo is the last version before becoming part of Argo CD itself. So it will never be updated.
-
-If Argo CD is updated to v2.3.0 or later, argocd-notifications container will be no longer needed.
-
 ## bird
 
 ![Regular Update](./regular_update.svg)
