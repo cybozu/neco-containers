@@ -150,8 +150,9 @@ jobs:
       - run:
           name: Check TAG file
           command: |
-            c="$(./tag_exists ceph)"
-            if [ "$c" = ng ]; then
+            ceph_tag_exists="$(./tag_exists ceph)"
+            cephcsi_tag_exists="$(./tag_exists cephcsi)"
+            if [ "$ceph_tag_exists" = ng ] || [ "$cephcsi_tag_exists" = ng ]; then
                 echo ceph > BUILDS
             fi
       - run:
@@ -645,6 +646,13 @@ workflows:
           suffix: "-asan"
           requires:
             - build-ceph-asan
+      - build:
+          name: build-cephcsi
+          container-image: cephcsi
+          attach: true
+          dir: cephcsi
+          requires:
+            - build-ceph
       - build-cert-manager:
           version: 1.6.1
           bazel-version: 4.0.0

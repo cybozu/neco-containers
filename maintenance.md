@@ -174,6 +174,20 @@ In Regular update, do the following as part of the update of each CRD-providing 
 - ref: https://github.com/ceph/ceph/pull/43646/commits/32d844511e2616e1015df86757014f1dd5ad684b
 - ref: https://github.com/rhcs-dashboard/ceph/commit/eab195566d54122f826debd8efb7f36db78fa4e1
 
+## cephcsi
+
+![CSA Update](./csa_update.svg)
+
+1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of cephcsi.
+2. Update `CSI_IMAGE_VERSION` in Dockerfile with the value which you checked in the previous step.
+3. Update `BASE_IMAGE` in Dockerfile if necessary.
+   - If `BASE_IMAGE` is too old, the build may fail.
+   - You should also check `BASE_IMAGE` in [the upstream build.env](https://github.com/ceph/ceph-csi/blob/devel/build.env) file of the appropriate tag.
+4. See [the upstream Dockerfile](https://github.com/ceph/ceph-csi/blob/devel/deploy/cephcsi/image/Dockerfile) of the appropriate tag, and update our Dockerfile if necessary.
+5. Update `BRANCH` and `TAG` files.
+
+***NOTE:*** Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
+
 ## cert-manager
 
 ![Regular Update](./regular_update.svg)
@@ -710,6 +724,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ***NOTE:*** A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
 
+- cephcsi
 - csi-attacher
 - csi-node-driver-registrar
 - csi-provisioner

@@ -27,7 +27,7 @@ fi
 VERSION="$1"
 
 # Checkout Ceph source
-mkdir -p src/workspace
+mkdir -p src/workspace/dev/
 cd src
 git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules https://github.com/ceph/ceph.git
 cd ceph
@@ -51,6 +51,7 @@ sed -i -e 's@usr/share/java/libcephfs-test.jar@@' debian/ceph-test.install
 rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
 # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
 dpkg-buildpackage --build=binary -uc -us -j10
-rm ../*-dbg_*.deb ../*-dev_*.deb
+rm ../*-dbg_*.deb
+mv ../*-dev_*.deb ../workspace/dev/
 mv ../*.deb ../workspace/
 mv COPYING* ../workspace
