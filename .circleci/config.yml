@@ -654,7 +654,7 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.6.1
+          version: 1.7.1
           bazel-version: 4.0.0
       - build:
           name: build-cert-manager-container

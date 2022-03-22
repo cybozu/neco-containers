@@ -13,7 +13,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=cert-manager-controller \
-    quay.io/cybozu/cert-manager:1.6 controller
+    quay.io/cybozu/cert-manager:1.7 controller
 ```
 
 License
