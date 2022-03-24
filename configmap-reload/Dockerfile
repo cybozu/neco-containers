@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG CONFIGMAP_RELOAD_VERSION=0.5.0
+ARG CONFIGMAP_RELOAD_VERSION=0.7.1
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root

@@ -241,7 +241,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/jimmidyson/configmap-reload/releases).
+1. Check the [tags page](https://github.com/jimmidyson/configmap-reload/tags).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile
 3. Update `CONFIGMAP_RELOAD_VERSION` in `Dockerfile`
