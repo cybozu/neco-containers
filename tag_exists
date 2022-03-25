@@ -18,9 +18,10 @@ else
     DIR="$NAME"
 fi
 TAG=$(cat "$DIR"/TAG)$SUFFIX
-STATUS=$(curl -s "$API/repository/cybozu/$NAME/tag/$TAG/images" -o /dev/null -w '%{http_code}\n')
+RESPONSE=$(curl -sSfL "$API/repository/cybozu/$NAME/tag/?specificTag=$TAG&onlyActiveTags=true")
+NUM=$(echo "$RESPONSE" | jq '.tags | length')
 
-if [ "$STATUS" = "200" ]; then
+if [ $NUM -gt 0 ]; then
     echo "ok"
     exit 0
 fi
