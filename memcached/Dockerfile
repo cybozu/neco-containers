@@ -3,7 +3,7 @@
 # Stage1: build from sourceFROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
-ARG MEMCACHED_VERSION=1.6.10
+ARG MEMCACHED_VERSION=1.6.15
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
