@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG REGISTRY_VERSION=2.8.0
+ARG REGISTRY_VERSION=2.8.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/docker/ \
