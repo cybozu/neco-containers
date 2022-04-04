@@ -1,0 +1,25 @@
+From 387cc1b14afdf0adc3fae9090e27626d7bcb102a Mon Sep 17 00:00:00 2001
+From: Lei Zhang <1091517373@qq.com>
+Date: Wed, 14 Jul 2021 17:30:48 +0800
+Subject: [PATCH] rgw: RGWPostObj::execute() may lost data.
+
+Signed-off-by: Lei Zhang <1091517373@qq.com>
+(cherry picked from commit f241a330dcb5968f9ec1de1a382572258cb6daac)
+---
+ src/rgw/rgw_op.cc | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/rgw/rgw_op.cc b/src/rgw/rgw_op.cc
+index f022bc376f931..82cc8babd8720 100644
+--- a/src/rgw/rgw_op.cc
++++ b/src/rgw/rgw_op.cc
+@@ -4309,6 +4309,9 @@ void RGWPostObj::execute(optional_yield y)
+ 
+       hash.Update((const unsigned char *)data.c_str(), data.length());
+       op_ret = filter->process(std::move(data), ofs);
++      if (op_ret < 0) {
++        return;
++      }
+ 
+       ofs += len;
+ 
