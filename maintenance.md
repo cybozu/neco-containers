@@ -364,13 +364,9 @@ This section applies to the following containers. These containers are maintaine
 
 ![Regular Update](./regular_update.svg)
 
-Fluent Bit contains two versions, one for Fluent Bit and the other for libsystemd.
-The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://kinvolk.io/flatcar-container-linux/releases/).
-
 1. Check the [release page](https://github.com/fluent/fluent-bit/releases).
 2. Update `FLUENT_BIT_VERSION` in `Dockerfile`.
-3. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
-4. Update `BRANCH` and `TAG`.
+3. Update `BRANCH` and `TAG`.
 
 This image is referenced in `cybozu-go/moco`. So update the following as well.
 - https://github.com/cybozu-go/moco/blob/main/version.go
