@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS builder
 
-ARG FLUENT_BIT_VERSION=1.8.11
+ARG FLUENT_BIT_VERSION=1.9.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

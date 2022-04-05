@@ -13,7 +13,7 @@ Prepare `squid.conf`, then execute following command.
 
     $  docker run -d --read-only \
         -v /path/to/your/squid.conf:/etc/squid/squid.conf:ro \
-        quay.io/cybozu/squid:4
+        quay.io/cybozu/squid:5
 
 Your `squid.conf` must have the following configurations:
 
