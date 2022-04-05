@@ -1,0 +1,215 @@
+From e3bf1a787f600e2cc46568fd025c799e2ec2c7a4 Mon Sep 17 00:00:00 2001
+From: Satoru Takeuchi <satoru.takeuchi@gmail.com>
+Date: Thu, 18 Nov 2021 20:48:18 +0000
+Subject: [PATCH 1/3] osd: make osd_fast_shutdown_notify_mon option true by
+ default
+
+osd_fast_shutdown_notify_mon option is false by default. So users suffer
+from error log flood, slow ops, and the long I/O timeouts on voluntary OS
+shutdown before they are aware of the existence of this option. Let's
+make this option true by default.
+
+Fixes: https://tracker.ceph.com/issues/53328
+
+Signed-off-by: Satoru Takeuchi <satoru.takeuchi@gmail.com>
+(cherry picked from commit 729a5b85a6586b47d16acbba2cf8e765e498cd65)
+
+ Conflicts:
+	src/common/options/global.yaml.in
+		- global.yaml.in does not exist in Pacific; rather,
+		  these configs were handled in options.cc.
+---
+ src/common/options.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/common/options.cc b/src/common/options.cc
+index 4992b53ff81d0..b0387f65bf8cc 100644
+--- a/src/common/options.cc
++++ b/src/common/options.cc
+@@ -3804,7 +3804,7 @@ std::vector<Option> get_global_options() {
+     .set_long_description("Setting this to false makes the OSD do a slower teardown of all state when it receives a SIGINT or SIGTERM or when shutting down for any other reason.  That slow shutdown is primarilyy useful for doing memory leak checking with valgrind."),
+ 
+     Option("osd_fast_shutdown_notify_mon", Option::TYPE_BOOL, Option::LEVEL_ADVANCED)
+-    .set_default(false)
++    .set_default(true)
+     .set_description("Tell mon about OSD shutdown on immediate shutdown")
+     .set_long_description("Tell the monitor the OSD is shutting down on immediate shutdown. This helps with cluster log messages from other OSDs reporting it immediately failed.")
+     .add_see_also({"osd_fast_shutdown", "osd_mon_shutdown_timeout"}),
+
+From b6f0324b157da99846a5cfd0ca11fabe2b51f99d Mon Sep 17 00:00:00 2001
+From: Nitzan Mordechai <nmordech@redhat.com>
+Date: Thu, 27 Jan 2022 15:13:28 +0200
+Subject: [PATCH 2/3] osd/OSD: osd_fast_shutdown_notify_mon not quite right
+
+When osd_fast_shutdown and osd_fast_shutdown_notify_mon set as true, OSD marked as Down
+it should be marked as Dead,
+
+Fixed: https://tracker.ceph.com/issues/53327
+
+Signed-off-by: Nitzan Mordechai <nmordech@redhat.com>
+
+nd
+
+nd
+
+(cherry picked from commit 07302d5e41c49c885c9398c1c478638023e3f264)
+---
+ src/messages/MOSDMarkMeDown.h | 13 ++++++++++++-
+ src/mon/OSDMonitor.cc         |  8 +++++++-
+ src/osd/OSD.cc                |  6 ++++--
+ 3 files changed, 23 insertions(+), 4 deletions(-)
+
+diff --git a/src/messages/MOSDMarkMeDown.h b/src/messages/MOSDMarkMeDown.h
+index 2ff0e1cd809ea..44d57395fc9e2 100644
+--- a/src/messages/MOSDMarkMeDown.h
++++ b/src/messages/MOSDMarkMeDown.h
+@@ -19,7 +19,7 @@
+ 
+ class MOSDMarkMeDown final : public PaxosServiceMessage {
+ private:
+-  static constexpr int HEAD_VERSION = 3;
++  static constexpr int HEAD_VERSION = 4;
+   static constexpr int COMPAT_VERSION = 3;
+ 
+  public:
+@@ -28,6 +28,7 @@ class MOSDMarkMeDown final : public PaxosServiceMessage {
+   entity_addrvec_t target_addrs;
+   epoch_t epoch = 0;
+   bool request_ack = false;          // ack requested
++  bool down_and_dead = false;        // mark down and dead
+ 
+   MOSDMarkMeDown()
+     : PaxosServiceMessage{MSG_OSD_MARK_ME_DOWN, 0,
+@@ -38,6 +39,12 @@ class MOSDMarkMeDown final : public PaxosServiceMessage {
+ 			  HEAD_VERSION, COMPAT_VERSION},
+       fsid(fs), target_osd(osd), target_addrs(av),
+       epoch(e), request_ack(request_ack) {}
++  MOSDMarkMeDown(const uuid_d &fs, int osd, const entity_addrvec_t& av,
++		 epoch_t e, bool request_ack, bool down_and_dead)
++    : PaxosServiceMessage{MSG_OSD_MARK_ME_DOWN, e,
++			  HEAD_VERSION, COMPAT_VERSION},
++      fsid(fs), target_osd(osd), target_addrs(av),
++      epoch(e), request_ack(request_ack), down_and_dead(down_and_dead) {}
+  private:
+   ~MOSDMarkMeDown() final {}
+ 
+@@ -63,6 +70,8 @@ class MOSDMarkMeDown final : public PaxosServiceMessage {
+     decode(target_addrs, p);
+     decode(epoch, p);
+     decode(request_ack, p);
++    if(header.version >= 4)
++      decode(down_and_dead, p);
+   }
+ 
+   void encode_payload(uint64_t features) override {
+@@ -86,12 +95,14 @@ class MOSDMarkMeDown final : public PaxosServiceMessage {
+     encode(target_addrs, payload, features);
+     encode(epoch, payload);
+     encode(request_ack, payload);
++    encode(down_and_dead, payload);
+   }
+ 
+   std::string_view get_type_name() const override { return "MOSDMarkMeDown"; }
+   void print(std::ostream& out) const override {
+     out << "MOSDMarkMeDown("
+ 	<< "request_ack=" << request_ack
++	<< ", down_and_dead=" << down_and_dead
+ 	<< ", osd." << target_osd
+ 	<< ", " << target_addrs
+ 	<< ", fsid=" << fsid
+diff --git a/src/mon/OSDMonitor.cc b/src/mon/OSDMonitor.cc
+index 332673821c7ee..eba9fdc25258e 100644
+--- a/src/mon/OSDMonitor.cc
++++ b/src/mon/OSDMonitor.cc
+@@ -3038,8 +3038,14 @@ bool OSDMonitor::prepare_mark_me_down(MonOpRequestRef op)
+   ceph_assert(osdmap.is_up(target_osd));
+   ceph_assert(osdmap.get_addrs(target_osd) == m->target_addrs);
+ 
+-  mon.clog->info() << "osd." << target_osd << " marked itself down";
++  mon.clog->info() << "osd." << target_osd << " marked itself " << ((m->down_and_dead) ? "down and dead" : "down");
+   pending_inc.new_state[target_osd] = CEPH_OSD_UP;
++  if (m->down_and_dead) {
++    if (!pending_inc.new_xinfo.count(target_osd)) {
++      pending_inc.new_xinfo[target_osd] = osdmap.osd_xinfo[target_osd];
++    }
++    pending_inc.new_xinfo[target_osd].dead_epoch = m->get_epoch();
++  }
+   if (m->request_ack)
+     wait_for_finished_proposal(op, new C_AckMarkedDown(this, op));
+   return true;
+diff --git a/src/osd/OSD.cc b/src/osd/OSD.cc
+index ac9bd245f2d17..ea4c8db73d130 100644
+--- a/src/osd/OSD.cc
++++ b/src/osd/OSD.cc
+@@ -1378,7 +1378,7 @@ bool OSDService::prepare_to_stop()
+ 
+   OSDMapRef osdmap = get_osdmap();
+   if (osdmap && osdmap->is_up(whoami)) {
+-    dout(0) << __func__ << " telling mon we are shutting down" << dendl;
++    dout(0) << __func__ << " telling mon we are shutting down and dead " << dendl;
+     set_state(PREPARING_TO_STOP);
+     monc->send_mon_message(
+       new MOSDMarkMeDown(
+@@ -1386,12 +1386,14 @@ bool OSDService::prepare_to_stop()
+ 	whoami,
+ 	osdmap->get_addrs(whoami),
+ 	osdmap->get_epoch(),
+-	true  // request ack
++	true,  // request ack
++	true   // mark as down and dead
+ 	));
+     const auto timeout = ceph::make_timespan(cct->_conf->osd_mon_shutdown_timeout);
+     is_stopping_cond.wait_for(l, timeout,
+       [this] { return get_state() == STOPPING; });
+   }
++
+   dout(0) << __func__ << " starting shutdown" << dendl;
+   set_state(STOPPING);
+   return true;
+
+From 72091a80b50317c61750f926dfd0dfbd8a37441a Mon Sep 17 00:00:00 2001
+From: Sridhar Seshasayee <sseshasa@redhat.com>
+Date: Fri, 25 Mar 2022 22:10:31 +0530
+Subject: [PATCH 3/3] qa/standalone: Fix test_activate_osd() test in
+ ceph-helpers.sh
+
+Modify test_activate_osd() to get the type of scheduler in use and then
+verify the value of osd_max_backfills. This is because mclock scheduler
+overrides this option to 1000 upon OSD initialization.
+
+The test earlier used to pass because the OSD daemon was killed but not
+marked down and upon being brought up, the wait for OSD up check was
+passing quickly. But the OSD still didn't have the latest config values.
+
+But now upon killing the OSD, the osd_fast_shutdown sequence notifies the
+mon (see PR: https://github.com/ceph/ceph/pull/44807) and is marked down
+and dead. Upon bringing it up, the wait for OSD up check takes a longer
+time and this is sufficient for the config values to be updated. This
+results in the correct values being read from the config 'Values' map.
+
+Signed-off-by: Sridhar Seshasayee <sseshasa@redhat.com>
+(cherry picked from commit 3aa2df2e0f6f5bafadc96fd72935e5cf8b2fcf17)
+---
+ qa/standalone/ceph-helpers.sh | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/qa/standalone/ceph-helpers.sh b/qa/standalone/ceph-helpers.sh
+index d945ccf0707ee..58786e8c1a59d 100755
+--- a/qa/standalone/ceph-helpers.sh
++++ b/qa/standalone/ceph-helpers.sh
+@@ -896,9 +896,14 @@ function test_activate_osd() {
+     kill_daemons $dir TERM osd || return 1
+ 
+     activate_osd $dir 0 --osd-max-backfills 20 || return 1
++    local scheduler=$(get_op_scheduler 0)
+     local backfills=$(CEPH_ARGS='' ceph --format=json daemon $(get_asok_path osd.0) \
+         config get osd_max_backfills)
+-    test "$backfills" = '{"osd_max_backfills":"20"}' || return 1
++    if [ "$scheduler" = "mclock_scheduler" ]; then
++      test "$backfills" = '{"osd_max_backfills":"1000"}' || return 1
++    else
++      test "$backfills" = '{"osd_max_backfills":"20"}' || return 1
++    fi
+ 
+     teardown $dir || return 1
+ }
