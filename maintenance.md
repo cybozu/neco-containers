@@ -589,7 +589,10 @@ Only the base image and module dependency should be updated.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
 3. Update `MEOWS_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
+   1. `GO_VERSION`: https://github.com/cybozu/neco-containers/blob/main/golang/TAG
+   2. `PLACEMAT_VERSION`: https://github.com/cybozu-go/placemat/releases/latest
+5. Update `BRANCH` and `TAG` files.
 
 ## meows-neco-runner
 
