@@ -574,6 +574,9 @@ workflows:
           name: test-bmc-reverse-proxy
           directory: bmc-reverse-proxy
       - test:
+          name: test-ceph-extra-exporter
+          directory: ceph-extra-exporter
+      - test:
           name: test-envoy
           directory: envoy
       - test:
@@ -646,6 +649,9 @@ workflows:
           suffix: "-asan"
           requires:
             - build-ceph-asan
+      - build:
+          name: build-ceph-extra-exporter
+          container-image: ceph-extra-exporter
       - build:
           name: build-cephcsi
           container-image: cephcsi

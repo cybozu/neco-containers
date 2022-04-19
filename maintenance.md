@@ -188,6 +188,14 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
 
+## ceph-extra-exporter
+
+![CSA Update](./csa_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Upgrade base images in `Dockerfile`.
+3. Update the `TAG` files accordingly.
+
 ## cert-manager
 
 ![Regular Update](./regular_update.svg)
