@@ -505,6 +505,14 @@ Only the base image and module dependency should be updated.
 3. Update `MIGRATOR_VERSION` in `Dockerfile`
 4. Update `TAG` file.
 
+## kubectl
+
+![Kubernetes Update](./kubernetes_update.svg)
+
+1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
+2. Update `KUBECTL_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files.
+
 ## kubernetes
 
 ![Kubernetes Update](./kubernetes_update.svg)
