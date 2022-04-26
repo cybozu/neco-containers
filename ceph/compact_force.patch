@@ -1,0 +1,12 @@
+diff --git a/src/kv/RocksDBStore.cc b/src/kv/RocksDBStore.cc
+index 7d7fee68c73..2c9c6e8d05e 100644
+--- a/src/kv/RocksDBStore.cc
++++ b/src/kv/RocksDBStore.cc
+@@ -1936,6 +1936,7 @@ void RocksDBStore::compact()
+ {
+   logger->inc(l_rocksdb_compact);
+   rocksdb::CompactRangeOptions options;
++  options.bottommost_level_compaction = rocksdb::BottommostLevelCompaction::kForce;
+   db->CompactRange(options, default_cf, nullptr, nullptr);
+   for (auto cf : cf_handles) {
+     for (auto shard_cf : cf.second.handles) {

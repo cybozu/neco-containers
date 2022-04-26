@@ -39,6 +39,7 @@ git apply ${CEPH_DIR}/45502.patch
 git apply ${CEPH_DIR}/45654.patch
 git apply ${CEPH_DIR}/fix_pytest_version.patch
 git apply ${CEPH_DIR}/45963.patch
+git apply ${CEPH_DIR}/compact_force.patch
 if [ "$WITH_ASAN" = "ON" ]; then
     echo "WITH_ASAN is ON. ASAN patch will be applied."
     git apply ${CEPH_DIR}/asan.patch
