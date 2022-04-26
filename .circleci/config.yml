@@ -440,6 +440,8 @@ jobs:
             - "*"
   build-cert-manager:
     parameters:
+      repo:
+        type: string
       version:
         type: string
       bazel-version:
@@ -480,7 +482,7 @@ jobs:
                 exit 0
             fi
             cd src
-            git clone --depth 1 --branch v<< parameters.version >> https://github.com/jetstack/cert-manager
+            git clone --depth 1 --branch v<< parameters.version >> << parameters.repo >>
             cd cert-manager
             make cainjector controller webhook
             mv bazel-out/k8-fastbuild/bin/cmd/cainjector/cainjector_/cainjector ../workspace
@@ -660,7 +662,9 @@ workflows:
           requires:
             - build-ceph
       - build-cert-manager:
-          version: 1.7.2
+          #repo: https://github.com/cert-manager/cert-manager
+          repo: https://github.com/cybozu-go/cert-manager
+          version: 1.7.2-neco-longtimeout.1
           bazel-version: 4.0.0
       - build:
           name: build-cert-manager-container
