@@ -2,7 +2,7 @@ cert-manager container
 ======================
 
 This directory provides a Dockerfile to build a Docker container
-that runs [cert-manager](https://github.com/jetstack/cert-manager).
+that runs [cert-manager](https://github.com/cert-manager/cert-manager).
 
 Usage
 -----
@@ -19,7 +19,7 @@ $ docker run -d --read-only --name=cert-manager-controller \
 License
 -------
 
-[LICENSES](https://github.com/jetstack/cert-manager/blob/master/LICENSES) is a file bundled with all LICENSE files under the `vendor` directory.
+[LICENSES](https://github.com/cert-manager/cert-manager/blob/master/LICENSES) is a file bundled with all LICENSE files under the `vendor` directory.
 
 Docker images
 -------------
