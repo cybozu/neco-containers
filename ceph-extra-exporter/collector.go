@@ -16,7 +16,7 @@ func newCollector(executer *cephExecuter, namespace string) *cephCollector {
 	for name, metric := range cc.executer.rule.metrics {
 		cc.describe[name] = prometheus.NewDesc(
 			prometheus.BuildFQName(namespace, cc.executer.rule.name, name),
-			metric.help, nil, nil)
+			metric.help, metric.labelKeys, nil)
 	}
 	cc.describeFailed = prometheus.NewDesc(
 		prometheus.BuildFQName(namespace, "", "failed_total"),
@@ -35,13 +35,16 @@ func (cc *cephCollector) Describe(ch chan<- *prometheus.Desc) {
 func (cc *cephCollector) Collect(ch chan<- prometheus.Metric) {
 	cc.executer.mutex.RLock()
 	defer cc.executer.mutex.RUnlock()
-	for name, v := range cc.executer.values {
-		metric := cc.executer.rule.metrics[name]
-		ch <- prometheus.MustNewConstMetric(
-			cc.describe[name],
-			metric.metricType,
-			v,
-		)
+	for name, mVals := range cc.executer.metricValues {
+		for _, mVal := range mVals {
+			metric := cc.executer.rule.metrics[name]
+			ch <- prometheus.MustNewConstMetric(
+				cc.describe[name],
+				metric.metricType,
+				mVal.value,
+				mVal.labelValues...,
+			)
+		}
 	}
 	for reason, count := range cc.executer.failedCounter {
 		ch <- prometheus.MustNewConstMetric(

@@ -1,0 +1,206 @@
+[
+  {
+    "bucket": "session-log-bucket-3d9a7583-f11b-4186-b4bc-8bf84c852662",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.5",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.5",
+    "index_type": "Normal",
+    "owner": "ceph-user-7CswMQ0n",
+    "ver": "0#47,1#61,2#42,3#46,4#66,5#48,6#56,7#39,8#52,9#54,10#50",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:58.257771Z",
+    "creation_time": "2022-06-10T07:08:58.247817Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {
+      "rgw.main": {
+        "size": 180648,
+        "size_actual": 2326528,
+        "size_utilized": 180648,
+        "size_kb": 177,
+        "size_kb_actual": 2272,
+        "size_kb_utilized": 177,
+        "num_objects": 550
+      }
+    },
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  },
+  {
+    "bucket": "registry-ghcr-bucket-e8397b38-0bf7-43c8-9ec4-22e333797c50",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.4",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.4",
+    "index_type": "Normal",
+    "owner": "ceph-user-ZzL5ZKXa",
+    "ver": "0#1,1#1,2#1,3#1,4#1,5#1,6#1,7#1,8#1,9#1,10#1",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:53.797449Z",
+    "creation_time": "2022-06-10T07:08:53.783373Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {},
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  },
+  {
+    "bucket": "registry-quay-bucket-d6889534-de60-48f0-808f-d945aa3e785c",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.3",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.3",
+    "index_type": "Normal",
+    "owner": "ceph-user-pcFIx4JO",
+    "ver": "0#1,1#1,2#1,3#1,4#1,5#1,6#1,7#1,8#1,9#1,10#1",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:52.445038Z",
+    "creation_time": "2022-06-10T07:08:52.435025Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {},
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  },
+  {
+    "bucket": "registry-elastic-bucket-a0c248bb-da1d-446b-9b61-7aa4b12fc680",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.2",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.2",
+    "index_type": "Normal",
+    "owner": "ceph-user-3e4SkMEq",
+    "ver": "0#1,1#1,2#1,3#1,4#1,5#1,6#1,7#1,8#1,9#1,10#1",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:50.296971Z",
+    "creation_time": "2022-06-10T07:08:50.287294Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {},
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  },
+  {
+    "bucket": "rook-ceph-bucket-checker-193e3cc1-063c-4d44-8a1a-cf147c682680",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.25262.1",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.25262.1",
+    "index_type": "Normal",
+    "owner": "rook-ceph-internal-s3-user-checker-193e3cc1-063c-4d44-8a1a-cf147c682680",
+    "ver": "0#1,1#1,2#1,3#1,4#19595,5#1,6#1,7#1,8#1,9#1,10#1",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:49.196123Z",
+    "creation_time": "2022-06-10T07:08:49.180736Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {
+      "rgw.main": {
+        "size": 0,
+        "size_actual": 0,
+        "size_utilized": 0,
+        "size_kb": 0,
+        "size_kb_actual": 0,
+        "size_kb_utilized": 0,
+        "num_objects": 0
+      }
+    },
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  },
+  {
+    "bucket": "loki-data-bucket-bedc5054-a90f-41b0-82f8-c077c2c32217",
+    "num_shards": 11,
+    "tenant": "",
+    "zonegroup": "a654d7cd-6d56-4523-8088-51d42dbb5e90",
+    "placement_rule": "default-placement",
+    "explicit_placement": {
+      "data_pool": "",
+      "data_extra_pool": "",
+      "index_pool": ""
+    },
+    "id": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.1",
+    "marker": "b1a5d976-3e21-4589-a3aa-d69de1e110ae.14767.1",
+    "index_type": "Normal",
+    "owner": "ceph-user-GRMeyViE",
+    "ver": "0#12896,1#12898,2#13130,3#12848,4#12730,5#12799,6#12999,7#12834,8#12793,9#13099,10#13070",
+    "master_ver": "0#0,1#0,2#0,3#0,4#0,5#0,6#0,7#0,8#0,9#0,10#0",
+    "mtime": "2022-06-10T07:08:49.085565Z",
+    "creation_time": "2022-06-10T07:08:49.074825Z",
+    "max_marker": "0#,1#,2#,3#,4#,5#,6#,7#,8#,9#,10#",
+    "usage": {
+      "rgw.main": {
+        "size": 6429367944,
+        "size_actual": 6723739648,
+        "size_utilized": 6429367944,
+        "size_kb": 6278680,
+        "size_kb_actual": 6566152,
+        "size_kb_utilized": 6278680,
+        "num_objects": 136473
+      }
+    },
+    "bucket_quota": {
+      "enabled": false,
+      "check_on_raw": false,
+      "max_size": -1,
+      "max_size_kb": 0,
+      "max_objects": -1
+    }
+  }
+]

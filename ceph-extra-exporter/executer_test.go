@@ -7,37 +7,10 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const autoscale_status_json = `
-[
-    {
-        "actual_capacity_ratio": 1.2351049148057083e-05,
-        "actual_raw_used": 1989198.0,
-        "bias": 1.0,
-        "bulk": false,
-        "capacity_ratio": 1.2351049148057083e-05,
-        "crush_root_id": -15,
-        "effective_target_ratio": 0.0,
-        "logical_used": 663066,
-        "pg_autoscale_mode": "on",
-        "pg_num_final": 1,
-        "pg_num_ideal": 0,
-        "pg_num_target": 1,
-        "pool_id": 1,
-        "pool_name": ".mgr",
-        "raw_used": 1989198.0,
-        "raw_used_rate": 3.0,
-        "subtree_capacity": 161054982144,
-        "target_bytes": 0,
-        "target_ratio": 0.0,
-        "would_adjust": false
-    }
-]
-`
-
 func TestCephExecuterUpdate(t *testing.T) {
 	testcases := map[string]struct {
 		rule   rule
-		expect map[string]float64
+		expect map[string][]metricValue
 	}{
 		"happy path": {
 			rule: rule{
@@ -47,18 +20,22 @@ func TestCephExecuterUpdate(t *testing.T) {
 					"pool_count": {
 						metricType: prometheus.GaugeValue,
 						help:       "pool count of `ceph osd pool autoscale-status` command",
-						jqFilter:   ". | length",
+						jqFilter:   "[{value: . | length, labels: []}]",
 					},
 					"actual_capacity_ratio": {
 						metricType: prometheus.GaugeValue,
 						help:       "",
-						jqFilter:   ".[0].actual_capacity_ratio",
+						jqFilter:   "[.[] | {value: .actual_capacity_ratio, labels: [.pool_name]}]",
+						labelKeys:  []string{"pool_name"},
 					},
 				},
 			},
-			expect: map[string]float64{
-				"pool_count":            1.0,
-				"actual_capacity_ratio": 1.2351049148057083e-05,
+			expect: map[string][]metricValue{
+				"pool_count": {{value: 2.0, labelValues: []string{}}},
+				"actual_capacity_ratio": {
+					{value: 0.0, labelValues: []string{"device_health_metrics"}},
+					{value: 1.0802450726274402, labelValues: []string{"ceph-ssd-block-pool"}},
+				},
 			},
 		},
 		"command execution failed": {
@@ -66,7 +43,7 @@ func TestCephExecuterUpdate(t *testing.T) {
 				name:    "osd_pool_autoscale_status",
 				command: []string{"false"},
 			},
-			expect: map[string]float64{},
+			expect: map[string][]metricValue{},
 		},
 		"invalid jq filter": {
 			rule: rule{
@@ -76,22 +53,24 @@ func TestCephExecuterUpdate(t *testing.T) {
 					"pool_count": {
 						metricType: prometheus.GaugeValue,
 						help:       "pool count of `ceph osd pool autoscale-status` command",
-						jqFilter:   ". | length",
+						jqFilter:   "[{value: . | length, labels: []}]",
 					},
 					"pg_autoscale_mode": {
 						metricType: prometheus.GaugeValue,
 						help:       "",
-						jqFilter:   ".[0].pg_autoscale_mode",
+						jqFilter:   "[.[] | {value: .pg_autoscale_mode, labels: [.pool_name]}]",
+						labelKeys:  []string{"pool_name"},
 					},
 					"do_not_exist": {
 						metricType: prometheus.GaugeValue,
 						help:       "",
-						jqFilter:   ".[0].do_not_exist",
+						jqFilter:   "[.[] | {value: .do_not_exist, labels: [.pool_name]}]",
+						labelKeys:  []string{"pool_name"},
 					},
 				},
 			},
-			expect: map[string]float64{
-				"pool_count": 1.0,
+			expect: map[string][]metricValue{
+				"pool_count": {{value: 2.0, labelValues: []string{}}},
 			},
 		},
 	}
@@ -101,7 +80,7 @@ func TestCephExecuterUpdate(t *testing.T) {
 			ce := newExecuter(&tc.rule)
 			ce.update()
 
-			assert.Equal(t, tc.expect, ce.values)
+			assert.Equal(t, tc.expect, ce.metricValues)
 		})
 	}
 }

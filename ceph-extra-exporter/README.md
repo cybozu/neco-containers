@@ -32,6 +32,30 @@ ceph-extra-exporter
 | ----- | ----------- |
 | none  | none        |
 
+### `ceph_extra_rgw_bucket_stats_s3_object_count`
+
+`ceph_extra_rgw_bucket_stats_s3_object_count` is a gauge metric that gives S3 Object count of RGW buckets.
+
+| Label  | Description |
+| ------ | ----------- |
+| bucket | bucket name |
+
+### `ceph_extra_rgw_bucket_stats_s3_size_bytes`
+
+`ceph_extra_rgw_bucket_stats_s3_size_bytes` is a gauge metric that gives sum of S3 object size in the buckets.
+
+| Label  | Description |
+| ------ | ----------- |
+| bucket | bucket name |
+
+### `ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes`
+
+`ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes` is a gauge metric that gives sum of S3 object size rounded to 4KBytes in the buckets.
+
+| Label  | Description |
+| ------ | ----------- |
+| bucket | bucket name |
+
 ## How to add a metrics
 
 Add a new rule to `main.go` like below.
@@ -46,9 +70,46 @@ var rules = []rule{
             "<metrics name.>": {
                 metricType: <metrics type e.g. `prometheus.GaugeValue`>,
                 help:       "<help string.>",
-                jqFilter:   "<the jq command's filter to get a single number as a metrics.>",
+                jqFilter:   "<see jqFilter section.>",
+                labelKeys: ["<a key for a label.>", ...]
             },
-            <can get some metrics from a command.>
+            <... can get multiple metrics from a command.>
         },
     }
+```
+
+### jqFilter
+
+`jqFilter` must convert the output of the command to JSON in the following format and return it.
+`value` is used as the value of the metric. The length of `labels` must be the same for all elements of the array and length of `labelKeys`.
+
+```json
+[
+  {
+    "value": "<metrics value>",
+    "labels": [
+      "label value",
+      ...
+    ]
+  }
+]
+```
+
+For an example of output...
+
+```json
+[
+  {
+    "value": 0,
+    "labels": [
+      "device_health_metrics"
+    ]
+  },
+  {
+    "value": 1.0802450726274402,
+    "labels": [
+      "ceph-ssd-block-pool"
+    ]
+  }
+]
 ```

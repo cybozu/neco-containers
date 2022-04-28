@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
+	"errors"
 	"io"
 	"os/exec"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -20,6 +20,7 @@ type metric struct {
 	metricType prometheus.ValueType
 	help       string
 	jqFilter   string
+	labelKeys  []string
 }
 
 type rule struct {
@@ -28,9 +29,34 @@ type rule struct {
 	metrics map[string]metric
 }
 
+type metricValue struct {
+	labelValues []string
+	value       float64
+}
+
+func (mv *metricValue) UnmarshalJSON(b []byte) error {
+	var x struct {
+		LabelValues []string `json:"labels"`
+		Value       *float64 `json:"value"`
+	}
+	err := json.Unmarshal(b, &x)
+	if err != nil {
+		return err
+	}
+	if x.LabelValues == nil {
+		return errors.New("no labels found")
+	}
+	if x.Value == nil {
+		return errors.New("no value found")
+	}
+	mv.labelValues = x.LabelValues
+	mv.value = *x.Value
+	return nil
+}
+
 type cephExecuter struct {
 	rule          *rule
-	values        map[string]float64
+	metricValues  map[string][]metricValue
 	mutex         sync.RWMutex
 	failedCounter map[string]int
 }
@@ -38,7 +64,7 @@ type cephExecuter struct {
 func newExecuter(rule *rule) *cephExecuter {
 	return &cephExecuter{
 		rule:          rule,
-		values:        make(map[string]float64),
+		metricValues:  make(map[string][]metricValue),
 		failedCounter: map[string]int{"command": 0, "jq": 0, "parse": 0},
 	}
 }
@@ -59,15 +85,15 @@ func (ce *cephExecuter) start(ctx context.Context) {
 }
 
 func (ce *cephExecuter) update() {
-	values := make(map[string]float64)
+	values := make(map[string][]metricValue)
 
 	defer func() {
 		ce.mutex.Lock()
 		defer ce.mutex.Unlock()
-		ce.values = values
+		ce.metricValues = values
 	}()
 
-	json, err := executeCommand(ce.rule.command, nil)
+	jsonBytes, err := executeCommand(ce.rule.command, nil)
 	if err != nil {
 		_ = logger.Warn("command execution failed", map[string]interface{}{
 			"command": ce.rule.command,
@@ -77,7 +103,7 @@ func (ce *cephExecuter) update() {
 	}
 
 	for name, metric := range ce.rule.metrics {
-		result, err := executeCommand([]string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(json))
+		result, err := executeCommand([]string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
 		if err != nil {
 			_ = logger.Warn("jq command failed", map[string]interface{}{
 				"filter": metric.jqFilter,
@@ -86,15 +112,16 @@ func (ce *cephExecuter) update() {
 			continue
 		}
 
-		value, err := strconv.ParseFloat(strings.TrimSpace(string(result)), 64)
-		if err != nil {
+		mv := []metricValue{}
+		if err := json.Unmarshal(result, &mv); err != nil {
 			_ = logger.Warn("parse value failed", map[string]interface{}{
 				"value": string(result),
+				"error": err,
 			})
 			ce.failedCounter["parse"] += 1
 			continue
 		}
-		values[name] = value
+		values[name] = mv
 	}
 }
 
