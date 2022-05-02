@@ -1,10 +1,10 @@
 ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.17-focal
 ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 ARG BACKEND_IMAGE=scratch
-ARG NGINX_VERSION=1.21.4
-ARG NJS_VERSION=0.7.0
+ARG NGINX_VERSION=1.21.6
+ARG NJS_VERSION=0.7.2
 ARG PKG_RELEASE=1~focal
-ARG NGINX_UNPRIVILEGED_COMMIT_HASH=49e131b7b76ba574e1ad1ced5d6d82c1018fa286
+ARG NGINX_UNPRIVILEGED_COMMIT_HASH=e1eaa46947899468880e8133a67bfc656074384f
 
 # Stage 1: build
 FROM ${GOLANG_IMAGE} AS builder-base
@@ -117,7 +117,6 @@ RUN sed -i 's,listen       80;,listen       8080;,' /etc/nginx/conf.d/default.co
     && chmod -R g+w /etc/nginx
 
 COPY --from=build-hubble-ui /app/server/public /app
-COPY --from=build-hubble-ui /app/server/nginx-hubble-ui-frontend.conf /etc/nginx/conf.d/default.conf
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
