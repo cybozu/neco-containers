@@ -1,6 +1,11 @@
 #!/bin/sh -xe
 
-git clone -b ${NECO_APPS_BRANCH:-release} https://github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
+set +x
+if [ "${GITHUB_USER}" != "" -a "${GITHUB_TOKEN}" != "" ]; then
+    USER_PASS="${GITHUB_USER}:${GITHUB_TOKEN}@"
+fi
+git clone -b ${NECO_APPS_BRANCH:-release} https://${USER_PASS}github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
+set -x
 
 cp /secrets/account.json ${NECO_APPS_DIR}/test/
 
