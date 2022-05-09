@@ -26,7 +26,7 @@ index 9a073faa9ed46..7fda073872332 100644
      .set_default(.97)
      .set_description(""),
 diff --git a/src/kv/KeyValueDB.h b/src/kv/KeyValueDB.h
-index a9a7965117c0d..2ecccf8507134 100644
+index a9a7965117c0d..9e3cb3c3d0bbc 100644
 --- a/src/kv/KeyValueDB.h
 +++ b/src/kv/KeyValueDB.h
 @@ -7,6 +7,7 @@
@@ -37,55 +37,24 @@ index a9a7965117c0d..2ecccf8507134 100644
  #include <string>
  #include <boost/scoped_ptr.hpp>
  #include "include/encoding.h"
-@@ -314,11 +315,17 @@ class KeyValueDB {
+@@ -314,8 +315,14 @@ class KeyValueDB {
  public:
    typedef uint32_t IteratorOpts;
    static const uint32_t ITERATOR_NOCACHE = 1;
--  virtual WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) = 0;
--  virtual Iterator get_iterator(const std::string &prefix, IteratorOpts opts = 0) {
 +
 +  struct IteratorBounds {
 +    std::optional<std::string> lower_bound;
 +    std::optional<std::string> upper_bound;
 +  };
 +
-+  virtual WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) = 0;
+   virtual WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) = 0;
+-  virtual Iterator get_iterator(const std::string &prefix, IteratorOpts opts = 0) {
 +  virtual Iterator get_iterator(const std::string &prefix, IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) {
      return std::make_shared<PrefixIteratorImpl>(
        prefix,
--      get_wholespace_iterator(opts));
-+      get_wholespace_iterator(opts, std::move(bounds)));
-   }
- 
-   virtual uint64_t get_estimated_size(std::map<std::string,uint64_t> &extra) = 0;
-diff --git a/src/kv/LevelDBStore.h b/src/kv/LevelDBStore.h
-index 085193ee03321..b48642d12c34a 100644
---- a/src/kv/LevelDBStore.h
-+++ b/src/kv/LevelDBStore.h
-@@ -402,7 +402,7 @@ class LevelDBStore : public KeyValueDB {
-   }
- 
- 
--  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) override {
-+  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) override {
-     return std::make_shared<LevelDBWholeSpaceIteratorImpl>(
- 	db->NewIterator(leveldb::ReadOptions()));
-   }
-diff --git a/src/kv/MemDB.h b/src/kv/MemDB.h
-index 32d81db225ed2..80fed647efbdd 100644
---- a/src/kv/MemDB.h
-+++ b/src/kv/MemDB.h
-@@ -212,7 +212,7 @@ class MemDB : public KeyValueDB
-     return 0;
-   }
- 
--  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) override {
-+  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) override {
-     return std::shared_ptr<KeyValueDB::WholeSpaceIteratorImpl>(
-       new MDBWholeSpaceIteratorImpl(&m_map, &m_lock, &iterator_seq_no, m_using_btree));
-   }
+       get_wholespace_iterator(opts));
 diff --git a/src/kv/RocksDBStore.cc b/src/kv/RocksDBStore.cc
-index 7d7fee68c73d5..4c079d3d2333a 100644
+index 7d7fee68c73d5..05bcdaa26627b 100644
 --- a/src/kv/RocksDBStore.cc
 +++ b/src/kv/RocksDBStore.cc
 @@ -626,6 +626,18 @@ bool RocksDBStore::is_column_family(const std::string& prefix) {
@@ -229,7 +198,7 @@ index 7d7fee68c73d5..4c079d3d2333a 100644
      }
    }
    ~ShardMergeIteratorImpl() {
-@@ -2917,22 +2983,31 @@ class ShardMergeIteratorImpl : public KeyValueDB::IteratorImpl {
+@@ -2917,19 +2983,28 @@ class ShardMergeIteratorImpl : public KeyValueDB::IteratorImpl {
    }
  };
  
@@ -261,17 +230,9 @@ index 7d7fee68c73d5..4c079d3d2333a 100644
 +        std::move(bounds));
      }
    } else {
--    return KeyValueDB::get_iterator(prefix, opts);
-+    return KeyValueDB::get_iterator(prefix, opts, std::move(bounds));
-   }
- }
- 
-@@ -2941,14 +3016,11 @@ rocksdb::Iterator* RocksDBStore::new_shard_iterator(rocksdb::ColumnFamilyHandle*
-   return db->NewIterator(rocksdb::ReadOptions(), cf);
- }
- 
--RocksDBStore::WholeSpaceIterator RocksDBStore::get_wholespace_iterator(IteratorOpts opts)
-+RocksDBStore::WholeSpaceIterator RocksDBStore::get_wholespace_iterator(IteratorOpts opts, IteratorBounds bounds)
+     return KeyValueDB::get_iterator(prefix, opts);
+@@ -2944,11 +3019,8 @@ rocksdb::Iterator* RocksDBStore::new_shard_iterator(rocksdb::ColumnFamilyHandle*
+ RocksDBStore::WholeSpaceIterator RocksDBStore::get_wholespace_iterator(IteratorOpts opts)
  {
    if (cf_handles.size() == 0) {
 -    rocksdb::ReadOptions opt = rocksdb::ReadOptions();
@@ -279,7 +240,7 @@ index 7d7fee68c73d5..4c079d3d2333a 100644
 -      opt.fill_cache=false;
      return std::make_shared<RocksDBWholeSpaceIteratorImpl>(
 -      db->NewIterator(opt, default_cf));
-+      this, default_cf, opts, std::move(bounds));
++      this, default_cf, opts);
    } else {
      return std::make_shared<WholeMergeIteratorImpl>(this);
    }
@@ -289,12 +250,12 @@ index 7d7fee68c73d5..4c079d3d2333a 100644
  {
 -  return std::make_shared<RocksDBWholeSpaceIteratorImpl>(
 -    db->NewIterator(rocksdb::ReadOptions(), default_cf));
-+  return std::make_shared<RocksDBWholeSpaceIteratorImpl>(this, default_cf, 0, IteratorBounds());
++  return std::make_shared<RocksDBWholeSpaceIteratorImpl>(this, default_cf, 0);
  }
  
  int RocksDBStore::prepare_for_reshard(const std::string& new_sharding,
 diff --git a/src/kv/RocksDBStore.h b/src/kv/RocksDBStore.h
-index 529b4ffa621ab..a64e69b1d1d6c 100644
+index 529b4ffa621ab..50f2b4488f4dc 100644
 --- a/src/kv/RocksDBStore.h
 +++ b/src/kv/RocksDBStore.h
 @@ -65,6 +65,14 @@ namespace rocksdb{
@@ -332,41 +293,26 @@ index 529b4ffa621ab..a64e69b1d1d6c 100644
  
    int submit_common(rocksdb::WriteOptions& woptions, KeyValueDB::Transaction t);
    int install_cf_mergeop(const std::string &cf_name, rocksdb::ColumnFamilyOptions *cf_opt);
-@@ -342,9 +354,31 @@ class RocksDBStore : public KeyValueDB {
-     public KeyValueDB::WholeSpaceIteratorImpl {
+@@ -343,9 +355,15 @@ class RocksDBStore : public KeyValueDB {
    protected:
      rocksdb::Iterator *dbiter;
-+    const KeyValueDB::IteratorBounds bounds;
-+    const rocksdb::Slice iterate_lower_bound;
-+    const rocksdb::Slice iterate_upper_bound;
    public:
 -    explicit RocksDBWholeSpaceIteratorImpl(rocksdb::Iterator *iter) :
 -      dbiter(iter) { }
+-    //virtual ~RocksDBWholeSpaceIteratorImpl() { }
 +    explicit RocksDBWholeSpaceIteratorImpl(const RocksDBStore* db,
 +                                           rocksdb::ColumnFamilyHandle* cf,
-+                                           const KeyValueDB::IteratorOpts opts,
-+                                           KeyValueDB::IteratorBounds bounds_) :
-+      bounds(std::move(bounds_)),
-+      iterate_lower_bound(make_slice(bounds.lower_bound)),
-+      iterate_upper_bound(make_slice(bounds.upper_bound))
++                                           const KeyValueDB::IteratorOpts opts)
 +      {
 +        rocksdb::ReadOptions options = rocksdb::ReadOptions();
 +        if (opts & ITERATOR_NOCACHE)
 +          options.fill_cache=false;
-+        if (db->cct->_conf->osd_rocksdb_iterator_bounds_enabled) {
-+          if (bounds.lower_bound) {
-+            options.iterate_lower_bound = &iterate_lower_bound;
-+          }
-+          if (bounds.upper_bound) {
-+            options.iterate_upper_bound = &iterate_upper_bound;
-+          }
-+        }
 +        dbiter = db->db->NewIterator(options, cf);
 +    }
-     //virtual ~RocksDBWholeSpaceIteratorImpl() { }
      ~RocksDBWholeSpaceIteratorImpl() override;
  
-@@ -367,7 +401,7 @@ class RocksDBStore : public KeyValueDB {
+     int seek_to_first() override;
+@@ -367,7 +385,7 @@ class RocksDBStore : public KeyValueDB {
      size_t value_size() override;
    };
  
@@ -375,15 +321,6 @@ index 529b4ffa621ab..a64e69b1d1d6c 100644
  private:
    /// this iterator spans single cf
    rocksdb::Iterator* new_shard_iterator(rocksdb::ColumnFamilyHandle* cf);
-@@ -500,7 +534,7 @@ class RocksDBStore : public KeyValueDB {
-     return nullptr;
-   }
- 
--  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) override;
-+  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) override;
- private:
-   WholeSpaceIterator get_default_cf_iterator();
- 
 diff --git a/src/os/bluestore/BlueStore.cc b/src/os/bluestore/BlueStore.cc
 index 6ab4922da6bb1..b9ee17fbfe830 100644
 --- a/src/os/bluestore/BlueStore.cc
@@ -441,27 +378,3 @@ index 6ab4922da6bb1..b9ee17fbfe830 100644
      it->lower_bound(head);
      while (it->valid()) {
        if (it->key() >= tail) {
-diff --git a/src/test/ObjectMap/KeyValueDBMemory.cc b/src/test/ObjectMap/KeyValueDBMemory.cc
-index 234e963397e31..b2b351baef44b 100644
---- a/src/test/ObjectMap/KeyValueDBMemory.cc
-+++ b/src/test/ObjectMap/KeyValueDBMemory.cc
-@@ -234,7 +234,7 @@ int KeyValueDBMemory::rm_range_keys(const string &prefix, const string &start, c
-   return 0;
- }
- 
--KeyValueDB::WholeSpaceIterator KeyValueDBMemory::get_wholespace_iterator(IteratorOpts opts) {
-+KeyValueDB::WholeSpaceIterator KeyValueDBMemory::get_wholespace_iterator(IteratorOpts opts, IteratorBounds bounds) {
-   return std::shared_ptr<KeyValueDB::WholeSpaceIteratorImpl>(
-     new WholeSpaceMemIterator(this)
-   );
-diff --git a/src/test/ObjectMap/KeyValueDBMemory.h b/src/test/ObjectMap/KeyValueDBMemory.h
-index 5e7d3f0e1675f..da386ccb908bf 100644
---- a/src/test/ObjectMap/KeyValueDBMemory.h
-+++ b/src/test/ObjectMap/KeyValueDBMemory.h
-@@ -186,5 +186,5 @@ class KeyValueDBMemory : public KeyValueDB {
-   friend class WholeSpaceMemIterator;
- 
- public:
--  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0) override;
-+  WholeSpaceIterator get_wholespace_iterator(IteratorOpts opts = 0, IteratorBounds bounds = IteratorBounds()) override;
- };
