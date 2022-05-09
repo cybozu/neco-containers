@@ -1,16 +1,13 @@
 # vault container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG VAULT_VERSION=1.8.2
+ARG VAULT_VERSION=1.10.2
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
 WORKDIR /work/vault
-
-COPY disable-etcd-version-detection.patch .
-RUN patch -p1 < disable-etcd-version-detection.patch
 
 RUN make bootstrap && \
     make fmt && \
