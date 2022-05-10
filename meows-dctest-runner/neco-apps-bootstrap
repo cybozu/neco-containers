@@ -1,7 +1,7 @@
 #!/bin/sh -xe
 
 set +x
-if [ "${GITHUB_USER}" != "" -a "${GITHUB_TOKEN}" != "" ]; then
+if [ -n "${GITHUB_USER}" -a -n "${GITHUB_TOKEN}" ]; then
     USER_PASS="${GITHUB_USER}:${GITHUB_TOKEN}@"
 fi
 git clone -b ${NECO_APPS_BRANCH:-release} https://${USER_PASS}github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
