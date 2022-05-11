@@ -813,6 +813,15 @@ Only the base image and module dependency should be updated.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
+## unbound_exporter
+
+![Kubernetes Update](./kubernetes_update.svg)
+
+1. Check the [release page](https://github.com/letsencrypt/unbound_exporter/releases)
+2. Update `UNBOUND_EXPORTER_VERSION` in `Dockerfile`.
+3. Update image tag in `README.md`.
+4. Update `BRANCH` and `TAG` files.
+
 ## vault
 
 ![Regular Update](./regular_update.svg)
