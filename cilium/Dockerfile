@@ -81,8 +81,7 @@ RUN apt-get update \
     && apt-get purge --auto-remove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && /configure-iptables-wrapper.sh \
-    && groupadd -f cilium
+    && /configure-iptables-wrapper.sh
 
 WORKDIR /home/cilium
 
