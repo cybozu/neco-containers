@@ -585,8 +585,8 @@ workflows:
           name: test-golang-analyzer
           directory: golang/analyzer
       - test:
-          name: test-golang-1.16-analyzer
-          directory: golang-1.16/analyzer
+          name: test-golang-1.17-analyzer
+          directory: golang-1.17/analyzer
       - test:
           name: test-golang-bionic-analyzer
           directory: golang-bionic/analyzer
@@ -747,9 +747,9 @@ workflows:
           name: build-golang
           container-image: golang
       - build:
-          name: build-golang-1.16
+          name: build-golang-1.17
           container-image: golang
-          dir: golang-1.16
+          dir: golang-1.17
       - build:
           name: build-golang-bionic
           container-image: golang
