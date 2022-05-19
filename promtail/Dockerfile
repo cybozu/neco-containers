@@ -47,6 +47,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     linux-base \
     acl \
     python3:native \
+    python3-jinja2 \
     python3-lxml:native \
     python3-pyparsing \
     python3-evdev \
@@ -60,7 +61,7 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
     meson install -C /work/systemd/build/
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-RUN make -C /work/loki BUILD_IN_CONTAINER=false touch-protos promtail
+RUN make -C /work/loki BUILD_IN_CONTAINER=false promtail
 
 FROM quay.io/cybozu/ubuntu:20.04
 
