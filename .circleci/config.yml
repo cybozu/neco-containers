@@ -872,6 +872,9 @@ workflows:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
       - build:
+          name: build-nerdctl
+          container-image: nerdctl
+      - build:
           name: build-pause
           container-image: pause
       - build:

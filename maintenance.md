@@ -646,6 +646,14 @@ In the regular update, only update the ubuntu base image and module dependency.
 This image is referenced in `cybozu-go/moco`. So update the following as well.
 - https://github.com/cybozu-go/moco/blob/main/version.go
 
+## nerdctl
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/containerd/nerdctl/releases).
+2. Update `NERDCTL_VERSION` in `Dockerfile`.
+3. Update the `BRANCH` and `TAG` files.
+
 ## pause
 
 ![Kubernetes Update](./kubernetes_update.svg)
