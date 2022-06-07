@@ -395,6 +395,12 @@ This image is referenced in `cybozu-go/moco`. So update the following as well.
 
 Ignore!!!
 
+## go-ipfs
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/ipfs/go-ipfs/releases/) page for changes.
+2. Update the `BRANCH` and `TAG` files accordingly.
+
 ## grafana
 
 ![Regular Update](./regular_update.svg)
@@ -474,6 +480,8 @@ Only the base image and module dependency should be updated.
    1. `NGINX_VERSION`
    2. `NJS_VERSION`
    3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
+
+
 
 
 ## kube-metrics-adapter

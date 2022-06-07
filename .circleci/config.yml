@@ -758,6 +758,9 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build:
+          name: build-go-ipfs
+          container-image: go-ipfs
+      - build:
           name: build-grafana
           container-image: grafana
           resource-class: medium+
