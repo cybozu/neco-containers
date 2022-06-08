@@ -1,21 +1,30 @@
-# Note: when updating the go minor version here, also update the go-channel in snap/snapcraft.yml
-FROM golang:1.18.1-buster
-LABEL maintainer="Steven Allen <steven@stebalien.com>"
+FROM quay.io/cybozu/golang:1.17-focal AS build-idserver
+WORKDIR /idserver
+COPY idserver/go.mod /idserver/
+COPY idserver/go.sum /idserver/
+RUN go mod download 
+
+COPY idserver/*.go /idserver/
+RUN go build -o /idserver
+
+FROM quay.io/cybozu/golang:1.17-focal AS build-go-ipfs
 
 # Install deps
 RUN apt-get update && apt-get install -y \
-  libssl-dev \
-  ca-certificates \
-  fuse
+  fuse \
+  pkg-config \
+  wget 
 
+ARG GO_IPFS_VERSION=v0.12.2
 ENV SRC_DIR /go-ipfs
 
-# Download packages first so they can be cached.
-COPY go.mod go.sum $SRC_DIR/
-RUN cd $SRC_DIR \
-  && go mod download
+WORKDIR $SRC_DIR
+RUN git clone https://github.com/ipfs/go-ipfs.git $SRC_DIR \
+  && git checkout refs/tags/${GO_IPFS_VERSION}
 
-COPY . $SRC_DIR
+# Download packages first so they can be cached.
+RUN cd $SRC_DIR \
+ go mod download 
 
 # Preload an in-tree but disabled-by-default plugin by adding it to the IPFS_PLUGINS variable
 # e.g. docker build --build-arg IPFS_PLUGINS="foo bar baz"
@@ -25,7 +34,7 @@ ARG IPFS_PLUGINS
 # Also: fix getting HEAD commit hash via git rev-parse.
 RUN cd $SRC_DIR \
   && mkdir -p .git/objects \
-  && GOFLAGS=-buildvcs=false make build GOTAGS=openssl IPFS_PLUGINS=$IPFS_PLUGINS
+  && make build GOTAGS=openssl IPFS_PLUGINS=$IPFS_PLUGINS
 
 # Get su-exec, a very minimal tool for dropping privileges,
 # and tini, a very minimal init daemon for containers
@@ -47,18 +56,22 @@ RUN set -eux; \
   && chmod +x tini
 
 # Now comes the actual target image, which aims to be as small as possible.
-FROM busybox:1.31.1-glibc
-LABEL maintainer="Steven Allen <steven@stebalien.com>"
+FROM quay.io/cybozu/ubuntu:20.04
+
+RUN apt-get update && apt-get install -y \
+  wget \
+  netcat 
 
 # Get the ipfs binary, entrypoint script, and TLS CAs from the build container.
 ENV SRC_DIR /go-ipfs
-COPY --from=0 $SRC_DIR/cmd/ipfs/ipfs /usr/local/bin/ipfs
-COPY --from=0 $SRC_DIR/bin/container_daemon /usr/local/bin/start_ipfs
-COPY --from=0 $SRC_DIR/bin/container_init_run /usr/local/bin/container_init_run
-COPY --from=0 /tmp/su-exec/su-exec-static /sbin/su-exec
-COPY --from=0 /tmp/tini /sbin/tini
-COPY --from=0 /bin/fusermount /usr/local/bin/fusermount
-COPY --from=0 /etc/ssl/certs /etc/ssl/certs
+COPY --from=build-go-ipfs $SRC_DIR/cmd/ipfs/ipfs /usr/local/bin/ipfs
+COPY --from=build-go-ipfs $SRC_DIR/bin/container_daemon /usr/local/bin/start_ipfs
+COPY --from=build-go-ipfs /tmp/su-exec/su-exec-static /sbin/su-exec
+COPY --from=build-go-ipfs /tmp/tini /sbin/tini
+COPY --from=build-go-ipfs /bin/fusermount /usr/local/bin/fusermount
+COPY --from=build-go-ipfs /etc/ssl/certs /etc/ssl/certs
+
+COPY --from=build-idserver /idserver/src /idserver
 
 # Add suid bit on fusermount so it will run properly
 RUN chmod 4755 /usr/local/bin/fusermount
@@ -66,12 +79,9 @@ RUN chmod 4755 /usr/local/bin/fusermount
 # Fix permissions on start_ipfs (ignore the build machine's permissions)
 RUN chmod 0755 /usr/local/bin/start_ipfs
 
-# This shared lib (part of glibc) doesn't seem to be included with busybox.
-COPY --from=0 /lib/*-linux-gnu*/libdl.so.2 /lib/
-
 # Copy over SSL libraries.
-COPY --from=0 /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
-COPY --from=0 /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
+COPY --from=build-go-ipfs /usr/lib/*-linux-gnu*/libssl.so* /usr/lib/
+COPY --from=build-go-ipfs /usr/lib/*-linux-gnu*/libcrypto.so* /usr/lib/
 
 # Swarm TCP; should be exposed to the public
 EXPOSE 4001
@@ -87,7 +97,7 @@ EXPOSE 8081
 # Create the fs-repo directory and switch to a non-privileged user.
 ENV IPFS_PATH /data/ipfs
 RUN mkdir -p $IPFS_PATH \
-  && adduser -D -h $IPFS_PATH -u 1000 -G users ipfs \
+  && adduser --disabled-password --uid 1000 ipfs \
   && chown ipfs:users $IPFS_PATH
 
 # Create mount points for `ipfs mount` command
@@ -110,11 +120,6 @@ ENV IPFS_LOGGING ""
 # 1. There's an fs-repo, and initializes one if there isn't.
 # 2. The API and Gateway are accessible from outside the container.
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/start_ipfs"]
-
-# Heathcheck for the container
-# QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn is the CID of empty folder
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD ipfs dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn || exit 1 
 
 # Execute the daemon subcommand by default
 CMD ["daemon", "--migrate=true", "--agent-version-suffix=docker"]
