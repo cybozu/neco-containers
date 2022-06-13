@@ -1,0 +1,75 @@
+FROM quay.io/cybozu/golang:1.18-focal AS builder
+
+# This dockerfile builds and runs ipfs-cluster-service.
+ENV GOPATH      /go
+ENV SRC_PATH    $GOPATH/src/github.com/ipfs/ipfs-cluster
+ENV GO111MODULE on
+ENV GOPROXY     https://proxy.golang.org
+
+ENV SUEXEC_VERSION v0.2
+ENV TINI_VERSION v0.19.0
+ENV IPFS_CLUSTER_VERSION v1.0.1
+
+RUN apt-get update && apt-get install -y \
+    wget
+
+RUN set -eux; \
+    dpkgArch="$(dpkg --print-architecture)"; \
+    case "${dpkgArch##*-}" in \
+        "amd64" | "armhf" | "arm64") tiniArch="tini-static-$dpkgArch" ;;\
+        *) echo >&2 "unsupported architecture: ${dpkgArch}"; exit 1 ;; \
+    esac; \
+  cd /tmp \
+  && git clone https://github.com/ncopa/su-exec.git \
+  && cd su-exec \
+  && git checkout -q $SUEXEC_VERSION \
+  && make su-exec-static \
+  && cd /tmp \
+  && wget -q -O tini https://github.com/krallin/tini/releases/download/$TINI_VERSION/$tiniArch \
+  && chmod +x tini
+
+# Get the TLS CA certificates, they're not provided by busybox.
+
+WORKDIR $SRC_PATH
+RUN git clone https://github.com/ipfs/ipfs-cluster.git  $SRC_PATH \
+    && git checkout refs/tags/${IPFS_CLUSTER_VERSION}
+#COPY --chown=1000:users go.* $SRC_PATH/
+RUN go mod download
+
+COPY --chown=1000:users . $SRC_PATH
+RUN make install
+
+
+#------------------------------------------------------
+FROM quay.io/cybozu/ubuntu:20.04 
+
+ENV GOPATH                 /go
+ENV SRC_PATH               /go/src/github.com/ipfs/ipfs-cluster
+ENV IPFS_CLUSTER_PATH      /data/ipfs-cluster
+ENV IPFS_CLUSTER_CONSENSUS crdt
+ENV IPFS_CLUSTER_DATASTORE leveldb
+
+RUN apt-get update && apt-get install -y \
+    netcat
+
+EXPOSE 9094
+EXPOSE 9095
+EXPOSE 9096
+
+COPY --from=builder $GOPATH/bin/ipfs-cluster-service /usr/local/bin/ipfs-cluster-service
+COPY --from=builder $GOPATH/bin/ipfs-cluster-ctl /usr/local/bin/ipfs-cluster-ctl
+COPY --from=builder $GOPATH/bin/ipfs-cluster-follow /usr/local/bin/ipfs-cluster-follow
+COPY --from=builder $SRC_PATH/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=builder /tmp/su-exec/su-exec-static /sbin/su-exec
+COPY --from=builder /tmp/tini /sbin/tini
+COPY --from=builder /etc/ssl/certs /etc/ssl/certs
+
+RUN mkdir -p $IPFS_CLUSTER_PATH && \
+    adduser --disabled-password --uid 1000 ipfs && \
+    chown ipfs:users $IPFS_CLUSTER_PATH
+
+VOLUME $IPFS_CLUSTER_PATH
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/entrypoint.sh"]
+
+# Defaults for ipfs-cluster-service go here
+CMD ["daemon"]
