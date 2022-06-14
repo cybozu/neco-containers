@@ -477,7 +477,7 @@ Only the base image and module dependency should be updated.
 
 ## ipfs-cluster
 
-![Regular Update](./regular_update.svg)
+![No Need Update](./no_need_update.svg)
 
 1. Check the [releases](https://github.com/ipfs/ipfs-cluster/releases) page for changes.
 2. Update `IPFS_CLUSTER_VERSION` in `Dockerfile`.
