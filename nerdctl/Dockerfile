@@ -14,3 +14,4 @@ RUN make \
         &&  make install
  
 ENTRYPOINT ["/usr/local/bin/nerdctl", "ipfs", "registry", "serve"]
+
