@@ -15,6 +15,9 @@ The target container of these operations have the following badges, so check bef
 3 CSA Update  (![CSA Update](./csa_update.svg))
    - Update by CSA team.
 
+4 No Need Update (![No Need Update](./no_need_update.svg))
+   - Used as a PoC, so regular updates are not required.
+
 ---
 
 ## admission (neco-admission)
@@ -645,6 +648,14 @@ In the regular update, only update the ubuntu base image and module dependency.
 
 This image is referenced in `cybozu-go/moco`. So update the following as well.
 - https://github.com/cybozu-go/moco/blob/main/version.go
+
+## nerdctl
+
+![No Need Update](./no_need_update.svg)
+
+1. Check the [release page](https://github.com/containerd/nerdctl/releases).
+2. Update `NERDCTL_VERSION` in `Dockerfile`.
+3. Update the `BRANCH` and `TAG` files.
 
 ## pause
 
