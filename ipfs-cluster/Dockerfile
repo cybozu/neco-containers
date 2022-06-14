@@ -35,10 +35,8 @@ RUN cd /tmp \
   && make \
   && chmod +x tini
 
-# Get the TLS CA certificates, they're not provided by busybox.
-
 WORKDIR $SRC_PATH
-RUN git clone https://github.com/ipfs/ipfs-cluster.git  $SRC_PATH \
+RUN git clone https://github.com/ipfs/ipfs-cluster.git $SRC_PATH \
     && git checkout refs/tags/${IPFS_CLUSTER_VERSION}
 RUN go mod download
 
