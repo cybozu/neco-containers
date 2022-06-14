@@ -482,8 +482,6 @@ Only the base image and module dependency should be updated.
    3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
 
 
-
-
 ## kube-metrics-adapter
 
 ![Kubernetes Update](./kubernetes_update.svg)
