@@ -782,7 +782,7 @@ workflows:
           targets: frontend backend
       - build:
           name: build-ipfs-cluster
-          container-image: ipffs-cluster
+          container-image: ipfs-cluster
       - build:
           name: build-kube-metrics-adapter
           container-image: kube-metrics-adapter
