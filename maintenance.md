@@ -396,7 +396,8 @@ This image is referenced in `cybozu-go/moco`. So update the following as well.
 Ignore!!!
 
 ## go-ipfs
-![Regular Update](./regular_update.svg)
+
+![No Need Update](./no_need_update.svg)
 
 1. Check the [releases](https://github.com/ipfs/go-ipfs/releases/) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
