@@ -10,4 +10,3 @@ RUN git clone https://github.com/containerd/nerdctl.git $SRC_DIR \
 RUN make && make install
  
 ENTRYPOINT ["/usr/local/bin/nerdctl", "ipfs", "registry", "serve"]
-

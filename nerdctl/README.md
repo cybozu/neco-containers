@@ -8,4 +8,3 @@ Docker images
 -------------
 
 Docker images are available on [Quay.io](https://quay.io/repository/cybozu/nerdctl)
-
