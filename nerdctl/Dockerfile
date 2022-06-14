@@ -1,7 +1,16 @@
-FROM quay.io/cybozu/ubuntu:20.04 AS build
+FROM quay.io/cybozu/golang:1.17-focal 
 
-ARG NERDCTL_VERSION=0.20.0
-RUN curl -sSL --output /tmp/nerdctl.tgz https://github.com/containerd/nerdctl/releases/download/v${NERDCTL_VERSION}/nerdctl-${NERDCTL_VERSION}-linux-${TARGETARCH:-amd64}.tar.gz  \
-	&& tar zxvf /tmp/nerdctl.tgz -C /usr/local/bin/ \
-	&&     rm /tmp/nerdctl.tgz 
+ARG NERDCTL_VERSION=v0.20.0
+
+RUN apt-get update \
+        && apt-get install -y git make
+
+ENV SRC_DIR /nerdctl
+WORKDIR $SRC_DIR 
+RUN git clone https://github.com/containerd/nerdctl.git $SRC_DIR \
+        && git checkout refs/tags/$NERDCTL_VERSION
+
+RUN make \
+        &&  make install
+ 
 ENTRYPOINT ["/usr/local/bin/nerdctl", "ipfs", "registry", "serve"]
