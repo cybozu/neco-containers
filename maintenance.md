@@ -461,7 +461,6 @@ Only the base image and module dependency should be updated.
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
 
-
 ***NOTE:*** The hubble-relay image should be updated at the same time as the cilium image for consistency.
 
 
