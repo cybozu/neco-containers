@@ -459,8 +459,8 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update `IPFS_CLUSTER_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files accordingly.
+2. Update the `BRANCH` and `TAG` files accordingly.
+
 
 ***NOTE:*** The hubble-relay image should be updated at the same time as the cilium image for consistency.
 
@@ -481,8 +481,8 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/ipfs/ipfs-cluster/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
-
+2. Update `IPFS_CLUSTER_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files accordingly.
 
 ## kube-metrics-adapter
 
