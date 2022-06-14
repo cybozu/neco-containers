@@ -1,3 +1,4 @@
+# referring to ipfs-cluster Dockerfile (https://github.com/ipfs/ipfs-cluster/blob/master/Dockerfile)
 FROM quay.io/cybozu/golang:1.18-focal AS builder
 
 # This dockerfile builds and runs ipfs-cluster-service.
@@ -11,7 +12,8 @@ ENV TINI_VERSION v0.19.0
 ENV IPFS_CLUSTER_VERSION v1.0.1
 
 RUN apt-get update && apt-get install -y \
-    wget
+    wget \
+    cmake
 
 RUN set -eux; \
     dpkgArch="$(dpkg --print-architecture)"; \
@@ -23,9 +25,14 @@ RUN set -eux; \
   && git clone https://github.com/ncopa/su-exec.git \
   && cd su-exec \
   && git checkout -q $SUEXEC_VERSION \
-  && make su-exec-static \
-  && cd /tmp \
-  && wget -q -O tini https://github.com/krallin/tini/releases/download/$TINI_VERSION/$tiniArch \
+  && make su-exec-static 
+
+RUN cd /tmp \
+  && git clone https://github.com/krallin/tini.git  \
+  && cd tini \
+  && git checkout refs/tags/$TINI_VERSION \
+  && cmake . \
+  && make \
   && chmod +x tini
 
 # Get the TLS CA certificates, they're not provided by busybox.
@@ -33,7 +40,6 @@ RUN set -eux; \
 WORKDIR $SRC_PATH
 RUN git clone https://github.com/ipfs/ipfs-cluster.git  $SRC_PATH \
     && git checkout refs/tags/${IPFS_CLUSTER_VERSION}
-#COPY --chown=1000:users go.* $SRC_PATH/
 RUN go mod download
 
 COPY --chown=1000:users . $SRC_PATH
@@ -61,7 +67,7 @@ COPY --from=builder $GOPATH/bin/ipfs-cluster-ctl /usr/local/bin/ipfs-cluster-ctl
 COPY --from=builder $GOPATH/bin/ipfs-cluster-follow /usr/local/bin/ipfs-cluster-follow
 COPY --from=builder $SRC_PATH/docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY --from=builder /tmp/su-exec/su-exec-static /sbin/su-exec
-COPY --from=builder /tmp/tini /sbin/tini
+COPY --from=builder /tmp/tini/tini /sbin/tini
 COPY --from=builder /etc/ssl/certs /etc/ssl/certs
 
 RUN mkdir -p $IPFS_CLUSTER_PATH && \
