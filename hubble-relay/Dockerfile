@@ -6,24 +6,12 @@ ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 FROM ${GOLANG_IMAGE} as build
 
 COPY TAG /
-COPY 17930.patch /tmp/
-COPY 18454.patch /tmp/
-COPY 19936.patch /tmp/
-COPY 20006.patch /tmp/
-COPY 20092.patch /tmp/
-COPY 20176.patch /tmp/
 
 # LICENSE.all
 WORKDIR /go/src/github.com/cilium/cilium
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
       tar xzf - --strip-components 1 \
-    && patch -p1 --no-backup-if-mismatch < /tmp/17930.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/18454.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20006.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19936.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
     && make licenses-all \
     && apt-get update \
     && apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu \
