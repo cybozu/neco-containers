@@ -1,0 +1,499 @@
+From 433e9ebf908306d0c27f94b2f3c8530b9bfa76fb Mon Sep 17 00:00:00 2001
+From: Martynas Pumputis <m@lambda.lt>
+Date: Wed, 12 Jan 2022 11:23:13 +0100
+Subject: [PATCH 1/3] datapath: Do not create CT_INGRESS for NodePort traffic
+
+Previously, the NodePort BPF used to create CT_INGRESS entries for
+client => selected LB backend tuple in the nodeport_lb{4,6}() functions.
+
+The flow below illustrates why it was needed.
+
+-> TCP SYN:
+
+nodeport_lb4()@bpf_host
+    ct_create4(CT_EGRESS):
+	key = tuple=(saddr=pod,daddr=client,flags=TUPLE_F_OUT,
+                     dport=80,sport=client_port)         <-- ENTRY_EGRESS
+	val = entry=(rev_nat_id=svc_id,node_port=1)
+    ct_create4(CT_INGRESS):
+	key = tuple=(saddr=pod,daddr=client,flags=TUPLE_F_IN,
+                     dport=80,sport=client_port)         <-- ENTRY_INGRESS
+	val = entry=(rev_nat_id=0,node_port=1)
+
+ipv4_policy()@bpf_lxc
+    ct_lookup4(CT_INGRESS):
+	1. tuple=(saddr=client,daddr=pod,flags=TUPLE_F_OUT,
+                  dport=client_port,sport=80)
+	   nothing found
+	2. tuple=(saddr=pod,daddr=client,flags=TUPLE_F_IN,
+                  dport=80,sport=client_port)
+	   finds ENTRY_INGRESS
+
+<- SYN-ACK:
+
+handle_ipv4_from_lxc()@bpf_lxc
+    ct_lookup4(CT_EGRESS):
+	1. tuple=(saddr=pod,daddr=client,flags=TUPLE_F_IN,
+                  dport=80,sport=client_port)
+	   finds ENTRY_INGRESS and tail calls due to node_port=1 to
+	   do rev NodePort translation
+
+rev_nodeport_lb4()@bpf_lxc (via the tail call)
+    ct_lookup4(CT_INGRESS):
+	1. tuple=(saddr=pod,daddr=client,flags=TUPLE_F_OUT,
+                  dport=80,sport=client_port)
+	   finds ENTRY_EGRESS and does the rev NodePort xlation
+
+The ENTRY_INGRESS entry was needed to indicate the fact that
+the packet belongs to the NodePort flow, while ENTRY_EGRESS to store all
+necessary information for the reverse NodePort xlation.
+
+Unfortunately, creating the ENTRY_INGRESS beforehand in the NodePort BPF
+made the bpf_lxc to think that the TCP SYN packet belongs to already
+established connection (CT_ESTABLISHED), the monitor aggregator to
+ignore the packet when its aggregation level was set > "none" and screws
+up the packet stats accounting in the CT.
+
+To fix this, derive whether the packet belongs to the NodePort flow by
+querying CT_EGRESS instead of creating CT_INGRESS.
+
+Signed-off-by: Sebastian Wicki <sebastian@isovalent.com>
+Signed-off-by: Martynas Pumputis <m@lambda.lt>
+---
+ bpf/bpf_lxc.c       | 75 +++++++++++++++++++++++++++---------------
+ bpf/lib/conntrack.h | 79 +++++++++++++++++++++++++++++++--------------
+ bpf/lib/nodeport.h  | 51 +++--------------------------
+ 3 files changed, 107 insertions(+), 98 deletions(-)
+
+diff --git a/bpf/bpf_lxc.c b/bpf/bpf_lxc.c
+index 2480b1ff444..a0885f70d21 100644
+--- a/bpf/bpf_lxc.c
++++ b/bpf/bpf_lxc.c
+@@ -272,19 +272,19 @@ static __always_inline int ipv6_l3_from_lxc(struct __ctx_buff *ctx,
+ 		policy_mark_skip(ctx);
+ 
+ #ifdef ENABLE_NODEPORT
+-		/* See comment in handle_ipv4_from_lxc(). */
+-		if (ct_state.node_port) {
+-			ctx->tc_index |= TC_INDEX_F_SKIP_RECIRCULATION;
+-			ep_tail_call(ctx, CILIUM_CALL_IPV6_NODEPORT_REVNAT);
+-			return DROP_MISSED_TAIL_CALL;
+-		}
+ # ifdef ENABLE_DSR
+ 		if (ct_state.dsr) {
+ 			ret = xlate_dsr_v6(ctx, tuple, l4_off);
+ 			if (ret != 0)
+ 				return ret;
+-		}
++		} else
+ # endif /* ENABLE_DSR */
++		/* See comment in handle_ipv4_from_lxc(). */
++		if (ct_state.node_port) {
++			ctx->tc_index |= TC_INDEX_F_SKIP_RECIRCULATION;
++			ep_tail_call(ctx, CILIUM_CALL_IPV6_NODEPORT_REVNAT);
++			return DROP_MISSED_TAIL_CALL;
++		}
+ #endif /* ENABLE_NODEPORT */
+ 		if (ct_state.rev_nat_index) {
+ 			ret = lb6_rev_nat(ctx, l4_off, &csum_off,
+@@ -702,22 +702,23 @@ static __always_inline int handle_ipv4_from_lxc(struct __ctx_buff *ctx,
+ 		policy_mark_skip(ctx);
+ 
+ #ifdef ENABLE_NODEPORT
++# ifdef ENABLE_DSR
++		if (ct_state.dsr) {
++			ret = xlate_dsr_v4(ctx, &tuple, l4_off, has_l4_header);
++			if (ret != 0)
++				return ret;
++		} else
++# endif /* ENABLE_DSR */
+ 		/* This handles reply traffic for the case where the nodeport EP
+-		 * is local to the node. We'll redirect to bpf_host egress to
+-		 * perform the reverse DNAT.
++		 * is local to the node. We'll do the tail call to perform
++		 * the reverse DNAT.
+ 		 */
+ 		if (ct_state.node_port) {
+ 			ctx->tc_index |= TC_INDEX_F_SKIP_RECIRCULATION;
+ 			ep_tail_call(ctx, CILIUM_CALL_IPV4_NODEPORT_REVNAT);
+ 			return DROP_MISSED_TAIL_CALL;
+ 		}
+-# ifdef ENABLE_DSR
+-		if (ct_state.dsr) {
+-			ret = xlate_dsr_v4(ctx, &tuple, l4_off, has_l4_header);
+-			if (ret != 0)
+-				return ret;
+-		}
+-# endif /* ENABLE_DSR */
++
+ #endif /* ENABLE_NODEPORT */
+ 
+ 		if (ct_state.rev_nat_index) {
+@@ -1126,9 +1127,10 @@ ipv6_policy(struct __ctx_buff *ctx, int ifindex, __u32 src_label, __u8 *reason,
+ 					   verdict, policy_match_type, audited);
+ 	}
+ 
+-#ifdef ENABLE_DSR
++#ifdef ENABLE_NODEPORT
+ 	if (ret == CT_NEW || ret == CT_REOPENED) {
+ 		bool dsr = false;
++# ifdef ENABLE_DSR
+ 		int ret2;
+ 
+ 		ret2 = handle_dsr_v6(ctx, &dsr);
+@@ -1136,15 +1138,25 @@ ipv6_policy(struct __ctx_buff *ctx, int ifindex, __u32 src_label, __u8 *reason,
+ 			return ret2;
+ 
+ 		ct_state_new.dsr = dsr;
+-		if (ret == CT_REOPENED)
++		if (ret == CT_REOPENED && ct_state.dsr != dsr)
+ 			ct_update6_dsr(get_ct_map6(&tuple), &tuple, dsr);
++# endif /* ENABLE_DSR */
++		if (!dsr) {
++			bool node_port =
++				ct_has_nodeport_egress_entry6(get_ct_map6(&tuple),
++							      &tuple);
++
++			ct_state_new.node_port = node_port;
++			if (ret == CT_REOPENED &&
++			    ct_state.node_port != node_port)
++				ct_update_nodeport(get_ct_map6(&tuple), &tuple,
++						   node_port);
++		}
+ 	}
+-#endif /* ENABLE_DSR */
++#endif /* ENABLE_NODEPORT */
+ 
+ 	if (ret == CT_NEW) {
+ 		ct_state_new.src_sec_id = src_label;
+-		ct_state_new.node_port = ct_state.node_port;
+-		ct_state_new.ifindex = ct_state.ifindex;
+ 		ret = ct_create6(get_ct_map6(&tuple), &CT_MAP_ANY6, &tuple, ctx, CT_INGRESS,
+ 				 &ct_state_new, verdict > 0);
+ 		if (IS_ERR(ret))
+@@ -1431,9 +1443,10 @@ ipv4_policy(struct __ctx_buff *ctx, int ifindex, __u32 src_label, __u8 *reason,
+ skip_policy_enforcement:
+ #endif /* !ENABLE_HOST_SERVICES_FULL && !DISABLE_LOOPBACK_LB */
+ 
+-#ifdef ENABLE_DSR
++#ifdef ENABLE_NODEPORT
+ 	if (ret == CT_NEW || ret == CT_REOPENED) {
+ 		bool dsr = false;
++# ifdef ENABLE_DSR
+ 		int ret2;
+ 
+ 		ret2 = handle_dsr_v4(ctx, &dsr);
+@@ -1441,15 +1454,25 @@ ipv4_policy(struct __ctx_buff *ctx, int ifindex, __u32 src_label, __u8 *reason,
+ 			return ret2;
+ 
+ 		ct_state_new.dsr = dsr;
+-		if (ret == CT_REOPENED)
++		if (ret == CT_REOPENED && ct_state.dsr != dsr)
+ 			ct_update4_dsr(get_ct_map4(&tuple), &tuple, dsr);
++# endif /* ENABLE_DSR */
++		if (!dsr) {
++			bool node_port =
++				ct_has_nodeport_egress_entry4(get_ct_map4(&tuple),
++							      &tuple);
++
++			ct_state_new.node_port = node_port;
++			if (ret == CT_REOPENED &&
++			    ct_state.node_port != node_port)
++				ct_update_nodeport(get_ct_map4(&tuple), &tuple,
++						   node_port);
++		}
+ 	}
+-#endif /* ENABLE_DSR */
++#endif /* ENABLE_NODEPORT */
+ 
+ 	if (ret == CT_NEW) {
+ 		ct_state_new.src_sec_id = src_label;
+-		ct_state_new.node_port = ct_state.node_port;
+-		ct_state_new.ifindex = ct_state.ifindex;
+ 		ret = ct_create4(get_ct_map4(&tuple), &CT_MAP_ANY4, &tuple, ctx, CT_INGRESS,
+ 				 &ct_state_new, verdict > 0);
+ 		if (IS_ERR(ret))
+diff --git a/bpf/lib/conntrack.h b/bpf/lib/conntrack.h
+index 26e10792eb1..8163ddd6885 100644
+--- a/bpf/lib/conntrack.h
++++ b/bpf/lib/conntrack.h
+@@ -182,31 +182,6 @@ static __always_inline bool ct_entry_alive(const struct ct_entry *entry)
+ 	return !entry->rx_closing || !entry->tx_closing;
+ }
+ 
+-/* Helper for holding 2nd service entry alive in nodeport case. */
+-static __always_inline bool __ct_entry_keep_alive(const void *map,
+-						  const void *tuple)
+-{
+-	struct ct_entry *entry;
+-
+-	/* Lookup indicates to LRU that key/value is in use. */
+-	entry = map_lookup_elem(map, tuple);
+-	if (entry) {
+-		if (entry->node_port) {
+-#ifdef NEEDS_TIMEOUT
+-			__u32 lifetime = (entry->seen_non_syn ?
+-					  bpf_sec_to_mono(CT_SERVICE_LIFETIME_TCP) :
+-					  bpf_sec_to_mono(CT_SERVICE_LIFETIME_NONTCP)) +
+-					 bpf_mono_now();
+-			WRITE_ONCE(entry->lifetime, lifetime);
+-#endif
+-			if (!ct_entry_alive(entry))
+-				ct_reset_closing(entry);
+-		}
+-		return true;
+-	}
+-	return false;
+-}
+-
+ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+ 					const void *tuple, int action, int dir,
+ 					struct ct_state *ct_state,
+@@ -1024,6 +999,61 @@ static __always_inline int ct_create4(const void *map_main,
+        }
+        return 0;
+ }
++
++/* The function tries to determine whether the flow identified by the given
++ * CT_INGRESS tuple belongs to a NodePort traffic (i.e., outside client => N/S
++ * LB => local backend).
++ *
++ * When the client send the NodePort request, the NodePort BPF
++ * (nodeport_lb{4,6}()) creates the CT_EGRESS entry for the
++ * (saddr=client,daddr=backend) tuple. So, to derive whether the reply packet
++ * backend => client belongs to the LB flow we can query the CT_EGRESS entry.
++ */
++static __always_inline bool
++ct_has_nodeport_egress_entry4(const void *map,
++                             struct ipv4_ct_tuple *ingress_tuple)
++{
++       int prev_flags = ingress_tuple->flags;
++       struct ct_entry *entry;
++
++       ingress_tuple->flags = TUPLE_F_OUT;
++       entry = map_lookup_elem(map, ingress_tuple);
++       ingress_tuple->flags = prev_flags;
++
++       if (entry)
++               return entry->node_port;
++
++       return 0;
++}
++
++static __always_inline bool
++ct_has_nodeport_egress_entry6(const void *map,
++                             struct ipv6_ct_tuple *ingress_tuple)
++{
++       int prev_flags = ingress_tuple->flags;
++       struct ct_entry *entry;
++
++       ingress_tuple->flags = TUPLE_F_OUT;
++       entry = map_lookup_elem(map, ingress_tuple);
++       ingress_tuple->flags = prev_flags;
++
++       if (entry)
++               return entry->node_port;
++
++       return 0;
++}
++
++static __always_inline void
++ct_update_nodeport(const void *map, const void *tuple, const bool node_port)
++{
++       struct ct_entry *entry;
++
++       entry = map_lookup_elem(map, tuple);
++       if (!entry)
++               return;
++
++       entry->node_port = node_port;
++}
+ #else /* !CONNTRACK */
+ static __always_inline int
+ ct_lookup6(const void *map __maybe_unused,
+diff --git a/bpf/lib/nodeport.h b/bpf/lib/nodeport.h
+index c0c6621922b..bee74e340bd 100644
+--- a/bpf/lib/nodeport.h
++++ b/bpf/lib/nodeport.h
+@@ -786,7 +786,7 @@ static __always_inline int nodeport_lb6(struct __ctx_buff *ctx,
+ 				 CT_EGRESS, &ct_state, &monitor);
+ 		switch (ret) {
+ 		case CT_NEW:
+-redo_all:
++redo:
+ 			ct_state_new.src_sec_id = SECLABEL;
+ 			ct_state_new.node_port = 1;
+ 			ct_state_new.ifindex = NATIVE_DEV_IFINDEX;
+@@ -794,33 +794,13 @@ static __always_inline int nodeport_lb6(struct __ctx_buff *ctx,
+ 					 CT_EGRESS, &ct_state_new, false);
+ 			if (IS_ERR(ret))
+ 				return ret;
+-			if (backend_local) {
+-				ct_flip_tuple_dir6(&tuple);
+-redo_local:
+-				ct_state_new.rev_nat_index = 0;
+-				ret = ct_create6(get_ct_map6(&tuple), NULL,
+-						 &tuple, ctx, CT_INGRESS,
+-						 &ct_state_new, false);
+-				if (IS_ERR(ret))
+-					return ret;
+-			}
+ 			break;
+ 		case CT_REOPENED:
+ 		case CT_ESTABLISHED:
+ 		case CT_REPLY:
+ 			if (unlikely(ct_state.rev_nat_index !=
+ 				     svc->rev_nat_index))
+-				goto redo_all;
+-			if (backend_local) {
+-				ct_flip_tuple_dir6(&tuple);
+-				if (!__ct_entry_keep_alive(get_ct_map6(&tuple),
+-							   &tuple)) {
+-					ct_state_new.src_sec_id = SECLABEL;
+-					ct_state_new.node_port = 1;
+-					ct_state_new.ifindex = NATIVE_DEV_IFINDEX;
+-					goto redo_local;
+-				}
+-			}
++				goto redo;
+ 			break;
+ 		default:
+ 			return DROP_UNKNOWN_CT;
+@@ -1792,7 +1772,7 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+ 				 CT_EGRESS, &ct_state, &monitor);
+ 		switch (ret) {
+ 		case CT_NEW:
+-redo_all:
++redo:
+ 			ct_state_new.src_sec_id = SECLABEL;
+ 			ct_state_new.node_port = 1;
+ 			ct_state_new.ifindex = NATIVE_DEV_IFINDEX;
+@@ -1800,19 +1780,6 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+ 					 CT_EGRESS, &ct_state_new, false);
+ 			if (IS_ERR(ret))
+ 				return ret;
+-			if (backend_local) {
+-				ct_flip_tuple_dir4(&tuple);
+-redo_local:
+-				/* Reset rev_nat_index, otherwise ipv4_policy()
+-				 * in bpf_lxc will do invalid xlation.
+-				 */
+-				ct_state_new.rev_nat_index = 0;
+-				ret = ct_create4(get_ct_map4(&tuple), NULL,
+-						 &tuple, ctx, CT_INGRESS,
+-						 &ct_state_new, false);
+-				if (IS_ERR(ret))
+-					return ret;
+-			}
+ 			break;
+ 		case CT_REOPENED:
+ 		case CT_ESTABLISHED:
+@@ -1822,17 +1789,7 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+ 			 */
+ 			if (unlikely(ct_state.rev_nat_index !=
+ 				     svc->rev_nat_index))
+-				goto redo_all;
+-			if (backend_local) {
+-				ct_flip_tuple_dir4(&tuple);
+-				if (!__ct_entry_keep_alive(get_ct_map4(&tuple),
+-							   &tuple)) {
+-					ct_state_new.src_sec_id = SECLABEL;
+-					ct_state_new.node_port = 1;
+-					ct_state_new.ifindex = NATIVE_DEV_IFINDEX;
+-					goto redo_local;
+-				}
+-			}
++				goto redo;
+ 			break;
+ 		default:
+ 			return DROP_UNKNOWN_CT;
+
+From a3d560f7d8c070f7f1c7698d33894a176a05fd25 Mon Sep 17 00:00:00 2001
+From: Sebastian Wicki <sebastian@isovalent.com>
+Date: Wed, 12 Jan 2022 18:55:30 +0100
+Subject: [PATCH 2/3] hubble: Add special case for TO_NETWORK is_reply field
+
+The newly introduced NodePort reply path TO_NETWORK trace point does
+provide connection tracking state to userspace. We can therefore safely
+determine the value of `is_reply` if we detect it being non-zero.
+
+Signed-off-by: Sebastian Wicki <sebastian@isovalent.com>
+---
+ pkg/hubble/parser/threefour/parser.go | 18 +++++++++++++++++-
+ 1 file changed, 17 insertions(+), 1 deletion(-)
+
+diff --git a/pkg/hubble/parser/threefour/parser.go b/pkg/hubble/parser/threefour/parser.go
+index 03d735410d0..f95549ea9c5 100644
+--- a/pkg/hubble/parser/threefour/parser.go
++++ b/pkg/hubble/parser/threefour/parser.go
+@@ -488,6 +488,10 @@ func decodeICMPv6(icmp *layers.ICMPv6) *pb.Layer4 {
+ 	}
+ }
+ 
++func isReply(reason uint8) bool {
++	return reason & ^monitor.TraceReasonEncryptMask == monitor.TraceReasonCtReply
++}
++
+ func decodeIsReply(tn *monitor.TraceNotify, pvn *monitor.PolicyVerdictNotify) *wrapperspb.BoolValue {
+ 	switch {
+ 	case tn != nil && monitorAPI.TraceObservationPointHasConnState(tn.ObsPoint):
+@@ -495,7 +499,19 @@ func decodeIsReply(tn *monitor.TraceNotify, pvn *monitor.PolicyVerdictNotify) *w
+ 		// tracking state available. For certain trace point
+ 		// events, we do not know if it actually was a reply or not.
+ 		return &wrapperspb.BoolValue{
+-			Value: tn.Reason & ^monitor.TraceReasonEncryptMask == monitor.TraceReasonCtReply,
++			Value: isReply(tn.Reason),
++		}
++	case tn != nil && tn.ObsPoint == monitorAPI.TraceToNetwork && tn.Reason > 0:
++		// FIXME(GH-18460): Even though the BPF programs emitting TraceToNetwork
++		// do have access to connection tracking state, that state is currently
++		// not exposed to userspace by all trace points. Therefore TraceToNetwork
++		// is currently excluded in TraceObservationPointHasConnState.
++		// However, the NodePort return path in handle_ipv4_from_lxc does
++		// populate tn.Reason, and always has with a non-zero value due it
++		// only being used for replies. Therefore, if tn.Reason is non-zero,
++		// we can safely determine if the traced packet was a reply or not.
++		return &wrapperspb.BoolValue{
++			Value: isReply(tn.Reason),
+ 		}
+ 	case pvn != nil && pvn.Verdict >= 0:
+ 		// Forwarded PolicyVerdictEvents are emitted for the first packet of
+
+From 02340004908e5d8287ef374481f9baea8da7d8db Mon Sep 17 00:00:00 2001
+From: Martynas Pumputis <m@lambda.lt>
+Date: Wed, 12 Jan 2022 11:47:28 +0100
+Subject: [PATCH 3/3] datapath: Emit trace for NodePort reply
+
+Previously, when --monitor-aggregation was set to > "none", no trace
+events were emitted for the NodePort BPF replies coming from local
+backends. This made the replies invisible in cilium monitor / hubble
+output.
+
+Signed-off-by: Sebastian Wicki <sebastian@isovalent.com>
+Signed-off-by: Martynas Pumputis <m@lambda.lt>
+---
+ bpf/bpf_lxc.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/bpf/bpf_lxc.c b/bpf/bpf_lxc.c
+index a0885f70d21..e78e0e0a81f 100644
+--- a/bpf/bpf_lxc.c
++++ b/bpf/bpf_lxc.c
+@@ -281,6 +281,8 @@ static __always_inline int ipv6_l3_from_lxc(struct __ctx_buff *ctx,
+ # endif /* ENABLE_DSR */
+ 		/* See comment in handle_ipv4_from_lxc(). */
+ 		if (ct_state.node_port) {
++			send_trace_notify(ctx, TRACE_TO_NETWORK, SECLABEL,
++					  *dst_id, 0, 0, ret, monitor);
+ 			ctx->tc_index |= TC_INDEX_F_SKIP_RECIRCULATION;
+ 			ep_tail_call(ctx, CILIUM_CALL_IPV6_NODEPORT_REVNAT);
+ 			return DROP_MISSED_TAIL_CALL;
+@@ -714,6 +716,8 @@ static __always_inline int handle_ipv4_from_lxc(struct __ctx_buff *ctx,
+ 		 * the reverse DNAT.
+ 		 */
+ 		if (ct_state.node_port) {
++			send_trace_notify(ctx, TRACE_TO_NETWORK, SECLABEL,
++					  *dst_id, 0, 0, ct_ret, monitor);
+ 			ctx->tc_index |= TC_INDEX_F_SKIP_RECIRCULATION;
+ 			ep_tail_call(ctx, CILIUM_CALL_IPV4_NODEPORT_REVNAT);
+ 			return DROP_MISSED_TAIL_CALL;
