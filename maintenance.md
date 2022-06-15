@@ -482,6 +482,13 @@ Only the base image and module dependency should be updated.
    2. `NJS_VERSION`
    3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
 
+## ipfs-cluster
+
+![No Need Update](./no_need_update.svg)
+
+1. Check the [releases](https://github.com/ipfs/ipfs-cluster/releases) page for changes.
+2. Update `IPFS_CLUSTER_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files accordingly.
 
 ## kube-metrics-adapter
 
