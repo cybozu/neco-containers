@@ -22,7 +22,7 @@ index 2dbc2da371..b8e3b5145f 100644
 +	if err != nil {
 +		log.WithError(err).Error("Updating Identity")
 +	} else {
-+		log.WithField(logfields.Identity, identity.GetName()).Info("Updated identity")
++		log.WithField(logfields.Identity, identity.GetName()).Debug("Updated identity")
 +	}
 +
 +	return err
