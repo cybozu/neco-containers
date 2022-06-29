@@ -23,7 +23,31 @@ var rules = []rule{
 			"pool_count": {
 				metricType: prometheus.GaugeValue,
 				help:       "pool count of `ceph osd pool autoscale-status` command",
-				jqFilter:   ". | length",
+				jqFilter:   "[{value: . | length, labels: []}]",
+			},
+		},
+	},
+	{
+		name:    "rgw_bucket_stats",
+		command: []string{"radosgw-admin", "bucket", "stats"},
+		metrics: map[string]metric{
+			"s3_object_count": {
+				metricType: prometheus.GaugeValue,
+				help:       "s3 object count of `radosgw-admin bucket stats` command",
+				jqFilter:   "[.[] | select(.usage.\"rgw.main\" != null) | {value: .usage.\"rgw.main\".num_objects, labels: [.bucket]}]",
+				labelKeys:  []string{"bucket"},
+			},
+			"s3_size_bytes": {
+				metricType: prometheus.GaugeValue,
+				help:       "sum of s3 objects bytes `radosgw-admin bucket stats` command",
+				jqFilter:   "[.[] | select(.usage.\"rgw.main\" != null) | {value: .usage.\"rgw.main\".size, labels: [.bucket]}]",
+				labelKeys:  []string{"bucket"},
+			},
+			"s3_size_rounded_bytes": {
+				metricType: prometheus.GaugeValue,
+				help:       "sum of s3 objects bytes rounded to 4KBytes `radosgw-admin bucket stats` command",
+				jqFilter:   "[.[] | select(.usage.\"rgw.main\" != null) | {value: .usage.\"rgw.main\".size_actual, labels: [.bucket]}]",
+				labelKeys:  []string{"bucket"},
 			},
 		},
 	},
