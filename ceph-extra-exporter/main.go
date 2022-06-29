@@ -74,13 +74,13 @@ func main() {
 	wg := &sync.WaitGroup{}
 	wg.Add(len(rules))
 	ctx, cancel := context.WithCancel(context.Background())
-	for _, r := range rules {
-		go func(rule *rule) {
-			executer := newExecuter(rule)
+	for i := 0; i < len(rules); i++ {
+		go func(r *rule) {
+			executer := newExecuter(r)
 			prometheus.MustRegister(newCollector(executer, "ceph_extra"))
 			executer.start(ctx)
 			wg.Done()
-		}(&r)
+		}(&rules[i])
 	}
 
 	mux := http.NewServeMux()
