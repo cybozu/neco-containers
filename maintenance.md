@@ -159,23 +159,13 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![CSA Update](./csa_update.svg)
 
 1. Check the [release page](https://docs.ceph.com/en/latest/releases/).
-2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document.
-   1. If other instructions are needed for CircleCI `.config.yml`, add the instructions.
+2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
+   1. If other instructions are needed for `ceph/deb.sh`, add the instructions.
    2. If there are ceph runtime packages or required tool changes, update Dockerfile.
-3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow.
+3. Update the `version` argument on the `build-ceph` and `build-ceph-asan` job in the CircleCI `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
-
-***NOTE:*** Patch 43581 and 44413 are temporary. Please remove them after the PR below will be released upstream.
-
-- https://github.com/ceph/ceph/pull/43581
-- https://github.com/ceph/ceph/pull/44413
-
-***NOTE:*** Patch fix_pytest_version.patch is temporary. Please remove it after resolving the pytest version problem in the file below.
-- src/pybind/mgr/dashboard/requirements-lint.txt
-- ref: https://github.com/ceph/ceph/pull/43646/commits/32d844511e2616e1015df86757014f1dd5ad684b
-- ref: https://github.com/rhcs-dashboard/ceph/commit/eab195566d54122f826debd8efb7f36db78fa4e1
 
 ## cephcsi
 
