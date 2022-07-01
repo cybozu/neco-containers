@@ -4,7 +4,7 @@ set -eu
 CEPH_DIR=$(readlink -f $(dirname $0))
 
 print_usage() {
-    echo "Usage: deb.sh [-a] VERSION"
+    echo "Usage: $0 [-a] VERSION"
 }
 
 # Process optional arguments
@@ -28,6 +28,7 @@ VERSION="$1"
 
 # Checkout Ceph source
 mkdir -p src/workspace/dev/
+mkdir -p src/workspace/rocksdb/
 cd src
 git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules https://github.com/ceph/ceph.git
 cd ceph
@@ -55,3 +56,9 @@ rm ../*-dbg_*.deb
 mv ../*-dev_*.deb ../workspace/dev/
 mv ../*.deb ../workspace/
 mv COPYING* ../workspace
+
+# Intall libgflags to build rocksdb tools
+apt-get install --no-install-recommends -y libgflags-dev
+# Build rocksdb tools
+make -C src/rocksdb release -j10
+find src/rocksdb -maxdepth 1 -type f -executable -exec mv {} ../workspace/rocksdb \;
