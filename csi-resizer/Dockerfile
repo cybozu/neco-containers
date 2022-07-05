@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.16-focal AS build
+FROM quay.io/cybozu/golang:1.17-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-resizer
-ARG VERSION=1.3.0
+ARG VERSION=1.4.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
