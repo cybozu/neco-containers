@@ -27,7 +27,7 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false TEMP=/tmp/rook
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:16.2.7.0
+FROM quay.io/cybozu/ceph:17.2.1.2
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
