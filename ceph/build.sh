@@ -4,7 +4,7 @@ set -eu
 CEPH_DIR=$(readlink -f $(dirname $0))
 
 print_usage() {
-    echo "Usage: deb.sh [-a] VERSION"
+    echo "Usage: $0 [-a] VERSION"
 }
 
 # Process optional arguments
@@ -28,17 +28,12 @@ VERSION="$1"
 
 # Checkout Ceph source
 mkdir -p src/workspace/dev/
+mkdir -p src/workspace/rocksdb/
 cd src
 git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules https://github.com/ceph/ceph.git
 cd ceph
 
-# Apply temporary patch
-git apply ${CEPH_DIR}/43581.patch
-git apply ${CEPH_DIR}/44413.patch
-git apply ${CEPH_DIR}/45502.patch
-git apply ${CEPH_DIR}/45654.patch
-git apply ${CEPH_DIR}/fix_pytest_version.patch
-git apply ${CEPH_DIR}/46096.patch
+# Apply patches
 if [ "$WITH_ASAN" = "ON" ]; then
     echo "WITH_ASAN is ON. ASAN patch will be applied."
     git apply ${CEPH_DIR}/asan.patch
@@ -47,6 +42,9 @@ fi
 # Install dependencies
 apt-get update
 ./install-deps.sh
+
+# Prebuild ceph source to generate files in `src/pybind/mgr/dashboard/frontend/dist` needed by CMake
+./make-dist
 
 # Build Ceph packages
 sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
@@ -58,3 +56,9 @@ rm ../*-dbg_*.deb
 mv ../*-dev_*.deb ../workspace/dev/
 mv ../*.deb ../workspace/
 mv COPYING* ../workspace
+
+# Intall libgflags to build rocksdb tools
+apt-get install --no-install-recommends -y libgflags-dev
+# Build rocksdb tools
+make -C src/rocksdb release -j10
+find src/rocksdb -maxdepth 1 -type f -executable -exec mv {} ../workspace/rocksdb \;

@@ -165,7 +165,7 @@ jobs:
               touch COPYING
               exit 0
             fi
-            ceph/deb.sh << parameters.version >>
+            ceph/build.sh << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
@@ -198,7 +198,7 @@ jobs:
               exit 0
             fi
             # set WITH_ASAN flag to ON
-            ceph/deb.sh -a << parameters.version >>
+            ceph/build.sh -a << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
@@ -633,7 +633,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-ceph:
-          version: 16.2.7
+          version: 17.2.1
       - build:
           name: build-ceph-container
           container-image: ceph
@@ -642,7 +642,7 @@ workflows:
           requires:
             - build-ceph
       - build-ceph-asan:
-          version: 16.2.7
+          version: 17.2.1
       - build:
           name: build-ceph-asan-container
           container-image: ceph

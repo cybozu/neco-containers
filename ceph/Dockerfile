@@ -7,10 +7,11 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
 
 COPY workspace/*.deb /tmp/
+COPY workspace/rocksdb/* /usr/bin/
 
 RUN mkdir -p /var/run/ceph && \
     apt-get update && apt-get install --no-install-recommends -y \
-        libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev \
+        libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev libgflags2.2 \
         /tmp/*.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
