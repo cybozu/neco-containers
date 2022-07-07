@@ -151,8 +151,7 @@ jobs:
           name: Check TAG file
           command: |
             ceph_tag_exists="$(./tag_exists ceph)"
-            cephcsi_tag_exists="$(./tag_exists cephcsi)"
-            if [ "$ceph_tag_exists" = ng ] || [ "$cephcsi_tag_exists" = ng ]; then
+            if [ "$ceph_tag_exists" = ng ]; then
                 echo ceph > BUILDS
             fi
       - run:
@@ -166,6 +165,37 @@ jobs:
               exit 0
             fi
             ceph/build.sh << parameters.version >>
+      - persist_to_workspace:
+          root: src/workspace
+          paths:
+            - "*"
+  build-ceph-16:
+    parameters:
+      version:
+        type: string
+    docker:
+      - image: quay.io/cybozu/ubuntu-dev:20.04
+    resource_class: 2xlarge+
+    steps:
+      - checkout
+      - run:
+          name: Check TAG file
+          command: |
+            ceph_tag_exists="$(./tag_exists ceph ceph-16 -dev)"
+            if [ "$ceph_tag_exists" = ng ]; then
+                echo ceph > BUILDS
+            fi
+      - run:
+          name: Build Ceph packages
+          command: |
+            mkdir -p src/workspace
+            if [ ! -f BUILDS ]; then
+              # fake for the next step
+              cd src/workspace
+              touch COPYING
+              exit 0
+            fi
+            ceph-16/deb.sh << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
@@ -632,6 +662,16 @@ workflows:
       - build:
           name: build-calico
           container-image: calico
+      - build-ceph-16:
+          version: 16.2.7
+      - build:
+          name: build-ceph-16-container
+          container-image: ceph
+          attach: true
+          dir: ceph-16
+          suffix: "-dev"
+          requires:
+            - build-ceph-16
       - build-ceph:
           version: 17.2.1
       - build:
@@ -654,13 +694,11 @@ workflows:
       - build:
           name: build-ceph-extra-exporter
           container-image: ceph-extra-exporter
-      - build:
-          name: build-cephcsi
-          container-image: cephcsi
-          attach: true
-          dir: cephcsi
-          requires:
-            - build-ceph
+      # - build:
+      #     name: build-cephcsi
+      #     container-image: cephcsi
+      #     attach: true
+      #     dir: cephcsi
       - build-cert-manager:
           #repo: https://github.com/cert-manager/cert-manager
           repo: https://github.com/cybozu-go/cert-manager

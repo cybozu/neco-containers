@@ -32,10 +32,7 @@ RUN source /build.env && \
 # test if the downloaded version of Golang works (different arch?)
 RUN ${GOROOT}/bin/go version && ${GOROOT}/bin/go env
 
-COPY workspace/dev/*.deb /tmp/dev/
-
 RUN apt-get update && apt-get -y install \
-    /tmp/dev/*.deb \
     gcc \
     make \
     && true
