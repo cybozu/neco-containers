@@ -51,7 +51,7 @@ sed -i -e 's@usr/share/java/libcephfs-test.jar@@' debian/ceph-test.install
 rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
 # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
 dpkg-buildpackage --build=binary -uc -us -j10
-rm ../*-dbg_*.deb
+rm ../*-dbg_*.deb ../ceph-test_*.deb
 mv ../*.deb ../workspace/
 mv COPYING* ../workspace
 
