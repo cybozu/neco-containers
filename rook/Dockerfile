@@ -28,7 +28,7 @@ RUN mkdir /tmp/csv_template_dir
 RUN make CSV_TEMPLATE_DIR=/tmp/csv_template_dir generate-csv-templates
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:16.2.7.0
+FROM quay.io/cybozu/ceph:16.2.7.1
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
