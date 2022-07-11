@@ -1,0 +1,242 @@
+From 82425c035e0da4a72ed48ca46ff0461ce89e999b Mon Sep 17 00:00:00 2001
+From: Daniel Borkmann <daniel@iogearbox.net>
+Date: Wed, 8 Jun 2022 11:52:30 +0000
+Subject: [PATCH 1/4] bpf: Remove dead define NEEDS_TIMEOUT
+
+It's permanently set to 1.
+
+Signed-off-by: Daniel Borkmann <daniel@iogearbox.net>
+---
+ bpf/lib/common.h    | 7 -------
+ bpf/lib/conntrack.h | 3 +--
+ 2 files changed, 1 insertion(+), 9 deletions(-)
+
+diff --git a/bpf/lib/common.h b/bpf/lib/common.h
+index 10f35560ad9..212ffff9d8d 100644
+--- a/bpf/lib/common.h
++++ b/bpf/lib/common.h
+@@ -17,13 +17,6 @@
+ #include "mono.h"
+ #include "config.h"
+ 
+-/* FIXME: GH-3239 LRU logic is not handling timeouts gracefully enough
+- * #ifndef HAVE_LRU_HASH_MAP_TYPE
+- * #define NEEDS_TIMEOUT 1
+- * #endif
+- */
+-#define NEEDS_TIMEOUT 1
+-
+ #ifndef AF_INET
+ #define AF_INET 2
+ #endif
+diff --git a/bpf/lib/conntrack.h b/bpf/lib/conntrack.h
+index 5fc9bf96db8..d303bbcba7d 100644
+--- a/bpf/lib/conntrack.h
++++ b/bpf/lib/conntrack.h
+@@ -69,9 +69,8 @@ static __always_inline __u32 __ct_update_timeout(struct ct_entry *entry,
+ 	__u8 seen_flags = flags.lower_bits & report_mask;
+ 	__u32 last_report;
+ 
+-#ifdef NEEDS_TIMEOUT
+ 	WRITE_ONCE(entry->lifetime, now + lifetime);
+-#endif
++
+ 	if (dir == CT_INGRESS) {
+ 		accumulated_flags = READ_ONCE(entry->rx_flags_seen);
+ 		last_report = READ_ONCE(entry->last_rx_report);
+
+From abb724f64204221a0680f9c22a215dc519ccbb1f Mon Sep 17 00:00:00 2001
+From: Daniel Borkmann <daniel@iogearbox.net>
+Date: Thu, 12 May 2022 12:34:57 +0000
+Subject: [PATCH 2/4] bpf: Small cleanup around TCP rebalance timeout
+
+!ct_entry_closing_wait_before_rebalance(entry) logic is really
+just hard to parse. Rename it a bit into something more pleasant.
+
+Signed-off-by: Daniel Borkmann <daniel@iogearbox.net>
+---
+ bpf/lib/conntrack.h | 18 ++++--------------
+ 1 file changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/bpf/lib/conntrack.h b/bpf/lib/conntrack.h
+index d303bbcba7d..d960e6f67f4 100644
+--- a/bpf/lib/conntrack.h
++++ b/bpf/lib/conntrack.h
+@@ -172,15 +172,14 @@ static __always_inline bool ct_entry_closing(const struct ct_entry *entry)
+ }
+ 
+ static __always_inline bool
+-ct_entry_closing_wait_before_rebalance(const struct ct_entry *entry)
++ct_entry_expired_rebalance(const struct ct_entry *entry)
+ {
+-	__u32 now = bpf_mono_now();
+ 	__u32 wait_time = bpf_sec_to_mono(CT_SERVICE_CLOSE_REBALANCE);
+ 
+ 	/* This doesn't check last_rx_report because we don't see closing
+ 	 * in RX direction for CT_SERVICE.
+ 	 */
+-	return READ_ONCE(entry->last_tx_report) + wait_time >= now;
++	return READ_ONCE(entry->last_tx_report) + wait_time < bpf_mono_now();
+ }
+ 
+ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+@@ -199,19 +198,10 @@ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+ 		cilium_dbg(ctx, DBG_CT_MATCH, entry->lifetime, entry->rev_nat_index);
+ #ifdef HAVE_LARGE_INSN_LIMIT
+ 		if (dir == CT_SERVICE &&
+-		    ct_entry_closing(entry) &&
+ 		    (seen_flags.value & TCP_FLAG_SYN) &&
+-		    !ct_entry_closing_wait_before_rebalance(entry)) {
+-			/* There is an existing entry for this service. However,
+-			 * the old connection was already closed in the past.
+-			 * Since this is a new connection, we want it to pick a
+-			 * new backend. Hence don't reopen this entry if it's
+-			 * been longer than CT_SERVICE_CLOSE_REBALANCE seconds.
+-			 * (CT_SERVICE_CLOSE_REBALANCE is a grace period for any
+-			 * in-flight packets related to the old connection).
+-			 */
++		    ct_entry_closing(entry) &&
++		    ct_entry_expired_rebalance(entry))
+ 			goto ct_new;
+-		}
+ #endif
+ 		if (ct_entry_alive(entry))
+ 			*monitor = ct_update_timeout(entry, is_tcp, dir, seen_flags);
+
+From 998ddb0cf916ac76f196693c20a77c647403c8c0 Mon Sep 17 00:00:00 2001
+From: Daniel Borkmann <daniel@iogearbox.net>
+Date: Thu, 12 May 2022 14:43:04 +0000
+Subject: [PATCH 3/4] bpf: Allow also for 0 seconds graceful shutdown timeout
+
+Given this is in seconds, a 0 sec timeout for TCP won't otherwise trigger
+if selected by the user.
+
+Reported-by: Martynas Pumputis <m@lambda.lt>
+Signed-off-by: Daniel Borkmann <daniel@iogearbox.net>
+---
+ bpf/lib/conntrack.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/bpf/lib/conntrack.h b/bpf/lib/conntrack.h
+index d960e6f67f4..ebc5614073a 100644
+--- a/bpf/lib/conntrack.h
++++ b/bpf/lib/conntrack.h
+@@ -179,7 +179,7 @@ ct_entry_expired_rebalance(const struct ct_entry *entry)
+ 	/* This doesn't check last_rx_report because we don't see closing
+ 	 * in RX direction for CT_SERVICE.
+ 	 */
+-	return READ_ONCE(entry->last_tx_report) + wait_time < bpf_mono_now();
++	return READ_ONCE(entry->last_tx_report) + wait_time <= bpf_mono_now();
+ }
+ 
+ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+
+From 834709c5c4bbef6a626dc212e563b14648cded5b Mon Sep 17 00:00:00 2001
+From: Daniel Borkmann <daniel@iogearbox.net>
+Date: Thu, 12 May 2022 13:53:56 +0000
+Subject: [PATCH 4/4] cilium: Make timeout for graceful shutdown of svc
+ configurable
+
+... and given it's for TCP, set the default to TIME-WAIT state length.
+If needed, the `bpf-ct-timeout-service-tcp-grace` can be lowered if
+users know what they do.
+
+Signed-off-by: Daniel Borkmann <daniel@iogearbox.net>
+---
+ Documentation/cmdref/cilium-agent.md |  1 +
+ daemon/cmd/daemon_main.go            |  3 +++
+ pkg/datapath/linux/config/config.go  |  2 +-
+ pkg/option/config.go                 | 27 +++++++++++++++------------
+ 4 files changed, 20 insertions(+), 13 deletions(-)
+
+diff --git a/Documentation/cmdref/cilium-agent.md b/Documentation/cmdref/cilium-agent.md
+index 81929bc9c9b..84d90351bb1 100644
+--- a/Documentation/cmdref/cilium-agent.md
++++ b/Documentation/cmdref/cilium-agent.md
+@@ -33,6 +33,7 @@ cilium-agent [flags]
+       --bpf-ct-timeout-regular-tcp-syn duration                 Establishment timeout for entries in TCP CT table (default 1m0s)
+       --bpf-ct-timeout-service-any duration                     Timeout for service entries in non-TCP CT table (default 1m0s)
+       --bpf-ct-timeout-service-tcp duration                     Timeout for established service entries in TCP CT table (default 6h0m0s)
++      --bpf-ct-timeout-service-tcp-grace duration               Timeout for graceful shutdown of service entries in TCP CT table (default 1m0s)
+       --bpf-fragments-map-max int                               Maximum number of entries in fragments tracking map (default 8192)
+       --bpf-lb-acceleration string                              BPF load balancing acceleration via XDP ("native", "disabled") (default "disabled")
+       --bpf-lb-algorithm string                                 BPF load balancing algorithm ("random", "maglev") (default "random")
+diff --git a/daemon/cmd/daemon_main.go b/daemon/cmd/daemon_main.go
+index 334644302d9..0733f2e647d 100644
+--- a/daemon/cmd/daemon_main.go
++++ b/daemon/cmd/daemon_main.go
+@@ -854,6 +854,9 @@ func initializeFlags() {
+ 	flags.Duration(option.CTMapEntriesTimeoutSVCTCPName, 21600*time.Second, "Timeout for established service entries in TCP CT table")
+ 	option.BindEnv(option.CTMapEntriesTimeoutSVCTCPName)
+ 
++	flags.Duration(option.CTMapEntriesTimeoutSVCTCPGraceName, 60*time.Second, "Timeout for graceful shutdown of service entries in TCP CT table")
++	option.BindEnv(option.CTMapEntriesTimeoutSVCTCPGraceName)
++
+ 	flags.Duration(option.CTMapEntriesTimeoutSVCAnyName, 60*time.Second, "Timeout for service entries in non-TCP CT table")
+ 	option.BindEnv(option.CTMapEntriesTimeoutSVCAnyName)
+ 
+diff --git a/pkg/datapath/linux/config/config.go b/pkg/datapath/linux/config/config.go
+index 3b3a825be37..1ae8fc7579b 100644
+--- a/pkg/datapath/linux/config/config.go
++++ b/pkg/datapath/linux/config/config.go
+@@ -158,7 +158,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
+ 	cDefinesMap["CT_CONNECTION_LIFETIME_NONTCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutAny.Seconds()))
+ 	cDefinesMap["CT_SERVICE_LIFETIME_TCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCTCP.Seconds()))
+ 	cDefinesMap["CT_SERVICE_LIFETIME_NONTCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCAny.Seconds()))
+-	cDefinesMap["CT_SERVICE_CLOSE_REBALANCE"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCAny.Seconds()))
++	cDefinesMap["CT_SERVICE_CLOSE_REBALANCE"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCTCPGrace.Seconds()))
+ 	cDefinesMap["CT_SYN_TIMEOUT"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSYN.Seconds()))
+ 	cDefinesMap["CT_CLOSE_TIMEOUT"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutFIN.Seconds()))
+ 	cDefinesMap["CT_REPORT_INTERVAL"] = fmt.Sprintf("%d", int64(option.Config.MonitorAggregationInterval.Seconds()))
+diff --git a/pkg/option/config.go b/pkg/option/config.go
+index 09efb0cdbde..5174d227504 100644
+--- a/pkg/option/config.go
++++ b/pkg/option/config.go
+@@ -555,12 +555,13 @@ const (
+ 	CTMapEntriesGlobalAnyName = "bpf-ct-global-any-max"
+ 
+ 	// CTMapEntriesTimeout* name option and default value mappings
+-	CTMapEntriesTimeoutSYNName    = "bpf-ct-timeout-regular-tcp-syn"
+-	CTMapEntriesTimeoutFINName    = "bpf-ct-timeout-regular-tcp-fin"
+-	CTMapEntriesTimeoutTCPName    = "bpf-ct-timeout-regular-tcp"
+-	CTMapEntriesTimeoutAnyName    = "bpf-ct-timeout-regular-any"
+-	CTMapEntriesTimeoutSVCTCPName = "bpf-ct-timeout-service-tcp"
+-	CTMapEntriesTimeoutSVCAnyName = "bpf-ct-timeout-service-any"
++	CTMapEntriesTimeoutSYNName         = "bpf-ct-timeout-regular-tcp-syn"
++	CTMapEntriesTimeoutFINName         = "bpf-ct-timeout-regular-tcp-fin"
++	CTMapEntriesTimeoutTCPName         = "bpf-ct-timeout-regular-tcp"
++	CTMapEntriesTimeoutAnyName         = "bpf-ct-timeout-regular-any"
++	CTMapEntriesTimeoutSVCTCPName      = "bpf-ct-timeout-service-tcp"
++	CTMapEntriesTimeoutSVCTCPGraceName = "bpf-ct-timeout-service-tcp-grace"
++	CTMapEntriesTimeoutSVCAnyName      = "bpf-ct-timeout-service-any"
+ 
+ 	// NATMapEntriesGlobalDefault holds the default size of the NAT map
+ 	// and is 2/3 of the full CT size as a heuristic
+@@ -1405,12 +1406,13 @@ type DaemonConfig struct {
+ 	CTMapEntriesGlobalAny int
+ 
+ 	// CTMapEntriesTimeout* values configured by the user.
+-	CTMapEntriesTimeoutTCP    time.Duration
+-	CTMapEntriesTimeoutAny    time.Duration
+-	CTMapEntriesTimeoutSVCTCP time.Duration
+-	CTMapEntriesTimeoutSVCAny time.Duration
+-	CTMapEntriesTimeoutSYN    time.Duration
+-	CTMapEntriesTimeoutFIN    time.Duration
++	CTMapEntriesTimeoutTCP         time.Duration
++	CTMapEntriesTimeoutAny         time.Duration
++	CTMapEntriesTimeoutSVCTCP      time.Duration
++	CTMapEntriesTimeoutSVCTCPGrace time.Duration
++	CTMapEntriesTimeoutSVCAny      time.Duration
++	CTMapEntriesTimeoutSYN         time.Duration
++	CTMapEntriesTimeoutFIN         time.Duration
+ 
+ 	// EnableMonitor enables the monitor unix domain socket server
+ 	EnableMonitor bool
+@@ -2907,6 +2909,7 @@ func (c *DaemonConfig) Populate() {
+ 	c.CTMapEntriesTimeoutTCP = viper.GetDuration(CTMapEntriesTimeoutTCPName)
+ 	c.CTMapEntriesTimeoutAny = viper.GetDuration(CTMapEntriesTimeoutAnyName)
+ 	c.CTMapEntriesTimeoutSVCTCP = viper.GetDuration(CTMapEntriesTimeoutSVCTCPName)
++	c.CTMapEntriesTimeoutSVCTCPGrace = viper.GetDuration(CTMapEntriesTimeoutSVCTCPGraceName)
+ 	c.CTMapEntriesTimeoutSVCAny = viper.GetDuration(CTMapEntriesTimeoutSVCAnyName)
+ 	c.CTMapEntriesTimeoutSYN = viper.GetDuration(CTMapEntriesTimeoutSYNName)
+ 	c.CTMapEntriesTimeoutFIN = viper.GetDuration(CTMapEntriesTimeoutFINName)
