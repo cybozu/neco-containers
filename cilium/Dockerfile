@@ -9,6 +9,8 @@ ENV DESTDIR=${DESTDIR}
 COPY TAG /
 COPY 17930.patch /tmp/
 COPY 18454.patch /tmp/
+COPY 19451.patch /tmp/
+COPY 19800.patch /tmp/
 COPY 19936.patch /tmp/
 COPY 20006.patch /tmp/
 COPY 20092.patch /tmp/
@@ -21,9 +23,11 @@ RUN mkdir -p ${DESTDIR} \
       tar xzf - --strip-components 1 \
     && patch -p1 --no-backup-if-mismatch < /tmp/17930.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/18454.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/19451.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/19800.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/19936.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20006.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19936.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \

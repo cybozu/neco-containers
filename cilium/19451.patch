@@ -1,0 +1,136 @@
+From aa2558bf23536b3dff9843c29a6b1933f7db13d3 Mon Sep 17 00:00:00 2001
+From: Amol Ambekar <ambekara@google.com>
+Date: Thu, 14 Apr 2022 15:23:25 -0700
+Subject: [PATCH] Select new backend if old connection from src port to cluster
+ IP was closed
+
+Problem: On the egress of TCP syn packet, Cilium looks up conntrack table
+with 5-tuple (src IP, src port, dst IP, dst port, protocol). On a lookup
+miss, Cilium adds a new entry to the conntrack table. When the destination
+is a cluster IP, Cilium additionally also randomly picks a backend for this
+cluster IP. The selected backend is persisted with the CT entry. Next time
+a new connection from same src port is initiated, Cilium reuses the
+existing CT entry and thus reuses the same backend. This eliminates the
+possibility of rebalancing load across available backends for new
+connections if its the same src port and the same cluster IP.
+
+Fix: Instead of reusing the existing entry for a cluster IP as is, do new
+backend selection if the previous connection was closed for more than 30s.
+This doesn't add new entry to the conntrack table, instead performs
+backend selection and updates it for the existing entry.
+
+Note: While deciding when to select a new backend, we only take into
+consideration tx_closing because we don't see closing in RX direction
+for CT_SERVICE. Additionally we also check that this packet is a SYN
+packet to limit the context to new connection only and give a 30s grace
+period for any in-flight packets related to the old connection.
+
+Testing: Manually verified
+1. If previous connection from same src port to the cluster IP was closed,
+a new backend is used (unless old backend got reselected as part of random
+selection).
+2. If previous connection wasn't closed, same backend is used.
+
+Signed-off-by: Amol Ambekar <ambekara@google.com>
+---
+ bpf/lib/conntrack.h                 | 34 +++++++++++++++++++++++++++++
+ bpf/node_config.h                   |  1 +
+ bpf/tests/bpf_ct_tests.c            |  1 +
+ pkg/datapath/linux/config/config.go |  1 +
+ 4 files changed, 37 insertions(+)
+
+diff --git a/bpf/lib/conntrack.h b/bpf/lib/conntrack.h
+index 822df7d961a..5fc9bf96db8 100644
+--- a/bpf/lib/conntrack.h
++++ b/bpf/lib/conntrack.h
+@@ -167,6 +167,23 @@ static __always_inline bool ct_entry_alive(const struct ct_entry *entry)
+ 	return !entry->rx_closing || !entry->tx_closing;
+ }
+ 
++static __always_inline bool ct_entry_closing(const struct ct_entry *entry)
++{
++	return entry->tx_closing || entry->rx_closing;
++}
++
++static __always_inline bool
++ct_entry_closing_wait_before_rebalance(const struct ct_entry *entry)
++{
++	__u32 now = bpf_mono_now();
++	__u32 wait_time = bpf_sec_to_mono(CT_SERVICE_CLOSE_REBALANCE);
++
++	/* This doesn't check last_rx_report because we don't see closing
++	 * in RX direction for CT_SERVICE.
++	 */
++	return READ_ONCE(entry->last_tx_report) + wait_time >= now;
++}
++
+ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+ 					const void *tuple, int action, int dir,
+ 					struct ct_state *ct_state,
+@@ -181,6 +198,22 @@ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+ 	entry = map_lookup_elem(map, tuple);
+ 	if (entry) {
+ 		cilium_dbg(ctx, DBG_CT_MATCH, entry->lifetime, entry->rev_nat_index);
++#ifdef HAVE_LARGE_INSN_LIMIT
++		if (dir == CT_SERVICE &&
++		    ct_entry_closing(entry) &&
++		    (seen_flags.value & TCP_FLAG_SYN) &&
++		    !ct_entry_closing_wait_before_rebalance(entry)) {
++			/* There is an existing entry for this service. However,
++			 * the old connection was already closed in the past.
++			 * Since this is a new connection, we want it to pick a
++			 * new backend. Hence don't reopen this entry if it's
++			 * been longer than CT_SERVICE_CLOSE_REBALANCE seconds.
++			 * (CT_SERVICE_CLOSE_REBALANCE is a grace period for any
++			 * in-flight packets related to the old connection).
++			 */
++			goto ct_new;
++		}
++#endif
+ 		if (ct_entry_alive(entry))
+ 			*monitor = ct_update_timeout(entry, is_tcp, dir, seen_flags);
+ 		if (ct_state) {
+@@ -243,6 +276,7 @@ static __always_inline __u8 __ct_lookup(const void *map, struct __ctx_buff *ctx,
+ 		return CT_ESTABLISHED;
+ 	}
+ 
++ct_new: __maybe_unused
+ 	*monitor = TRACE_PAYLOAD_LEN;
+ 	return CT_NEW;
+ }
+diff --git a/bpf/node_config.h b/bpf/node_config.h
+index 3603359b7dc..8abfaf7dab3 100644
+--- a/bpf/node_config.h
++++ b/bpf/node_config.h
+@@ -39,6 +39,7 @@ DEFINE_IPV6(HOST_IP, 0xbe, 0xef, 0x0, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0xa, 0x
+ #define CT_CONNECTION_LIFETIME_NONTCP	60
+ #define CT_SERVICE_LIFETIME_TCP		21600
+ #define CT_SERVICE_LIFETIME_NONTCP	60
++#define CT_SERVICE_CLOSE_REBALANCE	30
+ #define CT_SYN_TIMEOUT			60
+ #define CT_CLOSE_TIMEOUT		10
+ #define CT_REPORT_INTERVAL		5
+diff --git a/bpf/tests/bpf_ct_tests.c b/bpf/tests/bpf_ct_tests.c
+index 7513278c635..0418ae2aa33 100644
+--- a/bpf/tests/bpf_ct_tests.c
++++ b/bpf/tests/bpf_ct_tests.c
+@@ -24,6 +24,7 @@
+ #define CT_CONNECTION_LIFETIME_NONTCP	60
+ #define CT_SERVICE_LIFETIME_TCP		21600
+ #define CT_SERVICE_LIFETIME_NONTCP	60
++#define CT_SERVICE_CLOSE_REBALANCE	30
+ #define CT_SYN_TIMEOUT			60
+ #define CT_CLOSE_TIMEOUT		10
+ #define CT_REPORT_INTERVAL		5
+diff --git a/pkg/datapath/linux/config/config.go b/pkg/datapath/linux/config/config.go
+index f8f34025e94..4ccaf63d18b 100644
+--- a/pkg/datapath/linux/config/config.go
++++ b/pkg/datapath/linux/config/config.go
+@@ -157,6 +157,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
+ 	cDefinesMap["CT_CONNECTION_LIFETIME_NONTCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutAny.Seconds()))
+ 	cDefinesMap["CT_SERVICE_LIFETIME_TCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCTCP.Seconds()))
+ 	cDefinesMap["CT_SERVICE_LIFETIME_NONTCP"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCAny.Seconds()))
++	cDefinesMap["CT_SERVICE_CLOSE_REBALANCE"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSVCAny.Seconds()))
+ 	cDefinesMap["CT_SYN_TIMEOUT"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutSYN.Seconds()))
+ 	cDefinesMap["CT_CLOSE_TIMEOUT"] = fmt.Sprintf("%d", int64(option.Config.CTMapEntriesTimeoutFIN.Seconds()))
+ 	cDefinesMap["CT_REPORT_INTERVAL"] = fmt.Sprintf("%d", int64(option.Config.MonitorAggregationInterval.Seconds()))
