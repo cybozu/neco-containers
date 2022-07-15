@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG GRAFANA_VERSION=8.5.4
+ARG GRAFANA_VERSION=8.5.9
 
 ENV NODE_OPTIONS=--max_old_space_size=6144
 
