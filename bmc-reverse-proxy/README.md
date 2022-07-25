@@ -19,7 +19,7 @@ Usage
 ### Start `bmc-reverse-proxy`
 
 1. Prepare [dctest](https://github.com/cybozu-go/neco/blob/main/docs/dctest.md) environment.
-2. Run [neco-apps test](https://github.com/cybozu-go/neco-apps/test/README.md) to setup [cert-manager](https://github.com/jetstack/cert-manager).
+2. Run [neco-apps test](https://github.com/cybozu-private/neco-apps/blob/main/test/README.md) to setup [cert-manager](https://github.com/jetstack/cert-manager).
 3. Before running `bmc-reverse-proxy`, create ConfigMap using `machines-endpoints`.
    Please read [README.md](../machines-endpoints/README.md) at machines-endpoints directory and apply a yaml file like bellow.
 

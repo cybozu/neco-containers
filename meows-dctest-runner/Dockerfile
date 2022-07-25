@@ -12,7 +12,7 @@ ENV GOPATH=${HOME}/go
 ENV GOBIN=${GOPATH}/bin
 ENV PATH=${GOBIN}:/usr/local/go/bin:${PATH}
 ENV NECO_DIR=${GOPATH}/src/github.com/cybozu-go/neco
-ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-go/neco-apps
+ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-private/neco-apps
 
 # Avoid bird post-installation script error
 # See https://bird.network.cz/pipermail/bird-users/2019-December/014075.html
