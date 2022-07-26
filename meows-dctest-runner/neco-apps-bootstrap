@@ -4,7 +4,7 @@ set +x
 if [ -n "${GITHUB_USER}" -a -n "${GITHUB_TOKEN}" ]; then
     USER_PASS="${GITHUB_USER}:${GITHUB_TOKEN}@"
 fi
-git clone -b ${NECO_APPS_BRANCH:-release} https://${USER_PASS}github.com/cybozu-go/neco-apps.git ${NECO_APPS_DIR}
+git clone -b ${NECO_APPS_BRANCH:-release} https://${USER_PASS}github.com/cybozu-private/neco-apps.git ${NECO_APPS_DIR}
 
 echo ${GITHUB_TOKEN} > ${NECO_APPS_DIR}/test/cybozu_private_repo_read_pat
 set -x
