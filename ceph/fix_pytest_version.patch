@@ -1,0 +1,10 @@
+diff --git a/src/pybind/mgr/dashboard/requirements-test.txt b/src/pybind/mgr/dashboard/requirements-test.txt
+index 8ff9435..dea9847 100644
+--- a/src/pybind/mgr/dashboard/requirements-test.txt
++++ b/src/pybind/mgr/dashboard/requirements-test.txt
+@@ -1,4 +1,4 @@
+-pytest
++pytest==6.2.4
+ pytest-cov
+ pytest-instafail
+ pyfakefs==4.5.0

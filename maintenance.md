@@ -167,6 +167,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
 
+***NOTE:*** Patch fix_pytest_version.patch is temporary. Please remove it after updating to v17.
+
+ref: https://github.com/ceph/ceph/commit/eab195566d54122f826debd8efb7f36db78fa4e1
+
 ## cephcsi
 
 ![CSA Update](./csa_update.svg)

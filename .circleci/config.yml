@@ -632,7 +632,7 @@ workflows:
           name: build-calico
           container-image: calico
       - build-ceph:
-          version: 17.2.1
+          version: 16.2.10
       - build:
           name: build-ceph-container
           container-image: ceph
@@ -641,7 +641,7 @@ workflows:
           requires:
             - build-ceph
       - build-ceph-asan:
-          version: 17.2.1
+          version: 16.2.10
       - build:
           name: build-ceph-asan-container
           container-image: ceph
