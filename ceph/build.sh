@@ -33,6 +33,7 @@ git clone -b v${VERSION} --depth=1 --recurse-submodules --shallow-submodules htt
 cd ceph
 
 # Apply patches
+git apply ${CEPH_DIR}/fix_pytest_version.patch
 if [ "$WITH_ASAN" = "ON" ]; then
     echo "WITH_ASAN is ON. ASAN patch will be applied."
     git apply ${CEPH_DIR}/asan.patch
