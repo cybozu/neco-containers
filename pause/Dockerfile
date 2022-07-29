@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
-ARG K8S_VERSION=1.23.0
+ARG K8S_VERSION=1.23.9
 ARG PAUSE_VERSION=3.6
 
 RUN mkdir /work
