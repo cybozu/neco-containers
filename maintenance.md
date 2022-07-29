@@ -345,8 +345,6 @@ This section applies to the following containers. These containers are maintaine
 
 ![Kubernetes Update](./kubernetes_update.svg)
 
-***NOTE:*** Upgrading to etcd 3.4+ will require modifications to CKE, so it should be done separately.
-
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile-release

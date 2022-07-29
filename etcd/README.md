@@ -22,7 +22,7 @@ To use `etcdctl`, first install it in a host directory `DIR`:
     $ docker run --rm -u root:root \
       --entrypoint /usr/local/etcd/install-tools \
       --mount type=bind,src=DIR,target=/host \
-      quay.io/cybozu/etcd:3.4
+      quay.io/cybozu/etcd:3.5
 
 Then run `etcdctl` as follows:
 
