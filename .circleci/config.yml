@@ -494,7 +494,7 @@ jobs:
             - "*"
   build-admission:
     docker:
-      - image: quay.io/cybozu/golang:1.17-focal
+      - image: quay.io/cybozu/golang:1.18-focal
     steps:
       - checkout
       - run: cd admission; make test

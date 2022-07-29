@@ -1,10 +1,10 @@
-CONTROLLER_TOOLS_VERSION = 0.7.0
-KUSTOMIZE_VERSION = 4.2.0
+CONTROLLER_TOOLS_VERSION = 0.9.2
+KUSTOMIZE_VERSION = 4.5.5
 CALICO_VERSION = 3.20
 CONTOUR_VERSION = 1.20.1
 ARGOCD_VERSION = 2.3.3
 GRAFANA_OPERATOR_VERSION = 4.2.0
-ENVTEST_K8S_VERSION = 1.22.1
+ENVTEST_K8S_VERSION = 1.24.2
 
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
@@ -39,7 +39,6 @@ test: crds simple-test setup-envtest
 simple-test:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
-	test -z "$$(nilerr $$(go list ./...) 2>&1 | tee /dev/stderr)"
 	go vet ./...
 
 .PHONY: check-generate
