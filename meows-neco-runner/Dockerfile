@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.7.0
+ARG MEOWS_VERSION=0.8.0
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
 
@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         awscli \
         bind9-dnsutils \
         binutils \
+        expect \
         file \
         gdb \
         iproute2 \
