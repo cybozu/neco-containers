@@ -55,7 +55,7 @@ RUN groupadd -g 10000 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git gpg gpg-agent && \
+    apt-get install -y --no-install-recommends git gpg gpg-agent openssh-client && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
