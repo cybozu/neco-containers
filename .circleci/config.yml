@@ -915,6 +915,9 @@ workflows:
           name: build-teleport-node
           container-image: teleport-node
       - build:
+          name: build-tempo
+          container-image: tempo
+      - build:
           name: build-testhttpd
           container-image: testhttpd
       - build:
