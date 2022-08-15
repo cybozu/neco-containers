@@ -623,6 +623,9 @@ workflows:
           name: build-bird
           container-image: bird
       - build:
+          name: build-blackbox_exporter
+          container-image: blackbox_exporter
+      - build:
           name: build-bmc-reverse-proxy
           container-image: bmc-reverse-proxy
       - build:
