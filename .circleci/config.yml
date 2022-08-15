@@ -879,6 +879,9 @@ workflows:
           name: build-nerdctl
           container-image: nerdctl
       - build:
+          name: build-opentelemetry-collector
+          container-image: opentelemetry-collector
+      - build:
           name: build-pause
           container-image: pause
       - build:

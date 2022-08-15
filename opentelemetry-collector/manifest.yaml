@@ -1,0 +1,33 @@
+# derived from https://github.com/open-telemetry/opentelemetry-collector-releases/blob/main/distributions/otelcol/manifest.yaml
+
+dist:
+  module: github.com/open-telemetry/opentelemetry-collector-releases/core
+  name: otelcol
+  description: OpenTelemetry Collector
+  version: ${OTELCOL_VERSION}
+  output_path: ./_build
+  otelcol_version: ${OTELCOL_VERSION}
+
+receivers:
+  - import: go.opentelemetry.io/collector/receiver/otlpreceiver
+    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kafkareceiver v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/opencensusreceiver v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v${OTELCOL_VERSION}
+
+exporters:
+  - import: go.opentelemetry.io/collector/exporter/otlpexporter
+    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - import: go.opentelemetry.io/collector/exporter/otlphttpexporter
+    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+
+extensions: {}
+
+processors:
+  - import: go.opentelemetry.io/collector/processor/batchprocessor
+    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - import: go.opentelemetry.io/collector/processor/memorylimiterprocessor
+    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
