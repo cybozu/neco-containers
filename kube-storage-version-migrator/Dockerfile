@@ -6,7 +6,7 @@
 # Each target is prefixed with "storage-version-migrate-" to construct its repository name.
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG MIGRATOR_VERSION=0.0.5
 
