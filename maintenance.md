@@ -109,6 +109,14 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
+## blackbox_exporter
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/prometheus/blackbox_exporter/releases).
+2. Update `BLACKBOX_EXPORTER_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files.
+
 ## bmc-reverse-proxy
 
 ![Kubernetes Update](./kubernetes_update.svg)
