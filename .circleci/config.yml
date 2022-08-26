@@ -8,7 +8,7 @@ jobs:
         type: string
     description: "test at << parameters.directory >>"
     docker:
-      - image: quay.io/cybozu/golang:1.17-focal
+      - image: quay.io/cybozu/golang:1.18-focal
       - image: quay.io/cybozu/etcd:3.4.16.1
     working_directory: /work
     steps:
