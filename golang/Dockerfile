@@ -16,7 +16,6 @@ RUN rm -rf /usr/local/go \
     && GOBIN=/usr/local/bin go install honnef.co/go/tools/cmd/staticcheck@latest \
     && GOBIN=/usr/local/bin go install github.com/gordonklaus/ineffassign@latest \
     && GOBIN=/usr/local/bin go install github.com/tcnksm/ghr@latest \
-    && GOBIN=/usr/local/bin go install github.com/gostaticanalysis/nilerr/cmd/nilerr@latest \
     && rm -rf /go \
     && mkdir -p /go/src
 
