@@ -9,7 +9,6 @@ tools:
 * [golint](https://github.com/golang/lint)
 * [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
-* [nilerr](https://github.com/gostaticanalysis/nilerr)
 * [custom-checker](./analyzer/cmd/custom-checker/README.md)
 * [eventuallycheck](./analyzer/cmd/eventuallycheck/README.md)
 * [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
