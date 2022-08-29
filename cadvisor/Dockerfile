@@ -1,9 +1,9 @@
 # cadvisor container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
-ARG CADVISOR_VERSION=0.44.0
+ARG CADVISOR_VERSION=0.45.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
