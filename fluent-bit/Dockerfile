@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS builder
 
-ARG FLUENT_BIT_VERSION=1.9.1
+ARG FLUENT_BIT_VERSION=1.9.7
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -28,6 +28,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     libpq-dev \
     flex \
     bison \
+    libyaml-dev \
     && curl -L -o "/tmp/fluent-bit.tar.gz" ${FLB_SOURCE} \
     && cd tmp/ && mkdir fluent-bit \
     && tar zxfv fluent-bit.tar.gz -C ./fluent-bit --strip-components=1 \
