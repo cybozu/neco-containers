@@ -1,9 +1,9 @@
 # memcached_exporter container
 
 # Stage1: build from sourceFROM quay.io/cybozu/ubuntu-dev:20.04 AS build
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
-ARG MEMCACHED_EXPORTER_VERSION=0.9.0
+ARG MEMCACHED_EXPORTER_VERSION=0.10.0
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
