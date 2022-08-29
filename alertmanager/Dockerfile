@@ -1,7 +1,7 @@
 # Alertmanager container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG ALERTMANAGER_VERSION=0.24.0
 
