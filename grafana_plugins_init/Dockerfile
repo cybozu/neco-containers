@@ -3,7 +3,7 @@
 FROM quay.io/cybozu/ubuntu:20.04
 
 ARG SRCREPO=grafana-operator/grafana_plugins_init
-ARG GRAFANA_PLUGINS_INIT_VERSION=0.0.5
+ARG GRAFANA_PLUGINS_INIT_VERSION=0.0.6
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends python3 && \
