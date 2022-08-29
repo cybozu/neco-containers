@@ -1,6 +1,6 @@
-FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG LOKI_VERSION=2.5.0
-ARG SYSTEMD_VERSION=249
+FROM quay.io/cybozu/golang:1.18-focal AS build
+ARG LOKI_VERSION=2.6.1
+ARG SYSTEMD_VERSION=250
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
