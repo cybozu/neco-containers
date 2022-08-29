@@ -4,7 +4,7 @@
 FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.25.1
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.27.2
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
