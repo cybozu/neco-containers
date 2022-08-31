@@ -1,7 +1,7 @@
 # metallb container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG MYSQLD_EXPORTER_VERSION=v0.14.0
 
