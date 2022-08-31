@@ -509,7 +509,7 @@ jobs:
       mysql-version:
         type: string
     docker:
-      - image: quay.io/cybozu/golang:1.17-focal
+      - image: quay.io/cybozu/golang:1.18-focal
     resource_class: 2xlarge+
     steps:
       - checkout
@@ -837,6 +837,9 @@ workflows:
       - build-mysql:
           name: build-mysql-8028
           mysql-version: 8.0.28
+      - build-mysql:
+          name: build-mysql-8030
+          mysql-version: 8.0.30
       - build:
           name: build-mysql-container-8018
           container-image: mysql
@@ -872,6 +875,13 @@ workflows:
           dir: mysql/8.0.28
           requires:
             - build-mysql-8028
+      - build:
+          name: build-mysql-container-8030
+          container-image: mysql
+          attach: true
+          dir: mysql/8.0.30
+          requires:
+            - build-mysql-8030
       - build:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
