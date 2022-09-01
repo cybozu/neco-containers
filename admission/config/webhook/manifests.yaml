@@ -101,6 +101,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-deployment-replica-count
+  failurePolicy: Fail
+  name: vdeploymentreplicacount.kb.io
+  rules:
+  - apiGroups:
+    - apps
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - deployments
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-integreatly-org-grafanadashboard
   failurePolicy: Fail
   name: vgrafanadashboard.kb.io
