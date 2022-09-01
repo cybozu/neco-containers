@@ -28,7 +28,6 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     libpq-dev \
     flex \
     bison \
-    libyaml-dev \
     && curl -L -o "/tmp/fluent-bit.tar.gz" ${FLB_SOURCE} \
     && cd tmp/ && mkdir fluent-bit \
     && tar zxfv fluent-bit.tar.gz -C ./fluent-bit --strip-components=1 \
@@ -44,7 +43,9 @@ RUN cmake -DFLB_RELEASE=On \
           -DFLB_EXAMPLES=Off \
           -DFLB_HTTP_SERVER=On \
           -DFLB_IN_SYSTEMD=Off \
-          -DFLB_OUT_KAFKA=On .. \
+          -DFLB_OUT_KAFKA=On \
+          -DFLB_CONFIG_YAML=No \
+          .. \
     && make -j $(getconf _NPROCESSORS_ONLN) \
     && strip bin/fluent-bit \
     && mkdir -p /fluent-bit/bin \
