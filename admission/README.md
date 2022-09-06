@@ -69,8 +69,8 @@ unless it has this special annotation `admission.cybozu.com/i-am-sure-to-delete:
 
 However, resources in namespaces that have `development: true` label can be deleted without the annotation.
 
-DeploymentReplicaCountValidator
--------------------------------
+DeploymentReplicaCountValidator / DeploymentReplicaCountScaleValidator
+----------------------------------------------------------------------
 
 This validator enforces that the number of replicas for a Deployment is 0 if the Deployment has a specific annotation.
 This may be useful to prevent the number of replicas from being rewritten by ArgoCD or operators when the number of replicas is intentionally set to 0.
