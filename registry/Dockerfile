@@ -1,7 +1,7 @@
 # Registry container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG REGISTRY_VERSION=2.8.1
 

@@ -1,9 +1,9 @@
 # vault container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
-ARG VAULT_VERSION=1.11.0
+ARG VAULT_VERSION=1.11.3
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
