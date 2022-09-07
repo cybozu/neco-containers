@@ -46,7 +46,7 @@ check-generate:
 	$(MAKE) manifests
 	$(MAKE) generate
 	go mod tidy
-	git diff --exit-code --name-only
+	git diff --exit-code
 
 # Build manager binary
 .PHONY: build
