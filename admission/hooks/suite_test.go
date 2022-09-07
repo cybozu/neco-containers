@@ -34,16 +34,17 @@ import (
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
 var (
-	podMutatingWebhookPath                    = "/mutate-pod"
-	podValidatingWebhookPath                  = "/validate-pod"
-	contourMutatingWebhookPath                = "/mutate-projectcontour-io-httpproxy"
-	calicoValidateWebhookPath                 = "/validate-projectcalico-org-networkpolicy"
-	contourValidateWebhookPath                = "/validate-projectcontour-io-httpproxy"
-	argocdValidateWebhookPath                 = "/validate-argoproj-io-application"
-	grafanaDashboardValidateWebhookPath       = "/validate-integreatly-org-grafanadashboard"
-	deleteValidateWebhookPath                 = "/validate-delete"
-	preventDeleteValidateWebhookPath          = "/validate-preventdelete"
-	deploymentReplicaCountValidateWebhookPath = "/validate-deployment-replica-count"
+	podMutatingWebhookPath                         = "/mutate-pod"
+	podValidatingWebhookPath                       = "/validate-pod"
+	contourMutatingWebhookPath                     = "/mutate-projectcontour-io-httpproxy"
+	calicoValidateWebhookPath                      = "/validate-projectcalico-org-networkpolicy"
+	contourValidateWebhookPath                     = "/validate-projectcontour-io-httpproxy"
+	argocdValidateWebhookPath                      = "/validate-argoproj-io-application"
+	grafanaDashboardValidateWebhookPath            = "/validate-integreatly-org-grafanadashboard"
+	deleteValidateWebhookPath                      = "/validate-delete"
+	preventDeleteValidateWebhookPath               = "/validate-preventdelete"
+	deploymentReplicaCountValidateWebhookPath      = "/validate-deployment-replica-count"
+	deploymentReplicaCountScaleValidateWebhookPath = "/validate-scale-deployment-replica-count"
 )
 
 var scheme *runtime.Scheme
@@ -141,6 +142,7 @@ var _ = BeforeSuite(func() {
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(deploymentReplicaCountValidateWebhookPath, NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
+	wh.Register(deploymentReplicaCountScaleValidateWebhookPath, NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
 
 	//+kubebuilder:scaffold:webhook
 
