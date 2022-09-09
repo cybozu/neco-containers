@@ -1,10 +1,10 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
-ARG GRAFANA_VERSION=8.5.9
+FROM quay.io/cybozu/golang:1.18-focal AS build
+ARG GRAFANA_VERSION=9.1.3
 
-ENV NODE_OPTIONS=--max_old_space_size=6144
+ENV NODE_OPTIONS=--max_old_space_size=8000
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -51,6 +51,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
              "$GF_PATHS_PROVISIONING/notifiers" \
              "$GF_PATHS_PROVISIONING/plugins" \
              "$GF_PATHS_PROVISIONING/access-control" \
+             "$GF_PATHS_PROVISIONING/alerting" \
              "$GF_PATHS_LOGS" \
              "$GF_PATHS_PLUGINS" \
              "$GF_PATHS_DATA" && \
