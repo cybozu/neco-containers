@@ -412,8 +412,7 @@ Ignore!!!
    - Check `NODEVERSION` in https://github.com/grafana/grafana/blob/vX.Y.Z/scripts/build/ci-build/Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
 4. Update installation of Node.js in `Dockerfile` according to `NODEVERSION` if necessary.
-5. Update image tag in `README.md`.
-6. Update `BRANCH` and `TAG` files.
+5. Update `BRANCH` and `TAG` files.
 
 ## grafana-operator
 
