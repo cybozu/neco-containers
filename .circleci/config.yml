@@ -822,6 +822,12 @@ workflows:
       - build:
           name: build-metallb
           container-image: metallb
+      - build:
+          name: build-minio
+          container-image: minio
+      - build:
+          name: build-minio-mc
+          container-image: minio-mc
       - build-mysql:
           name: build-mysql-8018
           mysql-version: 8.0.18
