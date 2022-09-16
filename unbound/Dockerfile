@@ -17,7 +17,9 @@ RUN mkdir -p /usr/local/unbound \
 
 FROM quay.io/cybozu/ubuntu:20.04
 
-RUN apt-get update && apt-get -y install libevent-2.1-7
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libevent-2.1-7 \
+    && rm -rf /var/lib/apt/lists/*
 COPY reload-unbound /usr/local/bin/reload-unbound
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
 COPY --from=build /usr/local/unbound/sbin /usr/local/unbound/sbin
