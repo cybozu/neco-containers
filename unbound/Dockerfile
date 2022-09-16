@@ -4,19 +4,22 @@ ARG UNBOUND_VERSION=1.16.1
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev
+RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev libevent-dev
 RUN curl -sSLf https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz | \
     tar zxf - -C /work/
 
 WORKDIR /work/unbound-${UNBOUND_VERSION}
 RUN mkdir -p /usr/local/unbound \
-    && ./configure --prefix=/usr/local/unbound \
+    && ./configure --with-libevent --prefix=/usr/local/unbound \
     && make \
     && make install \
     && mv LICENSE /usr/local/unbound/LICENSE
 
 FROM quay.io/cybozu/ubuntu:20.04
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends libevent-2.1-7 \
+    && rm -rf /var/lib/apt/lists/*
 COPY reload-unbound /usr/local/bin/reload-unbound
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
 COPY --from=build /usr/local/unbound/sbin /usr/local/unbound/sbin
