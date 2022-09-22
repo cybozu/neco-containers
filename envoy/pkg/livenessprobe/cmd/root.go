@@ -61,25 +61,13 @@ var rootCmd = &cobra.Command{
 
 		mux := http.NewServeMux()
 
+		transport := http.DefaultTransport.(*http.Transport).Clone()
+		transport.DisableKeepAlives = true
+
 		m := &monitor{
 			client: &http.Client{
-				Transport: &http.Transport{
-					DisableKeepAlives: true,
-
-					// rest are copied from http.DefaultTransport
-					Proxy: http.ProxyFromEnvironment,
-					DialContext: (&net.Dialer{
-						Timeout:   30 * time.Second,
-						KeepAlive: 30 * time.Second,
-						DualStack: true,
-					}).DialContext,
-					ForceAttemptHTTP2:     true,
-					MaxIdleConns:          100,
-					IdleConnTimeout:       90 * time.Second,
-					TLSHandshakeTimeout:   10 * time.Second,
-					ExpectContinueTimeout: 1 * time.Second,
-				},
-				Timeout: config.timeout,
+				Transport: transport,
+				Timeout:   config.timeout,
 			},
 			readyURL:  config.readyURL,
 			httpURL:   config.httpURL,
