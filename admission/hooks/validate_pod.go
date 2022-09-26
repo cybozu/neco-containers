@@ -12,6 +12,7 @@ import (
 )
 
 // +kubebuilder:webhook:path=/validate-pod,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=create,versions=v1,name=vpod.kb.io,admissionReviewVersions={v1,v1beta1}
+// +kubebuilder:webhook:path=/validate-pod,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=pods/ephemeralcontainers,verbs=update,versions=v1,name=vpodephemeralcontainer.kb.io,admissionReviewVersions={v1,v1beta1}
 
 type podValidator struct {
 	client          client.Client
@@ -38,22 +39,29 @@ func (v *podValidator) Handle(ctx context.Context, req admission.Request) admiss
 		return admission.Errored(http.StatusBadRequest, err)
 	}
 
-	containers := make([]corev1.Container, len(po.Spec.Containers)+len(po.Spec.InitContainers))
-	copy(containers, po.Spec.Containers)
-	copy(containers[len(po.Spec.Containers):], po.Spec.InitContainers)
+	images := make([]string, 0)
+	for _, c := range po.Spec.Containers {
+		images = append(images, c.Image)
+	}
+	for _, c := range po.Spec.InitContainers {
+		images = append(images, c.Image)
+	}
+	for _, c := range po.Spec.EphemeralContainers {
+		images = append(images, c.Image)
+	}
 	var warnings []string
 OUTER:
-	for _, container := range containers {
+	for _, image := range images {
 		for _, prefix := range v.validPrefixes {
-			if strings.HasPrefix(container.Image, prefix) {
+			if strings.HasPrefix(image, prefix) {
 				continue OUTER
 			}
 		}
 
 		if v.imagePermissive {
-			warnings = append(warnings, "image "+container.Image+" is not trusted")
+			warnings = append(warnings, "image "+image+" is not trusted")
 		} else {
-			return admission.Denied("untrustworthy image " + container.Image)
+			return admission.Denied("untrustworthy image " + image)
 		}
 	}
 
