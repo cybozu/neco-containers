@@ -759,6 +759,17 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update version variables in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+## rclone
+
+![Regular Update](./regular_update.svg)
+
+1. Check the release page.
+   - https://github.com/rclone/rclone/releases
+2. Check the upstream Makefile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/rclone/rclone/blob/vX.Y.Z/Makefile
+3. Update version variables in `Dockerfile`.
+4. Update `TAG` file.
+
 ## redis
 
 ![Regular Update](./regular_update.svg)
