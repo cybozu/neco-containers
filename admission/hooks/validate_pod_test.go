@@ -124,7 +124,7 @@ spec:
 		k8s, err := kubernetes.NewForConfig(k8sConfig)
 		Expect(err).NotTo(HaveOccurred())
 
-		po, err = k8s.CoreV1().Pods(po.Namespace).UpdateEphemeralContainers(testCtx, po.Name, po, metav1.UpdateOptions{})
+		_, err = k8s.CoreV1().Pods(po.Namespace).UpdateEphemeralContainers(testCtx, po.Name, po, metav1.UpdateOptions{})
 		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 		Expect(err == nil).To(Equal(permissive))
 	})
