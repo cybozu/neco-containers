@@ -36,7 +36,6 @@ import (
 var (
 	podMutatingWebhookPath                         = "/mutate-pod"
 	podValidatingWebhookPath                       = "/validate-pod"
-	ephemeralContainerValidatingWebhookPath        = "/validate-pod-ephemeral-container"
 	contourMutatingWebhookPath                     = "/mutate-projectcontour-io-httpproxy"
 	calicoValidateWebhookPath                      = "/validate-projectcalico-org-networkpolicy"
 	contourValidateWebhookPath                     = "/validate-projectcontour-io-httpproxy"
@@ -131,7 +130,6 @@ var _ = BeforeSuite(func() {
 	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec))
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 	wh.Register(podValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
-	wh.Register(ephemeralContainerValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
 	wh.Register(calicoValidateWebhookPath, NewCalicoNetworkPolicyValidator(mgr.GetClient(), dec, 1000))
 	if isHTTPProxyMutationDisabled() {
 		wh.Register(contourMutatingWebhookPath, &webhook.Admission{Handler: &nullWebhook{}})
