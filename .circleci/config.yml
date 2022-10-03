@@ -456,14 +456,6 @@ jobs:
                 echo cert-manager > BUILDS
             fi
       - run:
-          name: Install dependency packages
-          command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
-            apt-get update
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sh get-docker.sh
-            usermod -aG docker $USER
-      - run:
           name: Build cert-manager
           command: |
             mkdir -p src/workspace
@@ -476,9 +468,9 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> << parameters.repo >>
             cd cert-manager
-            make _bin/server/controller-linux-amd64
-            make _bin/server/webhook-linux-amd64
-            make _bin/server/cainjector-linux-amd64
+            CTR=sleep make _bin/server/controller-linux-amd64
+            CTR=sleep make _bin/server/webhook-linux-amd64
+            CTR=sleep make _bin/server/cainjector-linux-amd64
             mv _bin/server/controller-linux-amd64 ../workspace/controller
             mv _bin/server/webhook-linux-amd64 ../workspace/webhook
             mv _bin/server/cainjector-linux-amd64 ../workspace/cainjector
