@@ -468,9 +468,9 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> << parameters.repo >>
             cd cert-manager
-            CTR=sleep make _bin/server/controller-linux-amd64
-            CTR=sleep make _bin/server/webhook-linux-amd64
-            CTR=sleep make _bin/server/cainjector-linux-amd64
+            make CTR=sleep _bin/server/controller-linux-amd64
+            make CTR=sleep _bin/server/webhook-linux-amd64
+            make CTR=sleep _bin/server/cainjector-linux-amd64
             mv _bin/server/controller-linux-amd64 ../workspace/controller
             mv _bin/server/webhook-linux-amd64 ../workspace/webhook
             mv _bin/server/cainjector-linux-amd64 ../workspace/cainjector
