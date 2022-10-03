@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.17-focal AS build
 
-ARG SERF_VERSION=0.9.7
+ARG SERF_VERSION=0.10.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/hashicorp/serf \

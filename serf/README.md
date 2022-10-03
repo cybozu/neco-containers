@@ -26,7 +26,7 @@ To launch serf server by `docker run`:
     $ docker run -d --rm --read-only --name serf \
        --mount type=bind,source=/your/config,target=/serf/config \
        -p 7373:7373 -p 7946:7946 \
-       quay.io/cybozu/serf:0.9 \
+       quay.io/cybozu/serf:0.10 \
          agent -config-dir=/serf/config
 
 To use serf cli, first install it in a host OS directory `DIR`:
@@ -34,7 +34,7 @@ To use serf cli, first install it in a host OS directory `DIR`:
     $ docker run --rm -u root:root \
       --entrypoint /usr/local/serf/install-tools \
       --mount type=bind,source=DIR,target=/host \
-      quay.io/cybozu/serf:0.9
+      quay.io/cybozu/serf:0.10
 
 Then run `serf` as follows:
 
