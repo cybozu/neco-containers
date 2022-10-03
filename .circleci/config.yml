@@ -444,7 +444,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/golang:1.17-bionic
+      - image: quay.io/cybozu/golang:1.19-focal
     resource_class: xlarge
     steps:
       - checkout
@@ -455,6 +455,14 @@ jobs:
             if [ "$c" = ng ]; then
                 echo cert-manager > BUILDS
             fi
+      - run:
+          name: Install dependency packages
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            apt-get update
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sh get-docker.sh
+            adduser $USER docker
       - run:
           name: Build cert-manager
           command: |
