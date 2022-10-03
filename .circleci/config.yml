@@ -443,8 +443,6 @@ jobs:
         type: string
       version:
         type: string
-      bazel-version:
-        type: string
     docker:
       - image: quay.io/cybozu/golang:1.17-bionic
     resource_class: xlarge
@@ -458,19 +456,6 @@ jobs:
                 echo cert-manager > BUILDS
             fi
       - run:
-          name: Install dependency packages
-          command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
-            apt-get update
-            apt-get -y install unzip pkg-config zlib1g-dev python
-      - run:
-          name: Install Bazel
-          command: |
-            if [ ! -f BUILDS ]; then exit 0; fi
-            curl -o /tmp/bazel.deb -fsSL https://github.com/bazelbuild/bazel/releases/download/<< parameters.bazel-version >>/bazel_<< parameters.bazel-version >>-linux-x86_64.deb
-            dpkg -i /tmp/bazel.deb
-            rm -f /tmp/bazel.deb
-      - run:
           name: Build cert-manager
           command: |
             mkdir -p src/workspace
@@ -483,10 +468,12 @@ jobs:
             cd src
             git clone --depth 1 --branch v<< parameters.version >> << parameters.repo >>
             cd cert-manager
-            make cainjector controller webhook
-            mv bazel-out/k8-fastbuild/bin/cmd/cainjector/cainjector_/cainjector ../workspace
-            mv bazel-out/k8-fastbuild/bin/cmd/controller/controller_/controller ../workspace
-            mv bazel-out/k8-fastbuild/bin/cmd/webhook/webhook_/webhook ../workspace
+            make _bin/server/controller-linux-amd64
+            make _bin/server/webhook-linux-amd64
+            make _bin/server/cainjector-linux-amd64
+            mv _bin/server/controller-linux-amd64 ../workspace/controller
+            mv _bin/server/webhook-linux-amd64 ../workspace/webhook
+            mv _bin/server/cainjector-linux-amd64 ../workspace/cainjector
             mv LICENSE ../workspace
       - persist_to_workspace:
           root: src/workspace
@@ -662,8 +649,7 @@ workflows:
       - build-cert-manager:
           #repo: https://github.com/cert-manager/cert-manager
           repo: https://github.com/cybozu-go/cert-manager
-          version: 1.7.2-neco-longtimeout.1
-          bazel-version: 4.0.0
+          version: 1.9.1-neco-longtimeout.1
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
