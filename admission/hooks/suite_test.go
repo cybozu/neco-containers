@@ -102,7 +102,6 @@ var _ = BeforeSuite(func() {
 	Expect(k8sClient).NotTo(BeNil())
 
 	By("setting up resources")
-	setupNetworkPolicyResources()
 	sc := &storagev1.StorageClass{}
 	sc.Name = "local-storage"
 	sc.Provisioner = "kubernetes.io/no-provisioner"
