@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG DEX_VERSION=2.35.0
+ARG DEX_VERSION=2.35.1
 
 WORKDIR /work/dex/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
