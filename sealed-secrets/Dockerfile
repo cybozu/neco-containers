@@ -1,7 +1,7 @@
 # Build stage
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG SEALED_SECRETS_VERSION=0.17.4
+ARG SEALED_SECRETS_VERSION=0.18.5
 
 RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-secrets/archive/v${SEALED_SECRETS_VERSION}.tar.gz \
     && tar --strip-components=1 -xzf sealed-secrets.tar.gz \
