@@ -1,7 +1,7 @@
 # serf container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
 ARG SERF_VERSION=0.10.0
 
