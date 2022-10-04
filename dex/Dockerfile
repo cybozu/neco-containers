@@ -1,9 +1,9 @@
 # dex container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG DEX_VERSION=2.30.2
+ARG DEX_VERSION=2.35.0
 
 WORKDIR /work/dex/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
