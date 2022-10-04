@@ -619,9 +619,6 @@ workflows:
       - build:
           name: build-cadvisor
           container-image: cadvisor
-      - build:
-          name: build-calico
-          container-image: calico
       - build-ceph:
           version: 16.2.10
       - build:
@@ -806,9 +803,6 @@ workflows:
       - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
-      - build:
-          name: build-metallb
-          container-image: metallb
       - build:
           name: build-minio
           container-image: minio

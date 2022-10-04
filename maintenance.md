@@ -47,7 +47,6 @@ In Kubernetes update:
 In Regular update, do the following as part of the update of each CRD-providing product:
 
 1. Update a matching version variable from the following in `Makefile`.
-   - `CALICO_VERSION`
    - `CONTOUR_VERSION`
    - `ARGOCD_VERSION`
    - `GRAFANA_OPERATOR_VERSION`
@@ -147,20 +146,6 @@ In Regular update, do the following as part of the update of each CRD-providing 
    - https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile
 3. Update `CADVISOR_VERSION` in `Dockerfile`
 4. Update `TAG` file.
-
-## calico
-
-![Regular Update](./regular_update.svg)
-
-1. Check [the release notes](https://docs.projectcalico.org/release-notes/).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/projectcalico/node/blob/vX.Y.Z/Dockerfile.amd64
-   - https://github.com/projectcalico/typha/blob/vX.Y.Z/docker-image/Dockerfile.amd64
-3. Update version variables (`CALICO_VERSION` and `TINI_VERSION`) in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
-***NOTE:*** Calico's NetworkPolicy objects are validated by [neco-admission](#admission-neco-admission).  If NetworkPolicy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## ceph
 
@@ -626,17 +611,6 @@ Only the base image and module dependency should be updated.
 3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
-
-## metallb
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/metallb/metallb/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/metallb/metallb/blob/vX.Y.Z/controller/Dockerfile
-   - https://github.com/metallb/metallb/blob/vX.Y.Z/speaker/Dockerfile
-3. Update `METALLB_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
 
 ## minio
 

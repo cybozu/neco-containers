@@ -1,6 +1,5 @@
 CONTROLLER_TOOLS_VERSION = 0.9.2
 KUSTOMIZE_VERSION = 4.5.5
-CALICO_VERSION = 3.20
 CONTOUR_VERSION = 1.20.1
 ARGOCD_VERSION = 2.3.3
 GRAFANA_OPERATOR_VERSION = 4.2.0
@@ -16,7 +15,6 @@ all: build
 .PHONY: crds
 crds:
 	mkdir -p config/crd/bases
-	curl -fsL -o config/crd/bases/calico.yaml https://docs.projectcalico.org/v$(CALICO_VERSION)/manifests/crds.yaml
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana-operator/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/manifests/latest/crds.yaml
