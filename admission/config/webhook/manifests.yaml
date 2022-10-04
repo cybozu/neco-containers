@@ -184,27 +184,6 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-projectcalico-org-networkpolicy
-  failurePolicy: Fail
-  name: vnetworkpolicy.kb.io
-  rules:
-  - apiGroups:
-    - crd.projectcalico.org
-    apiVersions:
-    - v1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - networkpolicies
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
       path: /validate-pod
   failurePolicy: Fail
   name: vpod.kb.io
