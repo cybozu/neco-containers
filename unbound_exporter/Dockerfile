@@ -1,7 +1,7 @@
 # unbound_exporter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
 #ARG UNBOUND_EXPORTER_REPO=letsencrypt/unbound_exporter
 ARG UNBOUND_EXPORTER_REPO=cybozu-go/unbound_exporter
