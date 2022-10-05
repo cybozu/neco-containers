@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
 ARG COREDNS_VERSION=1.9.3
 
