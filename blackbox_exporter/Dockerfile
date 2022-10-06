@@ -12,7 +12,7 @@ RUN curl -fsSL https://github.com/prometheus/blackbox_exporter/archive/v${BLACKB
 RUN make build
 
 # Stage2: setup runtime container
-FROM scratch
+FROM quay.io/cybozu/ubuntu:20.04
 COPY --from=build /blackbox_exporter/blackbox_exporter /blackbox_exporter
 COPY --from=build /blackbox_exporter/blackbox.yml /blackbox.yml
 COPY --from=build /blackbox_exporter/LICENSE /LICENSE
