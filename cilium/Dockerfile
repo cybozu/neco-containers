@@ -15,6 +15,7 @@ COPY 19936.patch /tmp/
 COPY 20006.patch /tmp/
 COPY 20092.patch /tmp/
 COPY 20176.patch /tmp/
+COPY 99999_send_notify.patch /tmp/
 
 WORKDIR /go/src/github.com/cilium/cilium
 RUN mkdir -p ${DESTDIR} \
@@ -29,6 +30,7 @@ RUN mkdir -p ${DESTDIR} \
     && patch -p1 --no-backup-if-mismatch < /tmp/20006.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/99999_send_notify.patch \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
     && apt-get update \

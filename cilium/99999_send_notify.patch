@@ -1,0 +1,12 @@
+diff --git a/bpf/lib/nodeport.h b/bpf/lib/nodeport.h
+index edca5ddbb1..c1c9ed90c0 100644
+--- a/bpf/lib/nodeport.h
++++ b/bpf/lib/nodeport.h
+@@ -1551,6 +1551,7 @@ int tail_nodeport_ipv4_dsr(struct __ctx_buff *ctx)
+ 	}
+ out_send:
+ 	cilium_capture_out(ctx);
++	send_trace_notify4(ctx, TRACE_TO_NETWORK, 0, 0, fib_params.l.ipv4_src, 0, fib_params.l.ifindex, 0, TRACE_PAYLOAD_LEN);
+ 	return ctx_redirect(ctx, fib_params.l.ifindex, 0);
+ drop_err:
+ 	return send_drop_notify_error(ctx, 0, ret, CTX_ACT_DROP, METRIC_EGRESS);
