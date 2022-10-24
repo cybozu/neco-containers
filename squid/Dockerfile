@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
-ARG SQUID_VERSION=5.4.1
+ARG SQUID_VERSION=5.7
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules

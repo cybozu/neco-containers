@@ -6,7 +6,7 @@
 
 ### Run with the default configuration
 
-    $ docker run -d --read-only quay.io/cybozu/squid:4
+    $ docker run -d --read-only quay.io/cybozu/squid:5
 ### Launch Squid with specific config file
 
 Prepare `squid.conf`, then execute following command.
