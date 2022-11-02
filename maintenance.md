@@ -612,28 +612,6 @@ Only the base image and module dependency should be updated.
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
 
-## minio
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/minio/minio/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/minio/minio/blob/RELEASE.XXX/Dockerfile.release
-   - https://github.com/minio/minio/blob/RELEASE.XXX/Makefile
-3. Update `MINIO_VERSION` in `Dockerfile`.
-4. Update `TAG` files.
-
-## minio-mc
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/minio/mc/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/minio/mc/blob/RELEASE.XXX/Dockerfile.release
-   - https://github.com/minio/mc/blob/RELEASE.XXX/Makefile
-3. Update `MC_VERSION` in `Dockerfile`.
-4. Update `TAG` files.
-
 ## mysql
 
 ![Regular Update](./regular_update.svg)
