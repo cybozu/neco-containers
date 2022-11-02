@@ -894,9 +894,6 @@ workflows:
           name: build-pushgateway
           container-image: pushgateway
       - build:
-          name: build-rclone
-          container-image: rclone
-      - build:
           name: build-redis
           container-image: redis
       - build:
