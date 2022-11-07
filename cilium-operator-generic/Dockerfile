@@ -8,8 +8,6 @@ FROM ${GOLANG_IMAGE} as build
 COPY TAG /
 COPY 17930.patch /tmp/
 COPY 18454.patch /tmp/
-COPY 19936.patch /tmp/
-COPY 20006.patch /tmp/
 COPY 20092.patch /tmp/
 COPY 20176.patch /tmp/
 
@@ -20,9 +18,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
       tar xzf - --strip-components 1 \
     && patch -p1 --no-backup-if-mismatch < /tmp/17930.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/18454.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20006.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19936.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
     && make licenses-all \
     && apt-get update \
