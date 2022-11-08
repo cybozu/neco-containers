@@ -11,8 +11,6 @@ COPY 17930.patch /tmp/
 COPY 18454.patch /tmp/
 COPY 19451.patch /tmp/
 COPY 19800.patch /tmp/
-COPY 19936.patch /tmp/
-COPY 20006.patch /tmp/
 COPY 20092.patch /tmp/
 COPY 20176.patch /tmp/
 COPY 99999_send_notify.patch /tmp/
@@ -26,8 +24,6 @@ RUN mkdir -p ${DESTDIR} \
     && patch -p1 --no-backup-if-mismatch < /tmp/18454.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/19451.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/19800.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19936.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20006.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
     && patch -p1 --no-backup-if-mismatch < /tmp/99999_send_notify.patch \
@@ -43,8 +39,7 @@ RUN mkdir -p ${DESTDIR} \
     && images/runtime/build-gops.sh \
     && images/runtime/download-cni.sh \
     && mkdir -p ${DESTDIR}/usr/sbin \
-    && cp images/runtime/iptables-wrapper ${DESTDIR}/usr/sbin/iptables-wrapper \
-    && cp images/runtime/configure-iptables-wrapper.sh \
+    && cp images/runtime/iptables-wrapper-installer.sh \
       images/cilium/init-container.sh \
       plugins/cilium-cni/cni-install.sh \
       plugins/cilium-cni/cni-uninstall.sh \
@@ -97,7 +92,7 @@ RUN apt-get update \
     && apt-get purge --auto-remove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && /configure-iptables-wrapper.sh
+    && /iptables-wrapper-installer.sh --no-sanity-check
 
 WORKDIR /home/cilium
 
