@@ -620,7 +620,7 @@ workflows:
           name: build-cadvisor
           container-image: cadvisor
       - build-ceph:
-          version: 16.2.10
+          version: 17.2.5
       - build:
           name: build-ceph-container
           container-image: ceph
@@ -629,7 +629,7 @@ workflows:
           requires:
             - build-ceph
       - build-ceph-asan:
-          version: 16.2.10
+          version: 17.2.5
       - build:
           name: build-ceph-asan-container
           container-image: ceph

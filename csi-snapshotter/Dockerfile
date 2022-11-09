@@ -2,7 +2,7 @@
 FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-snapshotter
-ARG VERSION=6.0.1
+ARG VERSION=6.1.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

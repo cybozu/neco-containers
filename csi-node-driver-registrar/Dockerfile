@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/node-driver-registrar
 ARG VERSION=2.5.1
