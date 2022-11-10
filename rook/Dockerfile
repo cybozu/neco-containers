@@ -1,9 +1,9 @@
 # Rook container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.17-focal AS build
+FROM quay.io/cybozu/golang:1.18-focal AS build
 
-ARG ROOK_VERSION=1.9.6
+ARG ROOK_VERSION=1.10.5
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -27,7 +27,7 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false TEMP=/tmp/rook
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:17.2.1.2
+FROM quay.io/cybozu/ceph:17.2.5.1
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
@@ -42,9 +42,6 @@ COPY --from=build ceph-csv-templates /etc/ceph-csv-templates
 # create or modify owner and permissions to make a watch-active container of a MGR work properly
 RUN groupadd rook -g 2016 && \
     useradd rook -u 2016 -g rook
-RUN install -d -o rook -g rook -m 0700 /var/lib/rook
-RUN chown rook:rook /etc/ceph
-
 USER rook:rook
 
 ENTRYPOINT ["/usr/local/bin/rook"]
