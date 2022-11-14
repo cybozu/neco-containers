@@ -34,7 +34,6 @@ In Kubernetes update:
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   $ make setup
    $ make generate manifests
    # Commit, if there are any updated files.
    ```
