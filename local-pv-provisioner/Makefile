@@ -2,7 +2,7 @@
 
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = quay.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
-CONTROLLER_TOOLS_VERSION = 0.9.2
+CONTROLLER_TOOLS_VERSION = 0.10.0
 ENVTEST_K8S_VERSION = 1.24.2
 
 # Set the shell used to bash for better error handling.

@@ -550,7 +550,7 @@ jobs:
             - share
   test-local-pv-provisioner:
     docker:
-      - image: quay.io/cybozu/golang:1.17-focal
+      - image: quay.io/cybozu/golang:1.19-focal
     steps:
       - checkout
       - run: cd local-pv-provisioner; make check-generate

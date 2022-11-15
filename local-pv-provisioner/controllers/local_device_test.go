@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -113,12 +112,12 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 }
 
 func setupDummyDevice(t *testing.T, devices []Device) (string, string) {
-	dummyFileDir, err := ioutil.TempDir("", "list-local-devices-dummy-")
+	dummyFileDir, err := os.MkdirTemp("", "list-local-devices-dummy-")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	symlinkDir, err := ioutil.TempDir("", "list-local-devices-symlink-")
+	symlinkDir, err := os.MkdirTemp("", "list-local-devices-symlink-")
 	if err != nil {
 		t.Fatal(err)
 	}
