@@ -7,7 +7,7 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=4.4.1
+ENV KUSTOMIZE_VERSION=4.5.7
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
