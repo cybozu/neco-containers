@@ -91,6 +91,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 5. Update version variables in `Dockerfile`.
     - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
+7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
 ***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
@@ -251,6 +252,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
+6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
 ***NOTE:*** Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).  If HTTPProxy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
@@ -402,7 +404,7 @@ Ignore!!!
 3. Update `VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
-6. Follow maintenance instructions for neco-admission if needed.
+6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
 ***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
