@@ -2,19 +2,17 @@ package controllers
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 
 	"github.com/google/go-cmp/cmp"
-
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 func testFillDeleter() {
 	It("should fill first specified bytes with zero", func() {
-		tmpFile, _ := ioutil.TempFile("", "deleter")
+		tmpFile, _ := os.CreateTemp("", "deleter")
 		defer os.Remove(tmpFile.Name())
 		err := exec.Command("dd", `if=/dev/urandom`, "of="+tmpFile.Name(), fmt.Sprintf("bs=%d", 1024), "count=11").Run()
 		Expect(err).ShouldNot(HaveOccurred())
