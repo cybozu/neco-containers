@@ -211,6 +211,8 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Check whether manually applied patches have been included in the new release and remove them accordingly.
 4. Update the `BRANCH` and `TAG` files accordingly.
 
+***NOTE:*** The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
+
 ## cilium-operator-generic
 
 ![Regular Update](./regular_update.svg)
