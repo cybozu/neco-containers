@@ -7,7 +7,7 @@
 ### Launch Redis
 
 ```console
-$ docker run --name=redis quay.io/cybozu/redis:6.2
+$ docker run --name=redis quay.io/cybozu/redis:7.0
 ```
 
 ### Run Redis CLI

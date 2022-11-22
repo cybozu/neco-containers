@@ -717,7 +717,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the release notes in the [official site](https://redis.io/).
 2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
-   - v6.2.x: https://github.com/docker-library/redis/blob/master/6.2/Dockerfile
+   - v7.0.x: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
