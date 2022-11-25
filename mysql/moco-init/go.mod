@@ -3,8 +3,8 @@ module github.com/cybozu/neco-containers/mysql/moco-init
 go 1.18
 
 require (
-	github.com/spf13/cobra v1.5.0
-	golang.org/x/sys v0.0.0-20220823224334-20c2bfdbfe24
+	github.com/spf13/cobra v1.6.1
+	golang.org/x/sys v0.2.0
 )
 
 require (
