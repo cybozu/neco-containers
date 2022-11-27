@@ -674,7 +674,7 @@ jobs:
         type: string
         default: "1.19.3"
     machine:
-      image: ubuntu-2004:2022.10.1
+      image: ubuntu-2204:2022.10.2
     resource_class: << parameters.resource-class >>
     steps:
       - checkout
@@ -918,14 +918,14 @@ workflows:
       - build:
           name: build-fluent-bit
           container-image: fluent-bit
-      - build:
+      - buildx:
           name: build-golang
           container-image: golang
-      - build:
+      - buildx:
           name: build-golang-1.18
           container-image: golang
           dir: golang-1.18
-      - build:
+      - buildx:
           name: build-golang-bionic
           container-image: golang
           dir: golang-bionic
