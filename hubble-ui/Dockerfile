@@ -1,10 +1,10 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.17-focal
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.19-focal
 ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 ARG BACKEND_IMAGE=scratch
-ARG NGINX_VERSION=1.21.6
-ARG NJS_VERSION=0.7.2
+ARG NGINX_VERSION=1.23.1
+ARG NJS_VERSION=0.7.6
 ARG PKG_RELEASE=1~focal
-ARG NGINX_UNPRIVILEGED_COMMIT_HASH=e1eaa46947899468880e8133a67bfc656074384f
+ARG NGINX_UNPRIVILEGED_COMMIT_HASH=0b794b2bd54217ac3882680265c9426ae2edcbd6
 
 # Stage 1: build
 FROM ${GOLANG_IMAGE} AS builder-base
@@ -52,17 +52,15 @@ ARG GID=101
 
 RUN set -x \
     # create nginx user/group first, to be consistent throughout docker variants
-    && addgroup --system --gid $GID nginx \
-    && adduser --system --disabled-login --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid $UID nginx \
+    && addgroup --system --gid $GID nginx || true \
+    && adduser --system --disabled-login --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid $UID nginx || true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y gnupg1 ca-certificates \
     && \
     NGINX_GPGKEY=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62; \
     found=''; \
     for server in \
-        ha.pool.sks-keyservers.net \
         hkp://keyserver.ubuntu.com:80 \
-        hkp://p80.pool.sks-keyservers.net:80 \
         pgp.mit.edu \
     ; do \
         echo "Fetching GPG key $NGINX_GPGKEY from $server"; \

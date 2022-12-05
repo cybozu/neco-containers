@@ -1,4 +1,4 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.17-focal
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.18-focal
 ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
@@ -7,26 +7,14 @@ FROM ${GOLANG_IMAGE} as build-base
 ARG DESTDIR
 ENV DESTDIR=${DESTDIR}
 COPY TAG /
-COPY 17930.patch /tmp/
-COPY 18454.patch /tmp/
-COPY 19451.patch /tmp/
-COPY 19800.patch /tmp/
-COPY 20092.patch /tmp/
-COPY 20176.patch /tmp/
-COPY 99999_send_notify.patch /tmp/
+COPY 18449.patch /tmp/
 
 WORKDIR /go/src/github.com/cilium/cilium
 RUN mkdir -p ${DESTDIR} \
     && VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
       tar xzf - --strip-components 1 \
-    && patch -p1 --no-backup-if-mismatch < /tmp/17930.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/18454.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19451.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/19800.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20092.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/20176.patch \
-    && patch -p1 --no-backup-if-mismatch < /tmp/99999_send_notify.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/18449.patch \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
     && apt-get update \
