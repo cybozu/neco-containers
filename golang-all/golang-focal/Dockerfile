@@ -1,6 +1,6 @@
 # Go container
 
-FROM --platform=$TARGETPLATFORM quay.io/cybozu/ubuntu-dev:20.04
+FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:20.04
 
 ARG TARGETARCH
 ARG GO_VERSION=1.19.4

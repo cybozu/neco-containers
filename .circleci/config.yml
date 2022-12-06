@@ -153,9 +153,6 @@ jobs:
       resource-class:
         type: string
         default: medium
-      before:
-        type: string
-        default: ""
     description: "build << parameters.container-image >>"
     docker:
       - image: cimg/base:stable
@@ -166,6 +163,11 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y curl jq git
+            CONTAINER_TAG_EXISTS_VERSION=1.0.3
+            curl -fsSL -o container-tag-exists.tar.gz \
+              https://github.com/Hsn723/container-tag-exists/releases/download/v${CONTAINER_TAG_EXISTS_VERSION}/container-tag-exists_${CONTAINER_TAG_EXISTS_VERSION}_linux_amd64.tar.gz
+            sudo tar -xzf container-tag-exists.tar.gz -C /usr/local/bin
+            rm -f container-tag-exists.tar.gz
       - checkout
       - when:
           condition: << parameters.attach >>
@@ -174,17 +176,21 @@ jobs:
                 at: ./<< parameters.dir >>/workspace
       - setup_remote_docker:
           version: 20.10.11
-      - run: docker run --rm --privileged tonistiigi/binfmt:latest --install linux/amd64,linux/arm64/v8
+      # The binfmt container image is not an official image, so we use a pinned version(qemu-v6.2.0).
+      - run: docker run --rm --privileged tonistiigi/binfmt@sha256:5bf63a53ad6222538112b5ced0f1afb8509132773ea6dd3991a197464962854e --install linux/amd64,linux/arm64/v8
       - run:
           name: Check TAG files
           command: |
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             image=<< parameters.container-image >>
-            c="$(./tag_exists $image $dir)"
-            if [ "$c" = ng ]; then
-                echo << parameters.container-image >> > BUILDS
-            fi
+            for repo in quay.io ghcr.io; do 
+              tag=$(cat ${dir}/TAG)
+              c="$(container-tag-exists ${repo}/cybozu/$image $tag)"
+              if [ "$c" = "" ]; then
+                  echo ${repo}/cybozu/$image >> BUILDS
+              fi
+            done
       - run:
           name: Validate consistency between BRANCH and TAG
           command: |
@@ -195,7 +201,7 @@ jobs:
       - run:
           name: Build test
           command: |
-            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+            if [ "${CIRCLE_BRANCH}" = "main" ]; then
                 exit 0
             fi
             if [ ! -f BUILDS ]; then
@@ -205,9 +211,7 @@ jobs:
             image=<< parameters.container-image >>
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
-            before=<< parameters.before >>
             cd $dir
-            bash -c "$before"
             docker context create buildx
             docker buildx create buildx --use
             docker buildx build \
@@ -224,32 +228,35 @@ jobs:
                 exit 0
             fi
             docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            docker login -u $GITHUB_USER -p $GITHUB_TOKEN ghcr.io
             echo
             echo "building and pushing << parameters.container-image >> ..."
             image=<< parameters.container-image >>
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             TAG=$(cat $dir/TAG)
-            BRANCH=$(cat $dir/BRANCH)
-            before=<< parameters.before >>
             cd $dir
-            bash -c "$before"
             docker context create buildx
             docker buildx create buildx --use
-            docker buildx build \
-              --push \
-              --platform linux/amd64,linux/arm64/v8 \
-              -t quay.io/cybozu/$image:$TAG
-              .
+            for repo in $(cat BUILDS) ; do
+              docker buildx build \
+                --push \
+                --platform linux/amd64,linux/arm64/v8 \
+                -t ${repo}:$TAG \
+                .
+            done
+
             if echo $TAG | grep -q -e - ; then
               echo ===== Skip pushing branch tags for pre-release $TAG =====
               exit 0
             fi
             if [ -f $dir/BRANCH ]; then
-                BRANCH=$(cat $dir/BRANCH)
-                docker buildx imagetools create --tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
-              fi
-            done
+              BRANCH=$(cat $dir/BRANCH)
+              for repo in $(cat BUILDS) ; do
+                # docker buildx imagetools create --tag <new image> <source image>
+                docker buildx imagetools create --tag ${repo}/cybozu/$image:$BRANCH ${repo}/cybozu/$image:$TAG
+              done
+            fi
   build-ceph:
     parameters:
       version:
@@ -674,7 +681,7 @@ jobs:
         type: string
         default: "1.19.3"
     machine:
-      image: ubuntu-2204:2022.10.2
+      image: ubuntu-2004:2022.10.1
     resource_class: << parameters.resource-class >>
     steps:
       - checkout
@@ -763,13 +770,16 @@ workflows:
           directory: envoy
       - test:
           name: test-golang-analyzer
-          directory: golang/analyzer
+          directory: golang-all/golang/analyzer
       - test:
           name: test-golang-1.18-analyzer
-          directory: golang-1.18/analyzer
+          directory: golang-all/golang-1.18/analyzer
       - test:
-          name: test-golang-bionic-analyzer
-          directory: golang-bionic/analyzer
+          name: test-golang-focal-analyzer
+          directory: golang-all/golang-focal/analyzer
+      - test:
+          name: test-golang-1.18-focal-analyzer
+          directory: golang-all/golang-1.18-focal/analyzer
       - test:
           name: test-heartbeat
           directory: heartbeat
@@ -921,14 +931,19 @@ workflows:
       - buildx:
           name: build-golang
           container-image: golang
+          dir: golang-all/golang
       - buildx:
           name: build-golang-1.18
           container-image: golang
-          dir: golang-1.18
+          dir: golang-all/golang-1.18
       - buildx:
-          name: build-golang-bionic
+          name: build-golang-focal
           container-image: golang
-          dir: golang-bionic
+          dir: golang-all/golang-focal
+      - buildx:
+          name: build-golang-1.18-focal
+          container-image: golang
+          dir: golang-all/golang-1.18-focal
       - build:
           name: build-gorush
           container-image: gorush

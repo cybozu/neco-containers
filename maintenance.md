@@ -364,7 +364,7 @@ This section applies to the following containers. These containers are maintaine
 This image is referenced in `cybozu-go/moco`. So update the following as well.
 - https://github.com/cybozu-go/moco/blob/main/version.go
 
-## golang / golang-bionic
+## golang / golang-focal /  golang-1.18 / golang-1.18-focal
 
 ![Regular Update](./regular_update.svg)
 
