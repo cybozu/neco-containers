@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG CONTOUR_VERSION=1.23.0
+ARG CONTOUR_VERSION=1.23.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/projectcontour/contour/archive/v${CONTOUR_VERSION}.tar.gz | \
