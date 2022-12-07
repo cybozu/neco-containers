@@ -707,7 +707,7 @@ workflows:
           name: build-dnsmasq
           container-image: dnsmasq
       - build-envoy:
-          version: 1.24.0
+          version: 1.24.1
           bazel-version: 6.0.0-pre.20220706.4
       - build:
           name: build-envoy-container
