@@ -868,7 +868,7 @@ workflows:
       - build:
           name: build-external-dns
           container-image: external-dns
-      - build:
+      - buildx:
           name: build-fluent-bit
           container-image: fluent-bit
       - buildx:
@@ -1024,7 +1024,7 @@ workflows:
           dir: mysql/8.0.31
           requires:
             - build-mysql-8031
-      - build:
+      - buildx:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
       - build:
