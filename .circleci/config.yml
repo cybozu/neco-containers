@@ -138,6 +138,118 @@ jobs:
                   docker push quay.io/cybozu/$image:$BRANCH
               fi
             done
+  buildx:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      container-image:
+        type: string
+      dir:
+        type: string
+        default: ""
+      attach:
+        type: boolean
+        default: false
+      resource-class:
+        type: string
+        default: medium
+      before:
+        type: string
+        default: ""
+    description: "build << parameters.container-image >>"
+    docker:
+      - image: cimg/base:stable
+    resource_class: << parameters.resource-class >>
+    steps:
+      - run:
+          name: Install tools
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y curl jq git
+      - checkout
+      - when:
+          condition: << parameters.attach >>
+          steps:
+            - attach_workspace:
+                at: ./<< parameters.dir >>/workspace
+      - setup_remote_docker:
+          version: 20.10.11
+      - run: docker run --rm --privileged tonistiigi/binfmt:latest --install linux/amd64,linux/arm64/v8
+      - run:
+          name: Check TAG files
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            image=<< parameters.container-image >>
+            c="$(./tag_exists $image $dir)"
+            if [ "$c" = ng ]; then
+                echo << parameters.container-image >> > BUILDS
+            fi
+      - run:
+          name: Validate consistency between BRANCH and TAG
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+            ./tag_branch_consistency $dir
+      - run:
+          name: Build test
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            echo "building test: << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            before=<< parameters.before >>
+            cd $dir
+            bash -c "$before"
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --platform linux/amd64,linux/arm64/v8 \
+              -o type=tar,dest=$image.tar \
+              .
+      - run:
+          name: Build and Push
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            echo
+            echo "building and pushing << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            TAG=$(cat $dir/TAG)
+            BRANCH=$(cat $dir/BRANCH)
+            before=<< parameters.before >>
+            cd $dir
+            bash -c "$before"
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --push \
+              --platform linux/amd64,linux/arm64/v8 \
+              -t quay.io/cybozu/$image:$TAG
+              .
+            if echo $TAG | grep -q -e - ; then
+              echo ===== Skip pushing branch tags for pre-release $TAG =====
+              exit 0
+            fi
+            if [ -f $dir/BRANCH ]; then
+                BRANCH=$(cat $dir/BRANCH)
+                docker buildx imagetools create --tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
+              fi
+            done
   build-ceph:
     parameters:
       version:
@@ -725,14 +837,14 @@ workflows:
       - build:
           name: build-fluent-bit
           container-image: fluent-bit
-      - build:
+      - buildx:
           name: build-golang
           container-image: golang
-      - build:
+      - buildx:
           name: build-golang-1.18
           container-image: golang
           dir: golang-1.18
-      - build:
+      - buildx:
           name: build-golang-bionic
           container-image: golang
           dir: golang-bionic
