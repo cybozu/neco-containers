@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG K8S_VERSION=1.24.8
+ARG K8S_VERSION=1.24.9
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
