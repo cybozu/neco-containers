@@ -735,7 +735,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![CSA Update](./csa_update.svg)
 
-***NOTE:*** Rook update requires two phases. First phase, update rook image solely to update rook version, then release it by neco-apps. Second phase, update Ceph image, and then update Rook base image.
+***NOTE:*** If we update both Rook and Ceph, Rook update requires two phases. First phase, update rook image solely to update rook version, then release it by neco-apps. Second phase, update Ceph image, and then update Rook base image.
 
 ***NOTE:*** A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
 
