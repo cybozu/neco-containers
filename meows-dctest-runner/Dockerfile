@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.8.0
+ARG MEOWS_VERSION=0.9.1
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
 
