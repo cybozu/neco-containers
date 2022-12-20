@@ -319,9 +319,20 @@ func getBootServers(members []member) []net.IP {
 }
 
 func localHTTPClient() *http.Client {
-	transport := http.DefaultTransport.(*http.Transport).Clone()
-	transport.Proxy = nil
-	transport.ForceAttemptHTTP2 = false
+	// Most of the following values are copied from http.DefaultTransport to workaround a proxy issue.
+	// See: https://github.com/golang/go/issues/25793
+	transport := &http.Transport{
+		Proxy: nil,
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          100,
+		IdleConnTimeout:       90 * time.Second,
+		TLSHandshakeTimeout:   10 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 
 	return &http.Client{
 		Transport: transport,
