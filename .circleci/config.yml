@@ -138,6 +138,118 @@ jobs:
                   docker push quay.io/cybozu/$image:$BRANCH
               fi
             done
+  buildx:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      container-image:
+        type: string
+      dir:
+        type: string
+        default: ""
+      attach:
+        type: boolean
+        default: false
+      resource-class:
+        type: string
+        default: medium
+      before:
+        type: string
+        default: ""
+    description: "build << parameters.container-image >>"
+    docker:
+      - image: cimg/base:stable
+    resource_class: << parameters.resource-class >>
+    steps:
+      - run:
+          name: Install tools
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y curl jq git
+      - checkout
+      - when:
+          condition: << parameters.attach >>
+          steps:
+            - attach_workspace:
+                at: ./<< parameters.dir >>/workspace
+      - setup_remote_docker:
+          version: 20.10.11
+      - run: docker run --rm --privileged tonistiigi/binfmt:latest --install linux/amd64,linux/arm64/v8
+      - run:
+          name: Check TAG files
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            image=<< parameters.container-image >>
+            c="$(./tag_exists $image $dir)"
+            if [ "$c" = ng ]; then
+                echo << parameters.container-image >> > BUILDS
+            fi
+      - run:
+          name: Validate consistency between BRANCH and TAG
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+            ./tag_branch_consistency $dir
+      - run:
+          name: Build test
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            echo "building test: << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            before=<< parameters.before >>
+            cd $dir
+            bash -c "$before"
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --platform linux/amd64,linux/arm64/v8 \
+              -o type=tar,dest=$image.tar \
+              .
+      - run:
+          name: Build and Push
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            echo
+            echo "building and pushing << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            TAG=$(cat $dir/TAG)
+            BRANCH=$(cat $dir/BRANCH)
+            before=<< parameters.before >>
+            cd $dir
+            bash -c "$before"
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --push \
+              --platform linux/amd64,linux/arm64/v8 \
+              -t quay.io/cybozu/$image:$TAG
+              .
+            if echo $TAG | grep -q -e - ; then
+              echo ===== Skip pushing branch tags for pre-release $TAG =====
+              exit 0
+            fi
+            if [ -f $dir/BRANCH ]; then
+                BRANCH=$(cat $dir/BRANCH)
+                docker buildx imagetools create --tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
+              fi
+            done
   build-ceph:
     parameters:
       version:
@@ -548,6 +660,87 @@ jobs:
             - bin
             - lib
             - share
+  build-mysql-multi-platform:
+    parameters:
+      mysql-version:
+        type: string
+      resource-class:
+        type: string
+        default: 2xlarge+
+      architecture:
+        type: string
+        default: amd64
+      go-version:
+        type: string
+        default: "1.19.3"
+    machine:
+      image: ubuntu-2004:2022.10.1
+    resource_class: << parameters.resource-class >>
+    steps:
+      - checkout
+      - run:
+          name: Install dependency packages
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y curl jq git
+      - run:
+          name: Check TAG file
+          command: |
+            d=<< parameters.mysql-version >>
+            c="$(./tag_exists mysql mysql/$d)"
+            if [ "$c" = ng ]; then
+                echo mysql > BUILDS
+            fi
+      - run:
+          name: Install go
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            curl -sfL https://dl.google.com/go/go<< parameters.go-version >>.linux-<< parameters.architecture >>.tar.gz \
+              | sudo tar -x -z -C /usr/local -f -
+      - run:
+          name: Install dependency packages
+          command: |
+            if [ ! -f BUILDS ]; then exit 0; fi
+            sudo apt-get update
+            sudo apt-get -y install build-essential libssl-dev cmake libncurses5-dev libjemalloc-dev libnuma-dev libaio-dev pkg-config
+      - run:
+          name: Build MySQL
+          command: |
+            if [ ! -f BUILDS ]; then
+                # fake for the next step
+                sudo mkdir -p /usr/local/mysql
+                cd /usr/local/mysql
+                sudo touch LICENSE
+                sudo mkdir bin lib share
+                exit 0
+            fi
+            mkdir src
+            cd src
+            curl -fsSL -O https://dev.mysql.com/get/Downloads/MySQL-8.0/mysql-boost-<< parameters.mysql-version >>.tar.gz
+            tar -x -z -f mysql-boost-<< parameters.mysql-version >>.tar.gz
+            cd mysql-<< parameters.mysql-version >>
+            mkdir bld
+            cd bld
+            cmake .. -DBUILD_CONFIG=mysql_release -DCMAKE_BUILD_TYPE=Release -DWITH_BOOST=$(ls -d ../boost/boost_*) -DWITH_NUMA=1 -DWITH_JEMALLOC=1 -DWITH_PACKAGE_FLAGS=0
+            make -j 20
+            sudo make install
+      - run:
+          name: Build moco-init
+          command: |
+            cd mysql/moco-init
+            sudo bash -c "PATH=$PATH:/usr/local/go/bin GOBIN=/usr/local/mysql/bin go install -ldflags="-w -s" ."
+      - run:
+          name: Rename MySQL dirs
+          command: |
+            sudo mkdir /usr/local/mysql/<< parameters.architecture >>
+            sudo mv /usr/local/mysql/LICENSE /usr/local/mysql/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/bin /usr/local/mysql/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/lib /usr/local/mysql/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/share /usr/local/mysql/<< parameters.architecture >>/
+      - persist_to_workspace:
+          root: /usr/local/mysql
+          paths:
+            - << parameters.architecture >>
   test-local-pv-provisioner:
     docker:
       - image: quay.io/cybozu/golang:1.19-focal
@@ -815,15 +1008,30 @@ workflows:
       - build-mysql:
           name: build-mysql-8027
           mysql-version: 8.0.27
-      - build-mysql:
-          name: build-mysql-8028
+      - build-mysql-multi-platform:
+          name: build-mysql-8028-amd64
           mysql-version: 8.0.28
-      - build-mysql:
-          name: build-mysql-8030
+      - build-mysql-multi-platform:
+          name: build-mysql-8028-arm64
+          mysql-version: 8.0.28
+          resource-class: arm.2xlarge
+          architecture: arm64
+      - build-mysql-multi-platform:
+          name: build-mysql-8030-amd64
           mysql-version: 8.0.30
-      - build-mysql:
-          name: build-mysql-8031
+      - build-mysql-multi-platform:
+          name: build-mysql-8030-arm64
+          mysql-version: 8.0.30
+          resource-class: arm.2xlarge
+          architecture: arm64
+      - build-mysql-multi-platform:
+          name: build-mysql-8031-amd64
           mysql-version: 8.0.31
+      - build-mysql-multi-platform:
+          name: build-mysql-8031-arm64
+          mysql-version: 8.0.31
+          resource-class: arm.2xlarge
+          architecture: arm64
       - build:
           name: build-mysql-container-8018
           container-image: mysql
@@ -852,27 +1060,30 @@ workflows:
           dir: mysql/8.0.27
           requires:
             - build-mysql-8027
-      - build:
+      - buildx:
           name: build-mysql-container-8028
           container-image: mysql
           attach: true
           dir: mysql/8.0.28
           requires:
-            - build-mysql-8028
-      - build:
+            - build-mysql-8028-amd64
+            - build-mysql-8028-arm64
+      - buildx:
           name: build-mysql-container-8030
           container-image: mysql
           attach: true
           dir: mysql/8.0.30
           requires:
-            - build-mysql-8030
-      - build:
+            - build-mysql-8030-amd64
+            - build-mysql-8030-arm64
+      - buildx:
           name: build-mysql-container-8031
           container-image: mysql
           attach: true
           dir: mysql/8.0.31
           requires:
-            - build-mysql-8031
+            - build-mysql-8031-amd64
+            - build-mysql-8031-arm64
       - build:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
