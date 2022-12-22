@@ -13,7 +13,7 @@ tools:
 * [eventuallycheck](./analyzer/cmd/eventuallycheck/README.md)
 * [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
 
-This container is based on [quay.io/cybozu/ubuntu-dev](https://quay.io/repository/cybozu/ubuntu-dev).
+This container is based on [ghcr.io/cybozu/ubuntu-dev](https://ghcr.io/repository/cybozu/ubuntu-dev).
 
 Docker images
 -------------

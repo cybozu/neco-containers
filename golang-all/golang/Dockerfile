@@ -1,14 +1,16 @@
 # Go container
 
-FROM quay.io/cybozu/ubuntu-dev:18.04
+FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:22.04
 
-ARG GO_VERSION=1.18.9
+ARG TARGETARCH
+ARG GO_VERSION=1.19.4
 
+ENV GOARCH=${TARGETARCH}
 ENV GOPATH=/go
 ENV PATH=/go/bin:/usr/local/go/bin:"$PATH"
 
 RUN rm -rf /usr/local/go \
-    && curl -sfL https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz \
+    && curl -sfL https://dl.google.com/go/go${GO_VERSION}.linux-${GOARCH}.tar.gz \
     | tar -x -z -C /usr/local -f - \
     && mkdir -p /go/src \
     && GOBIN=/usr/local/bin go install golang.org/x/tools/cmd/goimports@latest \
