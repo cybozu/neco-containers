@@ -1,5 +1,5 @@
 FROM quay.io/cybozu/golang:1.18-focal AS build
-ARG LOKI_VERSION=2.6.1
+ARG LOKI_VERSION=2.7.1
 ARG SYSTEMD_VERSION=250
 
 WORKDIR /work
@@ -60,6 +60,9 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
     meson install -C /work/systemd/build/
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
+# see https://github.com/grafana/loki/issues/7996
+COPY no-newline-while-joining-partial-lines.patch /work/
+RUN cd /work/loki && patch -p1 < ../no-newline-while-joining-partial-lines.patch
 RUN make -C /work/loki BUILD_IN_CONTAINER=false promtail
 
 FROM quay.io/cybozu/ubuntu:20.04
