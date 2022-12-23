@@ -211,13 +211,12 @@ jobs:
             image=<< parameters.container-image >>
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
-            cd $dir
             docker context create buildx
             docker buildx create buildx --use
             docker buildx build \
               --platform linux/amd64,linux/arm64/v8 \
               -o type=tar,dest=$image.tar \
-              .
+              ${dir}
       - run:
           name: Build and Push
           command: |
@@ -235,7 +234,6 @@ jobs:
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             TAG=$(cat $dir/TAG)
-            cd $dir
             docker context create buildx
             docker buildx create buildx --use
             for repo in $(cat BUILDS) ; do
@@ -243,7 +241,7 @@ jobs:
                 --push \
                 --platform linux/amd64,linux/arm64/v8 \
                 -t ${repo}:$TAG \
-                .
+                ${dir}
             done
 
             if echo $TAG | grep -q -e - ; then
@@ -254,7 +252,7 @@ jobs:
               BRANCH=$(cat $dir/BRANCH)
               for repo in $(cat BUILDS) ; do
                 # docker buildx imagetools create --tag <new image> <source image>
-                docker buildx imagetools create --tag ${repo}/cybozu/$image:$BRANCH ${repo}/cybozu/$image:$TAG
+                docker buildx imagetools create --tag ${repo}:$BRANCH ${repo}:$TAG
               done
             fi
   build-ceph:
