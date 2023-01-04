@@ -184,13 +184,11 @@ jobs:
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             image=<< parameters.container-image >>
-            for repo in quay.io ghcr.io; do 
-              tag=$(cat ${dir}/TAG)
-              c="$(container-tag-exists ${repo}/cybozu/$image $tag)"
-              if [ "$c" = "" ]; then
-                  echo ${repo}/cybozu/$image >> BUILDS
-              fi
-            done
+            tag=$(cat ${dir}/TAG)
+            c="$(container-tag-exists quay.io/cybozu/$image $tag)"
+            if [ "$c" = "" ]; then
+                echo quay.io/cybozu/$image >> BUILDS
+            fi
       - run:
           name: Validate consistency between BRANCH and TAG
           command: |
@@ -227,7 +225,6 @@ jobs:
                 exit 0
             fi
             docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
-            docker login -u $GITHUB_USER -p $GITHUB_TOKEN ghcr.io
             echo
             echo "building and pushing << parameters.container-image >> ..."
             image=<< parameters.container-image >>
@@ -236,13 +233,11 @@ jobs:
             TAG=$(cat $dir/TAG)
             docker context create buildx
             docker buildx create buildx --use
-            for repo in $(cat BUILDS) ; do
-              docker buildx build \
-                --push \
-                --platform linux/amd64,linux/arm64/v8 \
-                -t ${repo}:$TAG \
-                ${dir}
-            done
+            docker buildx build \
+              --push \
+              --platform linux/amd64,linux/arm64/v8 \
+              -t quay.io/cybozu/$image:$TAG \
+              ${dir}
 
             if echo $TAG | grep -q -e - ; then
               echo ===== Skip pushing branch tags for pre-release $TAG =====
@@ -250,10 +245,8 @@ jobs:
             fi
             if [ -f $dir/BRANCH ]; then
               BRANCH=$(cat $dir/BRANCH)
-              for repo in $(cat BUILDS) ; do
-                # docker buildx imagetools create --tag <new image> <source image>
-                docker buildx imagetools create --tag ${repo}:$BRANCH ${repo}:$TAG
-              done
+              # docker buildx imagetools create --tag <new image> <source image>
+              docker buildx imagetools create --tag quay.io/cybozu/$image:$BRANCH quay.io/cybozu/$image:$TAG
             fi
   build-ceph:
     parameters:
