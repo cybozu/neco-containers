@@ -307,15 +307,6 @@ This section applies to the following containers. These containers are maintaine
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## dnsmasq
-
-![Regular Update](./regular_update.svg)
-
-1. Check the http://www.thekelleys.org.uk/dnsmasq/ and find the latest release.
-2. Update `DNSMASQ_VERSION` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
-
 ## envoy
 
 ![Regular Update](./regular_update.svg)
