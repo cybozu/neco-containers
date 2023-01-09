@@ -1,7 +1,7 @@
 # blackbox-exporter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-jammy AS build
 
 ARG BLACKBOX_EXPORTER_VERSION=0.23.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -12,7 +12,7 @@ RUN curl -fsSL https://github.com/prometheus/blackbox_exporter/archive/v${BLACKB
 RUN make build
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 COPY --from=build /blackbox_exporter/blackbox_exporter /blackbox_exporter
 COPY --from=build /blackbox_exporter/blackbox.yml /blackbox.yml
 COPY --from=build /blackbox_exporter/LICENSE /LICENSE
