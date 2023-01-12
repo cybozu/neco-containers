@@ -155,7 +155,7 @@ jobs:
         default: medium
     description: "build << parameters.container-image >>"
     docker:
-      - image: cimg/base:stable
+      - image: cimg/base:current-20.04
     resource_class: << parameters.resource-class >>
     steps:
       - run:
@@ -175,7 +175,7 @@ jobs:
             - attach_workspace:
                 at: ./<< parameters.dir >>/workspace
       - setup_remote_docker:
-          version: 20.10.11
+          version: 20.10.18
       # The binfmt container image is not an official image, so we use a pinned version(qemu-v6.2.0).
       - run: docker run --rm --privileged tonistiigi/binfmt@sha256:5bf63a53ad6222538112b5ced0f1afb8509132773ea6dd3991a197464962854e --install linux/amd64,linux/arm64/v8
       - run:
