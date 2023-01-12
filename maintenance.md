@@ -155,7 +155,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
    1. If other instructions are needed for `ceph/build.sh`, add the instructions.
    2. If there are ceph runtime packages or required tool changes, update Dockerfile.
-3. Update the `version` argument on the `build-ceph` and `build-ceph-asan` job in the CircleCI `main` workflow.
+3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
