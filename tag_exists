@@ -7,17 +7,12 @@ fi
 
 API=https://quay.io/api/v1
 NAME="$1"
-if [ $# -ge 2 ]; then
+if [ $# -eq 2 ]; then
     DIR="$2"
-    if [ $# -ge 3 ]; then
-        SUFFIX="$3"
-    else
-        SUFFIX=""
-    fi
 else
     DIR="$NAME"
 fi
-TAG=$(cat "$DIR"/TAG)$SUFFIX
+TAG=$(cat "$DIR"/TAG)
 RESPONSE=$(curl -sSfL "$API/repository/cybozu/$NAME/tag/?specificTag=$TAG&onlyActiveTags=true")
 NUM=$(echo "$RESPONSE" | jq '.tags | length')
 
