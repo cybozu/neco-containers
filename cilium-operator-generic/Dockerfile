@@ -6,12 +6,14 @@ ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
 FROM ${GOLANG_IMAGE} as build
 
 COPY TAG /
+COPY fix-metallb-bug.patch /tmp/
 
 # LICENSE.all
 WORKDIR /go/src/github.com/cilium/cilium
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
       tar xzf - --strip-components 1 \
+    && patch -p1 --no-backup-if-mismatch < /tmp/fix-metallb-bug.patch \
     && make licenses-all \
     && apt-get update \
     && apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu \
