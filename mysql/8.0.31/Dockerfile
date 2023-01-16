@@ -1,9 +1,8 @@
 # moco-mysql container
 
-FROM --platform=$TARGETPLATFORM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:20.04
 
-ARG TARGETARCH
-COPY workspace/${TARGETARCH} /usr/local/mysql/
+COPY workspace /usr/local/mysql/
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends libjemalloc2 libnuma1 libaio1 \
