@@ -227,23 +227,23 @@ jobs:
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             TAG=$(cat $dir/TAG)
+            if [ -f $dir/BRANCH ]; then
+              if echo $TAG | grep -q -e - ; then
+                echo ===== Skip pushing branch tags for pre-release $TAG =====
+              else
+                BRANCH=$(cat $dir/BRANCH)
+                BRANCH_TAG_OPTION="-t quay.io/cybozu/$image:$BRANCH"
+              fi
+            fi
             docker context create buildx
             docker buildx create buildx --use
             docker buildx build \
               --push \
               --platform linux/amd64,linux/arm64/v8 \
               -t quay.io/cybozu/$image:$TAG \
+              ${BRANCH_TAG_OPTION} \
+              --progress plain \
               ${dir}
-
-            if echo $TAG | grep -q -e - ; then
-              echo ===== Skip pushing branch tags for pre-release $TAG =====
-              exit 0
-            fi
-            if [ -f $dir/BRANCH ]; then
-              BRANCH=$(cat $dir/BRANCH)
-              # docker buildx imagetools create --tag <new image> <source image>
-              docker buildx imagetools create --tag quay.io/cybozu/$image:$BRANCH quay.io/cybozu/$image:$TAG
-            fi
   build-ceph:
     parameters:
       version:
