@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.17-focal 
+FROM quay.io/cybozu/golang:1.17-focal as build
 
 ARG NERDCTL_VERSION=v0.20.0
 
@@ -9,4 +9,8 @@ RUN git clone https://github.com/containerd/nerdctl.git $SRC_DIR \
 
 RUN make && make install
  
+FROM quay.io/cybozu/ubuntu:20.04
+
+COPY --from=build /usr/local/bin/nerdctl /usr/local/bin/nerdctl
+
 ENTRYPOINT ["/usr/local/bin/nerdctl", "ipfs", "registry", "serve"]
