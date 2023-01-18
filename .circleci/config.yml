@@ -181,7 +181,9 @@ jobs:
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
             image=<< parameters.container-image >>
             tag=$(cat ${dir}/TAG)
-            c="$(container-tag-exists quay.io/cybozu/$image $tag)"
+            c=$(container-tag-exists quay.io/cybozu/$image $tag 2>&1)
+            # The stderr should be either "" or "found".
+            # If the stderr was an error message other than "found", this step must have stopped due to the shell option "-e".
             if [ "$c" = "" ]; then
                 echo quay.io/cybozu/$image >> BUILDS
             fi
