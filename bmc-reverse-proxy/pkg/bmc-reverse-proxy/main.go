@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -62,7 +63,7 @@ func directorToInner(request *http.Request, inner uint16, resolveMap map[string]
 		// Director cannot return an error. Set an invalid address to fail.
 		address = "0.0.0.0"
 	}
-	request.URL.Host = fmt.Sprintf("%s:%d", address, inner)
+	request.URL.Host = net.JoinHostPort(address, strconv.Itoa(int(inner)))
 	request.URL.Scheme = "https"
 }
 
