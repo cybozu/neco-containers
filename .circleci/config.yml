@@ -164,6 +164,9 @@ jobs:
               https://github.com/Hsn723/container-tag-exists/releases/download/v${CONTAINER_TAG_EXISTS_VERSION}/container-tag-exists_${CONTAINER_TAG_EXISTS_VERSION}_linux_amd64.tar.gz
             sudo tar -xzf container-tag-exists.tar.gz -C /usr/local/bin
             rm -f container-tag-exists.tar.gz
+            curl -LO https://storage.googleapis.com/container-structure-test/v1.14.0/container-structure-test-linux-amd64 \
+              && chmod +x container-structure-test-linux-amd64 \
+              && sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
       - checkout
       - when:
           condition: << parameters.attach >>
@@ -213,6 +216,17 @@ jobs:
               --platform linux/amd64,linux/arm64/v8 \
               -o type=tar,dest=$image.tar \
               ${dir}
+            if [ ! -e "$dir/container-structure-test.yaml" ]; then exit 0; fi
+            TAG=$(cat $dir/TAG)
+            docker buildx build \
+              --load \
+              -t quay.io/cybozu/$image:$TAG \
+              ${BRANCH_TAG_OPTION} \
+              --progress plain \
+              ${dir}
+            container-structure-test test \
+              --image quay.io/cybozu/$image:$TAG \
+              --config ${dir}/container-structure-test.yaml
       - run:
           name: Build and Push
           command: |
@@ -695,13 +709,13 @@ jobs:
       - run:
           name: Rename MySQL dirs
           command: |
-            sudo mkdir /usr/local/mysql/<< parameters.architecture >>
-            sudo mv /usr/local/mysql/LICENSE /usr/local/mysql/<< parameters.architecture >>/
-            sudo mv /usr/local/mysql/bin /usr/local/mysql/<< parameters.architecture >>/
-            sudo mv /usr/local/mysql/lib /usr/local/mysql/<< parameters.architecture >>/
-            sudo mv /usr/local/mysql/share /usr/local/mysql/<< parameters.architecture >>/
+            sudo mkdir -p src/workspace/<< parameters.architecture >>
+            sudo mv /usr/local/mysql/LICENSE src/workspace/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/bin src/workspace/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/lib src/workspace/<< parameters.architecture >>/
+            sudo mv /usr/local/mysql/share src/workspace/<< parameters.architecture >>/
       - persist_to_workspace:
-          root: /usr/local/mysql
+          root: src/workspace
           paths:
             - << parameters.architecture >>
   test-local-pv-provisioner:
@@ -966,15 +980,30 @@ workflows:
       - build-mysql:
           name: build-mysql-8027
           mysql-version: 8.0.27
-      - build-mysql:
-          name: build-mysql-8028
+      - build-mysql-multi-platform:
+          name: build-mysql-8028-amd64
           mysql-version: 8.0.28
-      - build-mysql:
-          name: build-mysql-8030
+      - build-mysql-multi-platform:
+          name: build-mysql-8028-arm64
+          mysql-version: 8.0.28
+          resource-class: arm.2xlarge
+          architecture: arm64
+      - build-mysql-multi-platform:
+          name: build-mysql-8030-amd64
           mysql-version: 8.0.30
-      - build-mysql:
-          name: build-mysql-8031
+      - build-mysql-multi-platform:
+          name: build-mysql-8030-arm64
+          mysql-version: 8.0.30
+          resource-class: arm.2xlarge
+          architecture: arm64
+      - build-mysql-multi-platform:
+          name: build-mysql-8031-amd64
           mysql-version: 8.0.31
+      - build-mysql-multi-platform:
+          name: build-mysql-8031-arm64
+          mysql-version: 8.0.31
+          resource-class: arm.2xlarge
+          architecture: arm64
       - build:
           name: build-mysql-container-8018
           container-image: mysql
@@ -1003,27 +1032,30 @@ workflows:
           dir: mysql/8.0.27
           requires:
             - build-mysql-8027
-      - build:
+      - buildx:
           name: build-mysql-container-8028
           container-image: mysql
           attach: true
           dir: mysql/8.0.28
           requires:
-            - build-mysql-8028
-      - build:
+            - build-mysql-8028-amd64
+            - build-mysql-8028-arm64
+      - buildx:
           name: build-mysql-container-8030
           container-image: mysql
           attach: true
           dir: mysql/8.0.30
           requires:
-            - build-mysql-8030
-      - build:
+            - build-mysql-8030-amd64
+            - build-mysql-8030-arm64
+      - buildx:
           name: build-mysql-container-8031
           container-image: mysql
           attach: true
           dir: mysql/8.0.31
           requires:
-            - build-mysql-8031
+            - build-mysql-8031-amd64
+            - build-mysql-8031-arm64
       - buildx:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
