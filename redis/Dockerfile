@@ -5,7 +5,7 @@
 FROM quay.io/cybozu/ubuntu-dev:20.04 as build
 
 ARG GOSU_VERSION=1.14
-ARG REDIS_VERSION=7.0.4
+ARG REDIS_VERSION=7.0.7
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \
