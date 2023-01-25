@@ -12,13 +12,13 @@ RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/ku
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.8.1
+ENV HELM_VERSION=3.10.3
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
 FROM quay.io/cybozu/golang:1.18-focal AS argocd-build
-ENV ARGOCD_VERSION=2.4.17
+ENV ARGOCD_VERSION=2.5.7
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
