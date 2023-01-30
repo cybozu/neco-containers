@@ -656,6 +656,15 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 3. Update `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+## pomerium
+
+![Regular Update](./regular_update.svg)
+
+1. Check the release page.
+   - https://github.com/pomerium/pomerium/releases
+2. Update version variables in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files.
+
 ## prometheus-adapter
 
 ![Regular Update](./regular_update.svg)
