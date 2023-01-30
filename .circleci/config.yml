@@ -50,6 +50,7 @@ jobs:
           steps:
             - attach_workspace:
                 at: /app/<< parameters.dir >>/workspace
+      - setup_remote_docker:
       - run:
           name: Check TAG files
           command: |
