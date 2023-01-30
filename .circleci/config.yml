@@ -223,7 +223,6 @@ jobs:
               --progress plain \
               --load \
               -t quay.io/cybozu/$image:$TAG \
-              ${BRANCH_TAG_OPTION} \
               ${dir}
             container-structure-test test \
               --image quay.io/cybozu/$image:$TAG \
