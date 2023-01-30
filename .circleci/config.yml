@@ -213,16 +213,17 @@ jobs:
             docker context create buildx
             docker buildx create buildx --use
             docker buildx build \
+              --progress plain \
               --platform linux/amd64,linux/arm64/v8 \
               -o type=tar,dest=$image.tar \
               ${dir}
             if [ ! -e "$dir/container-structure-test.yaml" ]; then exit 0; fi
             TAG=$(cat $dir/TAG)
             docker buildx build \
+              --progress plain \
               --load \
               -t quay.io/cybozu/$image:$TAG \
               ${BRANCH_TAG_OPTION} \
-              --progress plain \
               ${dir}
             container-structure-test test \
               --image quay.io/cybozu/$image:$TAG \
@@ -254,11 +255,11 @@ jobs:
             docker context create buildx
             docker buildx create buildx --use
             docker buildx build \
+              --progress plain \
               --push \
               --platform linux/amd64,linux/arm64/v8 \
               -t quay.io/cybozu/$image:$TAG \
               ${BRANCH_TAG_OPTION} \
-              --progress plain \
               ${dir}
   build-ceph:
     parameters:
