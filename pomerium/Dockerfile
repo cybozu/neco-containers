@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.18-jammy as build
+FROM quay.io/cybozu/golang:1.18-focal as build
 ARG POMERIUM_VERSION=0.20.0
 
 WORKDIR /work/pomerium
