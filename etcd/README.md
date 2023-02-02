@@ -13,7 +13,7 @@ To launch `etcd` by `docker run`:
     $ docker volume create etcd
     $ docker run -p 2379:2379 -p 2380:2380 --name etcd-1 \
       --mount type=volume,src=etcd,target=/var/lib/etcd \
-      quay.io/cybozu/etcd:3.4 \
+      quay.io/cybozu/etcd:3.5 \
         --advertise-client-urls http://0.0.0.0:2379 \
         --listen-client-urls http://0.0.0.0:2379
 
