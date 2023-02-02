@@ -198,6 +198,33 @@ jobs:
             if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
             ./tag_branch_consistency $dir
       - run:
+          name: Test container structure
+          command: |
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ ! -e "$dir/container-structure-test.yaml" ]; then exit 0; fi
+            echo "testing container structure: << parameters.container-image >> ..."
+            TAG=$(cat $dir/TAG)
+            for platform in linux/amd64 linux/arm64/v8; do
+              docker context create structure
+              docker buildx create structure --use
+              docker buildx build \
+                --progress plain \
+                --load \
+                --platform $platform \
+                -t quay.io/cybozu/$image:$TAG \
+                ${dir}
+              container-structure-test test \
+                --image quay.io/cybozu/$image:$TAG \
+                --config ${dir}/container-structure-test.yaml
+              docker buildx rm
+              docker context rm structure
+            done
+      - run:
           name: Build test
           command: |
             if [ "${CIRCLE_BRANCH}" = "main" ]; then
@@ -217,16 +244,6 @@ jobs:
               --platform linux/amd64,linux/arm64/v8 \
               -o type=tar,dest=$image.tar \
               ${dir}
-            if [ ! -e "$dir/container-structure-test.yaml" ]; then exit 0; fi
-            TAG=$(cat $dir/TAG)
-            docker buildx build \
-              --progress plain \
-              --load \
-              -t quay.io/cybozu/$image:$TAG \
-              ${dir}
-            container-structure-test test \
-              --image quay.io/cybozu/$image:$TAG \
-              --config ${dir}/container-structure-test.yaml
       - run:
           name: Build and Push
           command: |
