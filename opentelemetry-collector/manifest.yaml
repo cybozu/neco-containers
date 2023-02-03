@@ -21,7 +21,8 @@ exporters:
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
 
-extensions: {}
+extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_VERSION}
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v${OTELCOL_VERSION}
