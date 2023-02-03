@@ -9,8 +9,7 @@ dist:
   otelcol_version: ${OTELCOL_VERSION}
 
 receivers:
-  - import: go.opentelemetry.io/collector/receiver/otlpreceiver
-    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kafkareceiver v${OTELCOL_VERSION}
@@ -19,15 +18,11 @@ receivers:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v${OTELCOL_VERSION}
 
 exporters:
-  - import: go.opentelemetry.io/collector/exporter/otlpexporter
-    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
-  - import: go.opentelemetry.io/collector/exporter/otlphttpexporter
-    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
+  - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
 
 extensions: {}
 
 processors:
-  - import: go.opentelemetry.io/collector/processor/batchprocessor
-    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
-  - import: go.opentelemetry.io/collector/processor/memorylimiterprocessor
-    gomod: go.opentelemetry.io/collector v${OTELCOL_VERSION}
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v${OTELCOL_VERSION}
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v${OTELCOL_VERSION}
