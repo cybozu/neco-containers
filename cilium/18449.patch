@@ -40,7 +40,7 @@ index 850fd57092..07495656cf 100644
  #define	CB_ADDR_V6_4		CB_CT_STATE	/* Alias, non-overlapping */
  #define	CB_ENCRYPT_DST		CB_CT_STATE	/* Alias, non-overlapping,
 diff --git a/bpf/lib/nodeport.h b/bpf/lib/nodeport.h
-index de2c8983d5..376afc881c 100644
+index de2c8983d5..8cc7af9deb 100644
 --- a/bpf/lib/nodeport.h
 +++ b/bpf/lib/nodeport.h
 @@ -497,6 +497,9 @@ int tail_nodeport_ipv6_dsr(struct __ctx_buff *ctx)
@@ -75,7 +75,7 @@ index de2c8983d5..376afc881c 100644
  static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
  {
  	const __u32 bits = 32 - IPV4_RSS_PREFIX_BITS;
-@@ -1088,6 +1095,154 @@ static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
+@@ -1088,6 +1095,163 @@ static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
  		src |= bpf_htonl(hash_32(client ^ l4_hint, bits));
  	return src;
  }
@@ -101,7 +101,7 @@ index de2c8983d5..376afc881c 100644
 +	const int l4_off = ETH_HLEN + sizeof(struct iphdr);
 +	__be16 id, frag_off;
 +	__be32 sum, sum_old;
-+	__u8 ihlver;
++	__u8 ihlver, tos;
 +
 +	struct iphds {
 +#if defined(__LITTLE_ENDIAN_BITFIELD)
@@ -177,11 +177,17 @@ index de2c8983d5..376afc881c 100644
 +		return DROP_INVALID;
 +
 +	sum = csum_diff(&tp_old, 24, &tp_new, 24, 0);
-+	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, check), &sum_old, 2) < 0)
++	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, tos),
++			     &tos, sizeof(tos)) < 0)
 +		return DROP_CT_INVALID_HDR;
-+	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, id), &id, 2) < 0)
++	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, id),
++			     &id, sizeof(id)) < 0)
 +		return DROP_CT_INVALID_HDR;
-+	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, frag_off), &frag_off, 2) < 0)
++	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, frag_off),
++			     &frag_off, sizeof(frag_off)) < 0)
++		return DROP_CT_INVALID_HDR;
++	if (ctx_load_bytes(ctx, l3_off + offsetof(struct iphdr, check),
++			     &sum_old, sizeof(sum_old)) < 0)
 +		return DROP_CT_INVALID_HDR;
 +
 +	ihlver = *((__u8 *)&tp_new);
@@ -205,6 +211,9 @@ index de2c8983d5..376afc881c 100644
 +	if (ctx_store_bytes(ctx, l4_off,
 +			    &ihlver, 1, 0) < 0)
 +		return DROP_WRITE_ERROR;
++	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, tos),
++			    &tos, 1, 0) < 0)
++		return DROP_WRITE_ERROR;
 +	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, tot_len),
 +			    &tp_old.tot_len, 2, 0) < 0)
 +		return DROP_WRITE_ERROR;
@@ -217,11 +226,11 @@ index de2c8983d5..376afc881c 100644
 +	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, ttl),
 +			    &tp_old.ttl, 2, 0) < 0)
 +		return DROP_WRITE_ERROR;
-+	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, saddr),
-+			    &tp_old.saddr, 8, 0) < 0)
-+		return DROP_WRITE_ERROR;
 +	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, check),
 +			    &sum_old, 2, 0) < 0)
++		return DROP_WRITE_ERROR;
++	if (ctx_store_bytes(ctx, l4_off + offsetof(struct iphdr, saddr),
++			    &tp_old.saddr, 8, 0) < 0)
 +		return DROP_WRITE_ERROR;
 +	return 0;
 +}
@@ -230,7 +239,7 @@ index de2c8983d5..376afc881c 100644
  
  /*
   * Original packet: [clientIP:clientPort -> serviceIP:servicePort] } IP/L4
-@@ -1148,7 +1303,9 @@ static __always_inline int dsr_set_ipip4(struct __ctx_buff *ctx,
+@@ -1148,7 +1312,9 @@ static __always_inline int dsr_set_ipip4(struct __ctx_buff *ctx,
  		return DROP_CSUM_L3;
  	return 0;
  }
@@ -241,7 +250,7 @@ index de2c8983d5..376afc881c 100644
  static __always_inline int dsr_set_opt4(struct __ctx_buff *ctx,
  					struct iphdr *ip4, __be32 svc_addr,
  					__be32 svc_port, __be16 *ohead)
-@@ -1245,6 +1402,30 @@ static __always_inline int handle_dsr_v4(struct __ctx_buff *ctx, bool *dsr)
+@@ -1245,6 +1411,30 @@ static __always_inline int handle_dsr_v4(struct __ctx_buff *ctx, bool *dsr)
  	return 0;
  }
  
@@ -272,7 +281,7 @@ index de2c8983d5..376afc881c 100644
  static __always_inline int xlate_dsr_v4(struct __ctx_buff *ctx,
  					const struct ipv4_ct_tuple *tuple,
  					int l4_off, bool has_l4_header)
-@@ -1368,7 +1549,28 @@ int tail_nodeport_ipv4_dsr(struct __ctx_buff *ctx)
+@@ -1368,7 +1558,28 @@ int tail_nodeport_ipv4_dsr(struct __ctx_buff *ctx)
  		goto drop_err;
  	}
  
@@ -302,7 +311,7 @@ index de2c8983d5..376afc881c 100644
  	ret = dsr_set_ipip4(ctx, ip4,
  			    ctx_load_meta(ctx, CB_ADDR_V4),
  			    ctx_load_meta(ctx, CB_HINT), &ohead);
-@@ -1587,6 +1789,12 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+@@ -1587,6 +1798,12 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
  
  	cilium_capture_in(ctx);
  
@@ -315,7 +324,7 @@ index de2c8983d5..376afc881c 100644
  	if (!revalidate_data(ctx, &data, &data_end, &ip4))
  		return DROP_INVALID;
  
-@@ -1608,7 +1816,11 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+@@ -1608,7 +1825,11 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
  
  	svc = lb4_lookup_service(&key, false);
  	if (svc) {
@@ -328,7 +337,7 @@ index de2c8983d5..376afc881c 100644
  
  		if (!lb4_src_range_ok(svc, ip4->saddr))
  			return DROP_NOT_IN_SRC_RANGE;
-@@ -1721,7 +1933,13 @@ redo:
+@@ -1721,7 +1942,13 @@ redo:
  	if (!backend_local) {
  		edt_set_aggregate(ctx, 0);
  		if (nodeport_uses_dsr4(&tuple)) {
