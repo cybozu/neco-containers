@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG K8S_VERSION=1.24.9
+ARG K8S_VERSION=1.25.6
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
@@ -16,11 +16,10 @@ RUN mkdir -p /go/src/k8s.io/ && \
     tar zxf - -C /go/src/k8s.io/ && \
     mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
 
-COPY 89155.patch 97081.patch /tmp/
+COPY 89155.patch /tmp/
 
 WORKDIR /go/src/k8s.io/kubernetes
 RUN patch -p1 --no-backup-if-mismatch < /tmp/89155.patch && \
-    patch -p1 --no-backup-if-mismatch < /tmp/97081.patch && \
     make all WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
