@@ -1,7 +1,7 @@
 # Registry container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-jammy AS build
 
 ARG REGISTRY_VERSION=2.8.1
 
@@ -16,7 +16,7 @@ WORKDIR /go/src/github.com/docker/distribution/
 RUN GO111MODULE=off CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     jq && \
