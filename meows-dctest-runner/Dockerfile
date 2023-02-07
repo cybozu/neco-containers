@@ -1,11 +1,11 @@
-ARG MEOWS_VERSION=0.9.1
+ARG MEOWS_VERSION=0.10.0
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
 
 USER root
 
-ENV GO_VERSION=1.18.4
-ENV PLACEMAT_VERSION=2.3.0
+ENV GO_VERSION=1.19.5
+ENV PLACEMAT_VERSION=2.4.0
 
 ENV HOME=/home/actions
 ENV GOPATH=${HOME}/go
@@ -20,7 +20,6 @@ COPY include-bird /etc/dpkg/dpkg.cfg.d/
 
 RUN apt-get update \
     && apt-get install -y software-properties-common \
-    && add-apt-repository -y ppa:smoser/swtpm \
     && apt-get update \
     && apt-get -y install --no-install-recommends \
             git \
