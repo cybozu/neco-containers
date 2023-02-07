@@ -1,6 +1,6 @@
 # opentelemetry-collector
 
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.19-jammy AS build
 
 ARG OTELCOL_VERSION=0.70.0
 
@@ -11,7 +11,7 @@ RUN sed -e s/\${OTELCOL_VERSION}/${OTELCOL_VERSION}/g manifest.yaml.in > manifes
     builder --config manifest.yaml
 RUN curl -sSf -o LICENSE https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/v${OTELCOL_VERSION}/LICENSE
 
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /work/_build/otelcol /otelcol
 COPY --from=build /work/LICENSE /LICENSE
