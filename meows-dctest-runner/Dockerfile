@@ -19,8 +19,6 @@ ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-private/neco-apps
 COPY include-bird /etc/dpkg/dpkg.cfg.d/
 
 RUN apt-get update \
-    && apt-get install -y software-properties-common \
-    && apt-get update \
     && apt-get -y install --no-install-recommends \
             git \
             build-essential \
