@@ -17,7 +17,10 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.19-jammy AS argocd-build
+# We cannot use Ubuntu 22.04 (jammy) image because the combination of
+# jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
+# Distributions.
+FROM quay.io/cybozu/golang:1.19-focal AS argocd-build
 ENV ARGOCD_VERSION=2.5.10
 ENV PACKAGE=github.com/argoproj/argo-cd
 
