@@ -654,7 +654,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile
-3. Update `PAUSE_VERSION` in `Dockerfile`.
+3. Update `K8S_VERSION` and `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## pomerium
