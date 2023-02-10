@@ -30,6 +30,7 @@ In Kubernetes update:
 1. Update the following version variables in `Makefile`.
    - `CONTROLLER_TOOLS_VERSION`
    - `KUSTOMIZE_VERSION`
+   - `ENVTEST_K8S_VERSION`
 2. Update go modules.
 3. Generate code and manifests.
    ```bash

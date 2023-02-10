@@ -3,7 +3,7 @@ KUSTOMIZE_VERSION = 4.5.7
 CONTOUR_VERSION = 1.23.0
 ARGOCD_VERSION = 2.5.7
 GRAFANA_OPERATOR_VERSION = 4.6.0
-ENVTEST_K8S_VERSION = 1.24.2
+ENVTEST_K8S_VERSION = 1.25.0
 
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
