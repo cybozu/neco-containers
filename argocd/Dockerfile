@@ -1,7 +1,7 @@
 # Argo CD container
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/ubuntu:20.04 AS builder
+FROM quay.io/cybozu/ubuntu:22.04 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -17,8 +17,11 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM quay.io/cybozu/golang:1.18-focal AS argocd-build
-ENV ARGOCD_VERSION=2.5.7
+# We cannot use Ubuntu 22.04 (jammy) image because the combination of
+# jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
+# Distributions.
+FROM quay.io/cybozu/golang:1.19-focal AS argocd-build
+ENV ARGOCD_VERSION=2.5.10
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -49,7 +52,7 @@ RUN make argocd-all
 
 
 # Final image
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
