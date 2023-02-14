@@ -1018,6 +1018,14 @@ workflows:
           mysql-version: 8.0.31
           resource-class: arm.2xlarge
           architecture: arm64
+      - build-mysql-multi-platform:
+          name: build-mysql-8032-amd64
+          mysql-version: 8.0.32
+      - build-mysql-multi-platform:
+          name: build-mysql-8032-arm64
+          mysql-version: 8.0.32
+          resource-class: arm.2xlarge
+          architecture: arm64
       - build:
           name: build-mysql-container-8018
           container-image: mysql
@@ -1070,6 +1078,14 @@ workflows:
           requires:
             - build-mysql-8031-amd64
             - build-mysql-8031-arm64
+      - buildx:
+          name: build-mysql-container-8032
+          container-image: mysql
+          attach: true
+          dir: mysql/8.0.32
+          requires:
+            - build-mysql-8032-amd64
+            - build-mysql-8032-arm64
       - buildx:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
