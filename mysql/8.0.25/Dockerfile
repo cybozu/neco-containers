@@ -1,6 +1,6 @@
 # moco-mysql container
 
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY workspace /usr/local/mysql/
 
