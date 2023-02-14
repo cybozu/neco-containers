@@ -1,6 +1,6 @@
 # moco-mysql container
 
-FROM --platform=$TARGETPLATFORM quay.io/cybozu/ubuntu:22.04
+FROM --platform=$TARGETPLATFORM quay.io/cybozu/ubuntu:20.04
 
 ARG TARGETARCH
 COPY workspace/${TARGETARCH} /usr/local/mysql/
