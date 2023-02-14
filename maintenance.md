@@ -804,8 +804,10 @@ Only the base image and module dependency should be updated.
 2. Check the upstream `Makefile` and `docker/Dockerfile`. If they have been updated significantly, update our `Dockerfile`.
    - https://github.com/gravitational/teleport/blob/vX.Y.Z/Makefile
    - https://github.com/gravitational/teleport/blob/vX.Y.Z/docker/Dockerfile
-3. Update `TELEPORT_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+3. Update `NODE_VERSION` in `Dockerfile`. Pleas reference bellow.
+   - https://github.com/gravitational/teleport/blob/vX.Y.Z/build.assets/Makefile
+4. Update `TELEPORT_VERSION` in `Dockerfile`.
+5. Update `BRANCH` and `TAG` files.
 
 ## tempo
 
