@@ -2,17 +2,14 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.18-focal AS build
-ARG VERSION=4.6.0
-
-COPY prevent-frequent-updates.patch /tmp/
+ARG VERSION=4.9.0
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana-operator/grafana-operator/archive/v${VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana-operator
 
-RUN patch -p1 --no-backup-if-mismatch < /tmp/prevent-frequent-updates.patch \
-    && CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # https://github.com/grafana-operator/grafana-operator/blob/master/.gitmodules
 RUN git clone --depth 1 https://github.com/grafana/grafonnet-lib
