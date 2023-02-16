@@ -22,6 +22,7 @@ exporters:
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
 
 extensions:
+  - gomod: go.opentelemetry.io/collector/extension/ballastextension v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_VERSION}
 
 processors:
