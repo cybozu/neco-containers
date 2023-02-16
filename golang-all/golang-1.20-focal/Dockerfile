@@ -1,9 +1,9 @@
 # Go container
 
-FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:22.04
+FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:20.04
 
 ARG TARGETARCH
-ARG GO_VERSION=1.18.9
+ARG GO_VERSION=1.20.1
 
 ENV GOARCH=${TARGETARCH}
 ENV GOPATH=/go
