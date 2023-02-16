@@ -753,14 +753,14 @@ workflows:
           name: test-envoy
           directory: envoy
       - test:
-          name: test-golang-analyzer
-          directory: golang-all/golang/analyzer
+          name: test-golang-1.19-jammy-analyzer
+          directory: golang-all/golang-1.19-jammy/analyzer
       - test:
-          name: test-golang-1.18-analyzer
-          directory: golang-all/golang-1.18/analyzer
+          name: test-golang-1.18-jammy-analyzer
+          directory: golang-all/golang-1.18-jammy/analyzer
       - test:
-          name: test-golang-focal-analyzer
-          directory: golang-all/golang-focal/analyzer
+          name: test-golang-1.19-focal-analyzer
+          directory: golang-all/golang-1.19-focal/analyzer
       - test:
           name: test-golang-1.18-focal-analyzer
           directory: golang-all/golang-1.18-focal/analyzer
@@ -900,17 +900,17 @@ workflows:
           name: build-fluent-bit
           container-image: fluent-bit
       - buildx:
-          name: build-golang
+          name: build-golang-1.19-jammy
           container-image: golang
-          dir: golang-all/golang
+          dir: golang-all/golang-1.19-jammy
       - buildx:
-          name: build-golang-1.18
+          name: build-golang-1.18-jammy
           container-image: golang
-          dir: golang-all/golang-1.18
+          dir: golang-all/golang-1.18-jammy
       - buildx:
-          name: build-golang-focal
+          name: build-golang-1.19-focal
           container-image: golang
-          dir: golang-all/golang-focal
+          dir: golang-all/golang-1.19-focal
       - buildx:
           name: build-golang-1.18-focal
           container-image: golang
