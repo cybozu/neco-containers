@@ -1,13 +1,13 @@
 # Fluent Bit container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:20.04 AS builder
+FROM quay.io/cybozu/ubuntu-dev:22.04 AS builder
 
-ARG FLUENT_BIT_VERSION=1.9.7
+ARG FLUENT_BIT_VERSION=2.0.9
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# https://github.com/fluent/fluent-bit/blob/master/dockerfiles/Dockerfile.x86_64
+# https://github.com/fluent/fluent-bit/blob/master/dockerfiles/Dockerfile
 ARG FLB_TARBALL=https://github.com/fluent/fluent-bit/archive/v$FLUENT_BIT_VERSION.tar.gz
 ENV FLB_SOURCE $FLB_TARBALL
 RUN mkdir -p /fluent-bit/bin /fluent-bit/etc /fluent-bit/log /tmp/fluent-bit-master/
@@ -64,7 +64,7 @@ RUN cmake -DFLB_RELEASE=On \
     && cp LICENSE /fluent-bit/
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=builder /fluent-bit /fluent-bit
 
