@@ -3,6 +3,33 @@ ceph-extra-exporter
 
 `ceph-extra-exporter` exposes extra metrics using some Ceph commands.
 
+## How to work
+
+ceph-extra-exporter gets metrics using `ceph`, `rados-gw-admin`, and related commands and export metric values like as follows.
+
+- Run commands such as `ceph` written in the code. The output is in JSON format.
+- The above command outputs are inherent JSON for each of them. So convert it to specified structure JSON using jq filter.
+- Decode formatted JSON and export these values as the metrics.
+
+The commands to get values and arguments for jq are hard-coded. To add metrics, please modify the program by reading [`How to add metrics`](#how-to-add-metrics) section.
+
+## How to run
+
+To use `ceph` and `radosgw-admin` commands in the docker container of ceph-extra-exporter, configuration file (usually it is in `/etc/ceph/ceph.conf`) is required. For example, you can deploy a rook toolbox as a sidecar container of ceph-extra-exporter and share the `/etc/ceph` directory between them.
+
+Command-line options are:
+
+| Option | Default value | Description                   |
+| ------ | ------------- | ----------------------------- |
+| `port` | `8080`        | port number to export metrics |
+
+API endpoints are:
+
+| Path        | Description                 |
+| ----------- | --------------------------- |
+| /v1/health  | the path for liveness probe |
+| /v1/metrics | exporting metrics           |
+
 ## Prometheus metrics
 
 `ceph-extra-exporter` exposes the following metrics.
@@ -56,7 +83,7 @@ ceph-extra-exporter
 | ------ | ----------- |
 | bucket | bucket name |
 
-## How to add a metrics
+## How to add metrics
 
 Add a new rule to `main.go` like below.
 
