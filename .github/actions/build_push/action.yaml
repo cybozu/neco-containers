@@ -1,0 +1,60 @@
+name: "Build and push"
+description: "build and push container image"
+
+inputs:
+  dir:
+    description: "working direcotry"
+    required: false
+    default: ""
+  container-image:
+    description: "container image"
+    required: true
+  github_token:
+    description: "GitHub Token"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Extract targets
+      shell: bash
+      run: |
+        dir=${{ inputs.dir }}
+        if [ "$dir" = "" ]; then dir=${{ inputs.container-image }} ; fi
+        image=${{ inputs.container-image }}
+        TAG=$(cat ${dir}/TAG)
+        c=$(container-tag-exists ghcr.io/cybozu/$image $TAG)
+        # The stdout should be either "" or "found".
+        if [ "$c" = "" ]; then
+            echo "BUILDS_TAG=ghcr.io/cybozu/$image:$TAG" >> $GITHUB_ENV
+            
+            if [ -f $dir/BRANCH ]; then
+              if echo $TAG | grep -q -e - ; then
+                echo ===== Skip pushing branch tags for pre-release $TAG =====
+              else
+                BRANCH=$(cat $dir/BRANCH)
+                echo "BUILDS_BRANCH=ghcr.io/cybozu/$image:$BRANCH" >> $GITHUB_ENV
+              fi
+            fi
+        fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+    - name: Validate consistency between BRANCH and TAG
+      shell: bash
+      run: |
+        dir=${{ inputs.dir }}
+        if [ "$dir" = "" ]; then dir=${{ inputs.container-image }} ; fi
+        if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+        ./tag_branch_consistency $dir
+    - name: Build and push
+      if: env.BUILDS_TAG != null
+      uses: docker/build-push-action@v4
+      with:
+        context: ${{ inputs.dir }}
+        platforms: linux/amd64,linux/arm64
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: |
+          ${{ env.BUILDS_TAG }}
+          ${{ env.BUILDS_BRANCH }}
