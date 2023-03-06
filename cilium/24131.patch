@@ -1,0 +1,22 @@
+diff --git a/bpf/lib/lb.h b/bpf/lib/lb.h
+index 20024774c3..4867d89008 100644
+--- a/bpf/lib/lb.h
++++ b/bpf/lib/lb.h
+@@ -891,7 +891,7 @@ static __always_inline int lb6_local(const void *map, struct __ctx_buff *ctx,
+ 		/* Drain existing connections, but redirect new ones to only
+ 		 * active backends.
+ 		 */
+-		if (backend && !state->syn)
++		if (backend && tuple->nexthdr == IPPROTO_TCP && !state->syn)
+ 			goto update_state;
+ 		key->backend_slot = 0;
+ 		svc = lb6_lookup_service(key, false);
+@@ -1550,7 +1550,7 @@ static __always_inline int lb4_local(const void *map, struct __ctx_buff *ctx,
+ 		/* Drain existing connections, but redirect new ones to only
+ 		 * active backends.
+ 		 */
+-		if (backend && !state->syn)
++		if (backend && tuple->nexthdr == IPPROTO_TCP && !state->syn)
+ 			goto update_state;
+ 		key->backend_slot = 0;
+ 		svc = lb4_lookup_service(key, false);
