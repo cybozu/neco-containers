@@ -21,7 +21,6 @@ RUN touch /config.yaml
 
 FROM quay.io/cybozu/ubuntu:22.04
 WORKDIR /pomerium
-COPY --from=build /work/pomerium/ui/dist ./ui/dist
 COPY --from=build /work/pomerium/bin/* /bin/
 COPY --from=build /config.yaml ./config.yaml
 COPY --from=build /work/pomerium/LICENSE ./LICENSE
