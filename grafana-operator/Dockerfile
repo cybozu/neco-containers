@@ -1,22 +1,23 @@
 # Grafana Operator container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 ARG VERSION=4.9.0
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSLf https://github.com/grafana-operator/grafana-operator/archive/v${VERSION}.tar.gz | \
-    tar zxf - --strip-components 1 -C /work/grafana-operator
 
-RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
-
+# The grafana-operator uses the git submodule.
+# The source archive on the GitHub Releases does not contain the commit ID of submodules.
+# To get submodules of the specific revision, we clone the grafana-operator instead of downloading the tar archive.
 # https://github.com/grafana-operator/grafana-operator/blob/master/.gitmodules
-RUN git clone --depth 1 https://github.com/grafana/grafonnet-lib
+RUN git clone --depth 1 --single-branch -b v${VERSION} https://github.com/grafana-operator/grafana-operator.git .
+RUN git submodule update --init --recursive --recommend-shallow --depth 1
+RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana-operator/grafana-operator/blob/master/build/Dockerfile
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 USER 10000:10000
 
 COPY --from=build /work/grafana-operator/grafonnet-lib/grafonnet/ /opt/jsonnet/grafonnet
