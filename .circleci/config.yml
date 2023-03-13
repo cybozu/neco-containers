@@ -770,6 +770,7 @@ workflows:
       - test:
           name: test-heartbeat
           directory: heartbeat
+          go-image-tag: 1.20-jammy
       - test-local-pv-provisioner
       - test:
           name: test-machines-endpoints
