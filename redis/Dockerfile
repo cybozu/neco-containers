@@ -1,11 +1,11 @@
 # Redis container
-# Refer to this Dockerfile: https://github.com/docker-library/redis/blob/master/6.0/Dockerfile
+# Refer to this Dockerfile: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:20.04 as build
+FROM quay.io/cybozu/ubuntu-dev:22.04 as build
 
-ARG GOSU_VERSION=1.14
-ARG REDIS_VERSION=7.0.7
+ARG GOSU_VERSION=1.16
+ARG REDIS_VERSION=7.0.9
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \
@@ -35,7 +35,7 @@ RUN wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
     && BUILD_TLS=yes make -C /usr/src/redis PREFIX=/usr/local/redis install
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 RUN groupadd -g 10000 -r redis && \
     useradd -r -u 10000 -g redis redis && \

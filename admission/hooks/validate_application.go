@@ -47,13 +47,12 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, err)
 	}
-	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
+
+	repoURLs, err := v.extractRepoURLs(app)
 	if err != nil {
-		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.resource.repoURL; %w", err))
+		return admission.Errored(http.StatusBadRequest, err)
 	}
-	if !found {
-		return admission.Errored(http.StatusBadRequest, errors.New("spec.source.repoURL not found"))
-	}
+
 	project, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "project")
 	if err != nil {
 		return admission.Errored(http.StatusBadRequest, fmt.Errorf("unable to get spec.project; %w", err))
@@ -62,17 +61,63 @@ func (v *argocdApplicationValidator) Handle(ctx context.Context, req admission.R
 		return admission.Errored(http.StatusBadRequest, errors.New("spec.project not found"))
 	}
 
-	for _, p := range v.findProjects(repoURL) {
-		if p == project {
-			return admission.Allowed("ok")
+	var warnings []string
+OUTER:
+	for _, repoURL := range repoURLs {
+		for _, p := range v.findProjects(repoURL) {
+			if p == project {
+				continue OUTER
+			}
+		}
+		reason := fmt.Sprintf("project %q is not allowed for the repository %q", project, repoURL)
+		if !v.repositoryPermissive {
+			return admission.Denied(reason)
+		}
+		warnings = append(warnings, reason)
+	}
+	if len(warnings) != 0 {
+		return admission.Allowed("warning").WithWarnings(warnings...)
+	}
+	return admission.Allowed("ok")
+}
+
+func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructured) ([]string, error) {
+	var repoURLs []string
+
+	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
+	if err != nil {
+		return nil, fmt.Errorf("unable to get spec.source.repoURL; %w", err)
+	}
+	if found {
+		repoURLs = append(repoURLs, repoURL)
+	}
+
+	sources, found, err := unstructured.NestedSlice(app.UnstructuredContent(), "spec", "sources")
+	if err != nil {
+		return nil, fmt.Errorf("unable to get spec.sources; %w", err)
+	}
+	if found {
+		for i, source := range sources {
+			sourceMap, ok := source.(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("spec.sources[%d] should be mapping", i)
+			}
+			repoURL, found, err := unstructured.NestedString(sourceMap, "repoURL")
+			if err != nil {
+				return nil, fmt.Errorf("unable to get spec.sources[%d].repoURL; %w", i, err)
+			}
+			if !found {
+				return nil, fmt.Errorf("spec.sources[%d].repoURL not found", i)
+			}
+			repoURLs = append(repoURLs, repoURL)
 		}
 	}
 
-	reason := fmt.Sprintf("project %q is not allowed for the repository %q", project, repoURL)
-	if v.repositoryPermissive {
-		return admission.Allowed("warning").WithWarnings(reason)
+	if len(repoURLs) == 0 {
+		return nil, errors.New("spec.source.repoURL nor spec.sources not found")
 	}
-	return admission.Denied(reason)
+
+	return repoURLs, nil
 }
 
 func (v *argocdApplicationValidator) findProjects(repo string) []string {
