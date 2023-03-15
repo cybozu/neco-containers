@@ -1,16 +1,17 @@
 # memcached container
 
-# Stage1: build from sourceFROM quay.io/cybozu/ubuntu-dev:20.04 AS build
-FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
+# Stage1: build from source
+FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG MEMCACHED_VERSION=1.6.16
+ARG MEMCACHED_VERSION=1.6.19
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         automake \
-        libevent-dev
+        libevent-dev \
+        pkg-config
 
 RUN git clone --depth=1 -b ${MEMCACHED_VERSION} https://github.com/memcached/memcached /work/memcached
 
@@ -21,7 +22,7 @@ RUN ./autogen.sh \
     && make install
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
