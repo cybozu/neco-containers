@@ -739,6 +739,13 @@ jobs:
       - checkout
       - run: cd local-pv-provisioner; make check-generate
       - run: cd local-pv-provisioner; make test
+  test-necosen:
+    machine:
+      image: ubuntu-2204:current
+    steps:
+      - checkout
+      - run: make -C necosen check-generate
+      - run: make -C necosen test
 
 workflows:
   main:
@@ -774,6 +781,7 @@ workflows:
       - test:
           name: test-moco-init
           directory: mysql/moco-init
+      - test-necosen
       - test:
           name: test-s3gw
           directory: s3gw
@@ -1089,6 +1097,9 @@ workflows:
       - buildx:
           name: build-mysqld_exporter
           container-image: mysqld_exporter
+      - build:
+          name: build-necosen
+          container-image: necosen
       - build:
           name: build-nerdctl
           container-image: nerdctl
