@@ -1,8 +1,8 @@
 # opentelemetry-collector
 
-FROM quay.io/cybozu/golang:1.19-jammy AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG OTELCOL_VERSION=0.71.0
+ARG OTELCOL_VERSION=0.73.0
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in
