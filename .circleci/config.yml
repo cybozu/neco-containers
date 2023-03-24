@@ -781,6 +781,7 @@ workflows:
       - test:
           name: test-s3gw
           directory: s3gw
+          go-image-tag: 1.20-jammy
       - test:
           name: test-testhttpd
           directory: testhttpd/src
