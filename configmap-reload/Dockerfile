@@ -1,9 +1,9 @@
 # configmap-reload container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG CONFIGMAP_RELOAD_VERSION=0.7.1
+ARG CONFIGMAP_RELOAD_VERSION=0.8.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root

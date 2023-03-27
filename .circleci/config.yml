@@ -6,10 +6,13 @@ jobs:
     parameters:
       directory:
         type: string
+      go-image-tag:
+        type: string
+        default: "1.19-jammy"
     description: "test at << parameters.directory >>"
     docker:
-      - image: quay.io/cybozu/golang:1.19-jammy
-      - image: quay.io/cybozu/etcd:3.4.16.1
+      - image: quay.io/cybozu/golang:<<parameters.go-image-tag>>
+      - image: quay.io/cybozu/etcd:3.5.7.1
     working_directory: /work
     steps:
       - checkout
@@ -767,6 +770,7 @@ workflows:
       - test:
           name: test-heartbeat
           directory: heartbeat
+          go-image-tag: 1.20-jammy
       - test-local-pv-provisioner
       - test:
           name: test-machines-endpoints
@@ -777,6 +781,7 @@ workflows:
       - test:
           name: test-s3gw
           directory: s3gw
+          go-image-tag: 1.20-jammy
       - test:
           name: test-testhttpd
           directory: testhttpd/src
