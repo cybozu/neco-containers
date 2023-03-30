@@ -37,7 +37,7 @@ start:
 
 .PHONY: test
 test:
-	go test -v -race . -ginkgo.progress -ginkgo.v -ginkgo.fail-fast
+	go test -v -race . -ginkgo.v -ginkgo.fail-fast
 
 .PHONY: stop
 stop:

@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/necosen
 
-go 1.19
+go 1.20
 
 replace github.com/envoyproxy/protoc-gen-validate => github.com/bufbuild/protoc-gen-validate v0.9.1
 

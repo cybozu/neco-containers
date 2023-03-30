@@ -1,5 +1,5 @@
 # Stage1
-FROM quay.io/cybozu/golang:1.19-jammy AS builder
+FROM quay.io/cybozu/golang:1.20-jammy AS builder
 
 # Copy the Go Modules manifests
 COPY go.mod go.mod
