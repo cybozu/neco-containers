@@ -626,6 +626,14 @@ In the regular update, only update the ubuntu base image and module dependency.
 This image is referenced in `cybozu-go/moco`. So update the following as well.
 - https://github.com/cybozu-go/moco/blob/main/version.go
 
+## necosen
+
+![Regular Update](./regular_update.svg)
+1. Run `make login-gh` to login to GitHub.
+2. Run `make update` to update dependent software versions.
+3. Upgrade direct dependencies listed in `go.mod`.
+4. Update `TAG` file.
+
 ## nerdctl
 
 ![No Need Update](./no_need_update.svg)

@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: backend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: backend
+    spec:
+      containers:
+      - name: backend
+        image: quay.io/cybozu/testhttpd:0
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+spec:
+  selector:
+    app.kubernetes.io/name: backend
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: 8000
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: frontend
+spec:
+  dnsNames:
+  - frontend.example.com
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-ca
+  secretName: frontend
+---
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: frontend
+spec:
+  virtualhost:
+    fqdn: frontend.example.com
+    tls:
+      secretName: frontend
+    authorization:
+      extensionRef:
+        name: necosen
+        namespace: contour
+  routes:
+  - services:
+    - name: backend
+      port: 80
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: frontend-free
+spec:
+  dnsNames:
+  - frontend-free.example.com
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-ca
+  secretName: frontend-free
+---
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: frontend-free
+spec:
+  virtualhost:
+    fqdn: frontend-free.example.com
+    tls:
+      secretName: frontend-free
+    authorization:
+      extensionRef:
+        name: necosen-free
+        namespace: contour
+  routes:
+  - services:
+    - name: backend
+      port: 80
