@@ -189,9 +189,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
 2. Check whether manually applied patches have been included in the new release and remove them accordingly.
-   1. If patches are still needed, synchronize the forked repository (https://github.com/cybozu-go/cert-manager)
-   2. Create and checkout a new branch from the tag named vX.Y.Z
-   3. Rebase the commit included patches and create a new tag named vX.Y.Z-neco-(patch-name)
+   1. If patches are still needed, synchronize the forked repository (https://github.com/cybozu-go/cert-manager).
+   2. Create and checkout a new branch named `vX.Y.Z-neco` from the tag named `vX.Y.Z`.
+   3. Cherry-pick the commit included patches and create a new tag named `vX.Y.Z-neco-longtimeout.1`.
+   4. Push it.
 3. Update the `version` argument on the `build-cert-manager` job in the CircleCI `main` workflow.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
