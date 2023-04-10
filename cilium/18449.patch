@@ -1,8 +1,8 @@
 diff --git a/bpf/Makefile b/bpf/Makefile
-index b09f712c0e..28212a19f8 100644
+index 3f6929bd78..390223383f 100644
 --- a/bpf/Makefile
 +++ b/bpf/Makefile
-@@ -213,8 +213,10 @@ XDP_OPTIONS = $(LB_OPTIONS) \
+@@ -215,8 +215,10 @@ XDP_OPTIONS = $(LB_OPTIONS) \
  	-DENABLE_NODEPORT_ACCELERATION:-DENABLE_IPV4:-DENABLE_IPV6:-DENABLE_SOCKET_LB_UDP:-DENABLE_SOCKET_LB_TCP:-DENABLE_NODEPORT:-DENABLE_DSR:-DENABLE_DSR_HYBRID: \
  	-DENABLE_NODEPORT_ACCELERATION:-DENABLE_IPV4:-DENABLE_IPV6:-DENABLE_NODEPORT:-DENABLE_DSR:-DDSR_ENCAP_MODE:-DDSR_ENCAP_NONE:-DDSR_ENCAP_IPIP=2 \
  	-DENABLE_NODEPORT_ACCELERATION:-DENABLE_IPV4:-DENABLE_IPV6:-DENABLE_NODEPORT:-DENABLE_DSR:-DDSR_ENCAP_MODE:-DDSR_ENCAP_IPIP:-DDSR_ENCAP_NONE=2 \
@@ -24,10 +24,10 @@ index 454e5cad46..2b4b7b3d82 100644
  -DSKIP_DEBUG=1 -DENABLE_IPV6=1 -DENABLE_SOCKET_LB_TCP=1 -DENABLE_SOCKET_LB_UDP=1 -DENABLE_ROUTING=1 -DNO_REDIRECT=1 -DPOLICY_VERDICT_NOTIFY=1 -DALLOW_ICMP_FRAG_NEEDED=1 -DENABLE_IDENTITY_MARK=1 -DMONITOR_AGGREGATION=3 -DCT_REPORT_FLAGS=0x0002 -DENABLE_HOST_FIREWALL=1 -DENABLE_ICMP_RULE=1 -DENABLE_CUSTOM_CALLS=1 -DENABLE_SRV6=1 -DHAVE_LPM_TRIE_MAP_TYPE=1 -DHAVE_LRU_HASH_MAP_TYPE=1 -DENABLE_MASQUERADE=1 -DENABLE_SRC_RANGE_CHECK=1 -DENABLE_NODEPORT=1 -DENABLE_NODEPORT_ACCELERATION=1 -DENABLE_SESSION_AFFINITY=1 -DENABLE_DSR_ICMP_ERRORS=1 -DENABLE_DSR=1 -DENABLE_DSR_HYBRID=1 -DENABLE_IPV4_FRAGMENTS=1 -DENABLE_BANDWIDTH_MANAGER=1 -DENCAP_IFINDEX=1 -DTUNNEL_MODE=1 -DENABLE_EGRESS_GATEWAY=1 -DENABLE_VTEP=1
 +-DSKIP_DEBUG=1 -DENABLE_IPV6=1 -DENABLE_HOST_SERVICES_TCP=1 -DENABLE_HOST_SERVICES_UDP=1 -DENABLE_HOST_REDIRECT=1 -DENABLE_ROUTING=1 -DNO_REDIRECT=1 -DPOLICY_VERDICT_NOTIFY=1 -DALLOW_ICMP_FRAG_NEEDED=1 -DENABLE_IDENTITY_MARK=1 -DMONITOR_AGGREGATION=3 -DCT_REPORT_FLAGS=0x0002 -DENABLE_HOST_FIREWALL=1 -DENABLE_ICMP_RULE=1 -DENABLE_CUSTOM_CALLS=1 -DHAVE_LPM_TRIE_MAP_TYPE=1 -DHAVE_LRU_HASH_MAP_TYPE=1 -DENABLE_MASQUERADE=1 -DENABLE_SRC_RANGE_CHECK=1 -DENABLE_NODEPORT=1 -DENABLE_NODEPORT_ACCELERATION=1 -DENABLE_SESSION_AFFINITY=1 -DENABLE_DSR_ICMP_ERRORS=1 -DENABLE_DSR=1 -DENABLE_IPV4_FRAGMENTS=1 -DENABLE_BANDWIDTH_MANAGER=1 -DENCAP_IFINDEX=1 -DTUNNEL_MODE=1 -DENABLE_EGRESS_GATEWAY=1 -DENABLE_VTEP=1 -DDSR_ENCAP_IPIP_CNI=1
 diff --git a/bpf/lib/common.h b/bpf/lib/common.h
-index 850fd57092..07495656cf 100644
+index ae39f64a9f..e45dc55cc5 100644
 --- a/bpf/lib/common.h
 +++ b/bpf/lib/common.h
-@@ -605,9 +605,11 @@ enum {
+@@ -633,9 +633,11 @@ enum {
  	CB_POLICY,
  #define	CB_ADDR_V6_2		CB_POLICY	/* Alias, non-overlapping */
  #define	CB_BACKEND_ID		CB_POLICY	/* Alias, non-overlapping */
@@ -38,12 +38,12 @@ index 850fd57092..07495656cf 100644
 +#define CB_ADDR_V4_2		CB_NAT		/* Alias, non-overlapping */
  	CB_CT_STATE,
  #define	CB_ADDR_V6_4		CB_CT_STATE	/* Alias, non-overlapping */
- #define	CB_ENCRYPT_DST		CB_CT_STATE	/* Alias, non-overlapping,
+ #define	CB_ENCRYPT_IDENTITY	CB_CT_STATE	/* Alias, non-overlapping,
 diff --git a/bpf/lib/nodeport.h b/bpf/lib/nodeport.h
-index de2c8983d5..8cc7af9deb 100644
+index 412956047c..95fff016f0 100644
 --- a/bpf/lib/nodeport.h
 +++ b/bpf/lib/nodeport.h
-@@ -497,6 +497,9 @@ int tail_nodeport_ipv6_dsr(struct __ctx_buff *ctx)
+@@ -514,6 +514,9 @@ int tail_nodeport_ipv6_dsr(struct __ctx_buff *ctx)
  #elif DSR_ENCAP_MODE == DSR_ENCAP_NONE
  	port = (__u16)ctx_load_meta(ctx, CB_PORT);
  	ret = dsr_set_ext6(ctx, ip6, &addr, port, &ohead);
@@ -53,9 +53,9 @@ index de2c8983d5..8cc7af9deb 100644
  #else
  # error "Invalid load balancer DSR encapsulation mode!"
  #endif
-@@ -730,7 +733,11 @@ static __always_inline int nodeport_lb6(struct __ctx_buff *ctx,
+@@ -746,7 +749,11 @@ static __always_inline int nodeport_lb6(struct __ctx_buff *ctx,
  
- 	svc = lb6_lookup_service(&key, false);
+ 	svc = lb6_lookup_service(&key, false, false);
  	if (svc) {
 -		const bool skip_l3_xlate = DSR_ENCAP_MODE == DSR_ENCAP_IPIP;
 +#if DSR_ENCAP_MODE == DSR_ENCAP_IPIP
@@ -66,7 +66,7 @@ index de2c8983d5..8cc7af9deb 100644
  
  		if (!lb6_src_range_ok(svc, (union v6addr *)&ip6->saddr))
  			return DROP_NOT_IN_SRC_RANGE;
-@@ -1078,7 +1085,7 @@ static __always_inline int nodeport_nat_ipv4_fwd(struct __ctx_buff *ctx)
+@@ -1117,7 +1124,7 @@ static __always_inline int nodeport_nat_ipv4_fwd(struct __ctx_buff *ctx)
  }
  
  #ifdef ENABLE_DSR
@@ -75,7 +75,7 @@ index de2c8983d5..8cc7af9deb 100644
  static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
  {
  	const __u32 bits = 32 - IPV4_RSS_PREFIX_BITS;
-@@ -1088,6 +1095,163 @@ static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
+@@ -1127,6 +1134,163 @@ static __always_inline __be32 rss_gen_src4(__be32 client, __be32 l4_hint)
  		src |= bpf_htonl(hash_32(client ^ l4_hint, bits));
  	return src;
  }
@@ -239,7 +239,7 @@ index de2c8983d5..8cc7af9deb 100644
  
  /*
   * Original packet: [clientIP:clientPort -> serviceIP:servicePort] } IP/L4
-@@ -1148,7 +1312,9 @@ static __always_inline int dsr_set_ipip4(struct __ctx_buff *ctx,
+@@ -1187,7 +1351,9 @@ static __always_inline int dsr_set_ipip4(struct __ctx_buff *ctx,
  		return DROP_CSUM_L3;
  	return 0;
  }
@@ -250,7 +250,7 @@ index de2c8983d5..8cc7af9deb 100644
  static __always_inline int dsr_set_opt4(struct __ctx_buff *ctx,
  					struct iphdr *ip4, __be32 svc_addr,
  					__be32 svc_port, __be16 *ohead)
-@@ -1245,6 +1411,30 @@ static __always_inline int handle_dsr_v4(struct __ctx_buff *ctx, bool *dsr)
+@@ -1283,6 +1449,30 @@ static __always_inline int handle_dsr_v4(struct __ctx_buff *ctx, bool *dsr)
  	return 0;
  }
  
@@ -281,7 +281,7 @@ index de2c8983d5..8cc7af9deb 100644
  static __always_inline int xlate_dsr_v4(struct __ctx_buff *ctx,
  					const struct ipv4_ct_tuple *tuple,
  					int l4_off, bool has_l4_header)
-@@ -1368,7 +1558,28 @@ int tail_nodeport_ipv4_dsr(struct __ctx_buff *ctx)
+@@ -1406,7 +1596,28 @@ int tail_nodeport_ipv4_dsr(struct __ctx_buff *ctx)
  		goto drop_err;
  	}
  
@@ -311,7 +311,7 @@ index de2c8983d5..8cc7af9deb 100644
  	ret = dsr_set_ipip4(ctx, ip4,
  			    ctx_load_meta(ctx, CB_ADDR_V4),
  			    ctx_load_meta(ctx, CB_HINT), &ohead);
-@@ -1587,6 +1798,12 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+@@ -1624,6 +1835,12 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
  
  	cilium_capture_in(ctx);
  
@@ -324,9 +324,9 @@ index de2c8983d5..8cc7af9deb 100644
  	if (!revalidate_data(ctx, &data, &data_end, &ip4))
  		return DROP_INVALID;
  
-@@ -1608,7 +1825,11 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
+@@ -1645,7 +1862,11 @@ static __always_inline int nodeport_lb4(struct __ctx_buff *ctx,
  
- 	svc = lb4_lookup_service(&key, false);
+ 	svc = lb4_lookup_service(&key, false, false);
  	if (svc) {
 -		const bool skip_l3_xlate = DSR_ENCAP_MODE == DSR_ENCAP_IPIP;
 +#if DSR_ENCAP_MODE == DSR_ENCAP_IPIP
@@ -337,7 +337,7 @@ index de2c8983d5..8cc7af9deb 100644
  
  		if (!lb4_src_range_ok(svc, ip4->saddr))
  			return DROP_NOT_IN_SRC_RANGE;
-@@ -1721,7 +1942,13 @@ redo:
+@@ -1770,7 +1991,13 @@ redo:
  	if (!backend_local) {
  		edt_set_aggregate(ctx, 0);
  		if (nodeport_uses_dsr4(&tuple)) {
@@ -365,7 +365,7 @@ index 205bc0461c..a43eb8a894 100644
  # if defined(ENABLE_IPV4) && defined(ENABLE_MASQUERADE) && !defined(IPV4_MASQUERADE)
  #  define IPV4_MASQUERADE 0
 diff --git a/daemon/cmd/daemon_main.go b/daemon/cmd/daemon_main.go
-index 8948ece323..1d28425c69 100644
+index c39ca94383..ed775bc870 100644
 --- a/daemon/cmd/daemon_main.go
 +++ b/daemon/cmd/daemon_main.go
 @@ -636,7 +636,7 @@ func initializeFlags() {
@@ -392,10 +392,10 @@ index 9f0fbc0ef8..f2d427e425 100644
  				option.Config.LoadBalancerDSRDispatch != option.DSRDispatchOption {
  			return false, fmt.Errorf("Invalid value for --%s: %s", option.LoadBalancerDSRDispatch, option.Config.LoadBalancerDSRDispatch)
 diff --git a/install/kubernetes/cilium/templates/cilium-configmap.yaml b/install/kubernetes/cilium/templates/cilium-configmap.yaml
-index f9b49dc580..dccef7dd10 100644
+index 78b406e9d1..ea40fa3863 100644
 --- a/install/kubernetes/cilium/templates/cilium-configmap.yaml
 +++ b/install/kubernetes/cilium/templates/cilium-configmap.yaml
-@@ -621,6 +621,9 @@ data:
+@@ -625,6 +625,9 @@ data:
  {{- if hasKey .Values.loadBalancer "acceleration" }}
    bpf-lb-acceleration: {{ .Values.loadBalancer.acceleration | quote }}
  {{- end }}
@@ -406,10 +406,10 @@ index f9b49dc580..dccef7dd10 100644
    bpf-lb-dsr-dispatch: {{ .Values.loadBalancer.dsrDispatch | quote }}
  {{- end }}
 diff --git a/install/kubernetes/cilium/values.yaml b/install/kubernetes/cilium/values.yaml
-index 05fc766ccd..e3d680259c 100644
+index 32d305094c..6d3006fb1a 100644
 --- a/install/kubernetes/cilium/values.yaml
 +++ b/install/kubernetes/cilium/values.yaml
-@@ -1304,6 +1304,10 @@ monitor:
+@@ -1367,6 +1367,10 @@ monitor:
    # used to pass a service IP and port to remote backend
    # dsrDispatch: opt
  
@@ -421,10 +421,10 @@ index 05fc766ccd..e3d680259c 100644
    # endpoints filtering
    # serviceTopology: false
 diff --git a/pkg/datapath/linux/config/config.go b/pkg/datapath/linux/config/config.go
-index ea542dd527..e377258228 100644
+index 71ee9d3f53..d89f07396d 100644
 --- a/pkg/datapath/linux/config/config.go
 +++ b/pkg/datapath/linux/config/config.go
-@@ -317,6 +317,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
+@@ -319,6 +319,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
  			dsrEncapInv = iota
  			dsrEncapNone
  			dsrEncapIPIP
@@ -432,7 +432,7 @@ index ea542dd527..e377258228 100644
  		)
  		const (
  			dsrL4XlateInv = iota
-@@ -324,6 +325,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
+@@ -326,6 +327,7 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
  			dsrL4XlateBackend
  		)
  		cDefinesMap["DSR_ENCAP_IPIP"] = fmt.Sprintf("%d", dsrEncapIPIP)
@@ -440,7 +440,7 @@ index ea542dd527..e377258228 100644
  		cDefinesMap["DSR_ENCAP_NONE"] = fmt.Sprintf("%d", dsrEncapNone)
  		cDefinesMap["DSR_XLATE_FRONTEND"] = fmt.Sprintf("%d", dsrL4XlateFrontend)
  		cDefinesMap["DSR_XLATE_BACKEND"] = fmt.Sprintf("%d", dsrL4XlateBackend)
-@@ -340,8 +342,11 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
+@@ -342,8 +344,11 @@ func (h *HeaderfileWriter) WriteNodeConfig(w io.Writer, cfg *datapath.LocalNodeC
  				cDefinesMap["DSR_ENCAP_MODE"] = fmt.Sprintf("%d", dsrEncapNone)
  			} else if option.Config.LoadBalancerDSRDispatch == option.DSRDispatchIPIP {
  				cDefinesMap["DSR_ENCAP_MODE"] = fmt.Sprintf("%d", dsrEncapIPIP)
@@ -454,10 +454,10 @@ index ea542dd527..e377258228 100644
  					cDefinesMap["DSR_XLATE_MODE"] = fmt.Sprintf("%d", dsrL4XlateFrontend)
  				} else if option.Config.LoadBalancerDSRL4Xlate == option.DSRL4XlateBackend {
 diff --git a/pkg/option/config.go b/pkg/option/config.go
-index 23c8c8b84c..d8b2f223c5 100644
+index 7c0eaa8932..5730e3ba2c 100644
 --- a/pkg/option/config.go
 +++ b/pkg/option/config.go
-@@ -1189,6 +1189,9 @@ const (
+@@ -1204,6 +1204,9 @@ const (
  	// DSR dispatch mode to encapsulate to IPIP
  	DSRDispatchIPIP = "ipip"
  
@@ -467,7 +467,7 @@ index 23c8c8b84c..d8b2f223c5 100644
  	// DSR L4 translation to frontend port
  	DSRL4XlateFrontend = "frontend"
  
-@@ -1850,7 +1853,7 @@ type DaemonConfig struct {
+@@ -1866,7 +1869,7 @@ type DaemonConfig struct {
  	NodePortAlg string
  
  	// LoadBalancerDSRDispatch indicates the method for pushing packets to
@@ -476,17 +476,67 @@ index 23c8c8b84c..d8b2f223c5 100644
  	LoadBalancerDSRDispatch string
  
  	// LoadBalancerDSRL4Xlate indicates the method for L4 DNAT translation
+diff --git a/test/k8s/service_helpers.go b/test/k8s/service_helpers.go
+index 05d9209b76..8c918be42c 100644
+--- a/test/k8s/service_helpers.go
++++ b/test/k8s/service_helpers.go
+@@ -686,6 +686,45 @@ func testNodePortExternal(kubectl *helpers.Kubectl, ni *helpers.NodesInfo, testS
+ 	}
+ }
+ 
++func testNodePortExternalIPv4Only(kubectl *helpers.Kubectl, ni *helpers.NodesInfo, testSecondaryNodePortIP, checkTCP, checkUDP bool) {
++	type svc struct {
++		name   string
++		nodeIP string
++	}
++
++	var (
++		data            v1.Service
++		nodePortService = "test-nodeport"
++	)
++
++	services := []svc{{nodePortService, ni.K8s1IP}}
++
++	if testSecondaryNodePortIP {
++		services = append(services, svc{name: nodePortService, nodeIP: ni.SecondaryK8s1IPv4})
++	}
++
++	for _, svc := range services {
++		err := kubectl.Get(helpers.DefaultNamespace, fmt.Sprintf("service %s", svc.name)).Unmarshal(&data)
++		ExpectWithOffset(1, err).Should(BeNil(), "Cannot retrieve service")
++
++		httpURL := getHTTPLink(svc.nodeIP, data.Spec.Ports[0].NodePort)
++		tftpURL := getTFTPLink(svc.nodeIP, data.Spec.Ports[1].NodePort)
++
++		// Test from external connectivity
++		// Note:
++		//   In case of SNAT checkSourceIP is false here since the HTTP request
++		//   won't have the client IP but the service IP (given the request comes
++		//   from the Cilium node to the backend, not from the client directly).
++		//   Same in case of Hybrid mode for UDP.
++		testCurlFromOutside(kubectl, ni, httpURL, 10, checkTCP)
++		testCurlFromOutside(kubectl, ni, tftpURL, 10, checkUDP)
++
++		// Clear CT tables on all Cilium nodes
++		kubectl.CiliumExecMustSucceedOnAll(context.TODO(),
++			"cilium bpf ct flush global", "Unable to flush CT maps")
++	}
++}
++
+ // fromOutside=true tests session affinity implementation from lb.h, while
+ // fromOutside=false tests from  bpf_sock.c.
+ func testSessionAffinity(kubectl *helpers.Kubectl, ni *helpers.NodesInfo, fromOutside, vxlan bool) {
 diff --git a/test/k8s/services.go b/test/k8s/services.go
-index 72b6a0b405..208ef29d04 100644
+index e4abeb520b..6ff965b280 100644
 --- a/test/k8s/services.go
 +++ b/test/k8s/services.go
-@@ -685,6 +685,20 @@ Secondary Interface %s :: IPv4: (%s, %s), IPv6: (%s, %s)`,
- 			testNodePortExternal(kubectl, ni, false, true, true)
+@@ -716,6 +716,20 @@ Secondary Interface %s :: IPv4: (%s, %s), IPv6: (%s, %s)`,
+ 			testNodePortExternal(kubectl, ni, false, true, false)
  		})
  
-+		It("Tests with XDP, direct routing, DSR in IPIP and Random", func() {
++		It("Tests with TC, direct routing, DSR in IPIP", func() {
 +			DeployCiliumOptionsAndDNS(kubectl, ciliumFilename, map[string]string{
-+				"loadBalancer.acceleration":   "testing-only",
++				"loadBalancer.acceleration":   "disabled",
 +				"loadBalancer.mode":           "dsr",
 +				"loadBalancer.algorithm":      "random",
 +				"tunnel":                      "disabled",
@@ -495,9 +545,9 @@ index 72b6a0b405..208ef29d04 100644
 +				"loadBalancer.dsrL4Translate": "backend",
 +				"devices":                     fmt.Sprintf(`'{%s}'`, ni.PrivateIface),
 +			})
-+			testNodePortExternal(kubectl, ni, false, true, true)
++			testNodePortExternalIPv4Only(kubectl, ni, false, true, true)
 +		})
 +
- 		It("Tests with XDP, direct routing, DSR and Maglev", func() {
- 			DeployCiliumOptionsAndDNS(kubectl, ciliumFilename, map[string]string{
- 				"loadBalancer.acceleration": "testing-only",
+ 		// Run on net-next and 4.19 but not on old versions, because of
+ 		// LRU requirement.
+ 		SkipItIf(func() bool {
