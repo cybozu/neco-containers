@@ -362,9 +362,9 @@ jobs:
             fi
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
-            curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz
+            curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
             mkdir llvm
-            tar -C llvm --strip-components=1 -xf /tmp/clang.tar.xz
+            tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
             cd envoy
             bazel/setup_clang.sh $(pwd)/../llvm
             echo "build --config=clang" >> user.bazelrc
@@ -917,7 +917,7 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.24.5
+          version: 1.25.4
           bazel-version: 6.0.0
       - build:
           name: build-envoy-container
