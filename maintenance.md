@@ -213,9 +213,19 @@ In Regular update, do the following as part of the update of each CRD-providing 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. If necessary, update the `version` parameters for the `build-cilium-envoy` and `build-cilium-image-tools` jobs in the CircleCI `main` workflow.
    1. The `version` for envoy is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
-   2. For image-tools' `version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
-3. Check whether manually applied patches have been included in the new release and remove them accordingly.
-4. Update the `BRANCH` and `TAG` files accordingly.
+   2. Check the upstream Dockerfile and update the `build-cilium-envoy` steps as needed.
+      - [Dockerfile.builder](https://github.com/cilium/proxy/blob/master/Dockerfile.builder) that includes installation of dependencies and Bazel.
+      - [Dockerfile](https://github.com/cilium/proxy/blob/master/Dockerfile) that builds and installs cilium-envoy.
+   3. For image-tools' `version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
+   4. Check the upstream Dockerfile and update the `build-cilium-image-tools` steps as needed.
+      - [compilers/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile) that includes installation of dependencies.
+      - [bpftool/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile)
+      - [llvm/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile)
+      - [iproute2/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/iproute2/Dockerfile)
+3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/cilium/Dockerfile
+4. Check whether manually applied patches have been included in the new release and remove them accordingly.
+5. Update the `BRANCH` and `TAG` files accordingly.
 
 ***NOTE:*** The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
 
@@ -224,7 +234,9 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/operator/Dockerfile
+3. Update the `BRANCH` and `TAG` files accordingly.
 
 ***NOTE:*** The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
 
@@ -436,7 +448,9 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/hubble/blob/vX.Y.Z/Dockerfile
+3. Update the `BRANCH` and `TAG` files accordingly.
 
 
 ## hubble-relay
@@ -444,7 +458,9 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile
+3. Update the `BRANCH` and `TAG` files accordingly.
 
 ***NOTE:*** The hubble-relay image should be updated at the same time as the cilium image for consistency.
 
@@ -455,10 +471,24 @@ Only the base image and module dependency should be updated.
 
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
-3. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
+3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile
+4. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
    1. `NGINX_VERSION`
    2. `NJS_VERSION`
    3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
+
+Update nginx that hubble-ui depends on as follows.
+
+1. Pick a commit hash from https://github.com/nginxinc/docker-nginx-unprivileged/commits/main/mainline/debian/Dockerfile
+  - If `NGINX_VERSION` is 1.23.2, the commit hash is 85f846c6c5d121b2b750d71c31429d9686523da0 referencing the commit "Update mainline NGINX to 1.23.2"
+  - You can find the corresponding `NJS_VERSION` value in the same commit
+2. Check the upstream [Dockerfile](https://github.com/nginxinc/docker-nginx-unprivileged/blob/main/mainline/debian/Dockerfile). If there are any updates, update our `Dockerfile`.
+
+```bash
+# Check diff between v1.23.1 and v1.23.2
+$ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d9686523da0 -- mainline/debian/Dockerfile
+```
 
 ## ipfs-cluster
 
