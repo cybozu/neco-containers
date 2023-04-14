@@ -8,7 +8,7 @@ WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
 RUN curl -sfLO http://www.squid-cache.org/Versions/v5/squid-${SQUID_VERSION}.tar.xz \
     && tar --strip-components=1 -xf /work/squid-${SQUID_VERSION}.tar.xz \
-    && ./configure --without-gnutls --with-openssl --without-systemd \
+    && CFLAGS="-mavx2" CXXFLAGS="-mavx2" ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
                    --with-logdir=/var/log/squid --with-pidfile=/run/squid.pid \
                    --with-filedescriptors=65536 --with-large-files --disable-arch-native \
