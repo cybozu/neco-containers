@@ -1,5 +1,5 @@
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG LOKI_VERSION=2.7.4
+ARG LOKI_VERSION=2.8.0
 ARG SYSTEMD_VERSION=250
 
 WORKDIR /work
