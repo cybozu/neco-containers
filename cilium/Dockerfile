@@ -30,6 +30,7 @@ RUN mkdir -p ${DESTDIR} \
     && cp images/runtime/iptables-wrapper-installer.sh \
       images/cilium/init-container.sh \
       plugins/cilium-cni/cni-install.sh \
+      plugins/cilium-cni/install-plugin.sh \
       plugins/cilium-cni/cni-uninstall.sh \
         ${DESTDIR} \
     && images/cilium/download-hubble.sh
@@ -66,6 +67,9 @@ COPY workspace/usr/lib /usr/lib
 # When used within the Cilium container, Hubble CLI should target the
 # local unix domain socket instead of Hubble Relay.
 ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock
+# This version of Cilium originally shipped with an older verison of the
+# Hubble CLI using legacy JSON output which we want to preserve.
+ENV HUBBLE_COMPAT=legacy-json-output
 COPY --from=build-base /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=build-base /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build-base /out/linux/amd64/bin/hubble /usr/bin/hubble

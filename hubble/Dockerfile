@@ -1,7 +1,7 @@
 # hubble container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
 COPY TAG /
 
@@ -12,7 +12,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL -o hubble.tar.gz "https://github.com/cilium/hubble/archive/v${VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f hubble.tar.gz \
     && rm -f hubble.tar.gz \
-    && CGO_ENABLED=0 go build -ldflags="-w -s" -o hubble .
+    && make clean && make hubble
 
 # Stage2: setup runtime container
 FROM scratch

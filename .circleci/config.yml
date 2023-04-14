@@ -362,9 +362,9 @@ jobs:
             fi
             cd src
             git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
-            curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang+llvm-11.0.0-x86_64-linux-gnu-ubuntu-20.04.tar.xz
+            curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
             mkdir llvm
-            tar -C llvm --strip-components=1 -xf /tmp/clang.tar.xz
+            tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
             cd envoy
             bazel/setup_clang.sh $(pwd)/../llvm
             echo "build --config=clang" >> user.bazelrc
@@ -397,40 +397,40 @@ jobs:
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             apt-get update
-            apt-get install -y --no-install-recommends autoconf \
+            apt-get install -y --no-install-recommends \
+              ca-certificates \
+              autoconf \
               automake \
-              binutils \
-              bison \
-              build-essential \
-              clang-10 \
               cmake \
               coreutils \
               curl \
-              flex \
-              g++ \
-              gcc \
               git \
-              libc6-dev \
-              libelf-dev \
-              libmnl-dev \
               libtool \
-              lld-10 \
-              llvm-10-dev \
               make \
               ninja-build \
               patch \
-              pkg-config \
-              python2 \
+              patchelf \
               python3 \
-              python3-pip \
+              python-is-python3 \
               unzip \
               virtualenv \
               wget \
               zip
-            ln /usr/bin/clang-10 /usr/bin/clang
-            ln /usr/bin/clang++-10 /usr/bin/clang++
-            ln /usr/bin/lld-10 /usr/bin/lld
-            update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+            wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+            echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list
+            echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list
+            apt-get update
+            apt-get install -y --no-install-recommends \
+              clang-15 \
+              clang-tools-15 \
+              lldb-15 \
+              lld-15 \
+              clang-format-15 \
+              libc++-15-dev \
+              libc++abi-15-dev
+            apt-get purge --auto-remove
+            apt-get clean
+            rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
       - run:
           name: Download cilium/proxy
           command: |
@@ -443,9 +443,8 @@ jobs:
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             BAZEL_VERSION="$(cat src/cilium-proxy/.bazelversion)"
-            curl -o /tmp/bazel.deb -sfL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel_${BAZEL_VERSION}-linux-x86_64.deb
-            dpkg -i /tmp/bazel.deb
-            rm -rf /tmp/bazel.deb
+            curl -sfL https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-linux-x86_64 -o /usr/bin/bazel
+            chmod +x /usr/bin/bazel
       - run:
           name: Build cilium-envoy
           environment:
@@ -457,7 +456,7 @@ jobs:
             cd src/cilium-proxy
             echo "<< parameters.version >>" > SOURCE_VERSION
             make bazel-bin/cilium-envoy
-            ./tools/get_workspace_status
+            ./bazel/get_workspace_status
             make install
             mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
       - persist_to_workspace:
@@ -469,7 +468,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:20.04
+      - image: quay.io/cybozu/ubuntu-dev:22.04
     resource_class: 2xlarge+
     steps:
       - checkout
@@ -482,20 +481,41 @@ jobs:
             fi
       - run:
           name: Install package dependencies
+          environment:
+            DEBIAN_FRONTEND: noninteractive
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
+            cat > /etc/apt/sources.list \<< EOF
+            deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+            deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
+            deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+            deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-security main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse
+            EOF
+            dpkg --add-architecture arm64
             apt-get update
-            apt-get install -y --no-install-recommends automake \
+            ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+            apt-get install -y --no-install-recommends \
+              automake \
               binutils \
+              binutils-aarch64-linux-gnu \
               bison \
               build-essential \
+              ca-certificates \
               cmake \
+              crossbuild-essential-arm64 \
               curl \
               flex \
               g++ \
-              gcc \
+              g++-aarch64-linux-gnu \
+              gcc-9 \
+              gcc-9-aarch64-linux-gnu \
               git \
               libelf-dev \
+              libelf-dev:arm64 \
               libmnl-dev \
               libtool \
               make \
@@ -505,6 +525,9 @@ jobs:
               python3 \
               python3-pip \
               unzip
+            update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 2
+            update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-9 3
       - run:
           name: Download cilium/image-tools
           command: |
@@ -837,7 +860,7 @@ workflows:
       - build-cert-manager:
           #repo: https://github.com/cert-manager/cert-manager
           repo: https://github.com/cybozu-go/cert-manager
-          version: 1.9.1-neco-longtimeout.1
+          version: 1.10.2-neco-longtimeout.1
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
@@ -849,9 +872,9 @@ workflows:
           name: build-chrony
           container-image: chrony
       - build-cilium-envoy:
-          version: 48cbb2f88edca93ba80d1135dbb067a827b8adc2
+          version: 04413917ff99e4f6ab51d1c6eb424d4a055f4462
       - build-cilium-image-tools:
-          version: ed09507a3d7261e330fb1e4b20d4bf48f66decbc
+          version: 0dea4f5dce7be67ac674e297d9ef724da6911889
       - build:
           name: build-cilium
           container-image: cilium
@@ -894,7 +917,7 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.24.5
+          version: 1.25.4
           bazel-version: 6.0.0
       - build:
           name: build-envoy-container
