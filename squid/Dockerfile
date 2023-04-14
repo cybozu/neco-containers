@@ -11,7 +11,7 @@ RUN curl -sfLO http://www.squid-cache.org/Versions/v5/squid-${SQUID_VERSION}.tar
     && ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
                    --with-logdir=/var/log/squid --with-pidfile=/run/squid.pid \
-                   --with-filedescriptors=65536 --with-large-files \
+                   --with-filedescriptors=65536 --with-large-files --disable-arch-native \
     && make -j "$(nproc)" \
     && make install
 
