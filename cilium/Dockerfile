@@ -76,11 +76,15 @@ COPY --from=build-base /out/linux/amd64/bin/hubble /usr/bin/hubble
 COPY --from=builder ${DESTDIR} /
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libelf1 \
+    && apt-get install -y --no-install-recommends \
+      libelf1 \
       libmnl0 \
+      bash-completion \
       iptables \
       ipset \
       kmod \
+      ca-certificates \
+      jq \
     && apt-get purge --auto-remove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
