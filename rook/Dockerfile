@@ -1,9 +1,9 @@
 # Rook container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
-ARG ROOK_VERSION=1.10.7
+ARG ROOK_VERSION=1.11.4
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -12,6 +12,12 @@ ENV PATH $PATH:${ROOK_DIR}/.cache/tools/linux_amd64
 RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
 WORKDIR ${ROOK_DIR}
+
+# Install kubectl binary as required for generating csv
+# ref: https://github.com/rook/rook/commit/972202db0d3a57863d2a1ebac2047f99d169d0a9
+RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" \
+    && chmod +x ./kubectl \
+    && mv ./kubectl /usr/local/bin/kubectl
 
 RUN mkdir -p ${ROOK_DIR}/.cache/tools/linux_amd64
 # Make a symbolic link of helm to allow the build script to use `helm` command without specifying the version.
@@ -27,7 +33,7 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false TEMP=/tmp/rook
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:17.2.5.1
+FROM quay.io/cybozu/ceph:17.2.6.1
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
