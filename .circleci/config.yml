@@ -842,7 +842,7 @@ workflows:
           name: build-cadvisor
           container-image: cadvisor
       - build-ceph:
-          version: 17.2.5
+          version: 17.2.6
       - build:
           name: build-ceph-container
           container-image: ceph
