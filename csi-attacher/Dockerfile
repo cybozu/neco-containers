@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.18-focal AS build
+FROM quay.io/cybozu/golang:1.19-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
-ARG VERSION=4.0.0
+ARG VERSION=4.1.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
