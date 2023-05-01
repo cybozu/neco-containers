@@ -1,14 +1,14 @@
 # ceph-csi container
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
-ARG BASE_IMAGE="quay.io/cybozu/ceph:17.2.5.1"
+ARG BASE_IMAGE="quay.io/cybozu/ceph:17.2.6.1"
 
 FROM ${BASE_IMAGE} as builder
 
 LABEL stage="build"
 
 ARG CSI_IMAGE_NAME=quay.io/cybozu/cephcsi
-ARG CSI_IMAGE_VERSION=3.7.2
+ARG CSI_IMAGE_VERSION=3.8.0
 ARG GO_ARCH
 ARG SRC_DIR
 ARG GIT_COMMIT
