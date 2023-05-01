@@ -6,9 +6,9 @@ require (
 	github.com/cybozu-go/log v1.6.1
 	github.com/hashicorp/serf v0.10.1
 	github.com/spf13/pflag v1.0.5
-	k8s.io/api v0.25.6
-	k8s.io/apimachinery v0.25.6
-	k8s.io/client-go v0.25.6
+	k8s.io/api v0.25.9
+	k8s.io/apimachinery v0.25.9
+	k8s.io/client-go v0.25.9
 )
 
 require (
