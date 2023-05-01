@@ -1,7 +1,7 @@
 # kube-state-metrics container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
 ARG KUBE_STATE_METRICS_VERSION=2.7.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
