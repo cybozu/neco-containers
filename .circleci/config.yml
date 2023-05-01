@@ -8,7 +8,7 @@ jobs:
         type: string
       go-image-tag:
         type: string
-        default: "1.19-jammy"
+        default: "1.20-jammy"
     description: "test at << parameters.directory >>"
     docker:
       - image: quay.io/cybozu/golang:<<parameters.go-image-tag>>
@@ -610,7 +610,7 @@ jobs:
             - "*"
   build-admission:
     docker:
-      - image: quay.io/cybozu/golang:1.19-focal
+      - image: quay.io/cybozu/golang:1.20-jammy
     steps:
       - checkout
       - run: cd admission; make test
@@ -759,7 +759,7 @@ jobs:
             - << parameters.architecture >>
   test-local-pv-provisioner:
     docker:
-      - image: quay.io/cybozu/golang:1.19-focal
+      - image: quay.io/cybozu/golang:1.20-jammy
     steps:
       - checkout
       - run: cd local-pv-provisioner; make check-generate

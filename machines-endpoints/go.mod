@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/machines-endpoints
 
-go 1.19
+go 1.20
 
 require (
 	github.com/cybozu-go/log v1.6.1
