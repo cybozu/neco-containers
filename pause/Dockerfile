@@ -1,9 +1,9 @@
 # pause container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
+FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG K8S_VERSION=1.25.6
+ARG K8S_VERSION=1.25.9
 ARG PAUSE_VERSION=3.8
 
 RUN mkdir /work

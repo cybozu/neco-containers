@@ -1,9 +1,9 @@
 # kubernetes container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG K8S_VERSION=1.25.6
+ARG K8S_VERSION=1.25.9
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
@@ -23,7 +23,7 @@ RUN patch -p1 --no-backup-if-mismatch < /tmp/89155.patch && \
     make all WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \

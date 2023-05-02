@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
 ARG COREDNS_VERSION=1.10.0
 
@@ -11,7 +11,7 @@ RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.ta
 WORKDIR /go/src/github.com/coredns/coredns/
 RUN make
 
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /go/src/github.com/coredns/coredns/LICENSE /usr/local/coredns/LICENSE
 COPY --from=build /go/src/github.com/coredns/coredns/coredns /usr/local/coredns/bin/coredns

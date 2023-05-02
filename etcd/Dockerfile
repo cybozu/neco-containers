@@ -1,7 +1,7 @@
 # etcd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-jammy AS build
+FROM quay.io/cybozu/golang:1.20-jammy AS build
 
 ARG ETCD_VERSION=3.5.7
 
@@ -14,7 +14,7 @@ WORKDIR /work/etcd
 RUN ./build.sh
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /work/etcd/bin /usr/local/etcd/bin
 COPY --from=build /work/etcd/LICENSE /usr/local/etcd/LICENSE

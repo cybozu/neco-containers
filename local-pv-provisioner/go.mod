@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/local-pv-provisioner
 
-go 1.19
+go 1.20
 
 require (
 	github.com/go-logr/logr v1.2.3
@@ -10,9 +10,9 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.14.0
-	k8s.io/api v0.25.6
-	k8s.io/apimachinery v0.25.6
-	k8s.io/client-go v0.25.6
+	k8s.io/api v0.25.9
+	k8s.io/apimachinery v0.25.9
+	k8s.io/client-go v0.25.9
 	k8s.io/klog/v2 v2.80.1
 	sigs.k8s.io/controller-runtime v0.13.1
 )
