@@ -1,0 +1,40 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: moco-switchover-downtime-monitor
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get # kubectl moco credential
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - update # kubectl moco switchover
+  - patch
+  - delete # kubectl delete
+- apiGroups:
+  - ""
+  resources:
+  - pods/exec
+  verbs:
+  - create # kubectl exec
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - get
+  - update
+  - patch # kubectl rollout restart
+- apiGroups:
+  - moco.cybozu.com
+  resources:
+  - mysqlclusters
+  verbs:
+  - get

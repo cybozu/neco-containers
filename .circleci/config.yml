@@ -1017,6 +1017,9 @@ workflows:
       - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
+      - build:
+          name: build-moco-switchover-downtime-monitor
+          container-image: moco-switchover-downtime-monitor
       - build-mysql:
           name: build-mysql-8018
           mysql-version: 8.0.18
