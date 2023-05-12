@@ -1,6 +1,6 @@
-ARG MEOWS_VERSION=0.10.0
+ARG MEOWS_VERSION=0.11.0
 
-FROM quay.io/cybozu/golang:1.18-jammy AS builder
+FROM quay.io/cybozu/golang:1.20-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.8.7
