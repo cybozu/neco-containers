@@ -916,8 +916,8 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.25.4
-          bazel-version: 6.0.0
+          version: 1.26.1
+          bazel-version: 6.1.0
       - build:
           name: build-envoy-container
           container-image: envoy
