@@ -623,7 +623,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
    - https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile
 3. Update `MEOWS_VERSION` in `Dockerfile`.
 4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
-   1. `GO_VERSION`: https://github.com/cybozu/neco-containers/blob/main/golang/TAG
+   1. `GO_VERSION`: https://github.com/cybozu/neco-containers/blob/main/golang-all/golang-1.20-jammy/TAG
    2. `PLACEMAT_VERSION`: https://github.com/cybozu-go/placemat/releases/latest
 5. Update `BRANCH` and `TAG` files.
 
