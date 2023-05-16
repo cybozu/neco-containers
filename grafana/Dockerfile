@@ -23,7 +23,7 @@ ENV NODE_ENV production
 RUN yarn build
 
 RUN go mod verify
-RUN make build-go # GO_BUILD_TAGS=${GO_BUILD_TAGS} WIRE_TAGS=${WIRE_TAGS}
+RUN make build-go
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v9.5.2/Dockerfile#L75-L164
