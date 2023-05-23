@@ -94,9 +94,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 6. Update `BRANCH` and `TAG` files.
 7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
-***NOTE:*** ArgoCD depends on dex and Redis. So browse the following manifests and update the [dex](#dex) and [redis](#redis) images next.
+***NOTE:*** ArgoCD depends on dex,Redis,HAProxy. So browse the following manifests and update [dex](#dex),[redis](#redis),[haproxy](#haproxy) images next.
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
+- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml
 
 ***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
@@ -432,6 +433,22 @@ grafana_plugins_init does not create [release](https://github.com/grafana-operat
    - https://github.com/grafana-operator/grafana_plugins_init/blob/A.B.C/Dockerfile
 3. Update `GRAFANA_PLUGINS_INIT_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` according to the value of `PluginsInitContainerTag`.
+
+## haproxy
+
+![Regular Update](./regular_update.svg)
+
+***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
+- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml
+
+1. Check the release notes in the [official site](https://www.haproxy.org/).
+2. Check the Dockerfile in docker-library or haproxytech. If there are any updates, update our `Dockerfile`.
+   - v2.6.x: https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile
+   - v2.6.x: https://github.com/haproxytech/haproxy-docker-ubuntu/blob/main/2.6/Dockerfile
+3. Update `HAPROXY_BRANCH and HAPROXY_MINOR` in `Dockerfile`.
+4. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in http://www.haproxy.org/download
+5. Update `BRANCH` and `TAG` files.
+
 
 ## heartbeat
 
