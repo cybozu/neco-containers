@@ -34,19 +34,15 @@ RUN apt-get update && \
     mkdir -p /usr/local/etc/haproxy && \
     ln -s /usr/local/etc/haproxy /etc/haproxy && \
     cp -R /tmp/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors && \
-    rm -rf /tmp/haproxy && \
-    apt-get purge -y --auto-remove gcc make libc6-dev libssl-dev libpcre2-dev zlib1g-dev liblua5.3-dev && \
-    apt-get clean && rm -rf /var/lib/apt/lists/*
-
+    rm -rf /tmp/haproxy
 
 FROM ubuntu:focal-20230412
-
 LABEL maintainer="takara@cybozu.co.jp"
-LABEL Name HAProxy
-LABEL Release Community Edition
-LABEL Vendor HAProxy
-LABEL Version 2.6.10
-LABEL org.opencontainers.image.source=https://github.com/cybozu/neco-containers/haproxy
+LABEL name="HAProxy"
+LABEL release="Community Edition"
+LABEL vendor="HAProxy"
+LABEL version="2.6.10"
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers/haproxy"
 
 ENV HAPROXY_BRANCH 2.6
 ENV HAPROXY_MINOR 2.6.10
@@ -66,13 +62,14 @@ COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
 COPY docker-entrypoint.sh /
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends procps zlib1g libssl1.1 "libpcre2-*" liblua5.3-0 libatomic1 tar curl socat ca-certificates && \
+    apt-get install -y --no-install-recommends procps zlib1g libssl1.1 "libpcre2-*" liblua5.3-0 libatomic1 socat ca-certificates && \
     groupadd "$HAPROXY_GID" && \
     useradd -g "$HAPROXY_GID" "$HAPROXY_UID" && \
     chown "$HAPROXY_UID:$HAPROXY_GID" /var/lib/haproxy && \
     mkdir -p /usr/local/etc/haproxy && \
-    ln -s /usr/local/etc/haproxy /etc/haproxy
-
+    ln -s /usr/local/etc/haproxy /etc/haproxy && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 STOPSIGNAL SIGUSR1
 
