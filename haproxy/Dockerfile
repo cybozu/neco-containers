@@ -1,12 +1,5 @@
 #FROM ubuntu:jammy-20230425
-FROM ubuntu:focal-20230412
-
-MAINTAINER Maho Takara <takara@cybozu.co.jp>
-
-LABEL Name HAProxy
-LABEL Release Community Edition
-LABEL Vendor HAProxy
-LABEL Version 2.6.10
+FROM ubuntu:focal-20230412 AS build
 
 ENV HAPROXY_BRANCH 2.6
 ENV HAPROXY_MINOR 2.6.10
@@ -15,9 +8,7 @@ ENV HAPROXY_SRC_URL http://www.haproxy.org/download
 
 ENV HAPROXY_UID haproxy
 ENV HAPROXY_GID haproxy
-
 ENV DEBIAN_FRONTEND noninteractive
-
 
 # if you use ubuntu:jammy, you must use "libssl3=3.0.2-0ubuntu1.9". but it is few case.
 # We choose "ubuntu:focal" and "libssl1.1" to get a stable operation.
@@ -47,7 +38,41 @@ RUN apt-get update && \
     apt-get purge -y --auto-remove gcc make libc6-dev libssl-dev libpcre2-dev zlib1g-dev liblua5.3-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
+
+FROM ubuntu:focal-20230412
+
+LABEL maintainer="takara@cybozu.co.jp"
+LABEL Name HAProxy
+LABEL Release Community Edition
+LABEL Vendor HAProxy
+LABEL Version 2.6.10
+LABEL org.opencontainers.image.source=https://github.com/cybozu/neco-containers/haproxy
+
+ENV HAPROXY_BRANCH 2.6
+ENV HAPROXY_MINOR 2.6.10
+ENV HAPROXY_SHA256 e71b2cd9ca1043345f083a5225078ccf824dced2b5779d86f11fa4e88f451773
+ENV HAPROXY_SRC_URL http://www.haproxy.org/download
+
+ENV HAPROXY_UID haproxy
+ENV HAPROXY_GID haproxy
+
+ENV DEBIAN_FRONTEND noninteractive
+
+RUN mkdir -p /var/lib/haproxy && \
+    mkdir -p /usr/local/etc/haproxy
+
+COPY --from=build /usr/local/sbin/haproxy /usr/sbin/haproxy
+COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
 COPY docker-entrypoint.sh /
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends procps zlib1g libssl1.1 "libpcre2-*" liblua5.3-0 libatomic1 tar curl socat ca-certificates && \
+    groupadd "$HAPROXY_GID" && \
+    useradd -g "$HAPROXY_GID" "$HAPROXY_UID" && \
+    chown "$HAPROXY_UID:$HAPROXY_GID" /var/lib/haproxy && \
+    mkdir -p /usr/local/etc/haproxy && \
+    ln -s /usr/local/etc/haproxy /etc/haproxy
+
 
 STOPSIGNAL SIGUSR1
 

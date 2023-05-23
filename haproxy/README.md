@@ -7,4 +7,4 @@ HA-Proxy container
 Docker images
 -------------
 
-HA-Proxy images are available on [Quay.io/cybozu/haproxy](https://quay.io/cybozu/haproxy)
+HA-Proxy images are available on [ghcr.io/cybozu-private/haproxy](https://ghcr.io/cybozu-private/haproxy)
