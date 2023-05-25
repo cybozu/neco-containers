@@ -442,12 +442,9 @@ grafana_plugins_init does not create [release](https://github.com/grafana-operat
 - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml
 
 1. Check the release notes in the [official site](https://www.haproxy.org/).
-2. Check the Dockerfile in docker-library or haproxytech. If there are any updates, update our `Dockerfile`.
    - v2.6.x: https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile
-   - v2.6.x: https://github.com/haproxytech/haproxy-docker-ubuntu/blob/main/2.6/Dockerfile
-3. Update `HAPROXY_BRANCH and HAPROXY_MINOR` in `Dockerfile`.
-4. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in http://www.haproxy.org/download
-5. Update `BRANCH` and `TAG` files.
+2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in http://www.haproxy.org/download
+3. Update `BRANCH` and `TAG` files.
 
 
 ## heartbeat
