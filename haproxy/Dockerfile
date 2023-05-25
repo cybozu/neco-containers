@@ -37,13 +37,7 @@ RUN apt-get update && \
                             USE_TFO=1 USE_LINUX_TPROXY=1 USE_LUA=1 USE_GETADDRINFO=1 \
                             USE_PROMEX=1 USE_SLZ=1 \
                             all && \
-    make -C /tmp/haproxy TARGET=linux-glibc install-bin install-man # && \
-    ln -s /usr/local/sbin/haproxy /usr/sbin/haproxy && \
-    mkdir -p /var/lib/haproxy && \
-    mkdir -p /usr/local/etc/haproxy && \
-    ln -s /usr/local/etc/haproxy /etc/haproxy && \
-    cp -R /tmp/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors && \
-    rm -rf /tmp/haproxy
+    make -C /tmp/haproxy TARGET=linux-glibc install-bin install-man
 
 
 FROM ghcr.io/cybozu/ubuntu:20.04
@@ -59,7 +53,9 @@ RUN mkdir -p /var/lib/haproxy && \
 
 COPY --from=build /usr/local/sbin/haproxy /usr/sbin/haproxy
 COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
+COPY --from=build /tmp/haproxy/LICENSE /LICENSE
 COPY docker-entrypoint.sh /
+
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends liblua5.3-0 && \
