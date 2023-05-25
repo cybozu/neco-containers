@@ -58,7 +58,13 @@ COPY docker-entrypoint.sh /
 
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends liblua5.3-0 && \
+    apt-get install -y --no-install-recommends \
+    procps \
+    zlib1g \
+    libssl1.1 \
+    "libpcre2-*" \
+    liblua5.3-0 \
+    libatomic1 && \
     groupadd "$HAPROXY_GID" && \
     useradd -g "$HAPROXY_GID" "$HAPROXY_UID" && \
     chown "$HAPROXY_UID:$HAPROXY_GID" /var/lib/haproxy && \
