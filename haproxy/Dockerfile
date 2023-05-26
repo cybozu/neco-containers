@@ -4,7 +4,6 @@ ENV HAPROXY_BRANCH 2.6
 ENV HAPROXY_MINOR 2.6.10
 ENV HAPROXY_SHA256 e71b2cd9ca1043345f083a5225078ccf824dced2b5779d86f11fa4e88f451773
 ENV HAPROXY_SRC_URL http://www.haproxy.org/download
-
 ENV DEBIAN_FRONTEND noninteractive
 
 # if you use ubuntu:22.04, you must use "libssl3=3.0.2-0ubuntu1.9". but HA-Proxy 2.6 does NOT adapt it.
