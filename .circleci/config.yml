@@ -871,9 +871,9 @@ workflows:
           name: build-chrony
           container-image: chrony
       - build-cilium-envoy:
-          version: 04413917ff99e4f6ab51d1c6eb424d4a055f4462
+          version: 0c056b5821621f5407fd4844a333f25b1157556f
       - build-cilium-image-tools:
-          version: 0dea4f5dce7be67ac674e297d9ef724da6911889
+          version: 7d5641cd879c93e8aeffc83407382458a1616aa9
       - build:
           name: build-cilium
           container-image: cilium
