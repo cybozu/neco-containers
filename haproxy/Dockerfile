@@ -40,7 +40,6 @@ RUN apt-get update && \
 
 
 FROM ghcr.io/cybozu/ubuntu:20.04
-
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers/haproxy"
 
 ENV HAPROXY_UID haproxy
@@ -48,13 +47,13 @@ ENV HAPROXY_GID haproxy
 ENV DEBIAN_FRONTEND noninteractive
 
 RUN mkdir -p /var/lib/haproxy && \
-    mkdir -p /usr/local/etc/haproxy
+    mkdir -p /usr/local/haproxy && \
+    mkdir -p /usr/local/bin 
 
-COPY --from=build /usr/local/sbin/haproxy /usr/sbin/haproxy
+COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
 COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
-COPY --from=build /tmp/haproxy/LICENSE /LICENSE
-COPY docker-entrypoint.sh /
-
+COPY --from=build /tmp/haproxy/LICENSE /usr/local/haproxy/LICENSE
+COPY docker-entrypoint.sh /usr/local/bin/
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
