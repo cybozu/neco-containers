@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/ubuntu-dev:20.04 AS build
+FROM ghcr.io/cybozu/ubuntu:20.04 AS build
 
 ENV HAPROXY_BRANCH 2.6
 ENV HAPROXY_MINOR 2.6.10
@@ -11,10 +11,19 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    socat \
+    procps \
+    zlib1g \
     libssl1.1 \
     "libpcre2-*" \
     liblua5.3-0 \
+    libatomic1 \
+    tar \
+    curl \
+    socat \
+    gcc \
+    make \
+    libc6-dev \
+    libssl-dev \
     libpcre3-dev \
     zlib1g-dev \
     liblua5.3-dev && \
@@ -48,7 +57,10 @@ COPY docker-entrypoint.sh /
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    socat \
+    procps \
+    zlib1g \
+    libssl1.1 \
+    "libpcre2-*" \
     liblua5.3-0 \
     libatomic1 && \
     groupadd "$HAPROXY_GID" && \
