@@ -21,7 +21,7 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
 FROM quay.io/cybozu/golang:1.20-focal AS argocd-build
-ENV ARGOCD_VERSION=2.6.7
+ENV ARGOCD_VERSION=2.6.8
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

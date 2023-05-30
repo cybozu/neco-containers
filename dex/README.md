@@ -12,7 +12,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=dex \
-    quay.io/cybozu/dex:2.35
+    quay.io/cybozu/dex:2.36
 ```
 
 [dex]: https://github.com/dexidp/dex
