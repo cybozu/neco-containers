@@ -44,7 +44,7 @@ RUN mkdir -p /var/lib/haproxy && \
 COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
 COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
 COPY --from=build /tmp/haproxy/LICENSE /usr/local/haproxy/LICENSE
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY docker-entrypoint.sh /
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
