@@ -1,5 +1,5 @@
-FROM quay.io/cybozu/golang:1.18-jammy as build
-ARG POMERIUM_VERSION=0.20.0
+FROM quay.io/cybozu/golang:1.20-jammy as build
+ARG POMERIUM_VERSION=0.22.2
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
