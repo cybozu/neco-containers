@@ -10,15 +10,20 @@ jobs:
       matrix:
         job:
           - dir: ./golang-all/golang-1.19-focal
-            container-image: "golang" 
+            container-image: "golang"
+            enable_arm64: true
           - dir: ./golang-all/golang-1.19-jammy
-            container-image: "golang" 
+            container-image: "golang"
+            enable_arm64: true
           - dir: "./golang-all/golang-1.20-focal"
-            container-image: "golang" 
+            container-image: "golang"
+            enable_arm64: true
           - dir: "./golang-all/golang-1.20-jammy"
             container-image: "golang" 
+            enable_arm64: true
           - dir: "./haproxy"
             container-image: "haproxy"
+
     runs-on: ubuntu-22.04
     env:
       go-version: "1.19"
@@ -35,3 +40,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
+          enable_arm64:  ${{ matrix.job.enable_arm64 }}
