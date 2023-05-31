@@ -67,7 +67,7 @@ runs:
       uses: docker/build-push-action@v4
       with:
         context: ${{ inputs.dir }}
-        platform: ${{ env.PLATFORM }}
+        platforms: ${{ env.PLATFORM }}
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ env.BUILDS_TAG }}
