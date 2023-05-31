@@ -5,7 +5,7 @@
 FROM quay.io/cybozu/ubuntu-dev:22.04 as build
 
 ARG GOSU_VERSION=1.16
-ARG REDIS_VERSION=7.0.9
+ARG REDIS_VERSION=7.0.11
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \
