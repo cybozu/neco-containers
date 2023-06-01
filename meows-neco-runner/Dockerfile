@@ -38,6 +38,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         telnet \
         traceroute \
         vim \
+        lsb-release \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
 
