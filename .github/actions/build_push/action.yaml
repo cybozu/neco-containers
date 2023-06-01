@@ -12,6 +12,11 @@ inputs:
   github_token:
     description: "GitHub Token"
     required: true
+  enable_arm64:
+    description: "Add arm64 to container image platform"
+    required: false
+    type: boolean
+    default: false
 
 runs:
   using: "composite"
@@ -48,12 +53,21 @@ runs:
         if [ "$dir" = "" ]; then dir=${{ inputs.container-image }} ; fi
         if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
         ./tag_branch_consistency $dir
+    - name: Set container build platform
+      shell: bash
+      run: |
+        enable_arm64=${{ inputs.enable_arm64 }}
+        if [ "$enable_arm64" = "true" ]; then 
+          echo "PLATFORM=linux/amd64,linux/arm64" >> $GITHUB_ENV
+        else
+          echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
+        fi
     - name: Build and push
       if: env.BUILDS_TAG != null
       uses: docker/build-push-action@v4
       with:
         context: ${{ inputs.dir }}
-        platforms: linux/amd64,linux/arm64
+        platforms: ${{ env.PLATFORM }}
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ env.BUILDS_TAG }}
