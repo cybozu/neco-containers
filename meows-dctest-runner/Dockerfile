@@ -49,6 +49,7 @@ RUN apt-get update \
             iproute2 \
             openssh-client \
             sudo \
+            lsb-release \
     && rm -rf /var/lib/apt/lists/* \
     && curl -sSLf https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
     && curl -sfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
