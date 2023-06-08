@@ -125,8 +125,8 @@ var _ = BeforeSuite(func() {
 	dec, err := admission.NewDecoder(scheme)
 	Expect(err).NotTo(HaveOccurred())
 	wh := mgr.GetWebhookServer()
-	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec))
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec, permissive))
 	wh.Register(podValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
 	if isHTTPProxyMutationDisabled() {
 		wh.Register(contourMutatingWebhookPath, &webhook.Admission{Handler: &nullWebhook{}})

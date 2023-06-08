@@ -20,13 +20,14 @@ var (
 )
 
 type podMutator struct {
-	client  client.Client
-	decoder *admission.Decoder
+	client                     client.Client
+	decoder                    *admission.Decoder
+	ephemeralStoragePermissive bool
 }
 
 // NewPodMutator creates a webhook handler for Pod.
-func NewPodMutator(c client.Client, dec *admission.Decoder) http.Handler {
-	return &webhook.Admission{Handler: &podMutator{c, dec}}
+func NewPodMutator(c client.Client, dec *admission.Decoder, ephemeralStoragePermissive bool) http.Handler {
+	return &webhook.Admission{Handler: &podMutator{c, dec, ephemeralStoragePermissive}}
 }
 
 func (m *podMutator) Handle(ctx context.Context, req admission.Request) admission.Response {
@@ -41,21 +42,29 @@ func (m *podMutator) Handle(ctx context.Context, req admission.Request) admissio
 		if co.Resources.Requests == nil {
 			poPatched.Spec.Containers[i].Resources.Requests = corev1.ResourceList{}
 		}
-		poPatched.Spec.Containers[i].Resources.Requests[corev1.ResourceEphemeralStorage] = ephemeralStorageRequest
+		if _, ok := co.Resources.Requests[corev1.ResourceEphemeralStorage]; !ok || !m.ephemeralStoragePermissive {
+			poPatched.Spec.Containers[i].Resources.Requests[corev1.ResourceEphemeralStorage] = ephemeralStorageRequest
+		}
 		if co.Resources.Limits == nil {
 			poPatched.Spec.Containers[i].Resources.Limits = corev1.ResourceList{}
 		}
-		poPatched.Spec.Containers[i].Resources.Limits[corev1.ResourceEphemeralStorage] = ephemeralStorageLimit
+		if _, ok := co.Resources.Limits[corev1.ResourceEphemeralStorage]; !ok || !m.ephemeralStoragePermissive {
+			poPatched.Spec.Containers[i].Resources.Limits[corev1.ResourceEphemeralStorage] = ephemeralStorageLimit
+		}
 	}
 	for i, co := range po.Spec.InitContainers {
 		if co.Resources.Requests == nil {
 			poPatched.Spec.InitContainers[i].Resources.Requests = corev1.ResourceList{}
 		}
-		poPatched.Spec.InitContainers[i].Resources.Requests[corev1.ResourceEphemeralStorage] = ephemeralStorageRequest
+		if _, ok := co.Resources.Requests[corev1.ResourceEphemeralStorage]; !ok || !m.ephemeralStoragePermissive {
+			poPatched.Spec.InitContainers[i].Resources.Requests[corev1.ResourceEphemeralStorage] = ephemeralStorageRequest
+		}
 		if co.Resources.Limits == nil {
 			poPatched.Spec.InitContainers[i].Resources.Limits = corev1.ResourceList{}
 		}
-		poPatched.Spec.InitContainers[i].Resources.Limits[corev1.ResourceEphemeralStorage] = ephemeralStorageLimit
+		if _, ok := co.Resources.Limits[corev1.ResourceEphemeralStorage]; !ok || !m.ephemeralStoragePermissive {
+			poPatched.Spec.InitContainers[i].Resources.Limits[corev1.ResourceEphemeralStorage] = ephemeralStorageLimit
+		}
 	}
 
 	marshaled, err := json.Marshal(poPatched)

@@ -43,7 +43,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	// admission.NewDecoder never returns non-nil error
 	dec, _ := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
-	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec))
+	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec, config.ephemeralStoragePermissive))
 	wh.Register("/validate-pod", hooks.NewPodValidator(mgr.GetClient(), dec, config.validImagePrefixes, config.imagePermissive))
 	if config.httpProxyDefaultClass != "" {
 		wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass))

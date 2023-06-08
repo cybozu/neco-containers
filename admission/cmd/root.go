@@ -15,16 +15,17 @@ import (
 )
 
 var config struct {
-	metricsAddr           string
-	probeAddr             string
-	webhookAddr           string
-	certDir               string
-	httpProxyDefaultClass string
-	configPath            string
-	validImagePrefixes    []string
-	imagePermissive       bool
-	repositoryPermissive  bool
-	zapOpts               zap.Options
+	metricsAddr                string
+	probeAddr                  string
+	webhookAddr                string
+	certDir                    string
+	httpProxyDefaultClass      string
+	configPath                 string
+	validImagePrefixes         []string
+	imagePermissive            bool
+	repositoryPermissive       bool
+	ephemeralStoragePermissive bool
+	zapOpts                    zap.Options
 }
 
 var rootCmd = &cobra.Command{
@@ -81,6 +82,7 @@ func init() {
 	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
 	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE") == "true"
+	config.ephemeralStoragePermissive = os.Getenv("VPOD_EPHEMERAL_STORAGE_PERMISSIVE") == "true"
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)
