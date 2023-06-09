@@ -1,6 +1,7 @@
 package hooks
 
 import (
+	"os"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -112,11 +113,19 @@ spec:
 		out := createPod(po)
 		Expect(out.Spec.Containers[0].Resources.Requests).Should(HaveKey(v1.ResourceEphemeralStorage))
 		Expect(out.Spec.Containers[0].Resources.Limits).Should(HaveKey(v1.ResourceEphemeralStorage))
-		Expect(out.Spec.Containers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("200Mi")))
-		Expect(out.Spec.Containers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("1Gi")))
 		Expect(out.Spec.InitContainers[0].Resources.Requests).Should(HaveKey(v1.ResourceEphemeralStorage))
 		Expect(out.Spec.InitContainers[0].Resources.Limits).Should(HaveKey(v1.ResourceEphemeralStorage))
-		Expect(out.Spec.InitContainers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("200Mi")))
-		Expect(out.Spec.InitContainers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("1Gi")))
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		if permissive {
+			Expect(out.Spec.Containers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("1Gi")))
+			Expect(out.Spec.Containers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("2Gi")))
+			Expect(out.Spec.InitContainers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("100Mi")))
+			Expect(out.Spec.InitContainers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("100Mi")))
+		} else {
+			Expect(out.Spec.Containers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("200Mi")))
+			Expect(out.Spec.Containers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("1Gi")))
+			Expect(out.Spec.InitContainers[0].Resources.Requests[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("200Mi")))
+			Expect(out.Spec.InitContainers[0].Resources.Limits[v1.ResourceEphemeralStorage]).Should(Equal(resource.MustParse("1Gi")))
+		}
 	})
 })
