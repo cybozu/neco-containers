@@ -18,13 +18,20 @@ receivers:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v${OTELCOL_VERSION}
 
 exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
 
 extensions:
   - gomod: go.opentelemetry.io/collector/extension/ballastextension v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v${OTELCOL_VERSION}
 
 processors:
   - gomod: go.opentelemetry.io/collector/processor/batchprocessor v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor v${OTELCOL_VERSION}
