@@ -23,6 +23,8 @@ jobs:
             enable_arm64: true
           - dir: "./haproxy"
             container-image: "haproxy"
+          - dir: "./kube-summary-exporter"
+            container-image: "kube-summary-exporter"
 
     runs-on: ubuntu-22.04
     env:
