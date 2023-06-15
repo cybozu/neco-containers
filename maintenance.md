@@ -865,6 +865,15 @@ Only the base image and module dependency should be updated.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
+## stakater/Reloader
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/stakater/Reloader/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile
+3. Update `BRANCH` and `TAG` files.
+
 ## teleport-node
 
 ![Regular Update](./regular_update.svg)
