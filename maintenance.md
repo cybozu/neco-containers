@@ -896,6 +896,15 @@ Only the base image and module dependency should be updated.
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `BRANCH` and `TAG` files.
 
+## trust-manager
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cert-manager/trust-manager/blob/vX.Y.Z/Dockerfile
+3. Update `BRANCH` and `TAG` files.
+
 ## unbound
 
 ![Kubernetes Update](./kubernetes_update.svg)
