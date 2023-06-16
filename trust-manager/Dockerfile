@@ -18,6 +18,7 @@ LABEL description="trust-manager is an operator for distributing trust bundles a
 
 WORKDIR /
 COPY --from=build /workspace/bin/trust-manager /usr/bin/trust-manager
+COPY --from=build /workspace/LICENSE /LICENSE
 
 USER 10000:10000
 EXPOSE 6060 6443 9402
