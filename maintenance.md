@@ -664,6 +664,13 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
 
+## moco-switchover-downtime-monitor
+
+![Regular Update](./regular_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`.
+2. Update `TAG` file.
+
 ## mysql
 
 ![Regular Update](./regular_update.svg)
