@@ -25,6 +25,10 @@ jobs:
             container-image: "haproxy"
           - dir: "./kube-summary-exporter"
             container-image: "kube-summary-exporter"
+          - dir: "./trust-manager"
+            container-image: "trust-manager"
+          - dir: "./stakater-reloader"
+            container-image: "stakater-reloader"
 
     runs-on: ubuntu-22.04
     env:
