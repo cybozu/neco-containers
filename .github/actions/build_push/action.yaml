@@ -68,6 +68,7 @@ runs:
       with:
         context: ${{ inputs.dir }}
         platforms: ${{ env.PLATFORM }}
+        provenance: false
         push: ${{ github.event_name != 'pull_request' }}
         tags: |
           ${{ env.BUILDS_TAG }}
