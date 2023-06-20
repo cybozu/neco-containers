@@ -18,6 +18,7 @@ FROM scratch
 
 WORKDIR /
 COPY --from=build /workspace/manager .
+COPY --from=build /workspace/LICENSE /LICENSE
 
 USER 10000:10000
 EXPOSE 9090
