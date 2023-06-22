@@ -29,6 +29,8 @@ jobs:
             container-image: "trust-manager"
           - dir: "./stakater-reloader"
             container-image: "stakater-reloader"
+          - dir: "./trust-packages"
+            container-image: "trust-packages"
 
     runs-on: ubuntu-22.04
     env:

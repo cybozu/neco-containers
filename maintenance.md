@@ -921,6 +921,21 @@ Only the base image and module dependency should be updated.
    - https://github.com/cert-manager/trust-manager/blob/vX.Y.Z/Dockerfile
 3. Update `BRANCH` and `TAG` files.
 
+## trust-packages
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
+2. Check the upstream Containerfile. If there are any updates, update our `Dockerfile`.
+   - https://github.com/cert-manager/trust-manager/blob/vX.Y.Z/trust-packages/debian/Containerfile
+3. Update `TRUST_MANAGER_VERSION` in `Dockerfile`.
+4. Update `EXPECTED_VERSION` in `Dockerfile` as needed. You can check it to run docker commaned as follows.
+   ```bash
+   $ docker run --rm quay.io/cybozu/ubuntu:22.04 dpkg-query --show  ca-certificates
+   ```
+5. Check the [tini release page](https://github.com/krallin/tini/releases) and update `TINI_VERSION` in `Dockerfile` as needed.
+6. Update `TAG` file. The TAG format is `<ca-certificates version>.<patch version>`.
+
 ## unbound
 
 ![Kubernetes Update](./kubernetes_update.svg)
