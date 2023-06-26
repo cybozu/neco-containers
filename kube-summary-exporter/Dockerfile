@@ -9,7 +9,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/utilitywarehouse/kube-summary-exporter/archive/v${KUBE_SUMMARY_EXPORTER_VERSION}.tar.gz | \
     tar --strip-components=1 -xzf -
 
-RUN go build -o /kube-summary-exporter
+RUN CGO_ENABLED=0 go build -o /kube-summary-exporter
 
 # Stage2: setup runtime container
 FROM scratch

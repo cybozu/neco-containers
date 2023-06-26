@@ -8,7 +8,7 @@ Usage
 
 ```console
 $ docker run -p 9779:9779  \
-    ghcr.io/cybozu/kube-summary-exporter:0.4.2.1
+    ghcr.io/cybozu/kube-summary-exporter:0.4.2.2
 ```
 
 Docker images
