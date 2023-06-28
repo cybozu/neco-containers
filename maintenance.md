@@ -567,7 +567,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 ## local-pv-provisioner
 
-![Kubernetes Update](./kubernetes_update.svg)
+![Kubernetes Update](./csa_update.svg)
 
 1. Update version variables in `Makefile`.
 2. Update go modules.
