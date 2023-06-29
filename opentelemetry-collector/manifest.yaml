@@ -19,6 +19,7 @@ receivers:
 
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/loadbalancingexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
 
@@ -33,5 +34,6 @@ processors:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/attributesprocessor v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/spanprocessor v${OTELCOL_VERSION}
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor v${OTELCOL_VERSION}
