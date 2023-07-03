@@ -2,7 +2,7 @@
 
 FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG OTELCOL_VERSION=0.79.0
+ARG OTELCOL_VERSION=0.80.0
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in
