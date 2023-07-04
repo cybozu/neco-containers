@@ -2,7 +2,6 @@
 apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: mutating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
@@ -49,7 +48,6 @@ webhooks:
 apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
-  creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
 - admissionReviewVersions:
@@ -114,26 +112,6 @@ webhooks:
     - UPDATE
     resources:
     - deployments
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-scale-deployment-replica-count
-  failurePolicy: Fail
-  name: vscaledeploymentreplicacount.kb.io
-  rules:
-  - apiGroups:
-    - apps
-    apiVersions:
-    - v1
-    operations:
-    - UPDATE
-    resources:
-    - deployments/scale
   sideEffects: None
 - admissionReviewVersions:
   - v1
@@ -236,4 +214,24 @@ webhooks:
     - DELETE
     resources:
     - persistentvolumeclaims
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-scale-deployment-replica-count
+  failurePolicy: Fail
+  name: vscaledeploymentreplicacount.kb.io
+  rules:
+  - apiGroups:
+    - apps
+    apiVersions:
+    - v1
+    operations:
+    - UPDATE
+    resources:
+    - deployments/scale
   sideEffects: None

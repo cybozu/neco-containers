@@ -122,8 +122,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	dec, err := admission.NewDecoder(scheme)
-	Expect(err).NotTo(HaveOccurred())
+	dec := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec, permissive))
