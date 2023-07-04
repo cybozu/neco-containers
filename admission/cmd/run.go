@@ -41,7 +41,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 
 	// register webhook handlers
 	// admission.NewDecoder never returns non-nil error
-	dec, _ := admission.NewDecoder(scheme)
+	dec := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
 	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec, config.ephemeralStoragePermissive))
 	wh.Register("/validate-pod", hooks.NewPodValidator(mgr.GetClient(), dec, config.validImagePrefixes, config.imagePermissive))
