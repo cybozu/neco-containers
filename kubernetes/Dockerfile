@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG K8S_VERSION=1.25.10
+ARG K8S_VERSION=1.26.6
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
