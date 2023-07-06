@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.11.0
+ARG MEOWS_VERSION=0.12.0
 
 FROM quay.io/cybozu/golang:1.20-jammy AS builder
 
