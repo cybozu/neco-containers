@@ -871,9 +871,14 @@ workflows:
           name: build-chrony
           container-image: chrony
       - build-cilium-envoy:
-          version: 0c056b5821621f5407fd4844a333f25b1157556f
+          version: ca87bee70e40bfa681d5859e7da4cba6b8ba4e8c
       - build-cilium-image-tools:
-          version: 7d5641cd879c93e8aeffc83407382458a1616aa9
+          # https://github.com/cilium/image-tools/commits/master
+          # From this commit, cilium/image-tools stops building iproute2 because of cilium v1.14 doesn't depend on iproute2.
+          # But, we use v1.12.11, so we still have to build iproute2.
+          # So we use an older version of image-tools which builds iproute2.
+          # https://github.com/cilium/image-tools/commit/8a2f099f14330221848c14808f3208e4dd2469bb
+          version: ff22ba3bff1010f4a2dd76ede789663c3beaf8d2
       - build:
           name: build-cilium
           container-image: cilium
