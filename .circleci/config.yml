@@ -959,7 +959,7 @@ workflows:
       - build:
           name: build-grafana
           container-image: grafana
-          resource-class: medium+
+          resource-class: large
       - build:
           name: build-grafana_plugins_init
           container-image: grafana_plugins_init
