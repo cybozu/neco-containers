@@ -552,9 +552,12 @@ jobs:
             mv /out/linux/amd64/bin/bpftool ../workspace/usr/local/bin/
       - run:
           name: Build iproute2
+          # The actual directory name of libbpf.tar.gz after extraction is cilium-libbpf in images/iproute2/checkout-libbpf.
+          # So we repalce libbpf with cilium-libbpf by sed.
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             cd src/image-tools
+            sed -i -e "s/libbpf-/cilium-libbpf-/g" images/iproute2/checkout-libbpf.sh
             images/iproute2/checkout-libbpf.sh
             images/iproute2/build-libbpf-native.sh
             images/iproute2/checkout-iproute2.sh
