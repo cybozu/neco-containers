@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG MEMCACHED_VERSION=1.6.19
+ARG MEMCACHED_VERSION=1.6.21
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
