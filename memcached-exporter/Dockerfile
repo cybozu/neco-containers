@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG MEMCACHED_EXPORTER_VERSION=0.11.2
+ARG MEMCACHED_EXPORTER_VERSION=0.13.0
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
