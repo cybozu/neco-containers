@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG BLACKBOX_EXPORTER_VERSION=0.23.0
+ARG BLACKBOX_EXPORTER_VERSION=0.24.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 WORKDIR /blackbox_exporter
 RUN curl -fsSL https://github.com/prometheus/blackbox_exporter/archive/v${BLACKBOX_EXPORTER_VERSION}.tar.gz | \
