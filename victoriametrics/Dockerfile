@@ -1,8 +1,8 @@
 # victoriametrics-xxx container
 
 ARG VICTORIAMETRICS_SRCREPO=VictoriaMetrics/VictoriaMetrics
-ARG VICTORIAMETRICS_SINGLE_VERSION=1.89.1
-ARG VICTORIAMETRICS_CLUSTER_VERSION=1.89.1-cluster
+ARG VICTORIAMETRICS_SINGLE_VERSION=1.91.3
+ARG VICTORIAMETRICS_CLUSTER_VERSION=1.91.3-cluster
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build-single
