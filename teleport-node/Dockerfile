@@ -1,7 +1,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-focal AS build
 
-ARG TELEPORT_VERSION=12.4.10
+ARG TELEPORT_VERSION=13.2.3
 # Install Nodejs
 ARG NODE_VERSION=16.18.1
 ENV NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
@@ -17,7 +17,7 @@ RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravita
     make build/teleport OS=linux
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu-debug:20.04
+FROM quay.io/cybozu/ubuntu-debug:22.04
 
 COPY --from=build /work/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /work/teleport/LICENSE /usr/local/teleport/
