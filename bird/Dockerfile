@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
 
-ARG BIRD_VERSION=2.0.12
+ARG BIRD_VERSION=2.13.1
 WORKDIR /work
 
 RUN apt-get update \

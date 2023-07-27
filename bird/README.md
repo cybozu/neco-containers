@@ -7,7 +7,7 @@ that runs up-to-date [BIRD][] internet routing daemon.
 Features
 --------
 
-* BIRD 2.0
+* BIRD 2.x
 * Multi-stage build to minimize the container size.
 * Optimized for BGP.  RIP, OSPF, Babel, and RAdv are not built-in.
 
@@ -27,21 +27,7 @@ $ docker run -d --read-only --cap-drop ALL \
     --network host --name bird \
     --mount type=tmpfs,destination=/run/bird \
     --mount type=bind,source=/your/bird.conf,target=/etc/bird/bird.conf \
-    quay.io/cybozu/bird:2.0
-```
-
-For rkt:
-```
-sudo rkt run \
-    --volume run,kind=empty,readOnly=false \
-    --volume etc,kind=host,source=/your/bird.conf,readOnly=true \
-    --net=host \
-    quay.io/cybozu/bird:2.0 \
-        --readonly-rootfs=true \
-        --caps-retain=CAP_NET_ADMIN,CAP_NET_BIND_SERVICE,CAP_NET_RAW \
-        --name bird \
-        --mount volume=run,target=/run/bird \
-        --mount volume=etc,target=/etc/bird/bird.conf
+    quay.io/cybozu/bird:2.13
 ```
 
 ### Use client tools
