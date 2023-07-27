@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG GRAFANA_VERSION=9.5.2
+ARG GRAFANA_VERSION=9.5.7
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
