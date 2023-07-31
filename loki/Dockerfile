@@ -1,5 +1,5 @@
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG LOKI_VERSION=2.8.0
+ARG LOKI_VERSION=2.8.3
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

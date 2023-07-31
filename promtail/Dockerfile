@@ -1,6 +1,6 @@
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG LOKI_VERSION=2.8.0
-ARG SYSTEMD_VERSION=250
+ARG LOKI_VERSION=2.8.3
+ARG SYSTEMD_VERSION=252
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -70,7 +70,7 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y tzdata libcap2 libpcre2-8-0 && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /usr/x86_64-linux-gnu/libsystemd.so.0 /usr/local/systemd/lib/libsystemd.so.0
+COPY --from=build /usr/lib/x86_64-linux-gnu/libsystemd.so.0 /usr/local/systemd/lib/libsystemd.so.0
 COPY --from=build /work/systemd/LICENSE.GPL2 /usr/local/systemd/LICENSE.GPL2
 COPY --from=build /work/systemd/LICENSE.LGPL2.1 /usr/local/systemd/LICENSE.LGPL2.1
 COPY --from=build /work/loki/clients/cmd/promtail/promtail /usr/local/loki/bin/promtail

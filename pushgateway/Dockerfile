@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
 
-ARG PUSHGATEWAY_VERSION=1.5.1
+ARG PUSHGATEWAY_VERSION=1.6.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root

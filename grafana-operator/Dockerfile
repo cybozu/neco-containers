@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG VERSION=4.9.0
+ARG VERSION=4.10.1
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
