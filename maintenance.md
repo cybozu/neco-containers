@@ -733,6 +733,27 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 3. Update `K8S_VERSION` and `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
+## pod-delete-rate-limiter
+
+![Kubernetes Update](./kubernetes_update.svg)
+
+1. Update the following version variables in `Makefile`.
+   - `CONTROLLER_TOOLS_VERSION`
+   - `KUSTOMIZE_VERSION`
+   - `ENVTEST_K8S_VERSION`
+2. Update go modules.
+3. Generate code and manifests.
+   ```bash
+   $ cd $GOPATH/src/github.com/cybozu/neco-containers/pod-delete-rate-limiter
+   $ make generate manifests
+   # Commit, if there are any updated files.
+   ```
+4. Confirm build and test are green.
+   ```bash
+   $ make build test
+   ```
+5. Update `TAG` file.
+
 ## pomerium
 
 ![Regular Update](./regular_update.svg)

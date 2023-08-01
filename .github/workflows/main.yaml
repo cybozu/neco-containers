@@ -31,6 +31,9 @@ jobs:
             container-image: "stakater-reloader"
           - dir: "./trust-packages"
             container-image: "trust-packages"
+          - dir: "./pod-delete-rate-limiter"
+            container-image: "pod-delete-rate-limiter"
+            make_test: true
 
     runs-on: ubuntu-22.04
     env:
@@ -49,3 +52,4 @@ jobs:
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
           enable_arm64:  ${{ matrix.job.enable_arm64 }}
+          make_test: ${{ matrix.job.make_test }}

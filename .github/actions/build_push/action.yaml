@@ -17,6 +17,11 @@ inputs:
     required: false
     type: boolean
     default: false
+  make_test:
+    description: "Run make test before building docker image"
+    required: false
+    type: boolean
+    default: false
 
 runs:
   using: "composite"
@@ -62,6 +67,11 @@ runs:
         else
           echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
         fi
+    - name: Make test
+      if: inputs.make_test && env.BUILDS_TAG != null
+      shell: bash
+      run: |
+        make -C ${{ inputs.dir }} test
     - name: Build and push
       if: env.BUILDS_TAG != null
       uses: docker/build-push-action@v4
