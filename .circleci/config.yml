@@ -788,18 +788,6 @@ workflows:
           name: test-envoy
           directory: envoy
       - test:
-          name: test-golang-1.20-jammy-analyzer
-          directory: golang-all/golang-1.20-jammy/analyzer
-      - test:
-          name: test-golang-1.19-jammy-analyzer
-          directory: golang-all/golang-1.19-jammy/analyzer
-      - test:
-          name: test-golang-1.20-focal-analyzer
-          directory: golang-all/golang-1.20-focal/analyzer
-      - test:
-          name: test-golang-1.19-focal-analyzer
-          directory: golang-all/golang-1.19-focal/analyzer
-      - test:
           name: test-heartbeat
           directory: heartbeat
           go-image-tag: 1.20-jammy

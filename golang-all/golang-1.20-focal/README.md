@@ -9,9 +9,7 @@ tools:
 * [golint](https://github.com/golang/lint)
 * [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
-* [custom-checker](./analyzer/cmd/custom-checker/README.md)
-* [eventuallycheck](./analyzer/cmd/eventuallycheck/README.md)
-* [restrictpkg](./analyzer/cmd/restrictpkg/README.md)
+* [golang custom analyzer](https://github.com/cybozu-go/golang-custom-analyzer)
 
 This container is based on [ghcr.io/cybozu/ubuntu-dev](https://ghcr.io/repository/cybozu/ubuntu-dev).
 
