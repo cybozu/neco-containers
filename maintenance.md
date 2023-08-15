@@ -660,17 +660,6 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 1. Upgrade direct dependencies listed in `go.mod`.
 2. Update `TAG` file.
 
-## mysql
-
-![Regular Update](./regular_update.svg)
-
-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
-The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
-In the regular update, only update the ubuntu base image and module dependency.
-
-1. Upgrade direct dependencies listed in `moco-init/go.mod`. Use `go get` or your editor's function.
-2. Update all `TAG` files in sub directories.
-
 ## necosen
 
 ![Regular Update](./regular_update.svg)
