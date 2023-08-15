@@ -363,17 +363,6 @@ This section applies to the following containers. These containers are maintaine
 4. Update image tag in `README.md`.
 5. Update `TAG` file.
 
-## fluent-bit
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/fluent/fluent-bit/releases).
-2. Update `FLUENT_BIT_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG`.
-
-This image is referenced in `cybozu-go/moco`. So update the following as well.
-- https://github.com/cybozu-go/moco/blob/main/version.go
-
 ## golang-all (golang for combinations of versions and platforms)
 
 ![Regular Update](./regular_update.svg)
@@ -670,28 +659,6 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Upgrade direct dependencies listed in `go.mod`.
 2. Update `TAG` file.
-
-## mysql
-
-![Regular Update](./regular_update.svg)
-
-mysql is used for [MOCO](https://github.com/cybozu-go/moco).
-The MySQL versions are the ones supported by MOCO. So the versions need not update usually.
-In the regular update, only update the ubuntu base image and module dependency.
-
-1. Upgrade direct dependencies listed in `moco-init/go.mod`. Use `go get` or your editor's function.
-2. Update all `TAG` files in sub directories.
-
-## mysqld_exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/prometheus/mysqld_exporter/releases).
-2. Update `MYSQLD_EXPORTER_VERSION` in `Dockerfile`.
-3. Update `TAG` file.
-
-This image is referenced in `cybozu-go/moco`. So update the following as well.
-- https://github.com/cybozu-go/moco/blob/main/version.go
 
 ## necosen
 
