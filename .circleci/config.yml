@@ -940,9 +940,6 @@ workflows:
           name: build-external-dns
           container-image: external-dns
       - buildx:
-          name: build-fluent-bit
-          container-image: fluent-bit
-      - buildx:
           name: build-golang-1.20-jammy
           container-image: golang
           dir: golang-all/golang-1.20-jammy
