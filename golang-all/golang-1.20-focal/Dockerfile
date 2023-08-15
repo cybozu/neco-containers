@@ -19,14 +19,8 @@ RUN rm -rf /usr/local/go \
     && GOBIN=/usr/local/bin go install honnef.co/go/tools/cmd/staticcheck@latest \
     && GOBIN=/usr/local/bin go install github.com/gordonklaus/ineffassign@latest \
     && GOBIN=/usr/local/bin go install github.com/tcnksm/ghr@latest \
+    && GOBIN=/usr/local/bin go install github.com/cybozu-go/golang-custom-analyzer/cmd/...@latest \
     && rm -rf /go \
     && mkdir -p /go/src
-
-COPY ./analyzer /work/analyzer
-WORKDIR /work/analyzer
-RUN go mod tidy && GOBIN=/usr/local/bin go install ./cmd/...
-
-WORKDIR /work
-RUN rm -r /work/analyzer
 
 CMD ["/bin/bash"]

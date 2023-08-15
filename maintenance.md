@@ -369,8 +369,7 @@ This section applies to the following containers. These containers are maintaine
 
 1. Check the [release history](https://golang.org/doc/devel/release.html).
 2. Update `GO_VERSION` in `Dockerfile`.
-3. Upgrade direct dependencies listed in `analyzer/go.mod`. Use `go get` or your editor's function.
-4. Update `BRANCH` and `TAG`.
+3. Update `BRANCH` and `TAG`.
 
 ## gorush
 
