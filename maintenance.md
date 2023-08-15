@@ -682,17 +682,6 @@ In the regular update, only update the ubuntu base image and module dependency.
 1. Upgrade direct dependencies listed in `moco-init/go.mod`. Use `go get` or your editor's function.
 2. Update all `TAG` files in sub directories.
 
-## mysqld_exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/prometheus/mysqld_exporter/releases).
-2. Update `MYSQLD_EXPORTER_VERSION` in `Dockerfile`.
-3. Update `TAG` file.
-
-This image is referenced in `cybozu-go/moco`. So update the following as well.
-- https://github.com/cybozu-go/moco/blob/main/version.go
-
 ## necosen
 
 ![Regular Update](./regular_update.svg)

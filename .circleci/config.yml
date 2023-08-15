@@ -1132,9 +1132,6 @@ workflows:
           requires:
             - build-mysql-8032-amd64
             - build-mysql-8032-arm64
-      - buildx:
-          name: build-mysqld_exporter
-          container-image: mysqld_exporter
       - build:
           name: build-necosen
           container-image: necosen
