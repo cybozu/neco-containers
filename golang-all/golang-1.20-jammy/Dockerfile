@@ -23,4 +23,6 @@ RUN rm -rf /usr/local/go \
     && rm -rf /go \
     && mkdir -p /go/src
 
+WORKDIR /work
+
 CMD ["/bin/bash"]
