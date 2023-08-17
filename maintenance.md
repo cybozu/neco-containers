@@ -532,17 +532,6 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 3. Update `MIGRATOR_VERSION` in `Dockerfile`
 4. Update `TAG` file.
 
-## kube-summary-exporter
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/utilitywarehouse/kube-summary-exporter/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/utilitywarehouse/kube-summary-exporter/blob/vX.Y.Z/Dockerfile
-3. Update `KUBE_SUMMARY_EXPORTER_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `TAG` files.
-
 ## kubernetes
 
 ![Kubernetes Update](./kubernetes_update.svg)
