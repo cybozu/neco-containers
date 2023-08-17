@@ -11,7 +11,7 @@ RUN curl -fsSL -o prometheus-operator.tar.gz "https://github.com/prometheus-oper
     && CGO_ENABLED=0 go install -ldflags="-w -s" ./cmd/prometheus-config-reloader
 
 # Stage2: setup runtime container
-FROM scratch
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /go/bin/prometheus-config-reloader /bin/prometheus-config-reloader
 COPY --from=build /work/LICENSE /
