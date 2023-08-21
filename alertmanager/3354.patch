@@ -1,0 +1,120 @@
+diff --git a/README.md b/README.md
+index fb47acae..980f3d96 100644
+--- a/README.md
++++ b/README.md
+@@ -372,6 +372,7 @@ be configured to communicate with each other. This is configured using the
+ - `--cluster.probe-interval` value: interval between random node probes (default "1s")
+ - `--cluster.reconnect-interval` value: interval between attempting to reconnect to lost peers (default "10s")
+ - `--cluster.reconnect-timeout` value: length of time to attempt to reconnect to a lost peer (default: "6h0m0s")
++- `--cluster.label` value: the label is an optional string to include on each packet and stream. It uniquely identifies the cluster and prevents cross-communication issues when sending gossip messages (default:"")
+ 
+ The chosen port in the `cluster.listen-address` flag is the port that needs to be
+ specified in the `cluster.peer` flag of the other peers.
+diff --git a/cluster/cluster.go b/cluster/cluster.go
+index ba7fdb9e..2c7ee945 100644
+--- a/cluster/cluster.go
++++ b/cluster/cluster.go
+@@ -142,6 +142,7 @@ func Create(
+ 	probeInterval time.Duration,
+ 	tlsTransportConfig *TLSTransportConfig,
+ 	allowInsecureAdvertise bool,
++	label string,
+ ) (*Peer, error) {
+ 	bindHost, bindPortStr, err := net.SplitHostPort(bindAddr)
+ 	if err != nil {
+@@ -227,6 +228,7 @@ func Create(
+ 	cfg.LogOutput = &logWriter{l: l}
+ 	cfg.GossipNodes = retransmit
+ 	cfg.UDPBufferSize = MaxGossipPacketSize
++	cfg.Label = label
+ 
+ 	if advertiseHost != "" {
+ 		cfg.AdvertiseAddr = advertiseHost
+diff --git a/cluster/cluster_test.go b/cluster/cluster_test.go
+index 87c31d13..6c498549 100644
+--- a/cluster/cluster_test.go
++++ b/cluster/cluster_test.go
+@@ -54,6 +54,7 @@ func testJoinLeave(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p)
+@@ -88,6 +89,7 @@ func testJoinLeave(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p2)
+@@ -123,6 +125,7 @@ func testReconnect(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p)
+@@ -148,6 +151,7 @@ func testReconnect(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p2)
+@@ -188,6 +192,7 @@ func testRemoveFailedPeers(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p)
+@@ -239,6 +244,7 @@ func testInitiallyFailingPeers(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		nil,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p)
+@@ -286,6 +292,7 @@ func testTLSConnection(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		tlsTransportConfig1,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p1)
+@@ -317,6 +324,7 @@ func testTLSConnection(t *testing.T) {
+ 		DefaultProbeInterval,
+ 		tlsTransportConfig2,
+ 		false,
++		"",
+ 	)
+ 	require.NoError(t, err)
+ 	require.NotNil(t, p2)
+diff --git a/cmd/alertmanager/main.go b/cmd/alertmanager/main.go
+index 5680e79a..9998e88d 100644
+--- a/cmd/alertmanager/main.go
++++ b/cmd/alertmanager/main.go
+@@ -226,6 +226,7 @@ func run() int {
+ 		peerReconnectTimeout   = kingpin.Flag("cluster.reconnect-timeout", "Length of time to attempt to reconnect to a lost peer.").Default(cluster.DefaultReconnectTimeout.String()).Duration()
+ 		tlsConfigFile          = kingpin.Flag("cluster.tls-config", "[EXPERIMENTAL] Path to config yaml file that can enable mutual TLS within the gossip protocol.").Default("").String()
+ 		allowInsecureAdvertise = kingpin.Flag("cluster.allow-insecure-public-advertise-address-discovery", "[EXPERIMENTAL] Allow alertmanager to discover and listen on a public IP address.").Bool()
++		label                  = kingpin.Flag("cluster.label", "The cluster label is an optional string to include on each packet and stream. It uniquely identifies the cluster and prevents cross-communication issues when sending gossip messages.").Default("").String()
+ 	)
+ 
+ 	promlogflag.AddFlags(kingpin.CommandLine, &promlogConfig)
+@@ -267,6 +268,7 @@ func run() int {
+ 			*probeInterval,
+ 			tlsTransportConfig,
+ 			*allowInsecureAdvertise,
++			*label,
+ 		)
+ 		if err != nil {
+ 			level.Error(logger).Log("msg", "unable to initialize gossip mesh", "err", err)
