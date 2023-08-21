@@ -9,10 +9,13 @@ ARG ALERTMANAGER_VERSION=0.25.0
 ENV USER=root
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY /*.patch /tmp/
+
 WORKDIR /go/src/github.com/prometheus/alertmanager
 RUN curl -fsSL -o alertmanager.tar.gz "https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f alertmanager.tar.gz \
     && rm -f alertmanager.tar.gz \
+    && patch -p1 < /tmp/3354.patch \
     && make "PREFIX=$GOPATH/bin/alertmanager" build
 
 # Stage2: setup runtime container
