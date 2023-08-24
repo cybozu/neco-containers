@@ -7,21 +7,26 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=4.5.7
+ENV KUSTOMIZE_VERSION=5.1.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.10.3
+ENV HELM_VERSION=3.12.1
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
+
+# Install tini
+ARG TINI_VERSION=0.19.0
+RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-static
+RUN chmod +x /usr/local/bin/tini-static
 
 # Stage2; Argo CD Build Stage
 # We cannot use Ubuntu 22.04 (jammy) image because the combination of
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
 FROM quay.io/cybozu/golang:1.20-focal AS argocd-build
-ENV ARGOCD_VERSION=2.6.8
+ENV ARGOCD_VERSION=2.8.1
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -62,6 +67,7 @@ RUN groupadd -g 10000 argocd && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
+COPY --from=builder /usr/local/bin/tini-static /usr/local/bin/tini
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
 
@@ -83,3 +89,5 @@ RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications
 USER 10000:10000
 
 WORKDIR /home/argocd
+
+ENTRYPOINT ["tini", "--"]
