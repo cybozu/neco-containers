@@ -26,7 +26,7 @@ RUN chmod +x /usr/local/bin/tini-static
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
 FROM quay.io/cybozu/golang:1.20-focal AS argocd-build
-ENV ARGOCD_VERSION=2.8.1
+ENV ARGOCD_VERSION=2.8.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
