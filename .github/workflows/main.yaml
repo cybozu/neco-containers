@@ -32,6 +32,8 @@ jobs:
           - dir: "./pod-delete-rate-limiter"
             container-image: "pod-delete-rate-limiter"
             make_test: true
+          - dir: "./spegel"
+            container-image: "spegel"
 
     runs-on: ubuntu-22.04
     env:
