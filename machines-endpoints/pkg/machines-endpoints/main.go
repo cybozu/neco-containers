@@ -390,7 +390,7 @@ func main() {
 				continue
 			}
 			machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
-			if machine.Spec.Role == "boot" && machine.Status.State != sabakan.StateRetired.String() {
+			if machine.Spec.Role == "boot" && machine.Status.State != sabakan.StateRetired.GQLEnum() {
 				currentBootservers = append(currentBootservers, net.ParseIP(machine.Spec.IPv4[0]))
 			}
 		}
