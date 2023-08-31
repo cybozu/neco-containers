@@ -4,10 +4,13 @@ machines-endpoints container
 `machines-endpoints` is a one-shot program to create/update Kubernetes Endpoints, EndpointSlice and ConfigMap objects based on the information in [sabakan](https://github.com/cybozu-go/sabakan) on bootservers.
 
 The Endpoints/EndpointSlice objects managed by this program are provided for [Prometheus](https://prometheus.io/) to discover services on host machines.
-Note that the host machines listed by this program include spare machines and boot servers.
-Such machines are not registered in Kubernetes as Nodes, and they cannot be scraped with `node` role in `<kubernetes_sd_config>` configuration.
+* The host machines listed by this program include spare machines and boot servers.
+    Such machines are not registered in Kubernetes as Nodes, and they cannot be scraped with `node` role in `<kubernetes_sd_config>` configuration.
+* Retired machines are not listed because they never provide metrics.
 
 The ConfigMap object is provided for [BMC reverse proxy](https://github.com/cybozu/neco-containers/tree/main/bmc-reverse-proxy) to resolve BMC hostnames to IP addresses.
+* The host machines listed by this program include spare machines and boot servers.
+* Retired machines are also listed because we need to operate them via BMCs.
 
 This program works in kubernetes pods.
 
