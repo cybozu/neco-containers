@@ -19,9 +19,12 @@ To use `ceph` and `radosgw-admin` commands in the docker container of ceph-extra
 
 Command-line options are:
 
-| Option | Default value | Description                   |
-| ------ | ------------- | ----------------------------- |
-| `port` | `8080`        | port number to export metrics |
+| Option               | Default value | Description                          |
+| -------------------- | ------------- | ------------------------------------ |
+| `port`               | `8080`        | port number to export metrics        |
+| `export-rgw-metrics` | `true`        | to export RGW related metrics or not |
+
+The `export-rgw-metrics` option is used to disable RGW related metrics on clusters that do not use RGW. Executing `radosgw-admin` creates RGW related pools which for some clusters is unnecessary, and this option was made to prevent it.
 
 API endpoints are:
 
