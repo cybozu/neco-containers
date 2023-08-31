@@ -1,9 +1,13 @@
-machines-endpoints-container
+machines-endpoints container
 ============================
 
-`machines-endpoints` is one shot program to create kubernetes endpoints and configmap from sabakan on bootservers.
+`machines-endpoints` is a one-shot program to create/update Kubernetes Endpoints, EndpointSlice and ConfigMap objects based on the information in [sabakan](https://github.com/cybozu-go/sabakan) on bootservers.
 
-This program is (1) for prometheus to discover services on host machines and (2) for BMC proxy to resolve BMC hostnames to IP addresses.
+The Endpoints/EndpointSlice objects managed by this program are provided for [Prometheus](https://prometheus.io/) to discover services on host machines.
+Note that the host machines listed by this program include spare machines and boot servers.
+Such machines are not registered in Kubernetes as Nodes, and they cannot be scraped with `node` role in `<kubernetes_sd_config>` configuration.
+
+The ConfigMap object is provided for [BMC reverse proxy](https://github.com/cybozu/neco-containers/tree/main/bmc-reverse-proxy) to resolve BMC hostnames to IP addresses.
 
 This program works in kubernetes pods.
 
@@ -15,17 +19,17 @@ Usage
 
    ```console
    vi machines-endpoints.yaml  # adjust tag of container image to the latest one
-   kubectl apply -f machines-endpoints.yaml
+   kubectl apply -n NAMESPACE -f machines-endpoints.yaml
    ```
 
-3. Check `prometheus-node-targets` endpoints, `bootserver-etcd-metrics` endpoints, and `bmc-proxy` configmap.
+3. Check `prometheus-node-targets` endpoints, `bootserver-etcd-metrics` endpoints, and `bmc-reverse-proxy` configmap.
 
    ```console
-   kubectl get endpoints prometheus-node-targets
-   kubectl get endpointslice prometheus-node-targets
-   kubectl get endpoints bootserver-etcd-metrics
-   kubectl get endpointslice bootserver-etcd-metrics
-   kubectl get configmap bmc-proxy
+   kubectl get endpoints -n NAMESPACE prometheus-node-targets
+   kubectl get endpointslice -n NAMESPACE prometheus-node-targets
+   kubectl get endpoints -n NAMESPACE bootserver-etcd-metrics
+   kubectl get endpointslice -n NAMESPACE bootserver-etcd-metrics
+   kubectl get configmap -n NAMESPACE bmc-reverse-proxy
    ```
  
 Docker images

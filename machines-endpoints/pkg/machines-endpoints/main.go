@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
+	sabakan "github.com/cybozu-go/sabakan/v2"
 	serfclient "github.com/hashicorp/serf/client"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
@@ -53,6 +54,9 @@ query search() {
         ipv4
       }
     }
+    status {
+      state
+    }
   }
 }
 `
@@ -75,6 +79,9 @@ type Machine struct {
 		BMC         struct {
 			IPv4 string `json:"ipv4"`
 		}
+	}
+	Status struct {
+		State string `json:"state"`
 	}
 }
 
@@ -376,21 +383,22 @@ func main() {
 	ctx := context.Background()
 
 	if *flgMonitoringEndpoints {
-		// create etcd metrics endpoints on boot servers
-		err = client.updateTargetEndpoints(ctx, bootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-
 		machineIPs := make([]net.IP, 0, len(machines))
+		currentBootservers := make([]net.IP, 0, len(bootservers))
 		for _, machine := range machines {
-			if machine.Spec.IPv4 == nil {
-				continue
-			}
 			if len(machine.Spec.IPv4) == 0 {
 				continue
 			}
 			machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
+			if machine.Spec.Role == "boot" && machine.Status.State != sabakan.StateRetired.String() {
+				currentBootservers = append(currentBootservers, net.ParseIP(machine.Spec.IPv4[0]))
+			}
+		}
+
+		// create etcd metrics endpoints on boot servers
+		err = client.updateTargetEndpoints(ctx, currentBootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+		if err != nil {
+			log.ErrorExit(err)
 		}
 
 		// create node-exporter endpoints on all servers
