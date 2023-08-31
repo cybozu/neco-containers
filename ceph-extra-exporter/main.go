@@ -69,12 +69,16 @@ func init() {
 
 func main() {
 	port := flag.Uint("port", 8080, "port number")
+	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
 	flag.Parse()
 
 	wg := &sync.WaitGroup{}
-	wg.Add(len(rules))
 	ctx, cancel := context.WithCancel(context.Background())
 	for i := 0; i < len(rules); i++ {
+		if !*doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
+			continue
+		}
+		wg.Add(1)
 		go func(r *rule) {
 			executer := newExecuter(r)
 			prometheus.MustRegister(newCollector(executer, "ceph_extra"))
