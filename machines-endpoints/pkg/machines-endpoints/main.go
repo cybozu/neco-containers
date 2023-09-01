@@ -386,12 +386,16 @@ func main() {
 		machineIPs := make([]net.IP, 0, len(machines))
 		currentBootservers := make([]net.IP, 0, len(bootservers))
 		for _, machine := range machines {
+			if machine.Status.State == sabakan.StateRetired.GQLEnum() {
+				continue
+			}
 			if len(machine.Spec.IPv4) == 0 {
 				continue
 			}
-			machineIPs = append(machineIPs, net.ParseIP(machine.Spec.IPv4[0]))
-			if machine.Spec.Role == "boot" && machine.Status.State != sabakan.StateRetired.String() {
-				currentBootservers = append(currentBootservers, net.ParseIP(machine.Spec.IPv4[0]))
+			machineIP := net.ParseIP(machine.Spec.IPv4[0])
+			machineIPs = append(machineIPs, machineIP)
+			if machine.Spec.Role == "boot" {
+				currentBootservers = append(currentBootservers, machineIP)
 			}
 		}
 
