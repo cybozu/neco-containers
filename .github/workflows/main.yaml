@@ -40,6 +40,8 @@ jobs:
             make_test: true
           - dir: "./spegel"
             container-image: "spegel"
+          - dir: "./fluent-bit"
+            container-image: "fluent-bit"
 
     runs-on: ubuntu-22.04
     env:
