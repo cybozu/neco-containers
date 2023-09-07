@@ -9,11 +9,17 @@ jobs:
     strategy:
       matrix:
         job:
+          - dir: ./golang-all/golang-1.19-focal
+            container-image: "golang"
+            enable_arm64: true
+          - dir: ./golang-all/golang-1.19-jammy
+            container-image: "golang"
+            enable_arm64: true
           - dir: "./golang-all/golang-1.20-focal"
             container-image: "golang"
             enable_arm64: true
           - dir: "./golang-all/golang-1.20-jammy"
-            container-image: "golang"
+            container-image: "golang" 
             enable_arm64: true
           - dir: "./golang-all/golang-1.21-focal"
             container-image: "golang"

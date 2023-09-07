@@ -788,21 +788,29 @@ workflows:
           name: build-external-dns
           container-image: external-dns
       - buildx:
-          name: build-golang-1.20-jammy
+          name: build-golang-1.19-focal
           container-image: golang
-          dir: golang-all/golang-1.20-jammy
+          dir: golang-all/golang-1.19-focal
+      - buildx:
+          name: build-golang-1.19-jammy
+          container-image: golang
+          dir: golang-all/golang-1.19-jammy
       - buildx:
           name: build-golang-1.20-focal
           container-image: golang
           dir: golang-all/golang-1.20-focal
       - buildx:
-          name: build-golang-1.21-jammy
+          name: build-golang-1.20-jammy
           container-image: golang
-          dir: golang-all/golang-1.21-jammy
+          dir: golang-all/golang-1.20-jammy
       - buildx:
           name: build-golang-1.21-focal
           container-image: golang
           dir: golang-all/golang-1.21-focal
+      - buildx:
+          name: build-golang-1.21-jammy
+          container-image: golang
+          dir: golang-all/golang-1.21-jammy
       - build:
           name: build-gorush
           container-image: gorush
