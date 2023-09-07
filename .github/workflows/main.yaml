@@ -21,6 +21,12 @@ jobs:
           - dir: "./golang-all/golang-1.20-jammy"
             container-image: "golang" 
             enable_arm64: true
+          - dir: "./golang-all/golang-1.21-focal"
+            container-image: "golang"
+            enable_arm64: true
+          - dir: "./golang-all/golang-1.21-jammy"
+            container-image: "golang"
+            enable_arm64: true
           - dir: "./haproxy"
             container-image: "haproxy"
           - dir: "./trust-manager"
