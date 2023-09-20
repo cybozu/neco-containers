@@ -1,5 +1,5 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.18-focal
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
 # Stage1: build common
@@ -7,14 +7,14 @@ FROM ${GOLANG_IMAGE} as build-base
 ARG DESTDIR
 ENV DESTDIR=${DESTDIR}
 COPY TAG /
-COPY 18449.patch /tmp/
+COPY cilium.patch /tmp/
 
 WORKDIR /go/src/github.com/cilium/cilium
 RUN mkdir -p ${DESTDIR} \
     && VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
       tar xzf - --strip-components 1 \
-    && patch -p1 --no-backup-if-mismatch < /tmp/18449.patch \
+    && patch -p1 --no-backup-if-mismatch < /tmp/cilium.patch \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
     && apt-get update \
@@ -38,6 +38,7 @@ RUN mkdir -p ${DESTDIR} \
 
 FROM build-base as builder
 COPY workspace/bin/llvm-objcopy /bin/
+COPY workspace/bin/clang workspace/bin/llc /bin/
 WORKDIR /go/src/github.com/cilium/cilium
 ARG LIBNETWORK_PLUGIN
 ARG DESTDIR

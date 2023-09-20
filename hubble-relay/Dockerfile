@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.18-focal
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build

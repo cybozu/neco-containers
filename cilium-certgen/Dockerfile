@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.17-focal
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
