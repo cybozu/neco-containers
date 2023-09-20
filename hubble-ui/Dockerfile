@@ -1,10 +1,10 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.19-focal
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:20.04
+ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
 ARG BACKEND_IMAGE=scratch
-ARG NGINX_VERSION=1.23.2
-ARG NJS_VERSION=0.7.7
-ARG PKG_RELEASE=1~focal
-ARG NGINX_UNPRIVILEGED_COMMIT_HASH=85f846c6c5d121b2b750d71c31429d9686523da0
+ARG NGINX_VERSION=1.25.2
+ARG NJS_VERSION=0.8.0
+ARG PKG_RELEASE=1~jammy
+ARG NGINX_UNPRIVILEGED_COMMIT_HASH=0ee942535b802636dd45b2d48b4e4f6d1a3eea89
 
 # Stage 1: build
 FROM ${GOLANG_IMAGE} AS builder-base
@@ -75,7 +75,7 @@ RUN set -x \
         nginx-module-image-filter=${NGINX_VERSION}-${PKG_RELEASE} \
         nginx-module-njs=${NGINX_VERSION}+${NJS_VERSION}-${PKG_RELEASE} \
     " \
-    && echo "deb https://nginx.org/packages/mainline/ubuntu/ focal nginx" >> /etc/apt/sources.list.d/nginx.list \
+    && echo "deb https://nginx.org/packages/mainline/ubuntu/ jammy nginx" >> /etc/apt/sources.list.d/nginx.list \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
                         $nginxPackages \
