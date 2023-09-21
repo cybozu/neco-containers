@@ -1,7 +1,7 @@
 # serf container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
 ARG SERF_VERSION=0.10.1
 
@@ -15,7 +15,7 @@ WORKDIR /go/src/github.com/hashicorp/serf
 RUN go install -ldflags="-w -s" ./...
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 RUN apt-get update \
   && apt-get -y install --no-install-recommends \
