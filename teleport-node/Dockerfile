@@ -1,9 +1,9 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-focal AS build
 
-ARG TELEPORT_VERSION=13.3.1
+ARG TELEPORT_VERSION=13.4.0
 # Install Nodejs
-ARG NODE_VERSION=16.18.1
+ARG NODE_VERSION=18.17.1
 ENV NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
 ENV NODE_PATH="/usr/local/lib/nodejs-linux"
 ENV PATH="$PATH:${NODE_PATH}/bin"
