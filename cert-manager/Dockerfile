@@ -1,6 +1,6 @@
 # cert-manager container
 
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY workspace/webhook /usr/local/bin/webhook
 COPY workspace/cainjector /usr/local/bin/cainjector

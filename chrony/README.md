@@ -6,7 +6,7 @@ Build Docker container image for [Chrony][] NTP server/client.
 Features
 --------
 
-- Chrony 4.3 based on Ubuntu 20.04.
+- Chrony 4.3 based on Ubuntu 22.04.
 - Multi-stage build to minimize the container size.
 
 Usage
