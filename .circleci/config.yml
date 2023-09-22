@@ -511,8 +511,8 @@ jobs:
               flex \
               g++ \
               g++-aarch64-linux-gnu \
-              gcc \
-              gcc-aarch64-linux-gnu \
+              gcc-9 \
+              gcc-9-aarch64-linux-gnu \
               git \
               libelf-dev \
               libelf-dev:arm64 \
@@ -526,6 +526,8 @@ jobs:
               python3-pip \
               unzip
             update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 2
+            update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-9 3
       - run:
           name: Download cilium/image-tools
           command: |
