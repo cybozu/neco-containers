@@ -7,14 +7,14 @@ FROM ${GOLANG_IMAGE} as build-base
 ARG DESTDIR
 ENV DESTDIR=${DESTDIR}
 COPY TAG /
-COPY cilium.patch /tmp/
 
-WORKDIR /go/src/github.com/cilium/cilium
+WORKDIR /go/src/github.com/cybozu-go/
 RUN mkdir -p ${DESTDIR} \
     && VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && curl -fsSL "https://github.com/cilium/cilium/archive/v${VERSION}.tar.gz" | \
-      tar xzf - --strip-components 1 \
-    && patch -p1 --no-backup-if-mismatch < /tmp/cilium.patch \
+    # Since we use the fork and patched repogitory, we need to specify the branch name
+    && BRANCH=v${VERSION}-lb-dsr-patch \
+    && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
+    && cd cilium \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
     && apt-get update \
@@ -39,7 +39,7 @@ RUN mkdir -p ${DESTDIR} \
 FROM build-base as builder
 COPY workspace/bin/llvm-objcopy /bin/
 COPY workspace/bin/clang workspace/bin/llc /bin/
-WORKDIR /go/src/github.com/cilium/cilium
+WORKDIR /go/src/github.com/cybozu-go/cilium
 ARG LIBNETWORK_PLUGIN
 ARG DESTDIR
 ENV PKG_BUILD=1
