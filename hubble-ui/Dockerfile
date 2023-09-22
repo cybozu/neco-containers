@@ -1,10 +1,10 @@
 ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
 ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
 ARG BACKEND_IMAGE=scratch
-ARG NGINX_VERSION=1.25.2
-ARG NJS_VERSION=0.8.0
+ARG NGINX_VERSION=1.23.4
+ARG NJS_VERSION=0.7.11
 ARG PKG_RELEASE=1~jammy
-ARG NGINX_UNPRIVILEGED_COMMIT_HASH=0ee942535b802636dd45b2d48b4e4f6d1a3eea89
+ARG NGINX_UNPRIVILEGED_COMMIT_HASH=582fa68a7609f2d3dad7fb2121af0244b3ce976c
 
 # Stage 1: build
 FROM ${GOLANG_IMAGE} AS builder-base
@@ -18,16 +18,14 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
 
 # Stage 1: build hubble-ui
 FROM builder-base as build-hubble-ui
-ARG NODE_VERSION=16
+ARG NODE_VERSION=18
 
 WORKDIR /app
 
 RUN curl -sSLf https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
-    && npm set unsafe-perm true \
-    && npm install \
-    && npm set unsafe-perm false
+    && npm install
 ARG NODE_ENV=production
 RUN npm run build
 
