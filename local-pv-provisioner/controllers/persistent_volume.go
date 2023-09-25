@@ -87,7 +87,7 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.PersistentVolume{}).
 		WithEventFilter(pred).
-		Watches(&src, &handler.EnqueueRequestForObject{}).
+		WatchesRawSource(&src, &handler.EnqueueRequestForObject{}).
 		Complete(r)
 }
 
