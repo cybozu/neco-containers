@@ -468,7 +468,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:20.04
+      - image: quay.io/cybozu/ubuntu-dev:22.04
     resource_class: 2xlarge+
     steps:
       - checkout
@@ -486,14 +486,14 @@ jobs:
           command: |
             if [ ! -f BUILDS ]; then exit 0; fi
             cat > /etc/apt/sources.list \<< EOF
-            deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal main restricted universe multiverse
-            deb [arch=amd64] http://security.ubuntu.com/ubuntu focal-updates main restricted universe multiverse
-            deb [arch=amd64] http://security.ubuntu.com/ubuntu focal-security main restricted universe multiverse
-            deb [arch=amd64] http://archive.ubuntu.com/ubuntu focal-backports main restricted universe multiverse
-            deb [arch=arm64] http://ports.ubuntu.com/ focal main restricted universe multiverse
-            deb [arch=arm64] http://ports.ubuntu.com/ focal-updates main restricted universe multiverse
-            deb [arch=arm64] http://ports.ubuntu.com/ focal-security main restricted universe multiverse
-            deb [arch=arm64] http://ports.ubuntu.com/ focal-backports main restricted universe multiverse
+            deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy main restricted universe multiverse
+            deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-updates main restricted universe multiverse
+            deb [arch=amd64] http://security.ubuntu.com/ubuntu jammy-security main restricted universe multiverse
+            deb [arch=amd64] http://archive.ubuntu.com/ubuntu jammy-backports main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-security main restricted universe multiverse
+            deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse
             EOF
             dpkg --add-architecture arm64
             apt-get update
@@ -511,8 +511,8 @@ jobs:
               flex \
               g++ \
               g++-aarch64-linux-gnu \
-              gcc \
-              gcc-aarch64-linux-gnu \
+              gcc-9 \
+              gcc-9-aarch64-linux-gnu \
               git \
               libelf-dev \
               libelf-dev:arm64 \
@@ -521,12 +521,13 @@ jobs:
               make \
               ninja-build \
               pkg-config \
-              pkg-config-aarch64-linux-gnu \
               python2 \
               python3 \
               python3-pip \
               unzip
             update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+            update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 2
+            update-alternatives --install /usr/bin/aarch64-linux-gnu-gcc aarch64-linux-gnu-gcc /usr/bin/aarch64-linux-gnu-gcc-9 3
       - run:
           name: Download cilium/image-tools
           command: |
@@ -722,11 +723,11 @@ workflows:
           name: build-chrony
           container-image: chrony
       - build-cilium-envoy:
-          version: ca87bee70e40bfa681d5859e7da4cba6b8ba4e8c
+          version: ad831bdec4c93feeb2378aa9e1847c936ada6ef7
       - build-cilium-image-tools:
           # https://github.com/cilium/image-tools/commits/master
           # From this commit, cilium/image-tools stops building iproute2 because of cilium v1.14 doesn't depend on iproute2.
-          # But, we use v1.12.11, so we still have to build iproute2.
+          # But, we use v1.13.6, so we still have to build iproute2.
           # So we use an older version of image-tools which builds iproute2.
           # https://github.com/cilium/image-tools/commit/8a2f099f14330221848c14808f3208e4dd2469bb
           version: ff22ba3bff1010f4a2dd76ede789663c3beaf8d2
