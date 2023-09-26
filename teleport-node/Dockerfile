@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-focal AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
 ARG TELEPORT_VERSION=13.4.0
 # Install Nodejs
