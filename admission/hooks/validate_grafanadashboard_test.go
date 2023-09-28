@@ -9,6 +9,49 @@ import (
 
 var _ = Describe("validate GrafanaDashboard webhook with ", func() {
 	It("should allow dashboard without any plugins", func() {
+		dashboard := `apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboard
+  namespace: default
+spec:
+  instanceSelector:
+    matchLabels:
+      foo: bar
+  name: dashboard.json
+  json: "{}"
+`
+		gd := &unstructured.Unstructured{}
+		dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		_, _, err := dec.Decode([]byte(dashboard), nil, gd)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(k8sClient.Create(testCtx, gd)).ShouldNot(HaveOccurred())
+	})
+
+	It("should deny dashboard with some plugins", func() {
+		dashboardWithPlugins := `apiVersion: grafana.integreatly.org/v1beta1
+kind: GrafanaDashboard
+metadata:
+  name: dashboard-with-plugins
+  namespace: default
+spec:
+  name: dashboard-with-plugins.json
+  instanceSelector:
+    matchLabels:
+      foo: bar
+  json: "{}"
+  plugins:
+    - name: "grafana-piechart-panel"
+      version: "1.3.6"
+`
+		gd := &unstructured.Unstructured{}
+		dec := yaml.NewDecodingSerializer(unstructured.UnstructuredJSONScheme)
+		_, _, err := dec.Decode([]byte(dashboardWithPlugins), nil, gd)
+		Expect(err).ShouldNot(HaveOccurred())
+		Expect(k8sClient.Create(testCtx, gd)).Should(HaveOccurred())
+	})
+
+	It("should allow v4 dashboard without any plugins", func() {
 		dashboard := `apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:
@@ -25,7 +68,7 @@ spec:
 		Expect(k8sClient.Create(testCtx, gd)).ShouldNot(HaveOccurred())
 	})
 
-	It("should deny dashboard with some plugins", func() {
+	It("should deny v4 dashboard with some plugins", func() {
 		dashboardWithPlugins := `apiVersion: integreatly.org/v1alpha1
 kind: GrafanaDashboard
 metadata:

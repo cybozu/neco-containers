@@ -91,7 +91,7 @@ PodValidator validates Pod specifications as follows:
 GrafanaDashboardValidator
 -------------------------
 
-GrafanaDashboardValidator validates [GrafanaDashboard](https://github.com/grafana-operator/grafana-operator/blob/v3.2.0/documentation/dashboards.md).
+GrafanaDashboardValidator validates [GrafanaDashboard](https://grafana-operator.github.io/grafana-operator/docs/api/#grafanadashboard).
 
 This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` is empty.
 
