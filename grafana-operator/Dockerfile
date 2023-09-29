@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG VERSION=4.10.1
+ARG VERSION=5.4.1
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -20,8 +20,6 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator mai
 FROM quay.io/cybozu/ubuntu:22.04
 USER 10000:10000
 
-COPY --from=build /work/grafana-operator/grafonnet-lib/grafonnet/ /opt/jsonnet/grafonnet
-COPY --from=build /work/grafana-operator/grafonnet-lib/LICENSE /opt/jsonnet/LICENSE.grafonnet
 COPY --from=build /usr/local/bin/grafana-operator /usr/local/bin/grafana-operator
 COPY --from=build /work/grafana-operator/LICENSE /usr/local/grafana-operator/LICENSE
 

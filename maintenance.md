@@ -407,10 +407,11 @@ Ignore!!!
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/grafana-operator/grafana-operator/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/Dockerfile
+2. Check the upstream build procedure (Makefile, Dockerfile, .ko.yaml, etc). At the point of v5.4.1, grafana-operator is built by [ko](https://github.com/ko-build/ko) with its default configuration.
+   If there are any updates, update our `Dockerfile`.
+   - https://github.com/grafana-operator/grafana-operator/tree/vX.Y.Z
 3. Update `VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG`.
+4. Update `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
 6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
