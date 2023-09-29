@@ -1,12 +1,12 @@
 # squid container
 
-FROM quay.io/cybozu/ubuntu-dev:20.04 as build
+FROM quay.io/cybozu/ubuntu-dev:22.04 as build
 
-ARG SQUID_VERSION=5.8
+ARG SQUID_VERSION=6.3
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
-RUN curl -sfLO http://www.squid-cache.org/Versions/v5/squid-${SQUID_VERSION}.tar.xz \
+RUN curl -sfLO http://www.squid-cache.org/Versions/v6/squid-${SQUID_VERSION}.tar.xz \
     && tar --strip-components=1 -xf /work/squid-${SQUID_VERSION}.tar.xz \
     && CFLAGS="-mavx2" CXXFLAGS="-mavx2" ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
@@ -16,7 +16,7 @@ RUN curl -sfLO http://www.squid-cache.org/Versions/v5/squid-${SQUID_VERSION}.tar
     && make install
 
 # stage2: production image
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /usr/local/squid /usr/local/squid
 COPY --from=build /etc/squid /etc/squid
