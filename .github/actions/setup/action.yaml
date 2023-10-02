@@ -17,7 +17,7 @@ runs:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
       with:
-        platforms: linux/adm64,linux/arm64/v8
+        platforms: linux/amd64,linux/arm64/v8
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
     - name: Login to GitHub Container Registry
@@ -32,4 +32,4 @@ runs:
         go-version: ${{ inputs.go-version }}
     - name: Install container-tag-exists
       shell: bash
-      run: go install github.com/Hsn723/container-tag-exists@latest  
+      run: go install github.com/Hsn723/container-tag-exists@latest
