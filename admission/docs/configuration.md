@@ -41,3 +41,49 @@ ArgoCDApplicationValidator:
       projects:
         - maneki
 ```
+
+HttpProxyMutator
+----------------
+
+The configuration of `HttpProxyMutator` is a map with the following keys.
+| Name     | Type       | Description                                |
+| -------- | ---------- | ---------------------- |
+| policies | \[\]policy | A list of policy. |
+
+Each policy represents an IP restriction that you want to add.
+
+| Name             | Type       | Description                                                                            |
+| ---------------- | ---------- | -------------------------------------------------------------------------------------- |
+| name       | string     | |
+| ipAllowPolicy         | \[\][IPFilterPolicy](https://projectcontour.io/docs/main/config/api/#projectcontour.io/v1.IPFilterPolicy) |  |
+
+### Example
+
+config.yaml
+```yaml
+HttpProxyMutator:
+  policies:
+  - name: <annotation word>
+    ipAllowPolicy:
+    - source: Peer
+      cidr: xxx.yyy.zzz.111
+```
+
+httpproxy.yaml
+```yaml
+apiVersion: projectcontour.io/v1
+kind: HTTPProxy
+metadata:
+  name: hoge
+  namespace: fuga
+  annotations:
+    ip-policy: <annotation word>
+spec:
+  ~~~
+  routes:
+  - ~~~
+    # insert from mutating webhook
+    ipAllowPolicy:
+    - source: Peer
+      cidr: xxx.yyy.zzz.111
+```
