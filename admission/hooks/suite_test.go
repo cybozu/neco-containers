@@ -130,7 +130,7 @@ var _ = BeforeSuite(func() {
 	if isHTTPProxyMutationDisabled() {
 		wh.Register(contourMutatingWebhookPath, &webhook.Admission{Handler: &nullWebhook{}})
 	} else {
-		wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured"))
+		wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured", httpproxyMutatorConfig))
 	}
 	wh.Register(contourValidateWebhookPath, NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig, permissive))
