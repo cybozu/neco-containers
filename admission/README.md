@@ -18,12 +18,14 @@ their applications.
 To enforce this, `ArgoCDApplicationValidator` validates Application resources.
 
 See the [document](docs/configuration.md#argocdapplicationvalidator) for
-the configuration of `ArgoCDApplicationValitor`.
+the configuration of `ArgoCDApplicationValidator`.
 
 If `VAPPLICATION_REPOSITORY_PERMISSIVE=true` envvar is set, this does not deny Applications but issues an warning.
 
 ContourHTTPProxyMutator / ContourHTTPProxyValidator
 ---------------------------------------------------
+
+### Ingress Class Name
 
 Contour's [HTTPProxy resource](https://projectcontour.io/docs/main/config/fundamentals/) can specify
 [the Ingress class](https://projectcontour.io/docs/main/config/ingress/) that should interpret and serve the Ingress.
@@ -40,6 +42,14 @@ The mutating webhook enforces the default ingress class of `.spec.ingressClassNa
 The default value can be configured with the `--httpproxy-default-class` option for `neco-admission`.
 
 The validating webhook prevents creating `HTTPProxy` without the annotations nor the field, and prevents updating `HTTPProxy` to change the annotation values.
+
+### IP Allow Filter Policy
+
+The virtual host route set for the HTTPProxy resource has a setting to allow matching requests.
+The mutating webhook set this filtering policy by the annotation values with a predetermined value.
+
+See the [document](docs/configuration.md#httpproxymutator) for
+the configuration of `HTTPProxyMutator`.
 
 DeleteValidator
 ---------------

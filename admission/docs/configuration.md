@@ -42,20 +42,20 @@ ArgoCDApplicationValidator:
         - maneki
 ```
 
-HttpProxyMutator
+HTTPProxyMutator
 ----------------
 
-The configuration of `HttpProxyMutator` is a map with the following keys.
-| Name     | Type       | Description                                |
-| -------- | ---------- | ---------------------- |
+The configuration of `HTTPProxyMutator` is a map with the following keys.
+| Name     | Type       | Description       |
+| -------- | ---------- | ----------------- |
 | policies | \[\]policy | A list of policy. |
 
 Each policy represents an IP restriction that you want to add.
 
-| Name             | Type       | Description                                                                            |
-| ---------------- | ---------- | -------------------------------------------------------------------------------------- |
-| name       | string     | |
-| ipAllowPolicy         | \[\][IPFilterPolicy](https://projectcontour.io/docs/main/config/api/#projectcontour.io/v1.IPFilterPolicy) |  |
+| Name          | Type                                                                                                      | Description |
+| ------------- | --------------------------------------------------------------------------------------------------------- | ----------- |
+| name          | string                                                                                                    |             |
+| ipAllowPolicy | \[\][IPFilterPolicy](https://projectcontour.io/docs/main/config/api/#projectcontour.io/v1.IPFilterPolicy) |             |
 
 ### Example
 
@@ -63,7 +63,7 @@ config.yaml
 ```yaml
 HttpProxyMutator:
   policies:
-  - name: <annotation word>
+  - name: <policy name>
     ipAllowPolicy:
     - source: Peer
       cidr: xxx.yyy.zzz.111
@@ -77,7 +77,7 @@ metadata:
   name: hoge
   namespace: fuga
   annotations:
-    ip-policy: <annotation word>
+    ip-policy: <policy name>
 spec:
   ~~~
   routes:
