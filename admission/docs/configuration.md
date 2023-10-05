@@ -77,7 +77,7 @@ metadata:
   name: hoge
   namespace: fuga
   annotations:
-    ip-policy: <policy name>
+    admission.cybozu.com/ip-policy: <policy name>
 spec:
   ~~~
   routes:
