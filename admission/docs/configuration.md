@@ -51,6 +51,8 @@ The configuration of `HTTPProxyMutator` is a map with the following keys.
 | policies | \[\]policy | A list of policy. |
 
 Each policy represents an IP restriction that you want to add.
+The order of ipAllowPolicy for HTTPProxy resources modified with this mutating webhook is not guaranteed.
+if the originally listed ipAllowPolicy and the ipAllowPolicy specified in the annotation are the same, the duplicate IPFilterPolicy will not be added.
 
 | Name          | Type                                                                                                      | Description |
 | ------------- | --------------------------------------------------------------------------------------------------------- | ----------- |
