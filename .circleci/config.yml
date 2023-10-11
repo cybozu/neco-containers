@@ -361,7 +361,12 @@ jobs:
                 exit 0
             fi
             cd src
-            git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
+            # Workaround. v1.26.5 is not tagged yet.
+            # git clone --depth 1 --branch v<< parameters.version >> https://github.com/envoyproxy/envoy
+            git clone https://github.com/envoyproxy/envoy
+            cd envoy
+            git checkout d3663038baad00278ca6d2663f7859a913b96d73
+            cd ../
             curl -o /tmp/clang.tar.xz -sLf https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
             mkdir llvm
             tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
@@ -773,8 +778,12 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.26.4
-          bazel-version: 6.1.0
+          # When updating the envoy to v1.26.5, the git tag `v1.26.5` was not tagged to the envoyproxy/envoy.
+          # So, we checked out the commit ID directly in the `build-envoy` job.
+          # Please revert the following changes the next time.
+          # https://github.com/cybozu/neco-containers/pull/1105
+          version: 1.26.5
+          bazel-version: 6.3.2
       - build:
           name: build-envoy-container
           container-image: envoy
