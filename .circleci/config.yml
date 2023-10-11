@@ -778,6 +778,10 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
+          # When updating the envoy to v1.26.5, the git tag `v1.26.5` was not tagged to the envoyproxy/envoy.
+          # So, we checked out the commit ID directly in the `build-envoy` job.
+          # Please revert the following changes the next time.
+          # https://github.com/cybozu/neco-containers/pull/1105
           version: 1.26.5
           bazel-version: 6.3.2
       - build:
