@@ -63,7 +63,7 @@ if the originally listed ipAllowPolicy and the ipAllowPolicy specified in the an
 
 config.yaml
 ```yaml
-HttpProxyMutator:
+HTTPProxyMutator:
   policies:
   - name: <policy name>
     ipAllowPolicy:
