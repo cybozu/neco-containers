@@ -357,8 +357,8 @@ This section applies to the following containers. These containers are maintaine
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/Dockerfile
+2. Check the upstream `.ko.yaml`. If there are any updates, update our `Dockerfile`.
+   - https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/.ko.yaml
 3. Update `EXTERNALDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `TAG` file.

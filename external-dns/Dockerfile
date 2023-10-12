@@ -1,9 +1,9 @@
 # ExternalDNS container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-focal AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG EXTERNALDNS_VERSION=0.13.4
+ARG EXTERNALDNS_VERSION=0.13.6
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-sigs/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
@@ -15,7 +15,7 @@ WORKDIR /work/external-dns/
 RUN make build
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM quay.io/cybozu/ubuntu:22.04
 
 COPY --from=build /work/external-dns/build/external-dns /usr/local/external-dns/bin/external-dns
 COPY --from=build /work/external-dns/LICENSE  /usr/local/external-dns/LICENSE
