@@ -3,6 +3,7 @@ package hooks
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -132,11 +133,12 @@ func (m *contourHTTPProxyMutator) mutateHTTPProxyPolicy(hp *unstructured.Unstruc
 	ann := hp.GetAnnotations()
 	if key, ok := ann[annotationIpPolicy]; ok {
 		policy, ok := getHTTPProxyPolicy(m.config.Policies, key)
-		if ok {
-			err := setHTTPProxyPolicyField(hp, policy)
-			if err != nil {
-				return admission.Errored(http.StatusInternalServerError, err)
-			}
+		if !ok {
+			return admission.Errored(http.StatusBadRequest, fmt.Errorf("failed to find %s=%s from configuration", annotationIpPolicy, key))
+		}
+		err := setHTTPProxyPolicyField(hp, policy)
+		if err != nil {
+			return admission.Errored(http.StatusInternalServerError, err)
 		}
 	}
 	return admission.Allowed("ok")

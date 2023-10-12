@@ -99,4 +99,28 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 	})
+
+	It("should allow httpproxy to update to add admission.cybozu.com/ip-policy", func() {
+		hp := fillHTTPProxy("vhp9", map[string]string{annotationContourIngressClass: "global"}, nil)
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+
+		ann := hp.GetAnnotations()
+		ann[annotationIpPolicy] = "restricted"
+		hp.SetAnnotations(ann)
+		err = k8sClient.Update(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should deny httpproxy to update to change admission.cybozu.com/ip-policy", func() {
+		hp := fillHTTPProxy("vhp10", map[string]string{annotationIpPolicy: "restricted", annotationContourIngressClass: "global"}, nil)
+		err := k8sClient.Create(testCtx, hp)
+		Expect(err).NotTo(HaveOccurred())
+
+		ann := hp.GetAnnotations()
+		ann[annotationIpPolicy] = "updated"
+		hp.SetAnnotations(ann)
+		err = k8sClient.Update(testCtx, hp)
+		Expect(err).To(HaveOccurred())
+	})
 })

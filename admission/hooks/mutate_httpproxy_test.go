@@ -20,6 +20,10 @@ var httpproxyMutatorConfig = &HTTPProxyMutatorConfig{
 				},
 			},
 		},
+		{
+			Name:          "updated",
+			IpAllowPolicy: []HTTPProxyIPFilterPolicy{},
+		},
 	},
 }
 
