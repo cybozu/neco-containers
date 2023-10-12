@@ -15,7 +15,7 @@ const (
 	annotationKubernetesIngressClass = "kubernetes.io/ingress.class"
 	annotationContourIngressClass    = "projectcontour.io/ingress.class"
 	fieldIngressClassName            = "ingressClassName"
-	annotationIpPolicy               = "ip-policy"
+	annotationIpPolicy               = annotatePrefix + "ip-policy"
 )
 
 // +kubebuilder:webhook:path=/mutate-projectcontour-io-httpproxy,mutating=true,failurePolicy=fail,sideEffects=None,groups=projectcontour.io,resources=httpproxies,verbs=create;update,versions=v1,name=mhttpproxy.kb.io,admissionReviewVersions={v1,v1beta1}
