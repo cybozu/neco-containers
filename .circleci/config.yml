@@ -773,7 +773,7 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.26.6
+          version: 1.27.1
           bazel-version: 6.3.2
       - build:
           name: build-envoy-container
