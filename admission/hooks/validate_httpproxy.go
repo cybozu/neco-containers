@@ -67,6 +67,12 @@ func (v *contourHTTPProxyValidator) Handle(ctx context.Context, req admission.Re
 		if newIngressClassNameField != oldIngressClassNameField {
 			return admission.Denied("changing field .spec.ingressClassName is not allowed")
 		}
+
+		oldAnnIpPolicy, ok := oldAnn[annotationIpPolicy]
+		// allow to update to add ip-policy annotation
+		if ok && oldAnnIpPolicy != newAnn[annotationIpPolicy] {
+			return admission.Denied("changing annotation " + annotationIpPolicy + " is not allowed")
+		}
 	}
 
 	return admission.Allowed("ok")

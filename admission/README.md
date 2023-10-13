@@ -48,6 +48,8 @@ The validating webhook prevents creating `HTTPProxy` without the annotations nor
 The virtual host route set for the HTTPProxy resource has a setting to allow matching requests.
 The mutating webhook set this filtering policy by the annotation values with a predetermined value.
 
+The validating webhook prevents updating `HTTPProxy` to change the annotation values. Also, this webhook allows updates to add annotations from an unannotated state.
+
 See the [document](docs/configuration.md#httpproxymutator) for
 the configuration of `HTTPProxyMutator`.
 
