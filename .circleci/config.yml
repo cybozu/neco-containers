@@ -368,6 +368,7 @@ jobs:
             cd envoy
             bazel/setup_clang.sh $(pwd)/../llvm
             echo "build --config=clang" >> user.bazelrc
+            sed -i s/envoy_dependencies_extra\(\)/envoy_dependencies_extra\(ignore_root_user_error=True\)/ WORKSPACE
             bazel --bazelrc=/dev/null build --jobs=20 -c opt //source/exe:envoy-static.stripped
             mv bazel-bin/source/exe/envoy-static.stripped ../workspace/envoy
             mv LICENSE ../workspace
@@ -773,7 +774,7 @@ workflows:
           name: build-dex
           container-image: dex
       - build-envoy:
-          version: 1.26.6
+          version: 1.27.2
           bazel-version: 6.3.2
       - build:
           name: build-envoy-container
