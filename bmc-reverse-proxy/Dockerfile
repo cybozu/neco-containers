@@ -1,7 +1,7 @@
 # bmc-reverse-proxy container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-focal AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 COPY . /work
 
