@@ -660,6 +660,7 @@ workflows:
       - test:
           name: test-machines-endpoints
           directory: machines-endpoints
+          go-image-tag: 1.21-jammy
       - test-necosen
       - test:
           name: test-s3gw
