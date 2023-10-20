@@ -908,6 +908,9 @@ workflows:
           name: build-promtail
           container-image: promtail
       - build:
+          name: build-promtail-debug
+          container-image: promtail-debug
+      - build:
           name: build-pushgateway
           container-image: pushgateway
       - build:
