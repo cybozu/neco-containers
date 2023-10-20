@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-jammy AS build
-ARG GRAFANA_VERSION=9.5.7
+ARG GRAFANA_VERSION=10.2.0
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -13,8 +13,11 @@ RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.ta
 
 # Install Node.js 18.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions
-RUN curl -sSLf https://deb.nodesource.com/setup_18.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
+RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
+    && mkdir -p /etc/apt/keyrings \
+    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+    && apt-get update && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
@@ -26,7 +29,7 @@ RUN go mod verify
 RUN make build-go
 
 # Stage2: setup runtime container
-# refer to : https://github.com/grafana/grafana/blob/v9.5.2/Dockerfile#L75-L164
+# refer to : https://github.com/grafana/grafana/blob/v10.1.5/Dockerfile#L76-L165
 FROM quay.io/cybozu/ubuntu:22.04
 ARG GF_UID="10000"
 ARG GF_GID="10000"
