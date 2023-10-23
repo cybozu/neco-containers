@@ -646,6 +646,7 @@ workflows:
       - test:
           name: test-bmc-reverse-proxy
           directory: bmc-reverse-proxy
+          go-image-tag: 1.21-jammy
       - test:
           name: test-ceph-extra-exporter
           directory: ceph-extra-exporter
