@@ -1,0 +1,32 @@
+diff --git a/clients/pkg/logentry/stages/extensions.go b/clients/pkg/logentry/stages/extensions.go
+index f25ffe02e..60a0998f4 100644
+--- a/clients/pkg/logentry/stages/extensions.go
++++ b/clients/pkg/logentry/stages/extensions.go
+@@ -1,8 +1,11 @@
+ package stages
+ 
+ import (
++	"fmt"
++	"os"
+ 	"strings"
+ 	"sync"
++	"time"
+ 
+ 	"github.com/go-kit/log"
+ 	"github.com/go-kit/log/level"
+@@ -76,6 +79,15 @@ func (c *cri) Run(entry chan Entry) chan Entry {
+ 				}
+ 
+ 				level.Warn(c.base.logger).Log("msg", "cri stage: partial lines upperbound exceeded. merging it to single line", "threshold", c.cfg.MaxPartialLines)
++				file, err := os.Create("/tmp/partial-" + time.Now().Format("2006-01-02T15:04:05") + ".txt")
++				if err == nil {
++					func() {
++						defer file.Close()
++						for _, e := range c.partialLines {
++							fmt.Fprintf(file, "%s %v %s\n", e.Timestamp.Format("2006-01-02T15:04:05"), e.Labels, e.Line)
++						}
++					}()
++				}
+ 
+ 				c.partialLines = make(map[model.Fingerprint]Entry, c.cfg.MaxPartialLines)
+ 				c.ensureTruncateIfRequired(&e)
