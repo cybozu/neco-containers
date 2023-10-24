@@ -9,68 +9,77 @@ import (
 
 func TestCephExecuterUpdate(t *testing.T) {
 	testcases := map[string]struct {
-		rule   rule
-		expect map[string][]metricValue
+		rule                rule
+		expectedMetricValue map[string][]metricValue
+		expectedFailedCount map[string]int
 	}{
 		"happy path": {
 			rule: rule{
-				name:    "osd_pool_autoscale_status",
-				command: []string{"echo", autoscale_status_json},
+				name:    "test",
+				command: []string{"echo", `[{"key": "key1", "value": 1}, {"key": "key2", "value": 2}]`},
 				metrics: map[string]metric{
-					"pool_count": {
+					"sum": {
 						metricType: prometheus.GaugeValue,
-						help:       "pool count of `ceph osd pool autoscale-status` command",
-						jqFilter:   "[{value: . | length, labels: []}]",
+						jqFilter:   "[{value: . | map(.value) | add, labels: []}]",
 					},
-					"actual_capacity_ratio": {
+					"value": {
 						metricType: prometheus.GaugeValue,
-						help:       "",
-						jqFilter:   "[.[] | {value: .actual_capacity_ratio, labels: [.pool_name]}]",
-						labelKeys:  []string{"pool_name"},
+						jqFilter:   "[.[] | {value: .value, labels: [.key]}]",
+						labelKeys:  []string{"key"},
 					},
 				},
 			},
-			expect: map[string][]metricValue{
-				"pool_count": {{value: 2.0, labelValues: []string{}}},
-				"actual_capacity_ratio": {
-					{value: 0.0, labelValues: []string{"device_health_metrics"}},
-					{value: 1.0802450726274402, labelValues: []string{"ceph-ssd-block-pool"}},
+			expectedMetricValue: map[string][]metricValue{
+				"sum": {{value: 3, labelValues: []string{}}},
+				"value": {
+					{value: 1, labelValues: []string{"key1"}},
+					{value: 2, labelValues: []string{"key2"}},
 				},
 			},
+			expectedFailedCount: map[string]int{},
 		},
 		"command execution failed": {
 			rule: rule{
-				name:    "osd_pool_autoscale_status",
+				name:    "test",
 				command: []string{"false"},
 			},
-			expect: map[string][]metricValue{},
+			expectedMetricValue: map[string][]metricValue{},
+			expectedFailedCount: map[string]int{
+				"command": 1,
+			},
 		},
 		"invalid jq filter": {
 			rule: rule{
-				name:    "osd_pool_autoscale_status",
-				command: []string{"echo", autoscale_status_json},
+				name:    "test",
+				command: []string{"echo", `[{"key": "key1", "value": 1}, {"key": "key2", "value": 2}]`},
 				metrics: map[string]metric{
-					"pool_count": {
+					"sum": {
 						metricType: prometheus.GaugeValue,
-						help:       "pool count of `ceph osd pool autoscale-status` command",
-						jqFilter:   "[{value: . | length, labels: []}]",
+						jqFilter:   "[{value: . | map(.value) | add, labels: []}]",
 					},
-					"pg_autoscale_mode": {
+					"not_integer": {
 						metricType: prometheus.GaugeValue,
-						help:       "",
-						jqFilter:   "[.[] | {value: .pg_autoscale_mode, labels: [.pool_name]}]",
-						labelKeys:  []string{"pool_name"},
+						jqFilter:   "[.[] | {value: .key, labels: [.key]}]",
+						labelKeys:  []string{"key"},
 					},
 					"do_not_exist": {
 						metricType: prometheus.GaugeValue,
-						help:       "",
-						jqFilter:   "[.[] | {value: .do_not_exist, labels: [.pool_name]}]",
-						labelKeys:  []string{"pool_name"},
+						jqFilter:   "[.[] | {value: .do_not_exist, labels: [.key]}]",
+						labelKeys:  []string{"key"},
+					},
+					"broken_filter": {
+						metricType: prometheus.GaugeValue,
+						jqFilter:   "(",
+						labelKeys:  []string{"key"},
 					},
 				},
 			},
-			expect: map[string][]metricValue{
-				"pool_count": {{value: 2.0, labelValues: []string{}}},
+			expectedMetricValue: map[string][]metricValue{
+				"sum": {{value: 3, labelValues: []string{}}},
+			},
+			expectedFailedCount: map[string]int{
+				"jq":    1,
+				"parse": 2,
 			},
 		},
 	}
@@ -80,7 +89,8 @@ func TestCephExecuterUpdate(t *testing.T) {
 			ce := newExecuter(&tc.rule)
 			ce.update()
 
-			assert.Equal(t, tc.expect, ce.metricValues)
+			assert.Equal(t, tc.expectedMetricValue, ce.metricValues)
+			assert.Subset(t, ce.failedCounter, tc.expectedFailedCount)
 		})
 	}
 }
