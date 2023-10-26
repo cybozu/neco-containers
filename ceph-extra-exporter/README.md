@@ -86,6 +86,14 @@ API endpoints are:
 | ------ | ----------- |
 | bucket | bucket name |
 
+### `ceph_extra_osd_df_crush_weight`
+
+`ceph_extra_osd_df_crush_weight` is a gauge metric that gives crush_weight of OSDs.
+
+| Label       | Description |
+| ----------- | ----------- |
+| ceph_daemon | OSD name    |
+
 ## How to add metrics
 
 Add a new rule to `main.go` like below.

@@ -2,6 +2,8 @@ package main
 
 import "github.com/prometheus/client_golang/prometheus"
 
+var _ prometheus.Collector = &cephCollector{}
+
 type cephCollector struct {
 	executer       *cephExecuter
 	describe       map[string]*prometheus.Desc

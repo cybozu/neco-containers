@@ -51,6 +51,18 @@ var rules = []rule{
 			},
 		},
 	},
+	{
+		name:    "osd_df",
+		command: []string{"ceph", "osd", "df", "-f", "json"},
+		metrics: map[string]metric{
+			"crush_weight": {
+				metricType: prometheus.GaugeValue,
+				help:       "WEIGHT of `ceph osd df` command",
+				jqFilter:   "[.nodes[] | {value: .crush_weight, labels: [.name]}]",
+				labelKeys:  []string{"ceph_daemon"},
+			},
+		},
+	},
 }
 
 //go:embed TAG
@@ -67,15 +79,15 @@ func init() {
 	prometheus.MustRegister(buildInfo)
 }
 
-func main() {
-	port := flag.Uint("port", 8080, "port number")
-	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
-	flag.Parse()
-
+func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
+	defer func() {
+		cancel()
+		wg.Wait()
+	}()
 	for i := 0; i < len(rules); i++ {
-		if !*doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
+		if !doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
 			continue
 		}
 		wg.Add(1)
@@ -94,14 +106,23 @@ func main() {
 	mux.Handle("/v1/metrics", promhttp.Handler())
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", *port),
+		Addr:    fmt.Sprintf(":%d", port),
 		Handler: mux,
 	}
 
 	if err := server.ListenAndServe(); err != nil {
 		_ = logger.Critical("failed to ListenAndServe", map[string]interface{}{log.FnError: err})
-		cancel()
-		wg.Wait()
+		return err
+	}
+
+	return nil
+}
+
+func main() {
+	port := flag.Uint("port", 8080, "port number")
+	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	flag.Parse()
+	if err := startServer(rules, *port, *doesRunRGWAdmin); err != nil {
 		os.Exit(1)
 	}
 }
