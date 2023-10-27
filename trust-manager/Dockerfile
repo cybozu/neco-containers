@@ -1,7 +1,7 @@
 # trust-manager container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
 COPY TAG /
 WORKDIR /workspace
