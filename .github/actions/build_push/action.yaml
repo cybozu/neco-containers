@@ -12,6 +12,9 @@ inputs:
   github_token:
     description: "GitHub Token"
     required: true
+  yamory_token:
+    description: "Yamory Access Token"
+    required: true
   enable_arm64:
     description: "Add arm64 to container image platform"
     required: false
@@ -22,6 +25,10 @@ inputs:
     required: false
     type: boolean
     default: false
+  scan:
+    description: "Enable image scanning"
+    required: false
+    default: "false"
 
 runs:
   using: "composite"
@@ -83,3 +90,17 @@ runs:
         tags: |
           ${{ env.BUILDS_TAG }}
           ${{ env.BUILDS_BRANCH }}
+    - name: Install Trivy
+      if: inputs.scan && env.BUILDS_TAG != null
+      shell: bash
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - name: Scan images
+      if: inputs.scan == 'true' && env.BUILDS_TAG != null
+      shell: bash
+      env:
+        YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
+      run: |
+        echo
+        echo "scanning $BUILDS_TAG ..."
+        YAMORY_IMAGE_NAME="$BUILDS_TAG" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"

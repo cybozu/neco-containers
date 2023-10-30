@@ -12,23 +12,30 @@ jobs:
           - dir: ./golang-all/golang-1.19-focal
             container-image: "golang"
             enable_arm64: true
+            scan: "true"
           - dir: ./golang-all/golang-1.19-jammy
             container-image: "golang"
             enable_arm64: true
+            scan: "true"
           - dir: "./golang-all/golang-1.20-focal"
             container-image: "golang"
             enable_arm64: true
+            scan: "true"
           - dir: "./golang-all/golang-1.20-jammy"
             container-image: "golang" 
             enable_arm64: true
+            scan: "true"
           - dir: "./golang-all/golang-1.21-focal"
             container-image: "golang"
             enable_arm64: true
+            scan: "true"
           - dir: "./golang-all/golang-1.21-jammy"
             container-image: "golang"
             enable_arm64: true
+            scan: "true"
           - dir: "./haproxy"
             container-image: "haproxy"
+            scan: "true"
           - dir: "./trust-manager"
             container-image: "trust-manager"
           - dir: "./stakater-reloader"
@@ -42,6 +49,7 @@ jobs:
             container-image: "spegel"
           - dir: "./fluent-bit"
             container-image: "fluent-bit"
+            scan: "true"
 
     runs-on: ubuntu-22.04
     env:
@@ -57,7 +65,9 @@ jobs:
         uses: ./.github/actions/build_push
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
           enable_arm64:  ${{ matrix.job.enable_arm64 }}
           make_test: ${{ matrix.job.make_test }}
+          scan: ${{ matrix.job.scan }}

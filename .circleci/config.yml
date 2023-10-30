@@ -37,6 +37,9 @@ jobs:
       resource-class:
         type: string
         default: medium
+      scan:
+        type: boolean
+        default: false
     description: "build << parameters.container-image >>"
     working_directory: /app
     docker:
@@ -134,6 +137,40 @@ jobs:
                   docker push quay.io/cybozu/$image:$BRANCH
               fi
             done
+      - when:
+          condition: << parameters.scan >>
+          steps:
+            - run:
+                name: Install Trivy
+                command: |
+                  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+            - run:
+                name: Scan images
+                command: |
+                  if [ "${CIRCLE_BRANCH}" != "main" ]; then
+                      exit 0
+                  fi
+                  if [ ! -f BUILDS ]; then
+                      echo "no need to scan << parameters.container-image >>."
+                      exit 0
+                  fi
+                  
+                  dir=<< parameters.dir >>
+                  if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+                  targets="<< parameters.targets >>"
+                  if [ "$targets" = "" ]; then
+                      images=<< parameters.container-image >>
+                  else
+                      images=
+                      for target in $targets; do
+                          images="$images << parameters.container-image >>-$target"
+                      done
+                  fi
+                  TAG=$(cat $dir/TAG)
+                  for image in $images; do
+                      echo "scanning $image:$TAG ..."
+                      YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+                  done
   buildx:
     # This is a parameterized job
     # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
@@ -681,15 +718,19 @@ workflows:
       - build:
           name: build-alertmanager
           container-image: alertmanager
+          scan: true
       - build:
           name: build-argocd
           container-image: argocd
+          scan: true
       - build:
           name: build-bird
           container-image: bird
+          scan: true
       - build:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
+          scan: true
       - build:
           name: build-bmc-reverse-proxy
           container-image: bmc-reverse-proxy
@@ -722,9 +763,11 @@ workflows:
           dir: cert-manager
           requires:
             - build-cert-manager
+          scan: true
       - build:
           name: build-chrony
           container-image: chrony
+          scan: true
       - build-cilium-envoy:
           version: ad831bdec4c93feeb2378aa9e1847c936ada6ef7
       - build-cilium-image-tools:
@@ -742,6 +785,7 @@ workflows:
           requires:
             - build-cilium-envoy
             - build-cilium-image-tools
+          scan: true
       - build:
           name: build-cilium-operator-generic
           container-image: cilium-operator-generic
@@ -757,6 +801,7 @@ workflows:
       - build:
           name: build-coredns
           container-image: coredns
+          scan: true
       - build:
           name: build-csi-attacher
           container-image: csi-attacher
@@ -775,6 +820,7 @@ workflows:
       - build:
           name: build-dex
           container-image: dex
+          scan: true
       - build-envoy:
           version: 1.27.2
           bazel-version: 6.3.2
@@ -785,12 +831,15 @@ workflows:
           dir: envoy
           requires:
             - build-envoy
+          scan: true
       - build:
           name: build-etcd
           container-image: etcd
+          scan: true
       - build:
           name: build-external-dns
           container-image: external-dns
+          scan: true
       - buildx:
           name: build-golang-1.19-focal
           container-image: golang
@@ -825,15 +874,19 @@ workflows:
           name: build-grafana
           container-image: grafana
           resource-class: large
+          scan: true
       - build:
           name: build-grafana_plugins_init
           container-image: grafana_plugins_init
+          scan: true
       - build:
           name: build-grafana-operator
           container-image: grafana-operator
+          scan: true
       - build:
           name: build-heartbeat
           container-image: heartbeat
+          scan: true
       - build:
           name: build-hubble
           container-image: hubble
@@ -861,27 +914,32 @@ workflows:
       - build:
           name: build-kubernetes
           container-image: kubernetes
+          scan: true
       - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
       - build:
           name: build-loki
           container-image: loki
+          scan: true
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
           name: build-memcached
           container-image: memcached
+          scan: true
       - build:
           name: build-memcached-exporter
           container-image: memcached-exporter
       - build:
           name: build-meows-dctest-runner
           container-image: meows-dctest-runner
+          scan: true
       - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
+          scan: true
       - build:
           name: build-moco-switchover-downtime-monitor
           container-image: moco-switchover-downtime-monitor
@@ -894,21 +952,25 @@ workflows:
       - build:
           name: build-opentelemetry-collector
           container-image: opentelemetry-collector
+          scan: true
       - build:
           name: build-pause
           container-image: pause
       - build:
           name: build-pomerium
           container-image: pomerium
+          scan: true
       - build:
           name: build-prometheus-adapter
           container-image: prometheus-adapter
       - build:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
+          scan: true
       - build:
           name: build-promtail
           container-image: promtail
+          scan: true
       - build:
           name: build-promtail-debug
           container-image: promtail-debug
@@ -918,9 +980,11 @@ workflows:
       - build:
           name: build-redis
           container-image: redis
+          scan: true
       - build:
           name: build-registry
           container-image: registry
+          scan: true
       - build:
           name: build-rook
           container-image: rook
@@ -933,27 +997,33 @@ workflows:
       - build:
           name: build-serf
           container-image: serf
+          scan: true
       - build:
           name: build-squid
           container-image: squid
+          scan: true
       - build:
           name: build-teleport-node
           container-image: teleport-node
+          scan: true
       - build:
           name: build-tempo
           container-image: tempo
+          scan: true
       - build:
           name: build-testhttpd
           container-image: testhttpd
       - build:
           name: build-unbound
           container-image: unbound
+          scan: true
       - build:
           name: build-unbound_exporter
           container-image: unbound_exporter
       - build:
           name: build-vault
           container-image: vault
+          scan: true
       - build:
           name: build-victoriametrics-operator
           container-image: victoriametrics-operator
@@ -961,3 +1031,4 @@ workflows:
           name: build-victoriametrics
           container-image: victoriametrics
           targets: vmsingle vmagent vmalert vmbackup vmrestore vmctl vminsert vmselect vmstorage
+          scan: true
