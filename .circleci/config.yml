@@ -822,7 +822,7 @@ workflows:
           container-image: dex
           scan: true
       - build-envoy:
-          version: 1.27.2
+          version: 1.28.0
           bazel-version: 6.3.2
       - build:
           name: build-envoy-container
