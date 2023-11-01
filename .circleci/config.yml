@@ -747,7 +747,7 @@ workflows:
       - build-cert-manager:
           #repo: https://github.com/cert-manager/cert-manager
           repo: https://github.com/cybozu-go/cert-manager
-          version: 1.11.4-neco-longtimeout.1
+          version: 1.13.2-neco-longtimeout.1
       - build:
           name: build-cert-manager-container
           container-image: cert-manager
