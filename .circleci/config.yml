@@ -669,13 +669,6 @@ jobs:
       - checkout
       - run: cd local-pv-provisioner; make check-generate
       - run: cd local-pv-provisioner; make test
-  test-necosen:
-    machine:
-      image: ubuntu-2204:current
-    steps:
-      - checkout
-      - run: make -C necosen check-generate
-      - run: make -C necosen test
 
 workflows:
   main:
@@ -699,7 +692,6 @@ workflows:
           name: test-machines-endpoints
           directory: machines-endpoints
           go-image-tag: 1.21-jammy
-      - test-necosen
       - test:
           name: test-s3gw
           directory: s3gw
@@ -943,9 +935,6 @@ workflows:
       - build:
           name: build-moco-switchover-downtime-monitor
           container-image: moco-switchover-downtime-monitor
-      - build:
-          name: build-necosen
-          container-image: necosen
       - build:
           name: build-nerdctl
           container-image: nerdctl
