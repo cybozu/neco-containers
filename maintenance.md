@@ -657,14 +657,6 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 1. Upgrade direct dependencies listed in `go.mod`.
 2. Update `TAG` file.
 
-## necosen
-
-![Regular Update](./regular_update.svg)
-1. Run `make login-gh` to login to GitHub.
-2. Run `make update` to update dependent software versions.
-3. Upgrade direct dependencies listed in `go.mod`.
-4. Update `TAG` file.
-
 ## nerdctl
 
 ![No Need Update](./no_need_update.svg)
