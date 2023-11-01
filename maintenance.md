@@ -400,7 +400,7 @@ Ignore!!!
    - Check `JS_IMAGE` in the Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
 4. Update installation of Node.js in `Dockerfile` according to `JS_IMAGE` if necessary.
-5. Update `BRANCH` and `TAG` files.
+5. Update `TAG`.
 
 ## grafana-operator
 
