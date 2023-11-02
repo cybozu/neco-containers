@@ -546,10 +546,9 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
-2. Check if each of the patches is still necessary.
-3. Update `K8S_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+2. Update `K8S_VERSION` in `Dockerfile`.
+3. Update image tag in `README.md`.
+4. Update `BRANCH` and `TAG` files.
 
 ## local-pv-provisioner
 
