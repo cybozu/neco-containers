@@ -1,9 +1,9 @@
 # kube-state-metrics container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG KUBE_STATE_METRICS_VERSION=2.9.2
+ARG KUBE_STATE_METRICS_VERSION=2.10.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/kubernetes/kube-state-metrics/archive/v${KUBE_STATE_METRICS_VERSION}.tar.gz | \
     tar --strip-components=1 -xzf -
