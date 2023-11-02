@@ -1,9 +1,9 @@
 # etcd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG ETCD_VERSION=3.5.9
+ARG ETCD_VERSION=3.5.10
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/etcd-io/etcd/archive/v${ETCD_VERSION}.tar.gz | \

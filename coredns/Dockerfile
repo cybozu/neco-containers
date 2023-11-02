@@ -1,6 +1,6 @@
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG COREDNS_VERSION=1.10.1
+ARG COREDNS_VERSION=1.11.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
