@@ -46,7 +46,7 @@ runs:
         # The stdout should be either "" or "found".
         if [ "$c" = "" ]; then
             echo "BUILDS_TAG=ghcr.io/cybozu/$image:$TAG" >> $GITHUB_ENV
-            
+
             if [ -f $dir/BRANCH ]; then
               if echo $TAG | grep -q -e - ; then
                 echo ===== Skip pushing branch tags for pre-release $TAG =====
@@ -69,7 +69,7 @@ runs:
       shell: bash
       run: |
         enable_arm64=${{ inputs.enable_arm64 }}
-        if [ "$enable_arm64" = "true" ]; then 
+        if [ "$enable_arm64" = "true" ]; then
           echo "PLATFORM=linux/amd64,linux/arm64" >> $GITHUB_ENV
         else
           echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
@@ -91,12 +91,12 @@ runs:
           ${{ env.BUILDS_TAG }}
           ${{ env.BUILDS_BRANCH }}
     - name: Install Trivy
-      if: inputs.scan && env.BUILDS_TAG != null
+      if: inputs.scan == 'true' && env.BUILDS_TAG != null && github.event_name != 'pull_request'
       shell: bash
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
     - name: Scan images
-      if: inputs.scan == 'true' && env.BUILDS_TAG != null
+      if: inputs.scan == 'true' && env.BUILDS_TAG != null && github.event_name != 'pull_request'
       shell: bash
       env:
         YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
