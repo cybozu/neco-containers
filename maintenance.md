@@ -614,7 +614,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/memcached/memcached/wiki/ReleaseNotes).
 2. Update `MEMCACHED_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG` file.
+3. Update `TAG` file.
 
 ## memcached_exporter
 
