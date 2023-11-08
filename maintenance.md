@@ -879,7 +879,7 @@ Only the base image and module dependency should be updated.
    - https://github.com/grafana/tempo/blob/vX.Y.Z/Makefile
    - https://github.com/grafana/tempo/blob/vX.Y.Z/cmd/tempo/Dockerfile
 3. Update `TEMPO_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` file.
 
 ## testhttpd
 
