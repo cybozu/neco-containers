@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -141,7 +140,7 @@ func executeCommand(command []string, input io.Reader) ([]byte, error) {
 		go func() {
 			defer stdin.Close()
 			if _, err = io.Copy(stdin, input); err != nil {
-				_ = logger.Error("failed to io.Copy", map[string]interface{}{log.FnError: err})
+				_ = logger.Error("failed to io.Copy", map[string]interface{}{"error": err})
 			}
 		}()
 	}

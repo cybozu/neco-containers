@@ -1,10 +1,12 @@
 package main
 
-import "github.com/cybozu-go/log"
+import (
+	"log/slog"
+	"os"
+)
 
-var logger *log.Logger
+var logger *slog.Logger
 
 func init() {
-	logger = log.NewLogger()
-	logger.SetFormatter(log.JSONFormat{})
+	logger = slog.New(slog.NewJSONHandler(os.Stderr, nil))
 }
