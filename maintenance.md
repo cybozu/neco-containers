@@ -584,7 +584,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/grafana/loki/blob/vX.Y.Z/cmd/loki/Dockerfile
 3. Update `LOKI_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` file.
 
 ***NOTE:*** Keep the version of [promtail](#promtail) the same as that of loki.
 
@@ -748,7 +748,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
-3. Update `BRANCH` and `TAG` files.
+3. Update `TAG` file.
 
 ## pushgateway
 
