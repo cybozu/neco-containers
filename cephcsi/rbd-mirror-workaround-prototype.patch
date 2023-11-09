@@ -1,0 +1,28 @@
+diff --git a/internal/rbd/clone.go b/internal/rbd/clone.go
+index a0faa468b..3163dfd31 100644
+--- a/internal/rbd/clone.go
++++ b/internal/rbd/clone.go
+@@ -200,23 +200,6 @@ func (rv *rbdVolume) doSnapClone(ctx context.Context, parentVol *rbdVolume) erro
+ 		return err
+ 	}
+ 
+-	defer func() {
+-		if err != nil || errClone != nil {
+-			cErr := cleanUpSnapshot(ctx, tempClone, cloneSnap, rv)
+-			if cErr != nil {
+-				log.ErrorLog(ctx, "failed to cleanup image %s or snapshot %s: %v", cloneSnap, tempClone, cErr)
+-			}
+-		}
+-
+-		if err != nil {
+-			// cleanup snapshot
+-			cErr := cleanUpSnapshot(ctx, parentVol, tempSnap, tempClone)
+-			if cErr != nil {
+-				log.ErrorLog(ctx, "failed to cleanup image %s or snapshot %s: %v", tempClone, tempSnap, cErr)
+-			}
+-		}
+-	}()
+-
+ 	err = tempClone.unsetAllMetadata(k8s.GetVolumeMetadataKeys())
+ 	if err != nil {
+ 		log.ErrorLog(ctx, "failed to unset volume metadata on temp clone image %q: %v", tempClone, err)

@@ -16,13 +16,16 @@ ARG GOROOT=/usr/local/go
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
+COPY /*.patch /tmp
+
 RUN apt-get update && apt-get -y install git
 
 RUN git clone -b v${CSI_IMAGE_VERSION} --depth=1 https://github.com/ceph/ceph-csi.git ${SRC_DIR}
 
 WORKDIR ${SRC_DIR}
 
-RUN cp build.env /
+RUN cp build.env / \
+    && patch -p1 < /tmp/rbd-mirror-workaround-prototype.patch
 
 RUN source /build.env && \
     ( test -n "${GO_ARCH}" && exit 0; echo -e "\n\nMissing GO_ARCH argument for building image, install Golang or run: make image-cephcsi GOARCH=amd64\n\n"; exit 1 ) && \
