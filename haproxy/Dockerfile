@@ -48,7 +48,7 @@ ENV DEBIAN_FRONTEND noninteractive
 
 RUN mkdir -p /var/lib/haproxy && \
     mkdir -p /usr/local/haproxy && \
-    mkdir -p /usr/local/bin 
+    mkdir -p /usr/local/bin
 
 COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
 COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
