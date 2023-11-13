@@ -1,7 +1,7 @@
 # testhttpd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.19-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 COPY src /work/src
 WORKDIR /work/src
 RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./testhttpd
