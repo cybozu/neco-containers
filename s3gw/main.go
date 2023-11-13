@@ -68,6 +68,7 @@ func main() {
 	envNames := []string{
 		"BUCKET_HOST",
 		"BUCKET_NAME",
+		"BUCKET_REGION",
 		"AWS_ACCESS_KEY_ID",
 		"AWS_SECRET_ACCESS_KEY",
 	}
@@ -103,7 +104,7 @@ func main() {
 		Region:      bucketRegion,
 		Credentials: credentialsProvider{},
 	}, func(opts *s3.Options) {
-		opts.EndpointResolver = s3.EndpointResolverFromURL("http://" + bucketHostPort + "/")
+		opts.BaseEndpoint = aws.String("http://" + bucketHostPort + "/")
 		opts.UsePathStyle = flagUsePathStyle
 	})
 	mux := http.NewServeMux()
