@@ -2,8 +2,10 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
@@ -17,6 +19,18 @@ func main() {
 	flag.Parse()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		q := r.URL.Query()
+		if s := q.Get("sleep"); s != "" {
+			d, err := time.ParseDuration(s)
+			if err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				io.WriteString(w, "Please specify valid time")
+				return
+			}
+			time.Sleep(d)
+			io.WriteString(w, fmt.Sprintf("Hello after sleeping %s", s))
+			return
+		}
 		io.WriteString(w, "Hello")
 	})
 	s := &well.HTTPServer{

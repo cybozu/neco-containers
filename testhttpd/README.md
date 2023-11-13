@@ -14,6 +14,18 @@ Usage
 $ kubectl run quay.io/cybozu/testhttpd
 ``` 
 
+Access from some clients like below.
+
+```
+$ curl http://<serving address>:8000
+```
+
+If you want a delayed response, you can give the delay as a query(`sleep`).
+
+```
+$ curl http://<serving address>:8000/?sleep=10s
+```
+
 Docker images
 -------------
 

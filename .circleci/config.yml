@@ -699,6 +699,7 @@ workflows:
       - test:
           name: test-testhttpd
           directory: testhttpd/src
+          go-image-tag: 1.21-jammy
       - build-admission
       - build:
           name: build-admission-image
