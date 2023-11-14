@@ -1,7 +1,7 @@
 # Prometheus container (prometheus, alertmanager, pushgateway)
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
 ARG PUSHGATEWAY_VERSION=1.6.0
 
