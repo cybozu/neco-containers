@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM quay.io/cybozu/golang:1.21-jammy AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
