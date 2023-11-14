@@ -1,9 +1,9 @@
 # Registry container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
-ARG REGISTRY_VERSION=2.8.2
+ARG REGISTRY_VERSION=2.8.3
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/docker/ \

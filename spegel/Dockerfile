@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.20-jammy AS builder
-ARG SPEGEL_VERSION=0.0.11
+FROM ghcr.io/cybozu/golang:1.21-jammy AS builder
+ARG SPEGEL_VERSION=0.0.14
 
 WORKDIR /work/spegel
 
