@@ -1,10 +1,10 @@
-ARG MEOWS_VERSION=0.12.0
+ARG MEOWS_VERSION=0.13.0
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
 
 USER root
 
-ENV GO_VERSION=1.20.6
+ENV GO_VERSION=1.21.4
 ENV PLACEMAT_VERSION=2.4.3
 
 ENV HOME=/home/actions
@@ -60,13 +60,5 @@ RUN apt-get update \
     && mkdir -p /opt/hostedtoolcache \
     && chown -R actions:actions /opt/hostedtoolcache \
     && chown -R actions:actions ${HOME}
-
-COPY --chown=actions:actions dctest-bootstrap /usr/local/bin
-COPY --chown=actions:actions neco-bootstrap /usr/local/bin
-COPY --chown=actions:actions neco-apps-bootstrap /usr/local/bin
-
-RUN chmod +x /usr/local/bin/dctest-bootstrap \
-    && chmod +x /usr/local/bin/neco-bootstrap \
-    && chmod +x /usr/local/bin/neco-apps-bootstrap
 
 USER actions

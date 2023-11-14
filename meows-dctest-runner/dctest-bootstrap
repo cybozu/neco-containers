@@ -1,4 +1,0 @@
-#!/bin/sh -xe
-
-neco-bootstrap
-neco-apps-bootstrap
