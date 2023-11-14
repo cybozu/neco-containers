@@ -1,6 +1,6 @@
-ARG MEOWS_VERSION=0.12.0
+ARG MEOWS_VERSION=0.13.0
 
-FROM quay.io/cybozu/golang:1.20-jammy AS builder
+FROM quay.io/cybozu/golang:1.21-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.8.7
@@ -17,6 +17,7 @@ USER root
 # https://github.com/cybozu/ubuntu-base/blob/main/20.04/ubuntu-debug/Dockerfile
 RUN apt-get update && apt-get install -y --no-install-recommends \
         awscli \
+        bash-completion \
         bind9-dnsutils \
         binutils \
         expect \
@@ -38,6 +39,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         telnet \
         traceroute \
         vim \
+        apache2-utils \
         lsb-release \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
