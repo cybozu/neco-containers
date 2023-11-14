@@ -1,5 +1,2 @@
 *
-!dctest-bootstrap
-!neco-bootstrap
-!neco-apps-bootstrap
 !include-bird
