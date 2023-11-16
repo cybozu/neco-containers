@@ -33,6 +33,7 @@ COPY bird-copyright /usr/local/bird/copyright
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \

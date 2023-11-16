@@ -1,6 +1,6 @@
 # squid container
 
-FROM quay.io/cybozu/ubuntu-dev:22.04 as build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 as build
 
 ARG SQUID_VERSION=6.5
 
@@ -16,7 +16,8 @@ RUN curl -sfLO http://www.squid-cache.org/Versions/v6/squid-${SQUID_VERSION}.tar
     && make install
 
 # stage2: production image
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/squid /usr/local/squid
 COPY --from=build /etc/squid /etc/squid

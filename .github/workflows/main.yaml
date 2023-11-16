@@ -22,7 +22,7 @@ jobs:
             enable_arm64: true
             scan: "true"
           - dir: "./golang-all/golang-1.20-jammy"
-            container-image: "golang" 
+            container-image: "golang"
             enable_arm64: true
             scan: "true"
           - dir: "./golang-all/golang-1.21-focal"
@@ -50,6 +50,15 @@ jobs:
           - dir: "./fluent-bit"
             container-image: "fluent-bit"
             scan: "true"
+          - dir: "./bird"
+            container-image: "bird"
+            scan: "true"
+          - dir: "./serf"
+            container-image: "serf"
+            scan: "true"
+          - dir: "./squid"
+            container-image: "squid"
+            scan: "true"
 
     runs-on: ubuntu-22.04
     env:
@@ -68,6 +77,6 @@ jobs:
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
-          enable_arm64:  ${{ matrix.job.enable_arm64 }}
+          enable_arm64: ${{ matrix.job.enable_arm64 }}
           make_test: ${{ matrix.job.make_test }}
           scan: ${{ matrix.job.scan }}
