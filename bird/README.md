@@ -27,7 +27,7 @@ $ docker run -d --read-only --cap-drop ALL \
     --network host --name bird \
     --mount type=tmpfs,destination=/run/bird \
     --mount type=bind,source=/your/bird.conf,target=/etc/bird/bird.conf \
-    quay.io/cybozu/bird:2.13
+    quay.io/cybozu/bird:2.14
 ```
 
 ### Use client tools

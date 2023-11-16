@@ -1,9 +1,9 @@
 # BIRD container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:20.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG BIRD_VERSION=2.13.1
+ARG BIRD_VERSION=2.14
 WORKDIR /work
 
 RUN apt-get update \
@@ -32,7 +32,8 @@ COPY bird-copyright /usr/local/bird/copyright
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
