@@ -1,7 +1,7 @@
 # Build stage
 FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG SEALED_SECRETS_VERSION=0.24.1
+ARG SEALED_SECRETS_VERSION=0.24.3
 
 RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-secrets/archive/v${SEALED_SECRETS_VERSION}.tar.gz \
     && tar --strip-components=1 -xzf sealed-secrets.tar.gz \

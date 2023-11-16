@@ -717,7 +717,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 1. Check the release page.
    - https://github.com/pomerium/pomerium/releases
 2. Update version variables in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files.
+3. Update `TAG` file.
 
 ## prometheus-adapter
 
