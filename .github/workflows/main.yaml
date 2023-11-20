@@ -57,6 +57,10 @@ jobs:
           - dir: "./vault"
             container-image: "vault"
             scan: "true"
+          - dir: "./bpf-map-pressure-exporter"
+            container-image: "bpf-map-pressure-exporter"
+            scan: "true"
+            make_test: true
 
     runs-on: ubuntu-22.04
     env:
