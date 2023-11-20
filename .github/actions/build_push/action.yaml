@@ -103,4 +103,5 @@ runs:
       run: |
         echo
         echo "scanning $BUILDS_TAG ..."
-        YAMORY_IMAGE_NAME="$BUILDS_TAG" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+        image=${{ inputs.container-image }}
+        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="$BUILDS_TAG" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"

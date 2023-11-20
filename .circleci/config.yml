@@ -169,7 +169,7 @@ jobs:
                   TAG=$(cat $dir/TAG)
                   for image in $images; do
                       echo "scanning $image:$TAG ..."
-                      YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+                      YAMORY_IMAGE_IDENTIFIER="quay.io/cybozu/$image" YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
                   done
   buildx:
     # This is a parameterized job
