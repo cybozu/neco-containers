@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -52,12 +53,14 @@ var flagUsePathStyle bool
 var flagListen string
 var flagHostsAllow string
 var flagHostsDeny string
+var flagReadTimeout time.Duration
 
 func init() {
 	flag.BoolVar(&flagUsePathStyle, "use-path-style", false, "use path style bucket name")
 	flag.StringVar(&flagListen, "listen", ":80", "addr:port to listen to")
 	flag.StringVar(&flagHostsAllow, "hosts-allow", "", "subnets allowed to access to this gw, separated by comma")
 	flag.StringVar(&flagHostsDeny, "hosts-deny", "", "subnets denied to access to this gw, separated by comma")
+	flag.DurationVar(&flagReadTimeout, "read-timeout", 0, "read timeout for each requests as a http server. the default value (0) means library default, which is 30s, not indefinite.")
 }
 
 func main() {
@@ -110,8 +113,9 @@ func main() {
 	mux := http.NewServeMux()
 	server := &well.HTTPServer{
 		Server: &http.Server{
-			Handler: mux,
-			Addr:    flagListen,
+			Handler:     mux,
+			Addr:        flagListen,
+			ReadTimeout: flagReadTimeout,
 		},
 	}
 
