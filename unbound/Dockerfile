@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
 ARG UNBOUND_VERSION=1.18.0
 
@@ -21,7 +21,8 @@ RUN mkdir -p /usr/local/unbound \
 RUN /usr/local/unbound/sbin/unbound-anchor -v || true
 RUN /usr/local/unbound/sbin/unbound-anchor -v
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libevent-2.1-7 \
