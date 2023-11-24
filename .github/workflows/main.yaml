@@ -51,6 +51,9 @@ jobs:
           - dir: "./squid"
             container-image: "squid"
             scan: "true"
+          - dir: "./unbound"
+            container-image: "unbound"
+            scan: "true"
 
     runs-on: ubuntu-22.04
     env:
