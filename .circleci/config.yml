@@ -998,7 +998,6 @@ workflows:
       - build:
           name: build-unbound
           container-image: unbound
-          scan: true
       - build:
           name: build-unbound_exporter
           container-image: unbound_exporter
