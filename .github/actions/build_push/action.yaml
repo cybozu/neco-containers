@@ -103,4 +103,11 @@ runs:
       run: |
         echo
         echo "scanning $BUILDS_TAG ..."
-        YAMORY_IMAGE_NAME="$BUILDS_TAG" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+        if [[ $BUILDS_TAG == "ghcr.io/cybozu/golang:"* ]]; then
+          dir=${{ inputs.dir }}
+          BRANCH=$(cat $dir/BRANCH)
+          image=${{ inputs.container-image }}:$BRANCH
+        else
+          image=${{ inputs.container-image }}
+        fi
+        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="$BUILDS_TAG" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
