@@ -54,6 +54,9 @@ jobs:
           - dir: "./unbound"
             container-image: "unbound"
             scan: "true"
+          - dir: "./vault"
+            container-image: "vault"
+            scan: "true"
 
     runs-on: ubuntu-22.04
     env:
