@@ -1004,7 +1004,6 @@ workflows:
       - build:
           name: build-vault
           container-image: vault
-          scan: true
       - build:
           name: build-victoriametrics-operator
           container-image: victoriametrics-operator

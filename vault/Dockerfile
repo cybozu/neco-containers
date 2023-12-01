@@ -1,9 +1,9 @@
 # vault container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
-ARG VAULT_VERSION=1.14.3
+ARG VAULT_VERSION=1.15.3
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
@@ -14,7 +14,7 @@ RUN make bootstrap && \
     make
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
 
 COPY --from=build /work/vault/bin /usr/local/vault/bin
 COPY --from=build /work/vault/LICENSE /usr/local/vault/LICENSE
