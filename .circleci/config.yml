@@ -826,10 +826,6 @@ workflows:
             - build-envoy
           scan: true
       - build:
-          name: build-etcd
-          container-image: etcd
-          scan: true
-      - build:
           name: build-external-dns
           container-image: external-dns
           scan: true

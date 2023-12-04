@@ -1,7 +1,7 @@
 # etcd container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG ETCD_VERSION=3.5.10
 
@@ -14,7 +14,8 @@ WORKDIR /work/etcd
 RUN ./build.sh
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/etcd/bin /usr/local/etcd/bin
 COPY --from=build /work/etcd/LICENSE /usr/local/etcd/LICENSE
