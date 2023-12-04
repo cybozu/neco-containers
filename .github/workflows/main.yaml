@@ -62,6 +62,8 @@ jobs:
           - dir: "./unbound"
             container-image: "unbound"
             scan: "true"
+          - dir: "./unbound_exporter"
+            container-image: "unbound_exporter"
           - dir: "./vault"
             container-image: "vault"
             scan: "true"

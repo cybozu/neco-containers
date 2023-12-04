@@ -988,9 +988,6 @@ workflows:
           name: build-unbound
           container-image: unbound
       - build:
-          name: build-unbound_exporter
-          container-image: unbound_exporter
-      - build:
           name: build-vault
           container-image: vault
       - build:
