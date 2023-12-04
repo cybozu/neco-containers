@@ -42,6 +42,9 @@ jobs:
             scan: "true"
           - dir: "./pause"
             container-image: "pause"
+          - dir: "./kubernetes"
+            container-image: "kubernetes"
+            scan: "true"
           - dir: "./pod-delete-rate-limiter"
             container-image: "pod-delete-rate-limiter"
             make_test: true

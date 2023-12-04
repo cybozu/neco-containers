@@ -889,10 +889,6 @@ workflows:
           dir: kube-storage-version-migrator
           targets: initializer migrator trigger
       - build:
-          name: build-kubernetes
-          container-image: kubernetes
-          scan: true
-      - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
       - build:
