@@ -37,6 +37,8 @@ jobs:
           - dir: "./haproxy"
             container-image: "haproxy"
             scan: "true"
+          - dir: "./pause"
+            container-image: "pause"
           - dir: "./pod-delete-rate-limiter"
             container-image: "pod-delete-rate-limiter"
             make_test: true

@@ -932,9 +932,6 @@ workflows:
           container-image: opentelemetry-collector
           scan: true
       - build:
-          name: build-pause
-          container-image: pause
-      - build:
           name: build-pomerium
           container-image: pomerium
           scan: true

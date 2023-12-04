@@ -1,9 +1,9 @@
 # pause container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG K8S_VERSION=1.27.7
+ARG K8S_VERSION=1.27.8
 ARG PAUSE_VERSION=3.9
 
 RUN mkdir /work
@@ -19,6 +19,7 @@ RUN curl -sSLf -O https://github.com/kubernetes/kubernetes/raw/v${K8S_VERSION}/L
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/pause /pause
 COPY --from=build /work/LICENSE /LICENSE
