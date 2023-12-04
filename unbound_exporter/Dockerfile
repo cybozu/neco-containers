@@ -1,7 +1,7 @@
 # unbound_exporter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 #ARG UNBOUND_EXPORTER_REPO=letsencrypt/unbound_exporter
 ARG UNBOUND_EXPORTER_REPO=cybozu-go/unbound_exporter
@@ -16,6 +16,7 @@ RUN curl -fsSL -o unbound_exporter.tar.gz "https://github.com/${UNBOUND_EXPORTER
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/bin/unbound_exporter /bin/unbound_exporter
 COPY --from=build /work/LICENSE /

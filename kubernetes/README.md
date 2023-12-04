@@ -17,7 +17,7 @@ Usage
 To launch `apiserver` by `docker run`:
 
     $ docker run --net=host --name apiserver -d \
-        quay.io/cybozu/kubernetes:1.27 kube-apiserver \
+        ghcr.io/cybozu/kubernetes:1.27 kube-apiserver \
         --advertise-address=192.168.1.101 \
         --insecure-bind-address=0.0.0.0 \
         --insecure-port=8080 \
@@ -28,4 +28,4 @@ To launch `apiserver` by `docker run`:
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/kubernetes)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/kubernetes)

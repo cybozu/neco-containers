@@ -792,10 +792,6 @@ workflows:
           name: build-contour
           container-image: contour
       - build:
-          name: build-coredns
-          container-image: coredns
-          scan: true
-      - build:
           name: build-csi-attacher
           container-image: csi-attacher
       - build:
@@ -824,10 +820,6 @@ workflows:
           dir: envoy
           requires:
             - build-envoy
-          scan: true
-      - build:
-          name: build-etcd
-          container-image: etcd
           scan: true
       - build:
           name: build-external-dns
@@ -897,10 +889,6 @@ workflows:
           dir: kube-storage-version-migrator
           targets: initializer migrator trigger
       - build:
-          name: build-kubernetes
-          container-image: kubernetes
-          scan: true
-      - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
       - build:
@@ -935,9 +923,6 @@ workflows:
           name: build-opentelemetry-collector
           container-image: opentelemetry-collector
           scan: true
-      - build:
-          name: build-pause
-          container-image: pause
       - build:
           name: build-pomerium
           container-image: pomerium
@@ -998,9 +983,6 @@ workflows:
       - build:
           name: build-unbound
           container-image: unbound
-      - build:
-          name: build-unbound_exporter
-          container-image: unbound_exporter
       - build:
           name: build-vault
           container-image: vault
