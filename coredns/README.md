@@ -6,9 +6,9 @@
 
 To launch server with specific config file.
 
-    $ docker run quay.io/cybozu/coredns:1.11 -v Corefile:/etc/coredns/Corefile -- \
+    $ docker run ghcr.io/cybozu/coredns:1.11 -v Corefile:/etc/coredns/Corefile -- \
         -conf /etc/coredns/Corefile
  
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/coredns)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/coredns)

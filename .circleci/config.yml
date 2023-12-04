@@ -792,10 +792,6 @@ workflows:
           name: build-contour
           container-image: contour
       - build:
-          name: build-coredns
-          container-image: coredns
-          scan: true
-      - build:
           name: build-csi-attacher
           container-image: csi-attacher
       - build:
