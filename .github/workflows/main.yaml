@@ -74,6 +74,9 @@ jobs:
             container-image: "bpf-map-pressure-exporter"
             scan: "true"
             make_test: true
+          - dir: "./argocd-image-updater"
+            container-image: "argocd-image-updater"
+            scan: "true"
 
     runs-on: ubuntu-22.04
     env:

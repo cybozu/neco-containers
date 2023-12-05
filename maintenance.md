@@ -101,6 +101,17 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
+## argocd-image-updater
+
+![Regular Update](./regular_update.svg)
+
+1. Check [releases](https://github.com/argoproj-labs/argocd-image-updater/releases) for changes.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+    - https://github.com/argoproj-labs/argocd-image-updater/blob/vX.Y.Z/Dockerfile
+3. Update version variables in `Dockerfile`.
+    - Update `ARGOCD_IMAGE_UPDATER_VERSION`.
+4. Update `TAG` file.
+
 ## bird
 
 ![Regular Update](./regular_update.svg)
