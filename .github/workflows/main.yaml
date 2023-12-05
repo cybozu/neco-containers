@@ -9,14 +9,30 @@ jobs:
     strategy:
       matrix:
         job:
+          - dir: "./argocd-image-updater"
+            container-image: "argocd-image-updater"
+            scan: "true"
           - dir: "./bird"
             container-image: "bird"
+            scan: "true"
+          - dir: "./bpf-map-pressure-exporter"
+            container-image: "bpf-map-pressure-exporter"
+            scan: "true"
+            make_test: true
+          - dir: "./chrony"
+            container-image: "chrony"
+            scan: "true"
+          - dir: "./contour"
+            container-image: "contour"
             scan: "true"
           - dir: "./coredns"
             container-image: "coredns"
             scan: "true"
           - dir: "./etcd"
             container-image: "etcd"
+            scan: "true"
+          - dir: "./external-dns"
+            container-image: "external-dns"
             scan: "true"
           - dir: "./fluent-bit"
             container-image: "fluent-bit"
@@ -48,6 +64,9 @@ jobs:
           - dir: "./pod-delete-rate-limiter"
             container-image: "pod-delete-rate-limiter"
             make_test: true
+          - dir: "./sealed-secrets"
+            container-image: "sealed-secrets"
+            scan: "true"
           - dir: "./serf"
             container-image: "serf"
             scan: "true"
@@ -69,13 +88,6 @@ jobs:
             container-image: "unbound_exporter"
           - dir: "./vault"
             container-image: "vault"
-            scan: "true"
-          - dir: "./bpf-map-pressure-exporter"
-            container-image: "bpf-map-pressure-exporter"
-            scan: "true"
-            make_test: true
-          - dir: "./argocd-image-updater"
-            container-image: "argocd-image-updater"
             scan: "true"
 
     runs-on: ubuntu-22.04

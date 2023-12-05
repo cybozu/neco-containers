@@ -12,7 +12,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=contour \
-    quay.io/cybozu/contour:1.27.0 serve
+    ghcr.io/cybozu/contour:1.27.0 serve
 ```
 
 [Contour]: https://github.com/heptio/contour
@@ -20,4 +20,4 @@ $ docker run -d --read-only --name=contour \
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/contour)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/contour)

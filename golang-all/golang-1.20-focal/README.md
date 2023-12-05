@@ -16,4 +16,4 @@ This container is based on [ghcr.io/cybozu/ubuntu-dev](https://ghcr.io/repositor
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/golang)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/golang)

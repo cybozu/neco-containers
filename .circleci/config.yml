@@ -760,7 +760,6 @@ workflows:
       - build:
           name: build-chrony
           container-image: chrony
-          scan: true
       - build-cilium-envoy:
           version: ad831bdec4c93feeb2378aa9e1847c936ada6ef7
       - build-cilium-image-tools:
@@ -824,7 +823,6 @@ workflows:
       - build:
           name: build-external-dns
           container-image: external-dns
-          scan: true
       - buildx:
           name: build-golang-1.20-focal
           container-image: golang

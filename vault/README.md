@@ -41,4 +41,4 @@ Then run `vault` as follows:
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/vault)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/vault)

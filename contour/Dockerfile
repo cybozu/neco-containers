@@ -1,7 +1,7 @@
 # Contour container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG CONTOUR_VERSION=1.27.0
 

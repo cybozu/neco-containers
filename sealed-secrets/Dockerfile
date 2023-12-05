@@ -1,5 +1,5 @@
 # Build stage
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG SEALED_SECRETS_VERSION=0.24.3
 

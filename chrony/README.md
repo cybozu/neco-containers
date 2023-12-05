@@ -25,7 +25,7 @@ Usage
     --cap-drop ALL \
     --cap-add SYS_TIME \
     --cap-add NET_BIND_SERVICE \
-    quay.io/cybozu/chrony:4.4
+    ghcr.io/cybozu/chrony:4.4
     ```
 
 ### Use `chronyc`
@@ -39,4 +39,4 @@ $ docker exec -it chrony chronyc tracking
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/chrony)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/chrony)
