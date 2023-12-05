@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
@@ -43,8 +44,10 @@ func setHeaderOrNil(header http.Header, key string, value *string) {
 }
 
 type Object struct {
-	Key  string `json:"key"`
-	Size int64  `json:"size"`
+	Key          string    `json:"key"`
+	Size         int64     `json:"size"`
+	LastModified time.Time `json:"last-modified"`
+	ETag         string    `json:"etag"`
 }
 
 type listResult struct {
@@ -77,8 +80,10 @@ func listHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	result := newListResult()
 	for _, c := range output.Contents {
 		result.Objects = append(result.Objects, Object{
-			Key:  *c.Key,
-			Size: c.Size,
+			Key:          *c.Key,
+			Size:         c.Size,
+			LastModified: c.LastModified.UTC(),
+			ETag:         *c.ETag,
 		})
 	}
 	marshalled, err := json.Marshal(result)
@@ -118,7 +123,11 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 
 	setHeaderOrNil(res.Header(), "Content-Type", output.ContentType)
+	setHeaderOrNil(res.Header(), "ETag", output.ETag)
 	res.Header().Set("Content-Length", fmt.Sprint(output.ContentLength))
+	if output.LastModified != nil {
+		res.Header().Set("Last-Modified", output.LastModified.UTC().Format(http.TimeFormat))
+	}
 	io.Copy(res, output.Body)
 }
 
