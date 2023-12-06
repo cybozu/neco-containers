@@ -13,7 +13,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=external-dns \
-    quay.io/cybozu/external-dns:0.14.0.1 \
+    ghcr.io/cybozu/external-dns:0.14.0.1 \
     --registry=txt --txt-owner-id ... --provider ...
 ```
 
@@ -22,4 +22,4 @@ $ docker run -d --read-only --name=external-dns \
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/external-dns)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/external-dns)

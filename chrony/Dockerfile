@@ -1,7 +1,7 @@
 # chrony container
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 ARG CHRONY_VERSION=4.4
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -20,7 +20,8 @@ RUN ./configure --exec-prefix=/usr/local/chrony --with-pidfile=/run/chrony/chron
 
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libedit2 \

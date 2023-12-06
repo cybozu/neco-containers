@@ -27,7 +27,7 @@ $ docker run -d --read-only --cap-drop ALL \
     --network host --name bird \
     --mount type=tmpfs,destination=/run/bird \
     --mount type=bind,source=/your/bird.conf,target=/etc/bird/bird.conf \
-    quay.io/cybozu/bird:2.14
+    ghcr.io/cybozu/bird:2.14
 ```
 
 ### Use client tools
@@ -73,4 +73,4 @@ Daemon is up and running
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/bird)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/bird)

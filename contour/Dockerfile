@@ -1,7 +1,7 @@
 # Contour container image
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG CONTOUR_VERSION=1.27.0
 
@@ -18,6 +18,7 @@ RUN make build \
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/contour/contour /bin/contour
 COPY --from=build /work/contour/LICENSE  /LICENSE

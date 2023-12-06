@@ -1,5 +1,5 @@
 # Build stage
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG SEALED_SECRETS_VERSION=0.24.3
 
@@ -10,6 +10,8 @@ RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-se
 
 # Runtime stage
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build /work/controller-static /controller
 COPY --from=build /work/LICENSE /LICENSE
 
