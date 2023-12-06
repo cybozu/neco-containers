@@ -11,7 +11,7 @@ Usage
 -----
 
 ```console
-$ kubectl run quay.io/cybozu/testhttpd
+$ kubectl run ghcr.io/cybozu/testhttpd
 ``` 
 
 Access from some clients like below.
@@ -29,4 +29,4 @@ $ curl http://<serving address>:8000/?sleep=10s
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/testhttpd)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/testhttpd)

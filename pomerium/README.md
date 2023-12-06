@@ -5,4 +5,4 @@ that runs `pomerium` in [pomerium/pomerium](https://github.com/pomerium/pomerium
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/pomerium)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/pomerium)

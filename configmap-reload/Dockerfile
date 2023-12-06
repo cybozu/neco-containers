@@ -1,7 +1,7 @@
 # configmap-reload container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG CONFIGMAP_RELOAD_VERSION=0.12.0
 
@@ -17,6 +17,7 @@ RUN curl -fsSL -o configmap-reload.tar.gz "https://github.com/jimmidyson/configm
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/bin/configmap-reload /configmap-reload
 COPY --from=build /go/src/github.com/jimmidyson/configmap-reload/LICENSE.txt /LICENSE.txt

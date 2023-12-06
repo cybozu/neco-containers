@@ -1,7 +1,7 @@
 # Prometheus container (prometheus, alertmanager, pushgateway)
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG PUSHGATEWAY_VERSION=1.6.0
 
@@ -17,6 +17,7 @@ RUN curl -fsSL -o pushgateway.tar.gz "https://github.com/prometheus/pushgateway/
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/pushgateway/pushgateway /
 COPY --from=build /work/pushgateway/LICENSE /LICENSE

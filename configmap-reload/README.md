@@ -8,4 +8,4 @@ Simple binary to trigger a reload when a Kubernetes ConfigMap is updated
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/configmap-reload)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/configmap-reload)

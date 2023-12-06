@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.21-jammy as build
+FROM ghcr.io/cybozu/golang:1.21-jammy as build
 ARG POMERIUM_VERSION=0.23.0
 
 WORKDIR /work/pomerium
@@ -19,7 +19,9 @@ RUN go mod download
 RUN make build-go NAME=pomerium
 RUN touch /config.yaml
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 WORKDIR /pomerium
 COPY --from=build /work/pomerium/bin/* /bin/
 COPY --from=build /config.yaml ./config.yaml

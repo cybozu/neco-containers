@@ -808,7 +808,6 @@ workflows:
       - build:
           name: build-dex
           container-image: dex
-          scan: true
       - build-envoy:
           version: 1.28.0
           bazel-version: 6.3.2
@@ -924,14 +923,12 @@ workflows:
       - build:
           name: build-pomerium
           container-image: pomerium
-          scan: true
       - build:
           name: build-prometheus-adapter
           container-image: prometheus-adapter
       - build:
           name: build-prometheus-config-reloader
           container-image: prometheus-config-reloader
-          scan: true
       - build:
           name: build-promtail
           container-image: promtail
@@ -945,11 +942,9 @@ workflows:
       - build:
           name: build-redis
           container-image: redis
-          scan: true
       - build:
           name: build-registry
           container-image: registry
-          scan: true
       - build:
           name: build-rook
           container-image: rook
@@ -974,7 +969,6 @@ workflows:
       - build:
           name: build-tempo
           container-image: tempo
-          scan: true
       - build:
           name: build-testhttpd
           container-image: testhttpd

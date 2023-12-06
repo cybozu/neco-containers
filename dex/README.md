@@ -12,7 +12,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=dex \
-    quay.io/cybozu/dex:2.36
+    ghcr.io/cybozu/dex:2.36
 ```
 
 [dex]: https://github.com/dexidp/dex
@@ -20,4 +20,4 @@ $ docker run -d --read-only --name=dex \
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/dex)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/dex)
