@@ -16,6 +16,7 @@ RUN make build
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/external-dns/build/external-dns /usr/local/external-dns/bin/external-dns
 COPY --from=build /work/external-dns/LICENSE  /usr/local/external-dns/LICENSE

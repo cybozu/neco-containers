@@ -10,6 +10,8 @@ RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-se
 
 # Runtime stage
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build /work/controller-static /controller
 COPY --from=build /work/LICENSE /LICENSE
 

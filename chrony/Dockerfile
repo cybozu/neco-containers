@@ -21,6 +21,7 @@ RUN ./configure --exec-prefix=/usr/local/chrony --with-pidfile=/run/chrony/chron
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libedit2 \

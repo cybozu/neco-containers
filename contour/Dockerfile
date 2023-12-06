@@ -18,6 +18,7 @@ RUN make build \
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/contour/contour /bin/contour
 COPY --from=build /work/contour/LICENSE  /LICENSE
