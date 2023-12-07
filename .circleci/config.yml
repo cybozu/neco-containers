@@ -715,11 +715,9 @@ workflows:
       - build:
           name: build-argocd
           container-image: argocd
-          scan: true
       - build:
           name: build-bird
           container-image: bird
-          scan: true
       - build:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
@@ -856,7 +854,6 @@ workflows:
       - build:
           name: build-grafana-operator
           container-image: grafana-operator
-          scan: true
       - build:
           name: build-heartbeat
           container-image: heartbeat
@@ -891,14 +888,12 @@ workflows:
       - build:
           name: build-loki
           container-image: loki
-          scan: true
       - build:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
           name: build-memcached
           container-image: memcached
-          scan: true
       - build:
           name: build-memcached-exporter
           container-image: memcached-exporter
@@ -919,7 +914,6 @@ workflows:
       - build:
           name: build-opentelemetry-collector
           container-image: opentelemetry-collector
-          scan: true
       - build:
           name: build-pomerium
           container-image: pomerium
@@ -932,7 +926,6 @@ workflows:
       - build:
           name: build-promtail
           container-image: promtail
-          scan: true
       - build:
           name: build-promtail-debug
           container-image: promtail-debug

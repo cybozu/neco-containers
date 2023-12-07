@@ -1,6 +1,6 @@
 # opentelemetry-collector
 
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG OTELCOL_VERSION=0.88.0
 
@@ -11,7 +11,8 @@ RUN sed -e s/\${OTELCOL_VERSION}/${OTELCOL_VERSION}/g manifest.yaml.in > manifes
     builder --config manifest.yaml
 RUN curl -sSf -o LICENSE https://raw.githubusercontent.com/open-telemetry/opentelemetry-collector/v${OTELCOL_VERSION}/LICENSE
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/_build/otelcol /otelcol
 COPY --from=build /work/LICENSE /LICENSE

@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 ARG LOKI_VERSION=2.9.2
 
 WORKDIR /work
@@ -7,7 +7,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 RUN make -C /work/loki BUILD_IN_CONTAINER=false loki logcli loki-canary
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/loki/cmd/loki/loki /usr/local/loki/bin/loki
 COPY --from=build /work/loki/cmd/logcli/logcli /usr/local/loki/bin/logcli

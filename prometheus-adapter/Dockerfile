@@ -1,7 +1,7 @@
 # prometheus-adapter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG PROMETHEUS_ADAPTER_VERSION=0.11.0
 
@@ -12,6 +12,7 @@ RUN curl -fsSL -o pa.tar.gz https://github.com/kubernetes-sigs/prometheus-adapte
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/adapter /adapter
 COPY --from=build /work/LICENSE /LICENSE

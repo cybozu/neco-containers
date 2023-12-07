@@ -1,7 +1,7 @@
 # memcached_exporter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 
 ARG MEMCACHED_EXPORTER_VERSION=0.13.0
 
@@ -14,6 +14,7 @@ RUN make build
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/memcached_exporter/memcached_exporter /bin/memcached_exporter
 COPY --from=build /work/memcached_exporter/LICENSE /LICENSE

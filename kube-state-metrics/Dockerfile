@@ -1,7 +1,7 @@
 # kube-state-metrics container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG KUBE_STATE_METRICS_VERSION=2.10.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -12,6 +12,8 @@ RUN make build-local
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build /work/kube-state-metrics /kube-state-metrics
 COPY --from=build /work/LICENSE /LICENSE
 

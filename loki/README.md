@@ -5,4 +5,4 @@ that runs [grafana/loki](https://github.com/grafana/loki).
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/loki)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/loki)

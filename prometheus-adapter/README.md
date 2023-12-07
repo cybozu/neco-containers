@@ -6,4 +6,4 @@ This directory provides a Dockerfile to build a Docker container that runs [prom
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/prometheus-adapter)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/prometheus-adapter)

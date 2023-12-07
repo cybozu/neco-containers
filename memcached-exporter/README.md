@@ -5,4 +5,4 @@ that runs `memcached_exporter` in [prometheus/memcached_exporter](https://github
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/memcached_exporter)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/memcached-exporter)

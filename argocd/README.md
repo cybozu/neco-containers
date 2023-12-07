@@ -5,4 +5,4 @@ that runs [argoproj/argo-cd](https://github.com/argoproj/argo-cd).
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/argocd)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/argocd)
