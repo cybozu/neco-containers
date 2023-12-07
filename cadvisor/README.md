@@ -8,4 +8,4 @@ cAdvisor (Container Advisor) provides container users an understanding of the re
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/cadvisor)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/cadvisor)

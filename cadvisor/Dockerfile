@@ -1,7 +1,7 @@
 # cadvisor container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 
 ARG CADVISOR_VERSION=0.47.2
 
@@ -16,6 +16,7 @@ RUN curl -fsSL -o cadvisor.tar.gz "https://github.com/google/cadvisor/archive/v$
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/src/github.com/google/cadvisor/cmd/cadvisor /cadvisor
 COPY --from=build /go/src/github.com/google/cadvisor/LICENSE /LICENSE

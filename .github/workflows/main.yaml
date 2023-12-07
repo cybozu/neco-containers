@@ -19,6 +19,8 @@ jobs:
             container-image: "bpf-map-pressure-exporter"
             scan: "true"
             make_test: true
+          - dir: "./cadvisor"
+            container-image: "cadvisor"
           - dir: "./chrony"
             container-image: "chrony"
             scan: "true"
