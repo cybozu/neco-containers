@@ -7,9 +7,9 @@
 ### Launch Registry
 
 ```console
-$ docker run --name=registry -p 5000:5000 quay.io/cybozu/registry:2.8
+$ docker run --name=registry -p 5000:5000 ghcr.io/cybozu/registry:2.8
 ```
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/registry)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/registry)

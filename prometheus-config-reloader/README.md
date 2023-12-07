@@ -8,4 +8,4 @@ This container contains prometheus-config-reloader, which is used internally by 
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/prometheus-config-reloader)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/prometheus-config-reloader)

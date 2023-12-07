@@ -1,7 +1,7 @@
 # trust-manager container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 COPY TAG /
 WORKDIR /workspace
@@ -15,6 +15,7 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -mod=mod -a -o manager main.go
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 WORKDIR /
 COPY --from=build /workspace/manager .

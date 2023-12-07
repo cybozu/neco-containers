@@ -16,7 +16,8 @@ WORKDIR /go/src/github.com/docker/distribution/
 RUN GO111MODULE=off CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     jq && \

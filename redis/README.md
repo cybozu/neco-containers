@@ -7,7 +7,7 @@
 ### Launch Redis
 
 ```console
-$ docker run --name=redis quay.io/cybozu/redis:7.0
+$ docker run --name=redis ghcr.io/cybozu/redis:7.0
 ```
 
 ### Run Redis CLI
@@ -22,4 +22,4 @@ OK
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/redis)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/redis)

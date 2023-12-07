@@ -2,7 +2,7 @@
 # Refer to this Dockerfile: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
 
 # Stage1: build from source
-FROM quay.io/cybozu/ubuntu-dev:22.04 as build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 as build
 
 ARG GOSU_VERSION=1.16
 ARG REDIS_VERSION=7.0.11
@@ -35,7 +35,8 @@ RUN wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
     && BUILD_TLS=yes make -C /usr/src/redis PREFIX=/usr/local/redis install
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 -r redis && \
     useradd -r -u 10000 -g redis redis && \

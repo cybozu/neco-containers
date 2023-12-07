@@ -11,9 +11,9 @@ This repository contains Dockerfile for [pushgateway](https://github.com/prometh
 $ docker run -d --read-only --cap-drop ALL \
     -p 9091:9091 \
     --name pushgateway \
-    quay.io/cybozu/pushgateway:1.4
+    ghcr.io/cybozu/pushgateway:1.4
 ```
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/prometheus)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/pushgateway)

@@ -8,4 +8,4 @@ Grafana Tempo
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/organization/cybozu)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/tempo)

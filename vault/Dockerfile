@@ -15,6 +15,7 @@ RUN make bootstrap && \
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/vault/bin /usr/local/vault/bin
 COPY --from=build /work/vault/LICENSE /usr/local/vault/LICENSE
