@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.20-jammy
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
@@ -14,6 +14,8 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
 
 # Stage2: runtime
 FROM ${BASE_IMAGE}
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build /go/src/github.com/cilium/certgen/cilium-certgen /usr/bin/cilium-certgen
 COPY --from=build /go/src/github.com/cilium/certgen/LICENSE  /LICENSE
 
