@@ -1,7 +1,7 @@
 # Argo CD container
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM quay.io/cybozu/ubuntu:22.04 AS builder
+FROM ghcr.io/cybozu/ubuntu:22.04 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -25,7 +25,7 @@ RUN chmod +x /usr/local/bin/tini-static
 # We cannot use Ubuntu 22.04 (jammy) image because the combination of
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
-FROM quay.io/cybozu/golang:1.21-focal AS argocd-build
+FROM ghcr.io/cybozu/golang:1.21-focal AS argocd-build
 ENV ARGOCD_VERSION=2.8.6
 ENV PACKAGE=github.com/argoproj/argo-cd
 
@@ -57,7 +57,9 @@ RUN make argocd-all
 
 
 # Final image
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \

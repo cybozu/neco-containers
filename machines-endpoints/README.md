@@ -38,4 +38,4 @@ Usage
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/machines-endpoints)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/machines-endpoints)

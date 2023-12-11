@@ -11,6 +11,7 @@ RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/machines-endpoints
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/bin /
 

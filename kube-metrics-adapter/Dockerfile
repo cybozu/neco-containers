@@ -1,7 +1,7 @@
 # kube-metrics-adapter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG KMA_VERSION=0.2.1
 
@@ -12,6 +12,7 @@ RUN curl -fsSL -o kma.tar.gz https://github.com/zalando-incubator/kube-metrics-a
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/build/linux/kube-metrics-adapter /
 COPY --from=build /work/LICENSE /LICENSE

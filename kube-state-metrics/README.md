@@ -8,11 +8,11 @@ Usage
 
 ```console
 $ docker run -p 8080:8080 -p 8081:8081 \
-    quay.io/cybozu/kube-state-metrics:2.10.0.1 \
+    ghcr.io/cybozu/kube-state-metrics:2.10.0.2 \
     --kubeconfig=<KUBE-CONFIG>\
 ```
 
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/kube-state-metrics)
+Docker images are available on [ghcr.io](ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/kube-state-metrics)

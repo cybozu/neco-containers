@@ -1,7 +1,7 @@
 # Grafana Operator container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 ARG VERSION=5.4.1
 
 WORKDIR /work/grafana-operator
@@ -19,9 +19,10 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator mai
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana-operator/grafana-operator/blob/master/build/Dockerfile
-FROM quay.io/cybozu/ubuntu:22.04
-USER 10000:10000
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
+USER 10000:10000
 COPY --from=build /usr/local/bin/grafana-operator /usr/local/bin/grafana-operator
 COPY --from=build /work/grafana-operator/LICENSE /usr/local/grafana-operator/LICENSE
 

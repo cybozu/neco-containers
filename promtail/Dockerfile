@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 ARG LOKI_VERSION=2.9.2
 ARG SYSTEMD_VERSION=252
 
@@ -62,7 +62,8 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 RUN make -C /work/loki BUILD_IN_CONTAINER=false PROMTAIL_JOURNAL_ENABLED=true promtail
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 # tzdata required for the timestamp stage to work
 # libcap2 and libpcre2-8-0 required to use libsystemd

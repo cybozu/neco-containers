@@ -64,4 +64,4 @@ Usage
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/bmc-reverse-proxy)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/bmc-reverse-proxy)
