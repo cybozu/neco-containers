@@ -21,7 +21,6 @@ start:
 	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=kindest/node:v$(E2ETEST_K8S_VERSION) --wait 1m
 	$(MAKE) -C ../ docker-build
 	$(KIND) load docker-image ghcr.io/cybozu/squid-exporter:dev --name=$(KIND_CLUSTER_NAME)
-	$(KUBECTL) apply -f deployment.yaml
 
 .PHONY: test
 test:

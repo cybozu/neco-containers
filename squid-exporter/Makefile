@@ -10,6 +10,9 @@ run-squid:
 .PHONEY test:
 test:
 	go test -v ./...
+	make -C e2e setup
+	make -C e2e start
+	make -C e2e test
 
 .PHONEY docker-build:
 docker-build:
