@@ -29,6 +29,10 @@ inputs:
     description: "Enable image scanning"
     required: false
     default: "false"
+  target:
+    description: "Target stage to build"
+    required: false
+    default: ""
 
 runs:
   using: "composite"
@@ -90,6 +94,7 @@ runs:
         tags: |
           ${{ env.BUILDS_TAG }}
           ${{ env.BUILDS_BRANCH }}
+        target: ${{ inputs.target }}
     - name: Install Trivy
       if: inputs.scan == 'true' && env.BUILDS_TAG != null && github.event_name != 'pull_request'
       shell: bash
