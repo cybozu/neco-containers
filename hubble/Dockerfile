@@ -1,7 +1,7 @@
 # hubble container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 
 COPY TAG /
 
@@ -16,6 +16,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/src/github.com/cilium/hubble/hubble /hubble
 COPY --from=build /go/src/github.com/cilium/hubble/LICENSE /LICENSE
