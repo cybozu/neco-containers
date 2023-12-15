@@ -966,7 +966,7 @@ Only the base image and module dependency should be updated.
    - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/Makefile
    - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/deployment/Dockerfile
 3. Update `VICTORIAMETRICS_SINGLE_VERSION` and `VICTORIAMETRICS_CLUSTER_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` file.
 
 ## victoriametrics-operator
 
