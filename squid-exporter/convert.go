@@ -21,8 +21,7 @@ func ConvertSquidCounter(body io.ReadCloser) error {
 		if err != nil {
 			return err
 		}
-		// fmt.Printf("%s:%v\n", metricName, metric[1])
-		counter := metrics.GetOrCreateFloatCounter("squid_counters_" + metricName)
+		counter := metrics.GetOrCreateFloatCounter("squid_counters_" + metricName + "_total")
 		counter.Set(metricVal)
 	}
 	return nil
@@ -51,10 +50,9 @@ func ConvertSquidServiceTimes(body io.ReadCloser) error {
 		if err != nil {
 			return err
 		}
-		// fmt.Printf("%v,%v,%v\n", metricName, metricVal5min, metricVal60min)
-		counter := metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "_5min")
+		counter := metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "percentile_5min")
 		counter.Set(metricVal5min)
-		counter = metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "_60min")
+		counter = metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "percentile_60min")
 		counter.Set(metricVal60min)
 	}
 	return nil

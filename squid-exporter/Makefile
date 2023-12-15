@@ -1,7 +1,7 @@
 
 .PHONEY build:
 build:
-	CGO_ENABLED=0 go build -o squiud-exporter .
+	CGO_ENABLED=0 go build -o squid-exporter .
 
 .PHONEY run-squid:
 run-squid:
@@ -13,6 +13,10 @@ test:
 	make -C e2e setup
 	make -C e2e start
 	make -C e2e test
+
+.PHONEY unit-test:
+unit-test:
+	go test -v ./...
 
 .PHONEY docker-build:
 docker-build:

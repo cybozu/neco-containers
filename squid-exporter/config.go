@@ -15,6 +15,7 @@ var (
 )
 
 func NewConfig() *Config {
+	flag.Parse()
 	return &Config{
 		SquidHost:   *flagSquidHost,
 		SquidPort:   *flagSquidPort,

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -40,5 +41,6 @@ func main() {
 		requestHandler(logger, squidClient)
 		metrics.WritePrometheus(w, false)
 	})
-	http.ListenAndServe(":8080", nil)
+	fmt.Printf("Starting squid-exporter on port %d\n", config.MetricsPort)
+	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.MetricsPort), nil)
 }

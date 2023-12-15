@@ -24,13 +24,13 @@ func TestConvertSquidCounter(t *testing.T) {
 			name: "squid_counters_client_http.requests",
 			metric: []byte(`sample_time = 1701938593.739082 (Thu, 07 Dec 2023 08:43:13 GMT)
 							client_http.requests = 5`),
-			expected: "squid_counters_client_http_requests 5",
+			expected: "squid_counters_client_http_requests_total 5",
 		},
 		{
 			name: "cpu_time",
 			metric: []byte(`sample_time = 1701938593.739082 (Thu, 07 Dec 2023 08:43:13 GMT)
 							cpu_time = 59.389186`),
-			expected: "cpu_time 59.389186",
+			expected: "cpu_time_total 59.389186",
 		},
 	}
 	for _, tc := range cases {
@@ -61,15 +61,15 @@ func TestConvertSquidServiceTimes(t *testing.T) {
 			name: "squid_service_times_http_requests_all_5_5min",
 			metric: []byte(`Service Time Percentiles            5 min    60 min:
 									HTTP Requests (All):   5%   0.00000  0.00000`),
-			expected5:  "squid_service_times_http_requests_all_5_5min 0",
-			expected60: "squid_service_times_http_requests_all_5_60min 0",
+			expected5:  "squid_service_times_http_requests_all_5percentile_5min 0",
+			expected60: "squid_service_times_http_requests_all_5percentile_60min 0",
 		},
 		{
 			name: "squid_service_times_cache_misses_10_5min",
 			metric: []byte(`Service Time Percentiles            5 min    60 min:
 									Cache Misses:          5%   0.00000  0.00000`),
-			expected5:  "squid_service_times_cache_misses_5_5min 0",
-			expected60: "squid_service_times_cache_misses_5_60min 0",
+			expected5:  "squid_service_times_cache_misses_5percentile_5min 0",
+			expected60: "squid_service_times_cache_misses_5percentile_60min 0",
 		},
 	}
 	for _, tc := range cases {
