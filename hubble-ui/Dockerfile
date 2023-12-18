@@ -1,5 +1,5 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 ARG BACKEND_IMAGE=scratch
 ARG NGINX_VERSION=1.23.4
 ARG NJS_VERSION=0.7.11
@@ -40,6 +40,8 @@ RUN CGO_ENABLED=0 go build -ldflags "-s -w" -o backend \
 
 # Stage 2: hubble-ui runtime
 FROM ${UBUNTU_IMAGE} as frontend
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 ARG NGINX_VERSION
 ARG NJS_VERSION
 ARG PKG_RELEASE
@@ -126,6 +128,8 @@ CMD ["nginx", "-g", "daemon off;"]
 
 # Stage 2: hubble-ui-backend runtime
 FROM ${BACKEND_IMAGE} as backend
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build-hubble-ui-backend /app/backend/backend /
 COPY --from=build-hubble-ui-backend /out/linux/amd64/bin/gops /usr/bin/gops
 

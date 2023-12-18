@@ -10,4 +10,4 @@ This image containes a hubble utility to observe and inspect recent Cilium route
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/hubble)
+Docker images are available on [ghcr.io](https://ghcr.io/cybozu/hubble)

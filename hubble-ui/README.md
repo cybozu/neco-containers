@@ -6,4 +6,4 @@ This directory provides the Dockerfile for building container images for Cilium 
 Docker images
 -------------
 
-Docker images are available on Quay.io for [hubble-ui-frontend](https://quay.io/repository/cybozu/hubble-ui-frontend) and [hubble-ui-backend](https://quay.io/repository/cybozu/hubble-ui-backend)
+Docker images are available on ghcr.io for [hubble-ui-frontend](https://ghcr.io/cybozu/hubble-ui-frontend)) and [hubble-ui-backend](https://ghcr.io/cybozu/hubble-ui-backend)

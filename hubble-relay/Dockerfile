@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
@@ -26,6 +26,8 @@ RUN make
 
 # Stage2: runtime
 FROM ${BASE_IMAGE}
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build /go/src/github.com/cybozu-go/cilium/LICENSE.all /LICENSE

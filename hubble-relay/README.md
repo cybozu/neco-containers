@@ -6,4 +6,4 @@ This directory provides the Dockerfile for building a container image containing
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/hubble-relay)
+Docker images are available on [ghcr.io](https://ghcr.io/cybozu/hubble-relay)
