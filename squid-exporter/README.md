@@ -14,5 +14,5 @@ squid-exporter converts squid counters and service_times to prometheus metrics.
 | ----          | ----      | ----                |
 | -squid-host   | localhost | squid host          |
 | -squid-port   | 3128      | squid port          |
-| -metrics-port | 8080      | metrics expose port |
+| -metrics-port | 9100      | metrics expose port |
 

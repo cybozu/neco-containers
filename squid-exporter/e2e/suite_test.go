@@ -72,7 +72,7 @@ var _ = Describe("squid-exporter e2e test", func() {
 			numSquidMetrics++
 		}
 
-		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:8080/metrics")
+		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:9100/metrics")
 		Expect(err).NotTo(HaveOccurred())
 		numPrometheusMetrics := 0
 		reader = bufio.NewScanner(bytes.NewReader(res))
@@ -100,7 +100,7 @@ var _ = Describe("squid-exporter e2e test", func() {
 			}
 			numSquidMetrics++
 		}
-		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:8080/metrics")
+		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:9100/metrics")
 		Expect(err).NotTo(HaveOccurred())
 		numPrometheusMetrics = 0
 		reader = bufio.NewScanner(bytes.NewReader(res))

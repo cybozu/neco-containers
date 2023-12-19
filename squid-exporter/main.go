@@ -15,7 +15,7 @@ func requestHandler(logger *slog.Logger, squidClient SquidClient) {
 		logger.Error("error getting squid counters", err)
 		return
 	}
-	err = ConvertSquidCounter(counters)
+	err = ConvertSquidCounter(logger, counters)
 	if err != nil {
 		logger.Error("failed to convert squid counters", err)
 		return
@@ -25,7 +25,7 @@ func requestHandler(logger *slog.Logger, squidClient SquidClient) {
 		logger.Error("error getting squid service_times", err)
 		return
 	}
-	err = ConvertSquidServiceTimes(serviceTimes)
+	err = ConvertSquidServiceTimes(logger, serviceTimes)
 	if err != nil {
 		logger.Error("failed to convert squid service_time", err)
 	}
