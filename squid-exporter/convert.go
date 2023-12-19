@@ -2,20 +2,26 @@ package main
 
 import (
 	"bufio"
+	"fmt"
 	"io"
+	"log/slog"
 	"strconv"
 	"strings"
 
 	"github.com/VictoriaMetrics/metrics"
 )
 
-func ConvertSquidCounter(body io.ReadCloser) error {
+func ConvertSquidCounter(logger *slog.Logger, body io.ReadCloser) error {
 	defer body.Close()
 	metrics.UnregisterAllMetrics()
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()
 	for scanner.Scan() {
 		metric := strings.Split(scanner.Text(), "=")
+		if len(metric) != 2 {
+			logger.Error("failed to parse squid counters")
+			continue
+		}
 		metricName := strings.TrimSpace(strings.ReplaceAll(metric[0], ".", "_"))
 		metricVal, err := strconv.ParseFloat(strings.TrimSpace(metric[1]), 64)
 		if err != nil {
@@ -27,7 +33,7 @@ func ConvertSquidCounter(body io.ReadCloser) error {
 	return nil
 }
 
-func ConvertSquidServiceTimes(body io.ReadCloser) error {
+func ConvertSquidServiceTimes(logger *slog.Logger, body io.ReadCloser) error {
 	defer body.Close()
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()
@@ -39,8 +45,16 @@ func ConvertSquidServiceTimes(body io.ReadCloser) error {
 	)
 	for scanner.Scan() {
 		metric := strings.Split(scanner.Text(), ":")
+		if len(metric) != 2 {
+			logger.Error("failed to parse squid service_times")
+			continue
+		}
 		metricName := r.Replace(strings.ToLower(strings.TrimSpace(metric[0])))
 		metricValues := strings.Split(strings.TrimLeft(metric[1], " "), "  ")
+		if len(metricValues) != 3 {
+			logger.Error("failed to parse squid service_times")
+			continue
+		}
 		metricPercentile := strings.ReplaceAll(strings.TrimSpace(metricValues[0]), "%", "")
 		metricVal5min, err := strconv.ParseFloat(strings.TrimSpace(metricValues[1]), 64)
 		if err != nil {
@@ -50,9 +64,9 @@ func ConvertSquidServiceTimes(body io.ReadCloser) error {
 		if err != nil {
 			return err
 		}
-		counter := metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "percentile_5min")
+		counter := metrics.GetOrCreateFloatCounter(fmt.Sprintf(`squid_service_times_%s{percentile="%s", duration_minutes="%s"}`, metricName, metricPercentile, "5"))
 		counter.Set(metricVal5min)
-		counter = metrics.GetOrCreateFloatCounter("squid_service_times_" + metricName + "_" + metricPercentile + "percentile_60min")
+		counter = metrics.GetOrCreateFloatCounter(fmt.Sprintf(`squid_service_times_%s{percentile="%s", duration_minutes="%s"}`, metricName, metricPercentile, "60"))
 		counter.Set(metricVal60min)
 	}
 	return nil
