@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: e2e
+spec:
+  containers:
+  - name: squid
+    image: ghcr.io/cybozu/squid:6
+  - name: squid-exporter
+    image: ghcr.io/cybozu/squid-exporter:dev
+    imagePullPolicy: Never

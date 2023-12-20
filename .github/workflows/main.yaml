@@ -145,6 +145,10 @@ jobs:
           - dir: "./squid"
             container-image: "squid"
             scan: "true"
+          - dir: "./squid-exporter"
+            container-image: "squid-exporter"
+            scan: "true"
+            make_test: true
           - dir: "./tempo"
             container-image: "tempo"
             scan: "true"
