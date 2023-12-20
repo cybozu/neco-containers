@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/squid-exporter
 
-go 1.21.1
+go 1.21
 
 require (
 	github.com/VictoriaMetrics/metrics v1.25.3

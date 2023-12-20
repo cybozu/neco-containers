@@ -1,7 +1,7 @@
 
 .PHONEY build:
 build:
-	CGO_ENABLED=0 go build -o squid-exporter .
+	CGO_ENABLED=0 go build -ldflags="-w -s" -o squid-exporter .
 
 .PHONEY run-squid:
 run-squid:
