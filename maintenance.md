@@ -890,7 +890,7 @@ Only the base image and module dependency should be updated.
 3. Update `NODE_VERSION` in `Dockerfile`. Please use the version in the below file.
    - https://github.com/gravitational/teleport/blob/vX.Y.Z/build.assets/versions.mk
 4. Update `TELEPORT_VERSION` in `Dockerfile`.
-5. Update `BRANCH` and `TAG` files.
+5. Update `TAG` files.
 
 ## tempo
 
