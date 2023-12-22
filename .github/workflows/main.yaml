@@ -187,3 +187,4 @@ jobs:
           enable_arm64: ${{ matrix.job.enable_arm64 }}
           make_test: ${{ matrix.job.make_test }}
           scan: ${{ matrix.job.scan }}
+          target: ${{ matrix.job.target }}
