@@ -9,6 +9,9 @@ jobs:
     strategy:
       matrix:
         job:
+          - dir: "./alertmanager"
+            container-image: "alertmanager"
+            scan: "true"
           - dir: "./argocd"
             container-image: "argocd"
             scan: "true"
@@ -17,6 +20,9 @@ jobs:
             scan: "true"
           - dir: "./bird"
             container-image: "bird"
+            scan: "true"
+          - dir: "./blackbox_exporter"
+            container-image: "blackbox_exporter"
             scan: "true"
           - dir: "./bmc-reverse-proxy"
             container-image: "bmc-reverse-proxy"
@@ -92,6 +98,8 @@ jobs:
             scan: "true"
           - dir: "./memcached-exporter"
             container-image: "memcached-exporter"
+          - dir: "./moco-switchover-downtime-monitor"
+            container-image: "moco-switchover-downtime-monitor"
           - dir: "./opentelemetry-collector"
             container-image: "opentelemetry-collector"
             scan: "true"
@@ -135,6 +143,8 @@ jobs:
             scan: "true"
           - dir: "./sealed-secrets"
             container-image: "sealed-secrets"
+          - dir: "./s3gw"
+            container-image: "s3gw"
           - dir: "./serf"
             container-image: "serf"
             scan: "true"
@@ -166,6 +176,8 @@ jobs:
           - dir: "./vault"
             container-image: "vault"
             scan: "true"
+          - dir: "./victoriametrics-operator"
+            container-image: "victoriametrics-operator"
 
     runs-on: ubuntu-22.04
     env:

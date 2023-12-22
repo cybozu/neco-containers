@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -8,6 +8,7 @@ WORKDIR /work
 RUN CGO_ENABLED=0 go build ./...
 
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/moco-switchover-downtime-monitor /moco-switchover-downtime-monitor
 # Note that this container image does not include kubectl and kubectl-moco.

@@ -1,7 +1,7 @@
 # Alertmanager container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG ALERTMANAGER_VERSION=0.26.0
 
@@ -16,7 +16,8 @@ RUN curl -fsSL -o alertmanager.tar.gz "https://github.com/prometheus/alertmanage
     && make "PREFIX=$GOPATH/bin/alertmanager" build
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/bin/alertmanager /bin
 COPY --from=build /go/src/github.com/prometheus/alertmanager/LICENSE /
