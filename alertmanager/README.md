@@ -15,10 +15,10 @@ $ docker run -d --read-only --cap-drop ALL --cap-add NET_BIND_SERVICE \
     --mount type=bind,source=/data,target=/data \
     --mount type=bind,source=/config,target=/config \
     --entrypoint alertmanager \
-    quay.io/cybozu/alertmanager:0.24 \
+    ghcr.io/cybozu/alertmanager:0.24 \
     --config.file=/config/alertmanager.yaml
 ```
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/alertmanager)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/alertmanager)

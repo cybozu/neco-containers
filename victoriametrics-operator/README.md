@@ -8,4 +8,4 @@ Kubernetes operator for VictoriaMetrics
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/victoriametrics-operator)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/victoriametrics-operator)

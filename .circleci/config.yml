@@ -711,7 +711,6 @@ workflows:
       - build:
           name: build-alertmanager
           container-image: alertmanager
-          scan: true
       - build:
           name: build-argocd
           container-image: argocd
@@ -721,7 +720,6 @@ workflows:
       - build:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
-          scan: true
       - build:
           name: build-bmc-reverse-proxy
           container-image: bmc-reverse-proxy
