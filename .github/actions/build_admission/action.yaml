@@ -1,0 +1,38 @@
+name: "Build admission"
+description: "Build admission"
+inputs:
+  github_token:
+    description: "GitHub Token"
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup build environment
+      uses: ./.github/actions/setup
+      with:
+        github_token: ${{ inputs.github_token }}
+        go-version-file: admission/go.mod
+    - id: extract
+      name: Extract targets
+      uses: ./.github/actions/extract_tags
+      with:
+        container-image: admission
+        github_token: ${{ inputs.github_token }}
+    - name: Test
+      if: ${{ steps.extract.outputs.build }}
+      shell: bash
+      run: |
+        make check-generate
+        make test
+      working-directory: admission
+    - name: Build and push
+      if: ${{ steps.extract.outputs.build }}
+      uses: docker/build-push-action@v5
+      with:
+        context: admission
+        platforms: "linux/amd64"
+        provenance: false
+        push: ${{ steps.extract.outputs.docker_push }}
+        tags: |
+          ${{ steps.extract.outputs.tag }}
+          ${{ steps.extract.outputs.branch }}

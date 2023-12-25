@@ -6,12 +6,21 @@ GRAFANA_OPERATOR_V4_VERSION = 4.10.1
 GRAFANA_OPERATOR_VERSION = 5.4.1
 ENVTEST_K8S_VERSION = 1.27.1
 
+TOOLS_DIR := $(shell pwd)/bin
+STATICCHECK := $(TOOLS_DIR)/staticcheck
+
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
 .SHELLFLAGS = -e -o pipefail -c
 
 .PHONY: all
 all: build
+
+.PHONY: setup
+setup: $(STATICCHECK)
+
+$(STATICCHECK):
+	GOBIN=$(TOOLS_DIR) go install honnef.co/go/tools/cmd/staticcheck@latest
 
 .PHONY: crds
 crds:
@@ -36,9 +45,9 @@ test: crds simple-test setup-envtest
 	}
 
 .PHONY: simple-test
-simple-test:
+simple-test: $(STATICCHECK)
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
+	$(STATICCHECK) ./...
 	go vet ./...
 
 .PHONY: check-generate

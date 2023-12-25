@@ -96,7 +96,7 @@ PodValidator
 
 PodValidator validates Pod specifications as follows:
 
-- Check that the container images have a valid prefix such as `quay.io/cybozu/`.
+- Check that the container images have a valid prefix such as `ghcr.io/cybozu/`.
     - Valid prefixes are given through `--valid-image-prefix` command-line flags.
     - If `VPOD_IMAGE_PERMISSIVE=true` envvar is set, this does not deny Pods but issues an warning.
 
@@ -112,4 +112,4 @@ The purpose of this validator is to avoid installing any plugins to production G
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/neco-admission)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/neco-admission)

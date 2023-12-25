@@ -1,0 +1,96 @@
+name: "Extract tags"
+description: "Extract tags to use for the new image"
+inputs:
+  dir:
+    description: "working directory"
+    required: false
+    default: ""
+  container-image:
+    description: "container image"
+    required: true
+  github_token:
+    description: "GitHub Token"
+    required: true
+outputs:
+  branch:
+    description: "branch"
+    value: ${{ steps.extract.outputs.branch }}
+  tag:
+    description: "tag"
+    value: ${{ steps.extract.outputs.tag }}
+  build:
+    description: "build is needed (true or '')"
+    value: ${{ steps.flags.outputs.build }}
+  push:
+    description: "push is needed (true or '')"
+    value: ${{ steps.flags.outputs.push }}
+  # docker/build-push-action does not accept '' as its push flag
+  docker_push:
+    description: "push is needed (true or false)"
+    value: ${{ steps.flags.outputs.docker_push }}
+
+runs:
+  using: composite
+  steps:
+    - id: extract
+      name: Extract targets
+      shell: bash
+      run: |
+        DIR=${{ inputs.dir }}
+        if [ "${DIR}" = "" ]; then DIR=${{ inputs.container-image }}; fi
+        IMAGE=${{ inputs.container-image }}
+        TAG=$(cat ${DIR}/TAG)
+        FOUND=$(container-tag-exists ghcr.io/cybozu/${IMAGE} ${TAG})
+        # The stdout should be either "" or "found".
+        if [ "${FOUND}" = "" ]; then
+          echo "tag=ghcr.io/cybozu/${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
+
+          if [ -f ${DIR}/BRANCH ]; then
+            if echo ${TAG} | grep -q -e - ; then
+              echo ===== Skip pushing branch tags for pre-release ${TAG} =====
+            else
+              BRANCH=$(cat ${DIR}/BRANCH)
+              echo "branch=ghcr.io/cybozu/${IMAGE}:${BRANCH}" >> $GITHUB_OUTPUT
+            fi
+          fi
+        fi
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+    - id: flags
+      name: Decide build flags
+      shell: bash
+      run: |
+        if ! [ -z "${{ steps.extract.outputs.tag }}" ]; then
+          echo "build=true" >> $GITHUB_OUTPUT
+          if [ "${EVENT_NAME}" != "pull_request" ]; then
+            echo "push=true" >> $GITHUB_OUTPUT
+            echo "docker_push=true" >> $GITHUB_OUTPUT
+          else
+            echo "docker_push=false" >> $GITHUB_OUTPUT
+          fi
+        else
+          echo "docker_push=false" >> $GITHUB_OUTPUT
+        fi
+      env:
+        EVENT_NAME: ${{ github.event_name }}
+    - name: Validate consistency between BRANCH and TAG
+      shell: bash
+      run: |
+        DIR=${{ inputs.dir }}
+        if [ "${DIR}" = "" ]; then DIR=${{ inputs.container-image }}; fi
+        if [ -e "${DIR}/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+        ./tag_branch_consistency ${DIR}
+    - name: Echo output
+      shell: bash
+      run: |
+        echo
+        echo "vvvvvvvvvv vvvvvvvvvv vvvvvvvvvv vvvvvvvvvv vvvvvvvvvv vvvvvvvvvv"
+        echo "    Build Policy:"
+        echo
+        echo "         branch: ${{ steps.extract.outputs.branch }}"
+        echo "            tag: ${{ steps.extract.outputs.tag }}"
+        echo "          build: ${{ steps.flags.outputs.build }}"
+        echo "           push: ${{ steps.flags.outputs.push }}"
+        echo "    docker_push: ${{ steps.flags.outputs.docker_push }}"
+        echo ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^
+        echo

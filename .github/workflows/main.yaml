@@ -188,3 +188,12 @@ jobs:
           make_test: ${{ matrix.job.make_test }}
           scan: ${{ matrix.job.scan }}
           target: ${{ matrix.job.target }}
+
+  build_admission:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        uses: ./.github/actions/build_admission
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
