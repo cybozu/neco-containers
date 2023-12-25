@@ -83,12 +83,12 @@ runs:
         YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
       run: |
         echo
-        echo "scanning $${{ steps.extract.outputs.tag }} ..."
-        if [[ $${{ steps.extract.outputs.tag }} == "ghcr.io/cybozu/golang:"* ]]; then
+        echo "scanning ${{ steps.extract.outputs.tag }} ..."
+        if [[ "${{ steps.extract.outputs.tag }}" == "ghcr.io/cybozu/golang:"* ]]; then
           dir=${{ inputs.dir }}
           BRANCH=$(cat $dir/BRANCH)
           image=${{ inputs.container-image }}:$BRANCH
         else
           image=${{ inputs.container-image }}
         fi
-        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="$${{ steps.extract.outputs.tag }}" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="${{ steps.extract.outputs.tag }}" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
