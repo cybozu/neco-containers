@@ -6,8 +6,9 @@ inputs:
     description: "GitHub Token"
     required: true
   go-version:
-    description: "go version"
-    required: true
+    description: "Go version"
+  go-version-file:
+    description: "Go version file"
 
 runs:
   using: "composite"
@@ -30,6 +31,7 @@ runs:
       uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go-version }}
+        go-version-file: ${{ inputs.go-version-file }}
     - name: Install container-tag-exists
       shell: bash
       run: go install github.com/Hsn723/container-tag-exists@latest

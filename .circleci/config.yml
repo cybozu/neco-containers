@@ -607,49 +607,6 @@ jobs:
           root: src/workspace
           paths:
             - "*"
-  build-cert-manager:
-    parameters:
-      repo:
-        type: string
-      version:
-        type: string
-    docker:
-      - image: quay.io/cybozu/golang:1.20-jammy
-    resource_class: xlarge
-    steps:
-      - checkout
-      - run:
-          name: Check TAG file
-          command: |
-            c="$(./tag_exists cert-manager)"
-            if [ "$c" = ng ]; then
-                echo cert-manager > BUILDS
-            fi
-      - run:
-          name: Build cert-manager
-          command: |
-            mkdir -p src/workspace
-            if [ ! -f BUILDS ]; then
-                # fake for the next step
-                cd src/workspace
-                touch cainjector controller webhook LICENSE
-                exit 0
-            fi
-            cd src
-            git clone --depth 1 --branch v<< parameters.version >> << parameters.repo >>
-            cd cert-manager
-            # We use a dummy environment value(CTR=sleep) to pass checks for unnecessary tools
-            make CTR=sleep _bin/server/controller-linux-amd64
-            make CTR=sleep _bin/server/webhook-linux-amd64
-            make CTR=sleep _bin/server/cainjector-linux-amd64
-            mv _bin/server/controller-linux-amd64 ../workspace/controller
-            mv _bin/server/webhook-linux-amd64 ../workspace/webhook
-            mv _bin/server/cainjector-linux-amd64 ../workspace/cainjector
-            mv LICENSE ../workspace
-      - persist_to_workspace:
-          root: src/workspace
-          paths:
-            - "*"
   build-admission:
     docker:
       - image: quay.io/cybozu/golang:1.20-jammy
@@ -741,18 +698,6 @@ workflows:
       - build:
           name: build-cephcsi
           container-image: cephcsi
-      - build-cert-manager:
-          #repo: https://github.com/cert-manager/cert-manager
-          repo: https://github.com/cybozu-go/cert-manager
-          version: 1.13.2-neco-longtimeout.1
-      - build:
-          name: build-cert-manager-container
-          container-image: cert-manager
-          attach: true
-          dir: cert-manager
-          requires:
-            - build-cert-manager
-          scan: true
       - build:
           name: build-chrony
           container-image: chrony
