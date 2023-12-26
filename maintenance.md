@@ -205,7 +205,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
    2. Create and checkout a new branch named `vX.Y.Z-neco` from the tag named `vX.Y.Z`.
    3. Cherry-pick the commit included patches and create a new tag named `vX.Y.Z-neco-longtimeout.1`.
    4. Push it.
-3. Update the `version` argument on the `build-cert-manager` job in the CircleCI `main` workflow.
+3. Update `CERT_MANAGER_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 

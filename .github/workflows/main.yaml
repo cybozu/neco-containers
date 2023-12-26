@@ -33,6 +33,7 @@ jobs:
             container-image: "cadvisor"
           - dir: "./cert-manager"
             container-image: "cert-manager"
+            scan: "true"
           - dir: "./chrony"
             container-image: "chrony"
             scan: "true"
