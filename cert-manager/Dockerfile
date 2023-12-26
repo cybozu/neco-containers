@@ -1,11 +1,24 @@
-# cert-manager container
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+# https://github.com/cert-manager/cert-manager
+ENV CERT_MANAGER_REPOSITORY=https://github.com/cybozu-go/cert-manager
+ENV CERT_MANAGER_VERSION=1.13.2-neco-longtimeout.1
+RUN git clone --depth 1 --branch v${CERT_MANAGER_VERSION} ${CERT_MANAGER_REPOSITORY}
+RUN cd cert-manager \
+    && make CTR=sleep _bin/server/controller-linux-amd64 \
+    && make CTR=sleep _bin/server/webhook-linux-amd64 \
+    && make CTR=sleep _bin/server/cainjector-linux-amd64 \
+    && mv _bin/server/controller-linux-amd64 /work/controller \
+    && mv _bin/server/webhook-linux-amd64 /work/webhook \
+    && mv _bin/server/cainjector-linux-amd64 /work/cainjector \
+    && mv LICENSE /work
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
-COPY workspace/webhook /usr/local/bin/webhook
-COPY workspace/cainjector /usr/local/bin/cainjector
-COPY workspace/controller /usr/local/bin/controller
-COPY workspace/LICENSE /usr/local/share/doc/cert-manager/LICENSE
+COPY --from=build /work/webhook /usr/local/bin/webhook
+COPY --from=build /work/cainjector /usr/local/bin/cainjector
+COPY --from=build /work/controller /usr/local/bin/controller
+COPY --from=build /work/LICENSE /usr/local/share/doc/cert-manager/LICENSE
 
 EXPOSE 9402
 

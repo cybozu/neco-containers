@@ -13,7 +13,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=cert-manager-controller \
-    quay.io/cybozu/cert-manager:1.13 controller
+    ghcr.io/cybozu/cert-manager:1.13 controller
 ```
 
 License
@@ -24,4 +24,4 @@ License
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/cert-manager)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/cert-manager)
