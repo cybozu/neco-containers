@@ -73,24 +73,11 @@ runs:
           ${{ steps.extract.outputs.tag }}
           ${{ steps.extract.outputs.branch }}
         target: ${{ inputs.target }}
-    - name: Install Trivy
-      if: ${{ steps.extract.outputs.scan }}
-      shell: bash
-      run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
     - name: Scan images
       if: ${{ steps.extract.outputs.scan }}
-      shell: bash
-      env:
-        YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
-      run: |
-        echo
-        echo "scanning ${{ steps.extract.outputs.tag }} ..."
-        if [[ "${{ steps.extract.outputs.tag }}" == "ghcr.io/cybozu/golang:"* ]]; then
-          dir=${{ inputs.dir }}
-          BRANCH=$(cat $dir/BRANCH)
-          image=${{ inputs.container-image }}:$BRANCH
-        else
-          image=${{ inputs.container-image }}
-        fi
-        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="${{ steps.extract.outputs.tag }}" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+      uses: ./.github/actions/trivy_scan
+      with:
+        dir: ${{ inputs.dir }}
+        container-image: ${{ inputs.container-image }}
+        tag: ${{ steps.extract.outputs.tag }}
+        yamory_token: ${{ inputs.yamory_token }}

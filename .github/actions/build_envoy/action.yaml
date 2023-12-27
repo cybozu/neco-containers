@@ -1,0 +1,97 @@
+name: "Build Envoy"
+description: "Build Envoy"
+inputs:
+  version:
+    description: "envoy version"
+    required: true
+  clang_archive_path:
+    description: "clang archive path"
+    required: true
+  github_token:
+    description: "GitHub Token"
+    required: true
+  yamory_token:
+    description: "Yamory Access Token"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup build environment
+      uses: ./.github/actions/setup
+      with:
+        github_token: ${{ inputs.github_token }}
+    - id: extract
+      name: Extract targets
+      uses: ./.github/actions/extract_tags
+      with:
+        container-image: envoy
+        github_token: ${{ inputs.github_token }}
+    - name: Build
+      if: ${{ steps.extract.outputs.build }}
+      shell: bash
+      working-directory: envoy
+      run: |
+        # Instruction: Building Envoy with Bazel
+        # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md
+        #
+        # Default runner includes bazelisk by default.
+        # Appropriate bazel version is decided from `.bazelversion`.
+        # https://github.com/bazelbuild/setup-bazelisk
+        # https://github.com/envoyproxy/envoy/blob/main/.bazelversion
+        mkdir -p src
+        cd src
+
+        # Extract clang+llvm
+        # Please update the archive path if supported compiler version is upgraded
+        # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#supported-compiler-versions
+        curl -o /tmp/clang.tar.xz -sLf ${{ inputs.clang_archive_path }}
+        mkdir llvm
+        tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
+
+        # Clone Envoy repository
+        git clone --depth 1 --branch v${{ inputs.version }} https://github.com/envoyproxy/envoy
+        cd envoy
+        bazel/setup_clang.sh $(pwd)/../llvm
+        echo "build --config=clang" >> user.bazelrc
+        # https://github.com/cybozu/neco-containers/pull/1119
+        sed -i s/envoy_dependencies_extra\(\)/envoy_dependencies_extra\(ignore_root_user_error=True\)/ WORKSPACE
+
+        # Check Bazel version
+        # e.g. bazel x.y.z
+        if [ "$(bazel --version | cut -d' ' -f2)" != "$(cat .bazelversion)" ]; then
+            echo "Wrong bazel version detected"
+            exit 1
+        fi
+
+        # Compile Envoy
+        # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#release-builds
+        bazel --bazelrc=/dev/null build --jobs=auto -c opt //source/exe:envoy-static.stripped
+    - name: Move files
+      if: ${{ steps.extract.outputs.build }}
+      shell: bash
+      working-directory: envoy
+      run: |
+        mkdir -p workspace
+        mv src/envoy/bazel-bin/source/exe/envoy-static.stripped workspace/envoy
+        mv src/envoy/LICENSE workspace/
+        mv src/envoy/ci/docker-entrypoint.sh workspace/
+    - name: Build and push
+      if: ${{ steps.extract.outputs.build }}
+      uses: docker/build-push-action@v5
+      with:
+        context: envoy
+        platforms: "linux/amd64"
+        provenance: false
+        push: ${{ steps.extract.outputs.docker_push }}
+        tags: |
+          ${{ steps.extract.outputs.tag }}
+          ${{ steps.extract.outputs.branch }}
+    - name: Scan images
+      if: ${{ steps.extract.outputs.scan }}
+      uses: ./.github/actions/trivy_scan
+      with:
+        dir: ${{ inputs.dir }}
+        container-image: ${{ inputs.container-image }}
+        tag: ${{ steps.extract.outputs.tag }}
+        yamory_token: ${{ inputs.yamory_token }}
