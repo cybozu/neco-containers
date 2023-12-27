@@ -10,7 +10,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/cybozu-go/log"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -111,7 +110,7 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		_ = logger.Critical("failed to ListenAndServe", map[string]interface{}{log.FnError: err})
+		logger.Error("failed to ListenAndServe", "error", err)
 		return err
 	}
 

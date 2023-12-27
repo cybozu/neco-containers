@@ -3,7 +3,6 @@ module github.com/cybozu/neco-containers/ceph-extra-exporter
 go 1.20
 
 require (
-	github.com/cybozu-go/log v1.7.0
 	github.com/prometheus/client_golang v1.17.0
 	github.com/stretchr/testify v1.8.4
 )

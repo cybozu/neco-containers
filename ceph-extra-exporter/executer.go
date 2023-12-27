@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/cybozu-go/log"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -95,9 +94,7 @@ func (ce *cephExecuter) update() {
 
 	jsonBytes, err := executeCommand(ce.rule.command, nil)
 	if err != nil {
-		_ = logger.Warn("command execution failed", map[string]interface{}{
-			"command": ce.rule.command,
-		})
+		logger.Warn("command execution failed", "command", ce.rule.command)
 		ce.failedCounter["command"] += 1
 		return
 	}
@@ -105,19 +102,14 @@ func (ce *cephExecuter) update() {
 	for name, metric := range ce.rule.metrics {
 		result, err := executeCommand([]string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
 		if err != nil {
-			_ = logger.Warn("jq command failed", map[string]interface{}{
-				"filter": metric.jqFilter,
-			})
+			logger.Warn("jq command failed", "filter", metric.jqFilter)
 			ce.failedCounter["jq"] += 1
 			continue
 		}
 
 		mv := []metricValue{}
 		if err := json.Unmarshal(result, &mv); err != nil {
-			_ = logger.Warn("parse value failed", map[string]interface{}{
-				"value": string(result),
-				"error": err,
-			})
+			logger.Warn("parse value failed", "value", string(result), "error", err)
 			ce.failedCounter["parse"] += 1
 			continue
 		}
@@ -141,7 +133,7 @@ func executeCommand(command []string, input io.Reader) ([]byte, error) {
 		go func() {
 			defer stdin.Close()
 			if _, err = io.Copy(stdin, input); err != nil {
-				_ = logger.Error("failed to io.Copy", map[string]interface{}{log.FnError: err})
+				logger.Error("failed to io.Copy", "error", err)
 			}
 		}()
 	}
