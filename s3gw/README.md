@@ -57,11 +57,15 @@ It returns the list of objects stored in the bucket as the following JSON format
     "objects": [
         {
             "key": "some_object",
-            "size": 123
+            "size": 123,
+            "last-modified": "2023-12-03T04:05:06.789Z",
+            "etag": "\"0123456789abcdef-12\""
         },
         {
             "key": "another_object",
-            "size": 789
+            "size": 789,
+            "last-modified": "2023-09-08T07:06:05.432Z",
+            "etag": "\"fedcba9876543210-98\""
         },
     ]
 }
@@ -71,9 +75,17 @@ If there are no objects, `objects` is empty array `[]`, not `null`.
 
 ### `/bucket/<object-key>`: bucket objects operation
 
+As with S3 API, `<object-key>` is not a path-style string. i.e. `/bucket/foo` and `/bucket//foo` represent different objects.
+
+#### `GET`/`PUT`/`DELETE` methods
+
 You can `GET`/`PUT`/`DELETE` objects.
 
-As with S3 API, `<object-key>` is not a path-style string. i.e. `/bucket/foo` and `/bucket//foo` represent different objects.
+In case of `GET` method, the following HTTP response header fields are returned:
+
+- `Content-Length`
+- `ETag`
+- `Last-Modified`
 
 Restrictions
 ------------
