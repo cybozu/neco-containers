@@ -1,7 +1,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.21-jammy AS build
 
-ARG TELEPORT_VERSION=14.2.3
+ARG TELEPORT_VERSION=14.3.0
 # Install Nodejs
 ARG NODE_VERSION=18.18.2
 ENV NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
