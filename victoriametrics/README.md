@@ -8,4 +8,4 @@ VictoriaMetrics - fast, cost-effective and scalable time series database
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/organization/cybozu)
+Docker images are available on [ghcr.io](https://github.com/orgs/cybozu/packages?repo_name=neco-containers)
