@@ -1,7 +1,7 @@
 # Ceph container image
 
 # Stage1: setup environment & install
-FROM quay.io/cybozu/ubuntu:20.04 AS build
+FROM quay.io/cybozu/ubuntu:22.04 AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
@@ -11,7 +11,7 @@ COPY workspace/rocksdb/* /usr/bin/
 
 RUN mkdir -p /var/run/ceph && \
     apt-get update && apt-get install --no-install-recommends -y \
-        libstdc++-9-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev libgflags2.2 \
+        libstdc++-11-dev jq kmod lvm2 gdisk ca-certificates e2fsprogs attr udev libgflags2.2 \
         /tmp/*.deb && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \

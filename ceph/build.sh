@@ -18,7 +18,9 @@ cd ceph
 
 # Install dependencies
 apt-get update
+apt-get install -y curl
 ./install-deps.sh
+apt-get install -y python3-routes
 
 # Prebuild ceph source to generate files in `src/pybind/mgr/dashboard/frontend/dist` needed by CMake
 ./make-dist

@@ -319,7 +319,7 @@ jobs:
       version:
         type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:20.04
+      - image: quay.io/cybozu/ubuntu-dev:22.04
     resource_class: 2xlarge+
     steps:
       - checkout
@@ -684,7 +684,7 @@ workflows:
           name: build-cadvisor
           container-image: cadvisor
       - build-ceph:
-          version: 17.2.6
+          version: 18.2.1
       - build:
           name: build-ceph-container
           container-image: ceph
