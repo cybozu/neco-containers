@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM quay.io/cybozu/golang:1.20-focal AS build
 
-ARG ROOK_VERSION=1.12.5
+ARG ROOK_VERSION=1.13.1
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -33,13 +33,14 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false TEMP=/tmp/rook
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ceph:17.2.6.1
+FROM quay.io/cybozu/ceph:18.2.1.1
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
 
 # Followings are based on upstream Dockerfile
 # Note: s5cmd is not installed because teleport node image has s3cmd.
+RUN apt-get update && apt-get install -y --no-install-recommends iproute2
 COPY --from=build rook toolbox.sh set-ceph-debug-level /usr/local/bin/
 COPY --from=build ceph-monitoring /etc/ceph-monitoring
 COPY --from=build rook-external /etc/rook-external/
