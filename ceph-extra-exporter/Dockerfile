@@ -6,7 +6,7 @@ COPY . .
 
 RUN go build -o ceph-extra-exporter
 
-FROM quay.io/cybozu/ceph:17.2.6.1
+FROM quay.io/cybozu/ceph:18.2.1.1
 
 COPY --from=builder /work/ceph-extra-exporter /
 

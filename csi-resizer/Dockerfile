@@ -2,7 +2,7 @@
 FROM quay.io/cybozu/golang:1.20-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-resizer
-ARG VERSION=1.8.0
+ARG VERSION=1.9.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
