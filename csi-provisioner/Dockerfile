@@ -2,7 +2,7 @@
 FROM quay.io/cybozu/golang:1.20-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
-ARG VERSION=3.5.0
+ARG VERSION=3.6.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
