@@ -37,8 +37,8 @@ RUN mkdir -p ${DESTDIR} \
 
 
 FROM build-base as builder
-COPY workspace/bin/llvm-objcopy /bin/
-COPY workspace/bin/clang workspace/bin/llc /bin/
+COPY src/workspace/bin/llvm-objcopy /bin/
+COPY src/workspace/bin/clang src/workspace/bin/llc /bin/
 WORKDIR /go/src/github.com/cybozu-go/cilium
 ARG LIBNETWORK_PLUGIN
 ARG DESTDIR
@@ -56,15 +56,16 @@ RUN apt-get install -y --no-install-recommends binutils \
       libelf-dev \
       make \
       unzip \
+      libz3-dev \
     && images/builder/install-protoc.sh \
     && make build-container install-container-binary
 
 FROM ${UBUNTU_IMAGE}
 ARG DESTDIR
-COPY workspace/bin/clang workspace/bin/llc /bin/
-COPY workspace/usr/local/bin /usr/local/bin
-COPY workspace/usr/bin /usr/bin
-COPY workspace/usr/lib /usr/lib
+COPY src/workspace/bin/clang src/workspace/bin/llc /bin/
+COPY src/workspace/usr/local/bin /usr/local/bin
+COPY src/workspace/usr/bin /usr/bin
+COPY src/workspace/usr/lib /usr/lib
 # When used within the Cilium container, Hubble CLI should target the
 # local unix domain socket instead of Hubble Relay.
 ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock

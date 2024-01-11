@@ -6,4 +6,4 @@ This directory provides the Dockerfile for building a container image containing
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/cilium)
+Docker images are available on [ghcrio](https://github.com/cybozu/neco-containers/pkgs/container/cilium)
