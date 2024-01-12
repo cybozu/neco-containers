@@ -13,7 +13,6 @@ import (
 
 func ConvertSquidCounter(logger *slog.Logger, body io.ReadCloser) error {
 	defer body.Close()
-	metrics.UnregisterAllMetrics()
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()
 	for scanner.Scan() {
