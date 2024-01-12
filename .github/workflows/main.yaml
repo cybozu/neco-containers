@@ -162,6 +162,9 @@ jobs:
             container-image: "squid-exporter"
             scan: "true"
             make_test: true
+          - dir: "./teleport-node"
+            container-image: "teleport-node"
+            scan: "true"
           - dir: "./tempo"
             container-image: "tempo"
             scan: "true"
