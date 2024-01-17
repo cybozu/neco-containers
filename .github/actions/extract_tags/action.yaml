@@ -140,7 +140,7 @@ runs:
       if: ${{ steps.flags.outputs.push }}
       shell: bash
       run: |
-        if [ "${{ steps.flags.scan-pre.scan }}" = "true" ]; then
+        if [ "${{ steps.scan-pre.outputs.scan }}" = "true" ]; then
           echo "scan=true" >> $GITHUB_OUTPUT
         fi
     - name: Validate consistency between BRANCH and TAG
