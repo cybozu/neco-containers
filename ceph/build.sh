@@ -28,6 +28,8 @@ apt-get install -y python3-routes
 # Build Ceph packages
 sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
 sed -i -e 's@usr/share/java/libcephfs-test.jar@@' debian/ceph-test.install
+# TODO: Remove this line when ceph-exporter become available for installation via the deb package officialy.
+grep -q '/usr/bin/ceph-exporter' debian/ceph-common.install || echo '/usr/bin/ceph-exporter' >> debian/ceph-common.install
 rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
 # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
 dpkg-buildpackage --build=binary -uc -us -j10
