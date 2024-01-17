@@ -24,9 +24,9 @@ inputs:
     required: false
     default: "false"
   scan:
-    description: "Enable image scanning"
+    description: "Enable image scanning (true, false, or auto)"
     required: false
-    default: "false"
+    default: "auto"
   target:
     description: "Target stage to build"
     required: false
@@ -43,6 +43,8 @@ runs:
       with:
         dir: ${{ inputs.dir }}
         container-image: ${{ inputs.container-image }}
+        target: ${{ inputs.target }}
+        scan: ${{ inputs.scan }}
         github_token: ${{ inputs.github_token }}
     - name: Set container build platform
       if: ${{ steps.extract.outputs.build }}
@@ -72,12 +74,12 @@ runs:
           ${{ steps.extract.outputs.branch }}
         target: ${{ inputs.target }}
     - name: Install Trivy
-      if: ${{ inputs.scan == 'true' && steps.extract.outputs.push }}
+      if: ${{ steps.extract.outputs.scan }}
       shell: bash
       run: |
         curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
     - name: Scan images
-      if: ${{ inputs.scan == 'true' && steps.extract.outputs.push }}
+      if: ${{ steps.extract.outputs.scan }}
       shell: bash
       env:
         YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}

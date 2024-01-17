@@ -8,6 +8,14 @@ inputs:
   container-image:
     description: "container image"
     required: true
+  target:
+    description: "target name"
+    required: false
+    default: ""
+  scan:
+    description: "Enable image scanning (true, false, or auto)"
+    required: false
+    default: "auto"
   github_token:
     description: "GitHub Token"
     required: true
@@ -28,16 +36,27 @@ outputs:
   docker_push:
     description: "push is needed (true or false)"
     value: ${{ steps.flags.outputs.docker_push }}
+  scan:
+    description: "scan is needed (true or '')"
+    value: ${{ steps.scan.outputs.scan }}
 
 runs:
   using: composite
   steps:
+    - id: dir
+      name: Decide directory
+      shell: bash
+      run: |
+        if [ -z "${{ inputs.dir }}" ]; then
+          echo "dir=${{ inputs.container-image }}" >> $GITHUB_OUTPUT
+        else
+          echo "dir=${{ inputs.dir }}" >> $GITHUB_OUTPUT
+        fi
     - id: extract
       name: Extract targets
       shell: bash
       run: |
-        DIR=${{ inputs.dir }}
-        if [ "${DIR}" = "" ]; then DIR=${{ inputs.container-image }}; fi
+        DIR=${{ steps.dir.outputs.dir }}
         IMAGE=${{ inputs.container-image }}
         TAG=$(cat ${DIR}/TAG)
         FOUND=$(container-tag-exists ghcr.io/cybozu/${IMAGE} ${TAG})
@@ -73,11 +92,61 @@ runs:
         fi
       env:
         EVENT_NAME: ${{ github.event_name }}
+    - id: scan-pre
+      name: Decide scan flag
+      shell: bash
+      working-directory: ${{ steps.dir.outputs.dir }}
+      run: |
+        # Check if scan-mode is manually overridden
+        echo "inputs.scan is: ${{ inputs.scan }}"
+        if [ -z "${{ inputs.scan }}" ]; then
+          echo "Calculating scanning mode..."
+        elif [ "${{ inputs.scan }}" = "auto" ]; then
+          echo "Calculating scanning mode..."
+        elif [ "${{ inputs.scan }}" = "true" ]; then
+          echo "Scanning is enabled manually."
+          echo "scan=true" >> $GITHUB_OUTPUT
+          exit 0
+        elif [ "${{ inputs.scan }}" = "false" ]; then
+          echo "Scanning is disabled manually."
+          exit 0
+        else
+          echo "inputs.scan has an invalid value"
+          exit 1
+        fi
+
+        # If base image is substituted by a variable, automatic detection is disabled
+        # It instructs users to set scan-flag manually if missing
+        if grep FROM Dockerfile | grep -F '$'; then
+          echo "!! FROM command may use a base image substituted by a variable."
+          echo "!! Please set scan requirement manually."
+          exit 1
+        fi
+
+        # Skip Trivy scan if scratch-based image
+        if [ -z "${{ inputs.target }}" ]; then
+          if grep FROM Dockerfile | tail -n 1 | grep scratch; then
+            echo "Scanning is disabled for scratch-based images."
+            exit 0
+          fi
+        elif grep FROM Dockerfile | grep AS | grep "${{ inputs.target }}" | grep scratch; then
+          echo "Scanning is disabled for scratch-based images."
+          exit 0
+        fi
+        echo "Scanning is enabled at image uploading."
+        echo "scan=true" >> $GITHUB_OUTPUT
+    - id: scan
+      name: Enable scan for upload-time only
+      if: ${{ steps.flags.outputs.push }}
+      shell: bash
+      run: |
+        if [ "${{ steps.flags.scan-pre.scan }}" = "true" ]; then
+          echo "scan=true" >> $GITHUB_OUTPUT
+        fi
     - name: Validate consistency between BRANCH and TAG
       shell: bash
       run: |
-        DIR=${{ inputs.dir }}
-        if [ "${DIR}" = "" ]; then DIR=${{ inputs.container-image }}; fi
+        DIR=${{ steps.dir.outputs.dir }}
         if [ -e "${DIR}/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
         ./tag_branch_consistency ${DIR}
     - name: Echo output
@@ -92,5 +161,6 @@ runs:
         echo "          build: ${{ steps.flags.outputs.build }}"
         echo "           push: ${{ steps.flags.outputs.push }}"
         echo "    docker_push: ${{ steps.flags.outputs.docker_push }}"
+        echo "           scan: ${{ steps.scan.outputs.scan }}"
         echo ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^ ^^^^^^^^^^
         echo

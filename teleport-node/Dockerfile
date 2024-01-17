@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG TELEPORT_VERSION=14.3.0
 # Install Nodejs
@@ -17,7 +17,8 @@ RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravita
     make build/teleport OS=linux
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu-debug:22.04
+FROM ghcr.io/cybozu/ubuntu-debug:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /work/teleport/LICENSE /usr/local/teleport/

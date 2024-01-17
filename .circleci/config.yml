@@ -901,7 +901,6 @@ workflows:
       - build:
           name: build-teleport-node
           container-image: teleport-node
-          scan: true
       - build:
           name: build-tempo
           container-image: tempo
