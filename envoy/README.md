@@ -17,7 +17,7 @@ Usage
     quay.io/cybozu/envoy:1.28
     ```
 
-Livenessprobe
+Probe
 -----
 
 Envoy has its own probe, but it does not guarantee that Envoy is working correctly.
