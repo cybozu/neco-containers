@@ -666,9 +666,6 @@ workflows:
           requires:
             - build-admission
       - build:
-          name: build-alertmanager
-          container-image: alertmanager
-      - build:
           name: build-argocd
           container-image: argocd
       - build:
@@ -725,9 +722,6 @@ workflows:
       - build:
           name: build-cilium-certgen
           container-image: cilium-certgen
-      - build:
-          name: build-configmap-reload
-          container-image: configmap-reload
       - build:
           name: build-contour
           container-image: contour
@@ -802,16 +796,6 @@ workflows:
           container-image: heartbeat
           scan: true
       - build:
-          name: build-hubble
-          container-image: hubble
-      - build:
-          name: build-hubble-relay
-          container-image: hubble-relay
-      - build:
-          name: build-hubble-ui
-          container-image: hubble-ui
-          targets: frontend backend
-      - build:
           name: build-ipfs-cluster
           container-image: ipfs-cluster
       - build:
@@ -835,12 +819,6 @@ workflows:
           name: build-machines-endpoints
           container-image: machines-endpoints
       - build:
-          name: build-memcached
-          container-image: memcached
-      - build:
-          name: build-memcached-exporter
-          container-image: memcached-exporter
-      - build:
           name: build-meows-dctest-runner
           container-image: meows-dctest-runner
           scan: true
@@ -858,14 +836,8 @@ workflows:
           name: build-opentelemetry-collector
           container-image: opentelemetry-collector
       - build:
-          name: build-pomerium
-          container-image: pomerium
-      - build:
           name: build-prometheus-adapter
           container-image: prometheus-adapter
-      - build:
-          name: build-prometheus-config-reloader
-          container-image: prometheus-config-reloader
       - build:
           name: build-promtail
           container-image: promtail
@@ -888,9 +860,6 @@ workflows:
           name: build-s3gw
           container-image: s3gw
       - build:
-          name: build-sealed-secrets
-          container-image: sealed-secrets
-      - build:
           name: build-serf
           container-image: serf
           scan: true
@@ -902,9 +871,6 @@ workflows:
           name: build-teleport-node
           container-image: teleport-node
       - build:
-          name: build-tempo
-          container-image: tempo
-      - build:
           name: build-testhttpd
           container-image: testhttpd
       - build:
@@ -913,11 +879,3 @@ workflows:
       - build:
           name: build-vault
           container-image: vault
-      - build:
-          name: build-victoriametrics-operator
-          container-image: victoriametrics-operator
-      - build:
-          name: build-victoriametrics
-          container-image: victoriametrics
-          targets: vmsingle vmagent vmalert vmbackup vmrestore vmctl vminsert vmselect vmstorage
-          scan: true
