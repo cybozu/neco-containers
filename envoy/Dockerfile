@@ -7,7 +7,7 @@ COPY . /work
 
 WORKDIR /work
 
-RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/livenessprobe
+RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/probe
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:22.04
@@ -16,7 +16,7 @@ COPY workspace/envoy /usr/local/bin/envoy
 COPY workspace/docker-entrypoint.sh /docker-entrypoint.sh
 COPY workspace/LICENSE /usr/local/share/doc/envoy/LICENSE
 COPY envoy.yaml /etc/envoy/envoy.yaml
-COPY --from=build /go/bin/livenessprobe /usr/local/bin/livenessprobe
+COPY --from=build /go/bin/probe /usr/local/bin/probe
 
 EXPOSE 9901
 
