@@ -25,10 +25,11 @@ FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends libevent-2.1-7 \
+    && apt-get install -y --no-install-recommends libevent-2.1-7 libexpat1 \
     && rm -rf /var/lib/apt/lists/*
 COPY reload-unbound /usr/local/bin/reload-unbound
 COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
+COPY --from=build /usr/local/unbound/lib /usr/local/unbound/lib
 COPY --from=build /usr/local/unbound/sbin /usr/local/unbound/sbin
 COPY --from=build /usr/local/unbound/etc/unbound/root.key /usr/local/unbound/etc/unbound/root.key
 
