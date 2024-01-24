@@ -70,6 +70,8 @@ jobs:
             container-image: "grafana-operator"
           - dir: "./haproxy"
             container-image: "haproxy"
+          - dir: "./heartbeat"
+            container-image: "heartbeat"
           - dir: "./kube-metrics-adapter"
             container-image: "kube-metrics-adapter"
           - dir: "./kube-state-metrics"
