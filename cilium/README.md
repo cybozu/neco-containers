@@ -6,4 +6,4 @@ This directory provides the Dockerfile for building a container image containing
 Docker images
 -------------
 
-Docker images are available on [ghcrio](https://github.com/cybozu/neco-containers/pkgs/container/cilium)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/cilium)

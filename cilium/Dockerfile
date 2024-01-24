@@ -61,6 +61,8 @@ RUN apt-get install -y --no-install-recommends binutils \
     && make build-container install-container-binary
 
 FROM ${UBUNTU_IMAGE}
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 ARG DESTDIR
 COPY src/workspace/bin/clang src/workspace/bin/llc /bin/
 COPY src/workspace/usr/local/bin /usr/local/bin

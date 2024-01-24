@@ -223,13 +223,13 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. If necessary, update the `version` parameters for the `build-cilium-envoy` and `build-cilium-image-tools` jobs in the CircleCI `main` workflow.
+2. If necessary, update `cilium-proxy_version` and `image-tools_version` parameters in the `.github/workflows/cilium.yaml`.
    1. The `version` for envoy is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
-   2. Check the upstream Dockerfile and update the `build-cilium-envoy` steps as needed.
+   2. Check the upstream Dockerfile and update the `.github/actions/build_cilium-envoy/action.yaml` as needed.
       - [Dockerfile.builder](https://github.com/cilium/proxy/blob/master/Dockerfile.builder) that includes installation of dependencies and Bazel.
       - [Dockerfile](https://github.com/cilium/proxy/blob/master/Dockerfile) that builds and installs cilium-envoy.
-   3. For image-tools' `version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
-   4. Check the upstream Dockerfile and update the `build-cilium-image-tools` steps as needed.
+   3. For `image-tools_version `, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
+   4. Check the upstream Dockerfile and update the `.github/actions/build_cilium-image-tools/action.yaml` as needed.
       - [compilers/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile) that includes installation of dependencies.
       - [bpftool/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile)
       - [llvm/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile)

@@ -16,23 +16,10 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Checkout
-      uses: actions/checkout@v4
-
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    - name: Setup build environment
+      uses: ./.github/actions/setup
       with:
-        platforms: linux/amd64,linux/arm64/v8
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.repository_owner }}
-        password: ${{ inputs.github_token }}
+        github_token: ${{ inputs.github_token }}
 
     - id: extract
       name: Extract targets
@@ -67,25 +54,11 @@ runs:
           ${{ steps.extract.outputs.tag }}
           ${{ steps.extract.outputs.branch }}
 
-    - name: Install Trivy
-      if: ${{ inputs.scan == 'true' && steps.extract.outputs.push }}
-      shell: bash
-      run: |
-        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-
-    - name: Scan the image
-      if: ${{ inputs.scan == 'true' && steps.extract.outputs.push }}
-      shell: bash
-      env:
-        YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
-      run: |
-        echo
-        echo "scanning ${{ steps.extract.outputs.tag }} ..."
-        if [[ "${{ steps.extract.outputs.tag }}" == "ghcr.io/cybozu/golang:"* ]]; then
-          dir=./cilium
-          BRANCH=$(cat $dir/BRANCH)
-          image=cilium:$BRANCH
-        else
-          image=cilium
-        fi
-        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="${{ steps.extract.outputs.tag }}" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+    - name: Scan images
+      if: ${{ steps.extract.outputs.scan }}
+      uses: ./.github/actions/trivy_scan
+      with:
+        dir: ./cilium
+        container-image: cilium
+        tag: ${{ steps.extract.outputs.tag }}
+        yamory_token: ${{ inputs.yamory_token }}
