@@ -16,7 +16,8 @@ runs:
       name: Extract targets
       uses: ./.github/actions/extract_tags
       with:
-        container-image: admission
+        dir: admission
+        container-image: neco-admission
         github_token: ${{ inputs.github_token }}
     - name: Test
       if: ${{ steps.extract.outputs.build }}
