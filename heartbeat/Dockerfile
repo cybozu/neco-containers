@@ -1,4 +1,4 @@
-FROM quay.io/cybozu/golang:1.20-jammy as build
+FROM ghcr.io/cybozu/golang:1.20-jammy as build
 
 COPY / /work
 WORKDIR /work
@@ -6,7 +6,8 @@ WORKDIR /work
 RUN go build -ldflags="-w -s" .
 
 # stage2: final image
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/heartbeat /usr/local/bin/heartbeat
 USER 10000:10000

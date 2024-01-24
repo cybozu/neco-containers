@@ -6,7 +6,7 @@
 # Each target is prefixed with "storage-version-migrate-" to construct its repository name.
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
 ARG MIGRATOR_VERSION=0.0.5
 
@@ -20,6 +20,7 @@ RUN git clone --depth 1 --branch v${MIGRATOR_VERSION} https://github.com/kuberne
 
 # Stage2 for initializer: setup runtime container
 FROM scratch AS initializer
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/initializer /initializer
 USER 10000:10000
@@ -27,6 +28,7 @@ ENTRYPOINT ["/initializer", "--alsologtostderr", "--v=2"]
 
 # Stage2 for migrator: setup runtime container
 FROM scratch AS migrator
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/migrator /migrator
 USER 10000:10000
@@ -34,6 +36,7 @@ ENTRYPOINT ["/migrator", "--alsologtostderr", "--v=2"]
 
 # Stage2 for trigger: setup runtime container
 FROM scratch AS trigger
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/trigger /trigger
 USER 10000:10000
