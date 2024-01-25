@@ -12,8 +12,8 @@ inputs:
     description: "target name"
     required: false
     default: ""
-  scan:
-    description: "Enable image scanning (true, false, or auto)"
+  request-scan:
+    description: "Request image scanning (true, false, or auto)"
     required: false
     default: "auto"
   github_token:
@@ -98,20 +98,20 @@ runs:
       working-directory: ${{ steps.dir.outputs.dir }}
       run: |
         # Check if scan-mode is manually overridden
-        echo "inputs.scan is: ${{ inputs.scan }}"
-        if [ -z "${{ inputs.scan }}" ]; then
+        echo "inputs.request-scan is: ${{ inputs.request-scan }}"
+        if [ -z "${{ inputs.request-scan }}" ]; then
           echo "Calculating scanning mode..."
-        elif [ "${{ inputs.scan }}" = "auto" ]; then
+        elif [ "${{ inputs.request-scan }}" = "auto" ]; then
           echo "Calculating scanning mode..."
-        elif [ "${{ inputs.scan }}" = "true" ]; then
+        elif [ "${{ inputs.request-scan }}" = "true" ]; then
           echo "Scanning is enabled manually."
           echo "scan=true" >> $GITHUB_OUTPUT
           exit 0
-        elif [ "${{ inputs.scan }}" = "false" ]; then
+        elif [ "${{ inputs.request-scan }}" = "false" ]; then
           echo "Scanning is disabled manually."
           exit 0
         else
-          echo "inputs.scan has an invalid value"
+          echo "inputs.request-scan has an invalid value"
           exit 1
         fi
 

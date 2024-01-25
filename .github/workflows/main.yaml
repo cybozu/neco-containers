@@ -32,10 +32,10 @@ jobs:
             container-image: "chrony"
           - dir: "./cilium-certgen"
             container-image: "cilium-certgen"
-            scan: "false"
+            request-scan: "false"
           - dir: "./cilium-operator-generic"
             container-image: "cilium-operator-generic"
-            scan: "false"
+            request-scan: "false"
           - dir: "./configmap-reload"
             container-image: "configmap-reload"
           - dir: "./contour"
@@ -53,19 +53,19 @@ jobs:
           - dir: "./golang-all/golang-1.20-focal"
             container-image: "golang"
             enable_arm64: true
-            scan: "true"
+            request-scan: "true"
           - dir: "./golang-all/golang-1.20-jammy"
             container-image: "golang"
             enable_arm64: true
-            scan: "true"
+            request-scan: "true"
           - dir: "./golang-all/golang-1.21-focal"
             container-image: "golang"
             enable_arm64: true
-            scan: "true"
+            request-scan: "true"
           - dir: "./golang-all/golang-1.21-jammy"
             container-image: "golang"
             enable_arm64: true
-            scan: "true"
+            request-scan: "true"
           - dir: "./grafana-operator"
             container-image: "grafana-operator"
           - dir: "./haproxy"
@@ -103,14 +103,14 @@ jobs:
             container-image: "hubble"
           - dir: "./hubble-relay"
             container-image: "hubble-relay"
-            scan: "false"
+            request-scan: "false"
           - dir: "./hubble-ui"
             container-image: "hubble-ui-frontend"
-            scan: "false"
+            request-scan: "false"
             target: "frontend"
           - dir: "./hubble-ui"
             container-image: "hubble-ui-backend"
-            scan: "false"
+            request-scan: "false"
             target: "backend"
           - dir: "./pause"
             container-image: "pause"
@@ -211,7 +211,7 @@ jobs:
           container-image: ${{ matrix.job.container-image }}
           enable_arm64: ${{ matrix.job.enable_arm64 }}
           make_test: ${{ matrix.job.make_test }}
-          scan: ${{ matrix.job.scan }}
+          request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
 
   build_admission:
