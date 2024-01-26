@@ -23,8 +23,8 @@ inputs:
     description: "Run make test before building docker image"
     required: false
     default: "false"
-  scan:
-    description: "Enable image scanning (true, false, or auto)"
+  request-scan:
+    description: "Request image scanning (true, false, or auto)"
     required: false
     default: "auto"
   target:
@@ -44,7 +44,7 @@ runs:
         dir: ${{ inputs.dir }}
         container-image: ${{ inputs.container-image }}
         target: ${{ inputs.target }}
-        scan: ${{ inputs.scan }}
+        request-scan: ${{ inputs.request-scan }}
         github_token: ${{ inputs.github_token }}
     - name: Set container build platform
       if: ${{ steps.extract.outputs.build }}
