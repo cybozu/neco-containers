@@ -1,0 +1,40 @@
+name: "Scan image using Trivy"
+description: "Scan image using Trivy"
+
+inputs:
+  dir:
+    description: "working direcotry"
+    required: false
+    default: ""
+  container-image:
+    description: "container image"
+    required: true
+  tag:
+    description: "container tag"
+    required: true
+  yamory_token:
+    description: "Yamory Access Token"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Trivy
+      shell: bash
+      run: |
+        curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+    - name: Scan images
+      shell: bash
+      env:
+        YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
+      run: |
+        echo
+        echo "scanning ${{ inputs.tag }} ..."
+        if [[ "${{ inputs.tag }}" == "ghcr.io/cybozu/golang:"* ]]; then
+          dir=${{ inputs.dir }}
+          BRANCH=$(cat $dir/BRANCH)
+          image=${{ inputs.container-image }}:$BRANCH
+        else
+          image=${{ inputs.container-image }}
+        fi
+        YAMORY_IMAGE_IDENTIFIER="ghcr.io/cybozu/$image" YAMORY_IMAGE_NAME="${{ inputs.tag }}" bash -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"

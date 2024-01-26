@@ -14,7 +14,7 @@ Usage
     $ docker run -d -p 10000:10000 --read-only --name=envoy \
     --mount type=bind,source=/your/envoy.yaml,target=/etc/envoy/envoy.yaml,readonly \
     --mount type=tmpfs,target=/tmp \ 
-    quay.io/cybozu/envoy:1.28
+    ghcr.io/cybozu/envoy:1.28
     ```
 
 Probe
@@ -31,4 +31,4 @@ As Envoy does not start listening on HTTP/HTTPS endpoints until the correspondin
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/envoy)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/envoy)

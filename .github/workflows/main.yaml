@@ -222,3 +222,15 @@ jobs:
         uses: ./.github/actions/build_admission
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  build_envoy:
+    runs-on: neco-containers-ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build container image
+        uses: ./.github/actions/build_envoy
+        with:
+          version: 1.28.0
+          clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
