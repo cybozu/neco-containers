@@ -1,0 +1,76 @@
+name: "Build Cilium Image Tools"
+description: "Build tools which are used to build Cilium images"
+inputs:
+  image-tools_version:
+    description: "cilium/image-tools version"
+    required: true
+runs:
+  using: composite
+  steps:
+  - name: Install dependencies
+    shell: bash
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    run: |
+      sudo apt-get update
+      sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
+      sudo apt-get install -y --no-install-recommends \
+        automake \
+        binutils \
+        bison \
+        build-essential \
+        ca-certificates \
+        cmake \
+        curl \
+        flex \
+        g++ \
+        gcc-9 \
+        git \
+        libelf-dev \
+        libmnl-dev \
+        libtool \
+        make \
+        ninja-build \
+        pkg-config \
+        python2 \
+        python3 \
+        python3-pip \
+        llvm \
+        unzip
+      sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
+      sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 2
+
+  - name: Download cilium/image-tools
+    shell: bash
+    run: |
+      mkdir -p cilium/src/workspace/bin cilium/src/workspace/usr/local/bin cilium/src/workspace/usr/lib cilium/src/image-tools
+      curl -sSLf https://github.com/cilium/image-tools/archive/${{ inputs.image-tools_version }}.tar.gz | \
+        tar zxf - --strip-components 1 -C cilium/src/image-tools
+
+  - name: Build llvm
+    shell: bash
+    run: |
+      cd cilium/src/image-tools
+      sudo images/llvm/checkout-llvm.sh
+      sudo images/llvm/build-llvm-native.sh
+      sudo mv /out/linux/amd64/bin/clang /out/linux/amd64/bin/llc /out/linux/amd64/bin/llvm-objcopy ../workspace/bin
+
+  - name: Build bpftool
+    shell: bash
+    run: |
+      cd cilium/src/image-tools
+      sudo images/bpftool/checkout-linux.sh
+      sudo images/bpftool/build-bpftool-native.sh
+      sudo mv /out/linux/amd64/bin/bpftool ../workspace/usr/local/bin/
+
+  - name: Build iproute2
+    shell: bash
+    run: |
+      cd cilium/src/image-tools
+      sed -i -e "s/libbpf-/cilium-libbpf-/g" images/iproute2/checkout-libbpf.sh
+      sudo images/iproute2/checkout-libbpf.sh
+      sudo images/iproute2/build-libbpf-native.sh
+      sudo images/iproute2/checkout-iproute2.sh
+      sudo images/iproute2/build-iproute2-native.sh
+      sudo mv /out/linux/amd64/lib64/libbpf* ../workspace/usr/lib/
+      sudo mv /out/linux/amd64/bin/ip /out/linux/amd64/bin/tc /out/linux/amd64/bin/ss ../workspace/usr/local/bin/

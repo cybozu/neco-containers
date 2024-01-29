@@ -234,3 +234,15 @@ jobs:
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           github_token: ${{ secrets.GITHUB_TOKEN }}
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+
+  build_cilium:
+    runs-on: neco-containers-ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build cilium-agent image
+      uses: ./.github/actions/build_cilium-agent
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+        cilium-proxy_version: ad831bdec4c93feeb2378aa9e1847c936ada6ef7
+        image-tools_version: ff22ba3bff1010f4a2dd76ede789663c3beaf8d2
