@@ -21,9 +21,9 @@ runs:
       with:
         github_token: ${{ inputs.github_token }}
 
-    - id: extract
-      name: Extract targets
-      uses: ./.github/actions/extract_tags
+    - id: prepare
+      name: Prepare build parameters
+      uses: ./.github/actions/prepare_build_params
       with:
         dir: ./cilium
         container-image: cilium
@@ -43,22 +43,22 @@ runs:
         image-tools_version: ${{ inputs.image-tools_version }}
 
     - name: Build cilium-agent image and push
-      if: ${{ steps.extract.outputs.build }}
+      if: ${{ steps.prepare.outputs.build }}
       uses: docker/build-push-action@v5
       with:
         context: cilium
         platforms: "linux/amd64"
         provenance: false
-        push: ${{ steps.extract.outputs.docker_push }}
+        push: ${{ steps.prepare.outputs.docker_push }}
         tags: |
-          ${{ steps.extract.outputs.tag }}
-          ${{ steps.extract.outputs.branch }}
+          ${{ steps.prepare.outputs.tag }}
+          ${{ steps.prepare.outputs.branch }}
 
     - name: Scan images
-      if: ${{ steps.extract.outputs.scan }}
+      if: ${{ steps.prepare.outputs.scan }}
       uses: ./.github/actions/trivy_scan
       with:
         dir: ./cilium
         container-image: cilium
-        tag: ${{ steps.extract.outputs.tag }}
+        tag: ${{ steps.prepare.outputs.tag }}
         yamory_token: ${{ inputs.yamory_token }}
