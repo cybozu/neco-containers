@@ -1,5 +1,5 @@
-name: "Extract tags"
-description: "Extract tags to use for the new image"
+name: "Prepare build action"
+description: "Prepare parameters for the build job"
 inputs:
   dir:
     description: "working directory"
