@@ -1,6 +1,6 @@
 ARG MEOWS_VERSION=0.13.0
 
-FROM quay.io/cybozu/golang:1.21-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.21-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.8.7
@@ -10,6 +10,7 @@ RUN curl -fsSL -o grpcurl.tar.gz "https://github.com/fullstorydev/grpcurl/archiv
     && GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -ldflags "-X \"main.version=${GRPCURL_VERSION}\"" -o /go/bin/grpcurl ./cmd/grpcurl
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 

@@ -608,7 +608,6 @@ workflows:
       - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
-          scan: true
       - build:
           name: build-moco-switchover-downtime-monitor
           container-image: moco-switchover-downtime-monitor

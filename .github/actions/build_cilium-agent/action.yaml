@@ -31,12 +31,14 @@ runs:
         request-scan: "true"
 
     - name: Build Cilium Envoy
+      if: ${{ steps.prepare.outputs.build }}
       uses: ./.github/actions/build_cilium-envoy
       with:
         github_token: ${{ inputs.github_token }}
         cilium-proxy_version: ${{ inputs.cilium-proxy_version }}
 
     - name: Build Cilium image tools
+      if: ${{ steps.prepare.outputs.build }}
       uses: ./.github/actions/build_cilium-image-tools
       with:
         github_token: ${{ inputs.github_token }}
