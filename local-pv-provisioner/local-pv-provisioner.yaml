@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
         - name: local-pv-provisioner
-          image: quay.io/cybozu/local-pv-provisioner:0.2.10
+          image: quay.io/cybozu/local-pv-provisioner:0.2.12
           imagePullPolicy: Never
           args:
             - --device-dir=/dev/crypt-disk/by-path
