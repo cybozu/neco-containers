@@ -1,7 +1,7 @@
 # Ceph container image
 
 # Stage1: setup environment & install
-FROM quay.io/cybozu/ubuntu:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu:22.04 AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND noninteractive
@@ -39,6 +39,7 @@ COPY workspace/COPYING* /usr/local/share/doc/ceph/
 # Stage2: runtime container with squashing layers
 
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build / /
 
