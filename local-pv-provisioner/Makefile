@@ -49,13 +49,13 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Download controller-gen locally if necessary
-CONTROLLER_GEN := $(PWD)/bin/controller-gen
+CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(PWD)/bin/setup-envtest
+SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
