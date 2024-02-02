@@ -21,9 +21,9 @@ test: simple-test setup-envtest
 	}
 
 .PHONY: simple-test
-simple-test:
+simple-test: staticcheck
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
+	$(STATICCHECK) ./...
 	go vet ./...
 
 .PHONY: check-generate
@@ -59,6 +59,12 @@ SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+
+# Download staticcheck locally if necessary
+STATICCHECK = $(PROJECT_DIR)/bin/staticcheck
+.PHONY: staticcheck
+staticcheck:
+	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
 .PHONY: docker
 docker: build
