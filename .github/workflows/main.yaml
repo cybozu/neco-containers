@@ -213,6 +213,7 @@ jobs:
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
           enable_arm64: ${{ matrix.job.enable_arm64 }}
+          make_check-generate: ${{ matrix.job.make_check-generate }}
           make_test: ${{ matrix.job.make_test }}
           request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
