@@ -26,6 +26,9 @@ jobs:
             make_test: true
           - dir: "./cadvisor"
             container-image: "cadvisor"
+          - dir: "./cephcsi"
+            container-image: "cephcsi"
+            request-scan: "false"
           - dir: "./cert-manager"
             container-image: "cert-manager"
           - dir: "./chrony"
