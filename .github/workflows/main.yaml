@@ -134,6 +134,8 @@ jobs:
             container-image: "redis"
           - dir: "./registry"
             container-image: "registry"
+          - dir: "./rook"
+            container-image: "rook"
           - dir: "./sealed-secrets"
             container-image: "sealed-secrets"
           - dir: "./s3gw"
