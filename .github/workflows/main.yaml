@@ -53,6 +53,8 @@ jobs:
             container-image: "csi-provisioner"
           - dir: "csi-resizer"
             container-image: "csi-resizer"
+          - dir: "csi-snapshotter"
+            container-image: "csi-snapshotter"
           - dir: "./dex"
             container-image: "dex"
           - dir: "./etcd"
