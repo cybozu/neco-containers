@@ -51,6 +51,8 @@ jobs:
             container-image: "csi-node-driver-registrar"
           - dir: "csi-provisioner"
             container-image: "csi-provisioner"
+          - dir: "csi-resizer"
+            container-image: "csi-resizer"
           - dir: "./dex"
             container-image: "dex"
           - dir: "./etcd"
