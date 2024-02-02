@@ -14,4 +14,4 @@ To use in Rook, you need to write a manifest of the custom resource CephCluster 
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/ceph)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/ceph)

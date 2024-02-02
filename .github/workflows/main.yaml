@@ -238,6 +238,16 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
 
+  build_ceph:
+    runs-on: neco-containers-ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Build ceph image
+      uses: ./.github/actions/build_ceph
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        version: 18.2.1
+
   build_cilium:
     runs-on: neco-containers-ubuntu-20.04
     steps:
