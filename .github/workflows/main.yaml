@@ -47,6 +47,8 @@ jobs:
             container-image: "coredns"
           - dir: "csi-attacher"
             container-image: "csi-attacher"
+          - dir: "csi-node-driver-registrar"
+            container-image: "csi-node-driver-registrar"
           - dir: "./dex"
             container-image: "dex"
           - dir: "./etcd"
