@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-focal AS build
+FROM ghcr.io/cybozu/golang:1.20-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
 ARG VERSION=3.6.2
@@ -13,7 +13,8 @@ WORKDIR ${SRC_DIR}
 RUN make
 
 # Stage2: setup runtime container
-FROM quay.io/cybozu/ubuntu:20.04
+FROM ghcr.io/cybozu/ubuntu:20.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
 LABEL description="CSI External Provisioner"

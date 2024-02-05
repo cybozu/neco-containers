@@ -1,7 +1,7 @@
 # ceph-csi container
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
-ARG BASE_IMAGE="quay.io/cybozu/ceph:18.2.1.1"
+ARG BASE_IMAGE="ghcr.io/cybozu/ceph:18.2.1.2"
 
 FROM ${BASE_IMAGE} as updated_base
 
@@ -11,7 +11,7 @@ FROM updated_base as builder
 
 LABEL stage="build"
 
-ARG CSI_IMAGE_NAME=quay.io/cybozu/cephcsi
+ARG CSI_IMAGE_NAME=ghcr.io/cybozu/cephcsi
 ARG CSI_IMAGE_VERSION=3.10.1
 ARG GO_ARCH
 ARG SRC_DIR
@@ -54,6 +54,7 @@ RUN make cephcsi
 
 #-- Final container
 FROM updated_base
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR
 
