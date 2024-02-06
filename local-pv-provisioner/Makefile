@@ -49,22 +49,16 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Download controller-gen locally if necessary
-CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
+CONTROLLER_GEN = $(CURDIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
+SETUP_ENVTEST = $(CURDIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
-
-# Download staticcheck locally if necessary
-STATICCHECK = $(PROJECT_DIR)/bin/staticcheck
-.PHONY: staticcheck
-staticcheck:
-	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
 .PHONY: docker
 docker: build
@@ -74,16 +68,4 @@ docker: build
 clean:
 	rm -rf bin
 
-# go-install-tool will 'go install' any package $2 and install it to $1.
-PROJECT_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
-define go-install-tool
-@[ -f $(1) ] || { \
-set -e ;\
-TMP_DIR=$$(mktemp -d) ;\
-cd $$TMP_DIR ;\
-go mod init tmp ;\
-echo "Downloading $(2)" ;\
-GOBIN=$(PROJECT_DIR)/bin go install $(2) ;\
-rm -rf $$TMP_DIR ;\
-}
-endef
+include ../tool.mk
