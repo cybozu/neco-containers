@@ -1,7 +1,7 @@
 # Makefile for local-pv-provisioner
 
 IMAGE_VERSION = `cat ./TAG`
-IMAGE_TAG = quay.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
+IMAGE_TAG = ghcr.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
 CONTROLLER_TOOLS_VERSION = 0.13.0
 ENVTEST_K8S_VERSION = 1.28.3
 
@@ -21,9 +21,9 @@ test: simple-test setup-envtest
 	}
 
 .PHONY: simple-test
-simple-test:
+simple-test: staticcheck
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
+	$(STATICCHECK) ./...
 	go vet ./...
 
 .PHONY: check-generate
@@ -49,16 +49,22 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile=./hack/boilerplate.go.txt paths="./..."
 
 # Download controller-gen locally if necessary
-CONTROLLER_GEN := $(PWD)/bin/controller-gen
+CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(PWD)/bin/setup-envtest
+SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+
+# Download staticcheck locally if necessary
+STATICCHECK = $(PROJECT_DIR)/bin/staticcheck
+.PHONY: staticcheck
+staticcheck:
+	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
 .PHONY: docker
 docker: build

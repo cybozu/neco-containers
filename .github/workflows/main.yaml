@@ -9,6 +9,10 @@ jobs:
     strategy:
       matrix:
         job:
+          - dir: "./admission"
+            container-image: "neco-admission"
+            make_check-generate: "true"
+            make_test: "true"
           - dir: "./alertmanager"
             container-image: "alertmanager"
           - dir: "./argocd"
@@ -100,6 +104,10 @@ jobs:
             target: "trigger"
           - dir: "./kubernetes"
             container-image: "kubernetes"
+          - dir: "./local-pv-provisioner"
+            container-image: "local-pv-provisioner"
+            make_check-generate: "true"
+            make_test: "true"
           - dir: "./loki"
             container-image: "loki"
           - dir: "./machines-endpoints"
@@ -228,18 +236,10 @@ jobs:
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
           enable_arm64: ${{ matrix.job.enable_arm64 }}
+          make_check-generate: ${{ matrix.job.make_check-generate }}
           make_test: ${{ matrix.job.make_test }}
           request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
-
-  build_admission:
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build container image
-        uses: ./.github/actions/build_admission
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   build_envoy:
     runs-on: neco-containers-ubuntu-20.04

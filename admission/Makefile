@@ -6,21 +6,12 @@ GRAFANA_OPERATOR_V4_VERSION = 4.10.1
 GRAFANA_OPERATOR_VERSION = 5.4.1
 ENVTEST_K8S_VERSION = 1.27.1
 
-TOOLS_DIR := $(shell pwd)/bin
-STATICCHECK := $(TOOLS_DIR)/staticcheck
-
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
 .SHELLFLAGS = -e -o pipefail -c
 
 .PHONY: all
 all: build
-
-.PHONY: setup
-setup: $(STATICCHECK)
-
-$(STATICCHECK):
-	GOBIN=$(TOOLS_DIR) go install honnef.co/go/tools/cmd/staticcheck@latest
 
 .PHONY: crds
 crds:
@@ -45,7 +36,7 @@ test: crds simple-test setup-envtest
 	}
 
 .PHONY: simple-test
-simple-test: $(STATICCHECK)
+simple-test: staticcheck
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	$(STATICCHECK) ./...
 	go vet ./...
@@ -73,22 +64,28 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Download controller-gen locally if necessary
-CONTROLLER_GEN := $(PWD)/bin/controller-gen
+CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download kustomize locally if necessary
-KUSTOMIZE := $(PWD)/bin/kustomize
+KUSTOMIZE = $(PROJECT_DIR)/bin/kustomize
 .PHONY: kustomize
 kustomize:
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
 
 # Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(PWD)/bin/setup-envtest
+SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+
+# Download staticcheck locally if necessary
+STATICCHECK = $(PROJECT_DIR)/bin/staticcheck
+.PHONY: staticcheck
+staticcheck:
+	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
 .PHONY: clean
 clean:

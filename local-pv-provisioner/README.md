@@ -85,7 +85,7 @@ spec:
 
 2. Prepare kind environment.
     ```
-    $ kind create cluster --config cluster.yaml --image quay.io/cybozu/kind-node:1.16 --wait=300s
+    $ kind create cluster --config cluster.yaml --wait=300s
     ```
 
 3. Deploy `local-pv-provisioner`.
@@ -138,7 +138,7 @@ spec:
     spec:
       containers:
         - name: ubuntu
-          image: quay.io/cybozu/ubuntu:20.04
+          image: ghcr.io/cybozu/ubuntu:20.04
           command: ["/usr/local/bin/pause"]
           volumeDevices:
             - name: sample-volume
@@ -185,4 +185,4 @@ Note that this cleanup process is also executed periodically (interval: 1 hour).
 
 ## Docker images
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/local-pv-provisioner)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/local-pv-provisioner)
