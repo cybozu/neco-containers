@@ -1,5 +1,5 @@
-ARG GOLANG_IMAGE=quay.io/cybozu/golang:1.20-jammy
-ARG UBUNTU_IMAGE=quay.io/cybozu/ubuntu:22.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.20-jammy
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
 # Stage1: build common
