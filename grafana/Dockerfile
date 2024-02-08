@@ -1,7 +1,7 @@
 # Grafana container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 ARG GRAFANA_VERSION=10.2.0
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
@@ -30,7 +30,7 @@ RUN make build-go
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v10.1.5/Dockerfile#L76-L165
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG GF_UID="10000"
