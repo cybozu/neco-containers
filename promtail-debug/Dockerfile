@@ -65,6 +65,7 @@ RUN cd /work/loki && patch -p1 < /work/a.patch
 RUN make -C /work/loki BUILD_IN_CONTAINER=false PROMTAIL_JOURNAL_ENABLED=true promtail
 
 FROM quay.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 # tzdata required for the timestamp stage to work
 # libcap2 and libpcre2-8-0 required to use libsystemd

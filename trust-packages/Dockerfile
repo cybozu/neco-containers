@@ -29,7 +29,7 @@ RUN curl -fsSL -o /usr/bin/tini-static https://github.com/krallin/tini/releases/
 
 # Stage3: setup runtime container
 FROM scratch
-
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 LABEL description="cert-manager trust package based on Debian"
 
 COPY --from=debbase /usr/bin/tini-static /tini

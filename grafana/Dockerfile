@@ -31,6 +31,8 @@ RUN make build-go
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v10.1.5/Dockerfile#L76-L165
 FROM quay.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 ARG GF_UID="10000"
 ARG GF_GID="10000"
 

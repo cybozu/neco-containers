@@ -11,6 +11,7 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/pod-delete-rate-limiter cmd/m
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/bin/pod-delete-rate-limiter /pod-delete-rate-limiter
 

@@ -1,6 +1,7 @@
 # grafana_plugins_init container
 
 FROM quay.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRCREPO=grafana-operator/grafana_plugins_init
 ARG GRAFANA_PLUGINS_INIT_VERSION=0.1.0

@@ -53,6 +53,7 @@ RUN git clone https://github.com/krallin/tini.git /tini \
   && chmod +x tini
 
 FROM quay.io/cybozu/ubuntu:20.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && apt-get install -y \
   wget \
@@ -97,4 +98,3 @@ ENV IPFS_LOGGING ""
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/start_ipfs"]
 
 CMD ["daemon", "--migrate=true", "--agent-version-suffix=docker"]
-

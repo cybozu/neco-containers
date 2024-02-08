@@ -11,6 +11,7 @@ RUN git clone https://github.com/cybozu/gorush.git -b "v${GORUSH_VERSION}" . \
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:20.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/release/gorush /usr/local/gorush/bin/gorush
 COPY --from=build /work/LICENSE /usr/local/gorush/LICENSE

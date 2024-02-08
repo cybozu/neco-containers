@@ -10,6 +10,7 @@ RUN git clone https://github.com/containerd/nerdctl.git $SRC_DIR \
 RUN make && make install
  
 FROM quay.io/cybozu/ubuntu:20.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/bin/nerdctl /usr/local/bin/nerdctl
 

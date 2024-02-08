@@ -1,6 +1,7 @@
 ARG MEOWS_VERSION=0.13.0
 
 FROM quay.io/cybozu/meows-runner:${MEOWS_VERSION}
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 

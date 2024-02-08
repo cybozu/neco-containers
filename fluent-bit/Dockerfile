@@ -65,6 +65,7 @@ RUN cmake -DFLB_RELEASE=On \
 
 # Stage2: setup runtime container
 FROM quay.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /fluent-bit /fluent-bit
 
