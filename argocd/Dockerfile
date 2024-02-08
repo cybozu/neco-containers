@@ -7,12 +7,12 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=5.1.0
+ENV KUSTOMIZE_VERSION=5.2.1
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.12.1
+ENV HELM_VERSION=3.13.2
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
@@ -26,7 +26,7 @@ RUN chmod +x /usr/local/bin/tini-static
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
 FROM ghcr.io/cybozu/golang:1.21-focal AS argocd-build
-ENV ARGOCD_VERSION=2.8.6
+ENV ARGOCD_VERSION=2.9.6
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
