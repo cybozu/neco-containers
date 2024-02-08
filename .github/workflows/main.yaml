@@ -153,6 +153,8 @@ jobs:
             container-image: "prometheus-config-reloader"
           - dir: "./promtail"
             container-image: "promtail"
+          - dir: "./promtail-debug"
+            container-image: "promtail-debug"
           - dir: "./pushgateway"
             container-image: "pushgateway"
           - dir: "./redis"
