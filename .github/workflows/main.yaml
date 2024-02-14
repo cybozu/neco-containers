@@ -11,8 +11,7 @@ jobs:
         job:
           - dir: "./admission"
             container-image: "neco-admission"
-            make_check-generate: "true"
-            make_test: "true"
+            make-targets: "check-generate test"
           - dir: "./alertmanager"
             container-image: "alertmanager"
           - dir: "./argocd"
@@ -25,9 +24,10 @@ jobs:
             container-image: "blackbox_exporter"
           - dir: "./bmc-reverse-proxy"
             container-image: "bmc-reverse-proxy"
+            make-targets: "setup check-generate test"
           - dir: "./bpf-map-pressure-exporter"
             container-image: "bpf-map-pressure-exporter"
-            make_test: true
+            make-targets: "check-generate test"
           - dir: "./cadvisor"
             container-image: "cadvisor"
           - dir: "./cephcsi"
@@ -35,8 +35,7 @@ jobs:
             request-scan: "false"
           - dir: "./ceph-extra-exporter"
             container-image: "ceph-extra-exporter"
-            make_check-generate: "true"
-            make_test: "true"
+            make-targets: "check-generate test"
           - dir: "./cert-manager"
             container-image: "cert-manager"
           - dir: "./chrony"
@@ -97,6 +96,7 @@ jobs:
             container-image: "haproxy"
           - dir: "./heartbeat"
             container-image: "heartbeat"
+            make-targets: "setup check-generate test"
           - dir: "./kube-metrics-adapter"
             container-image: "kube-metrics-adapter"
           - dir: "./kube-state-metrics"
@@ -114,12 +114,12 @@ jobs:
             container-image: "kubernetes"
           - dir: "./local-pv-provisioner"
             container-image: "local-pv-provisioner"
-            make_check-generate: "true"
-            make_test: "true"
+            make-targets: "check-generate test"
           - dir: "./loki"
             container-image: "loki"
           - dir: "./machines-endpoints"
             container-image: "machines-endpoints"
+            make-targets: "setup check-generate test"
           - dir: "./memcached"
             container-image: "memcached"
           - dir: "./memcached-exporter"
@@ -148,7 +148,7 @@ jobs:
             container-image: "pause"
           - dir: "./pod-delete-rate-limiter"
             container-image: "pod-delete-rate-limiter"
-            make_test: true
+            make-targets: "test"
           - dir: "./pomerium"
             container-image: "pomerium"
           - dir: "./prometheus-adapter"
@@ -171,6 +171,7 @@ jobs:
             container-image: "sealed-secrets"
           - dir: "./s3gw"
             container-image: "s3gw"
+            make-targets: "setup check-generate test"
           - dir: "./serf"
             container-image: "serf"
           - dir: "./stakater-reloader"
@@ -181,13 +182,14 @@ jobs:
             container-image: "squid"
           - dir: "./squid-exporter"
             container-image: "squid-exporter"
-            make_test: true
+            make-targets: "test"
           - dir: "./teleport-node"
             container-image: "teleport-node"
           - dir: "./tempo"
             container-image: "tempo"
           - dir: "./testhttpd"
             container-image: "testhttpd"
+            make-targets: "setup check-generate test"
           - dir: "./trust-manager"
             container-image: "trust-manager"
           - dir: "./trust-packages"
@@ -246,8 +248,7 @@ jobs:
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
           enable_arm64: ${{ matrix.job.enable_arm64 }}
-          make_check-generate: ${{ matrix.job.make_check-generate }}
-          make_test: ${{ matrix.job.make_test }}
+          make-targets: ${{ matrix.job.make-targets }}
           request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
 
