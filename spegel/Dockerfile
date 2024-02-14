@@ -10,6 +10,8 @@ RUN go mod download
 RUN CGO_ENABLED=0 go build -installsuffix 'static' -o spegel .
 
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 COPY --from=builder /work/spegel /app/
 WORKDIR /app
 

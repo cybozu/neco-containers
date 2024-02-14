@@ -39,6 +39,7 @@ RUN make install
 
 #------------------------------------------------------
 FROM quay.io/cybozu/ubuntu:20.04 
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ENV GOPATH                 /go
 ENV SRC_PATH               /go/src/github.com/ipfs/ipfs-cluster

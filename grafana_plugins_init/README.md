@@ -6,4 +6,4 @@ grafana_plugins_init container
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/grafana)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/grafana_plugins_init)

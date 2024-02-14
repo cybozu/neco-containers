@@ -481,12 +481,6 @@ workflows:
       - build:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
-      - build:
-          name: build-bmc-reverse-proxy
-          container-image: bmc-reverse-proxy
-      - build:
-          name: build-cadvisor
-          container-image: cadvisor
       - build-ceph:
           version: 18.2.1
       - build:
@@ -505,9 +499,6 @@ workflows:
       - build:
           name: build-chrony
           container-image: chrony
-      - build:
-          name: build-contour
-          container-image: contour
       - build:
           name: build-csi-attacher
           container-image: csi-attacher
@@ -536,10 +527,6 @@ workflows:
           dir: envoy
           requires:
             - build-envoy
-          scan: true
-      - build:
-          name: build-external-dns
-          container-image: external-dns
       - buildx:
           name: build-golang-1.20-focal
           container-image: golang
@@ -582,12 +569,6 @@ workflows:
           name: build-ipfs-cluster
           container-image: ipfs-cluster
       - build:
-          name: build-kube-metrics-adapter
-          container-image: kube-metrics-adapter
-      - build:
-          name: build-kube-state-metrics
-          container-image: kube-state-metrics
-      - build:
           name: build-kube-storage-version-migrator
           container-image: storage-version-migration
           dir: kube-storage-version-migrator
@@ -598,9 +579,6 @@ workflows:
       - build:
           name: build-loki
           container-image: loki
-      - build:
-          name: build-machines-endpoints
-          container-image: machines-endpoints
       - build:
           name: build-meows-dctest-runner
           container-image: meows-dctest-runner
@@ -633,9 +611,6 @@ workflows:
           name: build-redis
           container-image: redis
       - build:
-          name: build-registry
-          container-image: registry
-      - build:
           name: build-rook
           container-image: rook
       - build:
@@ -649,9 +624,6 @@ workflows:
           name: build-squid
           container-image: squid
           scan: true
-      - build:
-          name: build-teleport-node
-          container-image: teleport-node
       - build:
           name: build-testhttpd
           container-image: testhttpd

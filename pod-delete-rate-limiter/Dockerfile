@@ -1,7 +1,7 @@
 # pod-deletion-rate-limiter container
 
 # Stage1: build from source
-FROM quay.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.20-jammy AS build
 
 COPY . /work
 
@@ -11,6 +11,7 @@ RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/pod-delete-rate-limiter cmd/m
 
 # Stage2: setup runtime container
 FROM scratch
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/bin/pod-delete-rate-limiter /pod-delete-rate-limiter
 
