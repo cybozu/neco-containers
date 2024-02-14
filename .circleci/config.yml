@@ -414,13 +414,6 @@ jobs:
           root: src/workspace
           paths:
             - "*"
-  test-local-pv-provisioner:
-    docker:
-      - image: quay.io/cybozu/golang:1.20-jammy
-    steps:
-      - checkout
-      - run: cd local-pv-provisioner; make check-generate
-      - run: cd local-pv-provisioner; make test
 
 workflows:
   main:
