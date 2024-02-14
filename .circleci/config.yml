@@ -414,18 +414,6 @@ jobs:
           root: src/workspace
           paths:
             - "*"
-  build-admission:
-    docker:
-      - image: quay.io/cybozu/golang:1.20-jammy
-    steps:
-      - checkout
-      - run: cd admission; make test
-      - run: cd admission; make check-generate
-      - run: cd admission; make build
-      - persist_to_workspace:
-          root: admission/bin
-          paths:
-            - neco-admission
   test-local-pv-provisioner:
     docker:
       - image: quay.io/cybozu/golang:1.20-jammy
@@ -438,40 +426,8 @@ workflows:
   main:
     jobs:
       - test:
-          name: test-bmc-reverse-proxy
-          directory: bmc-reverse-proxy
-          go-image-tag: 1.21-jammy
-      - test:
-          name: test-ceph-extra-exporter
-          directory: ceph-extra-exporter
-      - test:
           name: test-envoy
           directory: envoy
-      - test:
-          name: test-heartbeat
-          directory: heartbeat
-          go-image-tag: 1.20-jammy
-      - test-local-pv-provisioner
-      - test:
-          name: test-machines-endpoints
-          directory: machines-endpoints
-          go-image-tag: 1.21-jammy
-      - test:
-          name: test-s3gw
-          directory: s3gw
-          go-image-tag: 1.20-jammy
-      - test:
-          name: test-testhttpd
-          directory: testhttpd/src
-          go-image-tag: 1.21-jammy
-      - build-admission
-      - build:
-          name: build-admission-image
-          container-image: neco-admission
-          dir: admission
-          attach: true
-          requires:
-            - build-admission
       - build:
           name: build-argocd
           container-image: argocd
