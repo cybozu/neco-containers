@@ -86,6 +86,10 @@ jobs:
             container-image: "golang"
             enable_arm64: true
             request-scan: "true"
+          - dir: "./golang-all/golang-1.22-jammy"
+            container-image: "golang"
+            enable_arm64: true
+            request-scan: "true"
           - dir: "./grafana"
             container-image: "grafana"
           - dir: "./grafana_plugins_init"
