@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -45,13 +46,14 @@ func ConvertSquidServiceTimes(logger *slog.Logger, body io.ReadCloser) error {
 	for scanner.Scan() {
 		metric := strings.Split(scanner.Text(), ":")
 		if len(metric) != 2 {
-			logger.Error("failed to parse squid service_times")
+			logger.Error("failed to split squid service_times")
 			continue
 		}
 		metricName := r.Replace(strings.ToLower(strings.TrimSpace(metric[0])))
-		metricValues := strings.Split(strings.TrimLeft(metric[1], " "), "  ")
+		re := regexp.MustCompile(`\s+`)
+		metricValues := re.Split(strings.TrimLeft(metric[1], " "), -1)
 		if len(metricValues) != 3 {
-			logger.Error("failed to parse squid service_times")
+			logger.Error("failed to parse squid service_times", "metric name", metricName, "values", metricValues)
 			continue
 		}
 		metricPercentile := strings.ReplaceAll(strings.TrimSpace(metricValues[0]), "%", "")

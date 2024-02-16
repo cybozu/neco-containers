@@ -89,6 +89,13 @@ func TestConvertSquidServiceTimes(t *testing.T) {
 			expected60: `squid_service_times_http_requests_all{percentile="5", duration_minutes="60"} 1.5`,
 		},
 		{
+			name: "squid_service_times_http_requests_95_percentile",
+			metric: []byte(`Service Time Percentiles            5 min    60 min:
+									HTTP Requests (All):   95%  1.00000 100.00000`),
+			expected5:  `squid_service_times_http_requests_all{percentile="95", duration_minutes="5"} 1`,
+			expected60: `squid_service_times_http_requests_all{percentile="95", duration_minutes="60"} 100`,
+		},
+		{
 			name: "squid_service_times_cache_misses",
 			metric: []byte(`Service Time Percentiles            5 min    60 min:
 									Cache Misses:          5%   1.00000  1.50000`),
