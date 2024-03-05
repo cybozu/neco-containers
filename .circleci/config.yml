@@ -154,7 +154,7 @@ jobs:
                       echo "no need to scan << parameters.container-image >>."
                       exit 0
                   fi
-                  
+
                   dir=<< parameters.dir >>
                   if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
                   targets="<< parameters.targets >>"
@@ -211,7 +211,7 @@ jobs:
             - attach_workspace:
                 at: ./<< parameters.dir >>/workspace
       - setup_remote_docker:
-          version: 20.10.18
+          version: docker24
       # The binfmt container image is not an official image, so we use a pinned version(qemu-v6.2.0).
       - run: docker run --rm --privileged tonistiigi/binfmt@sha256:5bf63a53ad6222538112b5ced0f1afb8509132773ea6dd3991a197464962854e --install linux/amd64,linux/arm64/v8
       - run:
