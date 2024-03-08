@@ -11,7 +11,7 @@ This repository contains Dockerfile for [pushgateway](https://github.com/prometh
 $ docker run -d --read-only --cap-drop ALL \
     -p 9091:9091 \
     --name pushgateway \
-    ghcr.io/cybozu/pushgateway:1.4
+    ghcr.io/cybozu/pushgateway:1.7
 ```
 
 ## Docker images

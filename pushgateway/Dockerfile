@@ -1,9 +1,9 @@
 # Prometheus container (prometheus, alertmanager, pushgateway)
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG PUSHGATEWAY_VERSION=1.6.0
+ARG PUSHGATEWAY_VERSION=1.7.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
