@@ -1,0 +1,278 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"io"
+	"log/slog"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"github.com/spf13/cobra"
+)
+
+var rootCmd = cobra.Command{
+	Use:   "tcp-keepalive",
+	Short: "tcp-keepalive is a simple TCP server and client program to confirm the long live connectivity.",
+	RunE:  rootMain,
+}
+
+var ServerCmd = cobra.Command{
+	Use:   "server",
+	Short: "run the TCP server",
+	RunE:  serverMain,
+}
+
+var ClientCmd = cobra.Command{
+	Use:   "client",
+	Short: "run the TCP client",
+	RunE:  clientMain,
+}
+
+func init() {
+	ServerCmd.Flags().StringP("listen", "l", ":8000", "Listen address and port")
+	ServerCmd.Flags().DurationP("interval", "i", time.Second*5, "Interval to send a keepalive message")
+	ServerCmd.Flags().DurationP("timeout", "t", time.Second*15, "Deadline to receive a keepalive message")
+	ClientCmd.Flags().StringP("server", "s", "127.0.0.1:8000", "Server running host")
+	ClientCmd.Flags().DurationP("interval", "i", time.Second*5, "Interval to send a keepalive message")
+	ClientCmd.Flags().DurationP("timeout", "t", time.Second*15, "Deadline to receive a keepalive message")
+	ClientCmd.Flags().DurationP("connect-retry", "r", time.Second, "Connect retry interval")
+	rootCmd.AddCommand(&ServerCmd)
+	rootCmd.AddCommand(&ClientCmd)
+}
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		os.Exit(1)
+	}
+}
+
+func rootMain(cmd *cobra.Command, args []string) error {
+	return cmd.Help()
+}
+
+func serverMain(cmd *cobra.Command, args []string) error {
+	logger := initLogger()
+
+	addr, err := cmd.Flags().GetString("listen")
+	if err != nil {
+		logger.Error("Failed to get listen flag", slog.Any("error", err))
+		return err
+	}
+
+	interval, err := cmd.Flags().GetDuration("interval")
+	if err != nil {
+		logger.Error("Failed to get interval flag", slog.Any("error", err))
+		return err
+	}
+
+	timeout, err := cmd.Flags().GetDuration("timeout")
+	if err != nil {
+		logger.Error("Failed to get timeout flag", slog.Any("error", err))
+		return err
+	}
+
+	logger = logger.With("local", addr)
+
+	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
+	if err != nil {
+		logger.Error("Failed to resolve host", slog.Any("error", err))
+		return err
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	logger.Info("Start TCP server")
+
+	listener, err := net.ListenTCP("tcp", tcpAddr)
+	if err != nil {
+		logger.Error("Failed to listen TCP", slog.Any("error", err))
+		return err
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	connections := make(chan *net.TCPConn)
+
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				conn, err := listener.AcceptTCP()
+				if err != nil {
+					logger.ErrorContext(ctx, "Failed to accept new TCP connection", slog.Any("error", err))
+				}
+				logger.InfoContext(ctx, "Accept new connection.", slog.Any("remote", conn.RemoteAddr()))
+				connections <- conn
+			}
+		}
+
+	}(ctx)
+
+	for {
+		select {
+		case <-sig:
+			// close all connections
+			logger.InfoContext(ctx, "Signal received, close all connections...")
+			cancel()
+			return nil
+		case conn := <-connections:
+			go handleConnection(ctx, conn, interval, timeout)
+		}
+
+	}
+}
+
+func handleConnection(ctx context.Context, conn net.Conn, interval, timeout time.Duration) {
+	logger := initLogger().With("remote", conn.RemoteAddr())
+
+	intervalTicker := time.NewTicker(interval)
+	timeoutTicker := time.NewTicker(timeout)
+
+	closeChan := make(chan struct{})
+	receiveChan := make(chan struct{})
+
+	go receive(ctx, logger, conn, closeChan, receiveChan)
+	for {
+		select {
+		case <-ctx.Done():
+			logger.InfoContext(ctx, "Close connection")
+			conn.Close()
+			return
+		case <-closeChan:
+			logger.InfoContext(ctx, "Close connection")
+			conn.Close()
+			return
+		case <-intervalTicker.C:
+			if _, err := conn.Write([]byte("keepalive")); err != nil {
+				logger.ErrorContext(ctx, "Failed to send keepalive message", slog.Any("error", err))
+				return
+			}
+			logger.InfoContext(ctx, "Send a keepalive message")
+		case <-timeoutTicker.C:
+			logger.WarnContext(ctx, "Deadline exceeded to receive a keepalive message. Close connection")
+			conn.Close()
+			return
+		case <-receiveChan:
+			timeoutTicker.Reset(timeout)
+		}
+	}
+}
+
+func clientMain(cmd *cobra.Command, args []string) error {
+	logger := initLogger()
+
+	addr, err := cmd.Flags().GetString("server")
+	if err != nil {
+		logger.Error("Failed to get server flag", slog.Any("error", err))
+		return err
+	}
+
+	interval, err := cmd.Flags().GetDuration("interval")
+	if err != nil {
+		logger.Error("Failed to get interval flag", slog.Any("error", err))
+		return err
+	}
+
+	timeout, err := cmd.Flags().GetDuration("timeout")
+	if err != nil {
+		logger.Error("Failed to get timeout flag", slog.Any("error", err))
+		return err
+	}
+
+	retryInterval, err := cmd.Flags().GetDuration("connect-retry")
+	if err != nil {
+		logger.Error("Failed to get connect-retry flag", slog.Any("error", err))
+		return err
+	}
+
+	logger = logger.With("local", addr)
+	logger.Info("Start TCP client")
+
+	ctx, cancel := context.WithCancel(context.Background())
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
+
+	nextChan := make(chan struct{}, 1)
+	connections := make(chan net.Conn)
+
+	go func(ctx context.Context) {
+		for {
+			select {
+			case <-ctx.Done():
+			case <-nextChan:
+				conn, err := net.Dial("tcp", addr)
+				if err != nil {
+					logger.Error("Failed to dial to TCP server", slog.Any("error", err))
+					connections <- nil
+				} else {
+					connections <- conn
+				}
+			}
+		}
+
+	}(ctx)
+
+	nextChan <- struct{}{}
+	waitChan := make(chan struct{}, 1)
+
+	for {
+		select {
+		case <-sig:
+			logger.WarnContext(ctx, "Signal received. Stop the client")
+			cancel()
+			return nil
+		case conn := <-connections:
+			if conn == nil {
+				time.Sleep(retryInterval)
+				nextChan <- struct{}{}
+				continue
+			}
+			go func() {
+				logger.InfoContext(ctx, "Start to handle connection")
+				handleConnection(ctx, conn, interval, timeout)
+				waitChan <- struct{}{}
+			}()
+		case <-waitChan:
+			time.Sleep(retryInterval)
+			nextChan <- struct{}{}
+		}
+	}
+
+}
+
+func receive(ctx context.Context, logger *slog.Logger, conn net.Conn, closeChan, receiveChan chan struct{}) {
+	for {
+		buf := make([]byte, 1024)
+		l, err := conn.Read(buf)
+		if err != nil {
+			if errors.Is(err, io.EOF) {
+				logger.WarnContext(ctx, "Connection closed by the client")
+				closeChan <- struct{}{}
+				return
+			}
+			netErr := errors.Unwrap(err)
+			if errors.Is(netErr, net.ErrClosed) {
+				return
+			}
+			logger.ErrorContext(ctx, "Failed to read the message", slog.Any("error", err))
+		}
+		msg := string(buf[:l])
+		if msg != "keepalive" {
+			logger.WarnContext(ctx, "Receive the other message", slog.String("message", msg))
+		} else {
+			logger.InfoContext(ctx, "Receive the keepalive")
+			receiveChan <- struct{}{}
+		}
+	}
+}
+
+func initLogger() *slog.Logger {
+	return slog.New(slog.NewJSONHandler(os.Stdout, nil))
+}
