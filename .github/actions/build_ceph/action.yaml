@@ -28,7 +28,7 @@ runs:
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
       run: |
-        sudo ./build.sh ${{ inputs.version }}
+        ./build.sh ${{ inputs.version }}
         sudo mv src/workspace .
       working-directory: ${{ inputs.dir }}
     - name: Build and push

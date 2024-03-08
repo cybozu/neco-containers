@@ -18,17 +18,7 @@ cd ceph
 
 # Install dependencies
 sudo apt-get update
-
-# Workaround for github actions runner.
-# Ceph depends on this library, but it is not automatically installed
-# because libraries that conflict with this library are installed.
-# Therefore, it should be installed explicitly.
-# See. https://github.com/actions/runner-images/issues/6399#issuecomment-1286050292
-sudo apt-get install -y libunwind-dev
-
-sudo apt-get install -y curl
 ./install-deps.sh
-sudo apt-get install -y python3-routes
 
 # Prebuild ceph source to generate files in `src/pybind/mgr/dashboard/frontend/dist` needed by CMake
 ./make-dist

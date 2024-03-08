@@ -344,6 +344,8 @@ jobs:
               touch COPYING
               exit 0
             fi
+            apt-get update
+            apt-get install sudo
             << parameters.dir >>/build.sh << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
@@ -446,6 +448,18 @@ workflows:
           dir: ceph/latest
           requires:
             - build-ceph-latest
+      - build-ceph:
+          name: build-ceph17-2-6
+          version: 17.2.6
+          ubuntu-version: "20.04"
+          dir: ceph/v17-2-6
+      - build:
+          name: build-ceph17-2-6-container
+          container-image: ceph
+          attach: true
+          dir: ceph/v17-2-6
+          requires:
+            - build-ceph17-2-6
       - build:
           name: build-ceph-extra-exporter
           container-image: ceph-extra-exporter
