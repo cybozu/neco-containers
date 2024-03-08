@@ -164,14 +164,43 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ![CSA Update](./csa_update.svg)
 
-1. Check the [release page](https://docs.ceph.com/en/latest/releases/).
-2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
-   1. If other instructions are needed for `ceph/build.sh`, add the instructions.
-   2. If there are ceph runtime packages or required tool changes, update Dockerfile.
-3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow and the `build_ceph` job in the Github Actions `main` workflow.
-4. Update `BRANCH` and `TAG` files.
-
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
+
+***NOTE:*** (Optional) You can delete the old version's directory and the related CI jobs. For example, if you consider vP.Q.R will not be used anymore, delete the `ceph/vP-Q-R` directory and the following CI jobs.
+- Github Actions: `build_cephP-Q-R` job.
+- CircleCI: `build-cephP-Q-R` job and `build-cephP-Q-R-container` job.
+
+### Directory naming convention
+
+- `ceph/latest`: The latest ceph build settings are located.
+- `ceph/vX-Y-Z`: Build settings for the specific version of Ceph are located.
+
+### When you update based on the `ceph` directory
+
+1. When you upgrade the upstream version, create the directory for the old version.
+   - You can ignore this step when you are going to change only the last part of the version number. For example, if you are going to change the version from vX.Y.Z.W to vX.Y.Z.W', you can just move on to the next step.
+   - To create the directory for the old version, check the check the version in the `ceph/latest/TAG` file. If the version is vX.Y.Z.W, then copy the `ceph/latest` directory to the `ceph/vX-Y-Z` directory and add the following CI jobs.
+     - Github Actions: `build_cephX-Y-Z` job.
+     - CircleCI: `build-cephX-Y-Z` job and `build-cephX-Y-Z-container` job.
+2. Check the [release page](https://docs.ceph.com/en/latest/releases/).
+3. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
+   1. If other instructions are needed for `ceph/latest/build.sh`, add the instructions.
+   2. If there are ceph runtime packages or required tool changes, update Dockerfile.
+4. Update the `version` argument on the `build-ceph-latest` job in the CircleCI `main` workflow and the `build_ceph` job in the Github Actions `main` workflow.
+5. Update `BRANCH` and `TAG` files in the `ceph/latest` directory.
+
+### When you update based on the `cephX-Y-Z` directory
+
+1. Suppose you are going to upgrade from vX.Y.Z.W to vA.B.C.D. When you upgrade the upstream version (which means X!=A or Y!=B or Z!=C), create the directory for the **new** version.
+   - You can ignore this step when you are going to change only the last part of the version number (which means X=A, Y=B, and Z=C, but W!=D).
+   - To create the directory for the new version, copy the `ceph/vX-Y-Z` directory to the `ceph/vA-B-C` directory and add the following CI jobs.
+     - Github Actions: `build_cephA-B-C` job.
+     - CircleCI: `build-cephA-B-C` job and `build-cephA-B-C-container` job.
+2. Check the [release page](https://docs.ceph.com/en/latest/releases/).
+3. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
+   1. If other instructions are needed for `ceph/vA-B-C/build.sh`, add the instructions.
+   2. If there are ceph runtime packages or required tool changes, update Dockerfile.
+4. Update `BRANCH` and `TAG` files in the `ceph/cephA-B-C` directory.
 
 ## cephcsi
 

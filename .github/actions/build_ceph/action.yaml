@@ -7,6 +7,9 @@ inputs:
   version:
     description: "ceph version"
     required: true
+  dir:
+    description: "ceph directory"
+    default: "ceph/latest"
 runs:
   using: composite
   steps:
@@ -20,18 +23,19 @@ runs:
       with:
         container-image: ceph
         github_token: ${{ inputs.github_token }}
+        dir: ${{ inputs.dir }}
     - name: Build
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
       run: |
         sudo ./build.sh ${{ inputs.version }}
         sudo mv src/workspace .
-      working-directory: ceph
+      working-directory: ${{ inputs.dir }}
     - name: Build and push
       if: ${{ steps.prepare.outputs.build }}
       uses: docker/build-push-action@v5
       with:
-        context: ceph
+        context: ${{ inputs.dir }}
         platforms: "linux/amd64"
         provenance: false
         push: ${{ steps.prepare.outputs.docker_push }}

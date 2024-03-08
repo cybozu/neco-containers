@@ -318,15 +318,19 @@ jobs:
     parameters:
       version:
         type: string
+      ubuntu-version:
+        type: string
+      dir:
+        type: string
     docker:
-      - image: quay.io/cybozu/ubuntu-dev:22.04
+      - image: quay.io/cybozu/ubuntu-dev:<< parameters.ubuntu-version >>
     resource_class: 2xlarge+
     steps:
       - checkout
       - run:
           name: Check TAG file
           command: |
-            ceph_tag_exists="$(./tag_exists ceph)"
+            ceph_tag_exists="$(./tag_exists ceph << parameters.dir >>)"
             if [ "$ceph_tag_exists" = ng ]; then
                 echo ceph > BUILDS
             fi
@@ -340,7 +344,7 @@ jobs:
               touch COPYING
               exit 0
             fi
-            ceph/build.sh << parameters.version >>
+            << parameters.dir >>/build.sh << parameters.version >>
       - persist_to_workspace:
           root: src/workspace
           paths:
@@ -431,14 +435,17 @@ workflows:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
       - build-ceph:
+          name: build-ceph-latest
           version: 18.2.1
+          ubuntu-version: "22.04"
+          dir: ceph/latest
       - build:
           name: build-ceph-container
           container-image: ceph
           attach: true
-          dir: ceph
+          dir: ceph/latest
           requires:
-            - build-ceph
+            - build-ceph-latest
       - build:
           name: build-ceph-extra-exporter
           container-image: ceph-extra-exporter
