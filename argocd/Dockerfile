@@ -12,7 +12,7 @@ RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/ku
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.14.0
+ENV HELM_VERSION=3.14.2
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
@@ -26,14 +26,14 @@ RUN chmod +x /usr/local/bin/tini-static
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
 FROM ghcr.io/cybozu/golang:1.21-focal AS argocd-build
-ENV ARGOCD_VERSION=2.10.1
+ENV ARGOCD_VERSION=2.10.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install Node.js 12.x and yarn
+# Install Node.js 20.x and yarn 
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sSLf https://deb.nodesource.com/setup_12.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
