@@ -1,9 +1,9 @@
 # dex container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG DEX_VERSION=2.37.0
+ARG DEX_VERSION=2.38.0
 
 WORKDIR /work/dex/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
