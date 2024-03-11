@@ -1,10 +1,10 @@
 # tempo container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG TEMPO_SRCREPO=grafana/tempo
-ARG TEMPO_VERSION=2.3.0
+ARG TEMPO_VERSION=2.4.0
 
 WORKDIR /work
 RUN git clone --depth=1 -b v${TEMPO_VERSION} https://github.com/${TEMPO_SRCREPO}.git tempo && \
