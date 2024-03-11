@@ -1,7 +1,7 @@
 # blackbox-exporter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG BLACKBOX_EXPORTER_VERSION=0.24.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
