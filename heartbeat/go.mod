@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/heartbeat
 
-go 1.22
+go 1.22.1
 
 require (
 	github.com/spf13/cobra v1.8.0
