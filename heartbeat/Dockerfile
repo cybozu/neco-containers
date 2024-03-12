@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy as build
+FROM ghcr.io/cybozu/golang:1.21-jammy as build
 
 COPY / /work
 WORKDIR /work
