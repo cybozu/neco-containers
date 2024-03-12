@@ -28,7 +28,7 @@ runs:
         username: ${{ github.repository_owner }}
         password: ${{ inputs.github_token }}
     - name: Setup golang
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v4
       with:
         go-version: ${{ inputs.go-version }}
         go-version-file: ${{ inputs.go-version-file }}
