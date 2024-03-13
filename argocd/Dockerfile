@@ -25,7 +25,7 @@ RUN chmod +x /usr/local/bin/tini-static
 # We cannot use Ubuntu 22.04 (jammy) image because the combination of
 # jammy and Node.js v12 is not provided by the NodeSource Node.js Binary
 # Distributions.
-FROM ghcr.io/cybozu/golang:1.22-focal AS argocd-build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS argocd-build
 ENV ARGOCD_VERSION=2.10.2
 ENV PACKAGE=github.com/argoproj/argo-cd
 
