@@ -1,9 +1,9 @@
 # memcached_exporter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG MEMCACHED_EXPORTER_VERSION=0.13.0
+ARG MEMCACHED_EXPORTER_VERSION=0.14.2
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
