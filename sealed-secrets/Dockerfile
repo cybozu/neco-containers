@@ -1,7 +1,7 @@
 # Build stage
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG SEALED_SECRETS_VERSION=0.24.3
+ARG SEALED_SECRETS_VERSION=0.26.0
 
 RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-secrets/archive/v${SEALED_SECRETS_VERSION}.tar.gz \
     && tar --strip-components=1 -xzf sealed-secrets.tar.gz \
@@ -16,5 +16,5 @@ COPY --from=build /work/controller-static /controller
 COPY --from=build /work/LICENSE /LICENSE
 
 USER 1001:1001
-EXPOSE 8080
+EXPOSE 8080 8081
 ENTRYPOINT ["/controller"]
