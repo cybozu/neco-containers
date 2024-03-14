@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG MEMCACHED_VERSION=1.6.22
+ARG MEMCACHED_VERSION=1.6.24
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
