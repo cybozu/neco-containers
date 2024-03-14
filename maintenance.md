@@ -173,6 +173,16 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
 
+### Create a patched image from the specific version
+
+When you want to create a new image with patches to the specific version of Ceph,
+follow these steps.
+
+1. Create a branch with the name `ceph-vX.Y.Z` from the commit you want, and push it.
+   - You must follow the branch naming convention to activate the image build and push jobs.
+   - If the branch already exists, you can skip this step.
+2. Create a PR to the branch `ceph-vX.Y.Z`, and merge it.
+
 ## cephcsi
 
 ![CSA Update](./csa_update.svg)
