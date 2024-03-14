@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"net"
@@ -39,7 +40,8 @@ func init() {
 	ClientCmd.Flags().StringP("server", "s", "127.0.0.1:8000", "Server running host")
 	ClientCmd.Flags().DurationP("interval", "i", time.Second*5, "Interval to send a keepalive message")
 	ClientCmd.Flags().DurationP("timeout", "t", time.Second*15, "Deadline to receive a keepalive message")
-	ClientCmd.Flags().DurationP("connect-retry", "r", time.Second, "Connect retry interval")
+	ClientCmd.Flags().BoolP("retry", "y", false, "Try to connect after a previous connection is closed")
+	ClientCmd.Flags().DurationP("retry-interval", "r", time.Second, "Connect retry interval")
 	rootCmd.AddCommand(&ServerCmd)
 	rootCmd.AddCommand(&ClientCmd)
 }
@@ -185,7 +187,13 @@ func clientMain(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	retryInterval, err := cmd.Flags().GetDuration("connect-retry")
+	retryInterval, err := cmd.Flags().GetDuration("connect-retry-interval")
+	if err != nil {
+		logger.Error("Failed to get connect-retry-interval flag", slog.Any("error", err))
+		return err
+	}
+
+	retry, err := cmd.Flags().GetBool("connect-retry")
 	if err != nil {
 		logger.Error("Failed to get connect-retry flag", slog.Any("error", err))
 		return err
@@ -230,6 +238,10 @@ func clientMain(cmd *cobra.Command, args []string) error {
 			return nil
 		case conn := <-connections:
 			if conn == nil {
+				if !retry {
+					cancel()
+					return fmt.Errorf("Got nil from the connection channel")
+				}
 				time.Sleep(retryInterval)
 				nextChan <- struct{}{}
 				continue
@@ -240,6 +252,10 @@ func clientMain(cmd *cobra.Command, args []string) error {
 				waitChan <- struct{}{}
 			}()
 		case <-waitChan:
+			if !retry {
+				cancel()
+				return nil
+			}
 			time.Sleep(retryInterval)
 			nextChan <- struct{}{}
 		}
@@ -253,7 +269,7 @@ func receive(ctx context.Context, logger *slog.Logger, conn net.Conn, closeChan,
 		l, err := conn.Read(buf)
 		if err != nil {
 			if errors.Is(err, io.EOF) {
-				logger.WarnContext(ctx, "Connection closed by the client")
+				logger.WarnContext(ctx, "Got EOF. Close connection.")
 				closeChan <- struct{}{}
 				return
 			}
