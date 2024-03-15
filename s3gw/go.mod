@@ -4,8 +4,8 @@ go 1.22.1
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.25.3
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.9
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.4
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.10
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.52.0
 	github.com/cybozu-go/log v1.7.0
 	github.com/cybozu-go/well v1.11.2
 	github.com/prometheus/client_golang v1.19.0
@@ -50,7 +50,7 @@ require (
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.32.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
