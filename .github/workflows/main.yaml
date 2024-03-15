@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - "main"
+      - "ceph-v*"
 jobs:
   build_container:
     strategy:

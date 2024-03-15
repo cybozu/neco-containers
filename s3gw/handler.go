@@ -81,7 +81,7 @@ func listHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	for _, c := range output.Contents {
 		result.Objects = append(result.Objects, Object{
 			Key:          *c.Key,
-			Size:         c.Size,
+			Size:         *c.Size,
 			LastModified: c.LastModified.UTC(),
 			ETag:         *c.ETag,
 		})
@@ -137,7 +137,7 @@ func objectPutHandlerFunc(res http.ResponseWriter, req *http.Request) {
 		Bucket:        &bucketName,
 		Key:           &objectKey,
 		Body:          req.Body,
-		ContentLength: req.ContentLength,
+		ContentLength: &req.ContentLength,
 		ContentType:   getHeaderOrNil(req.Header, "Content-Type"),
 	}
 	uploader := s3manager.NewUploader(client, func(u *s3manager.Uploader) {
