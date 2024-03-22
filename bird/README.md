@@ -27,7 +27,7 @@ $ docker run -d --read-only --cap-drop ALL \
     --network host --name bird \
     --mount type=tmpfs,destination=/run/bird \
     --mount type=bind,source=/your/bird.conf,target=/etc/bird/bird.conf \
-    ghcr.io/cybozu/bird:2.14
+    ghcr.io/cybozu/bird:2.15
 ```
 
 ### Use client tools

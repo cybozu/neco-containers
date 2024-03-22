@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
-ARG BIRD_VERSION=2.14
+ARG BIRD_VERSION=2.15
 WORKDIR /work
 
 RUN apt-get update \
