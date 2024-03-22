@@ -1,0 +1,99 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ttypdb-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: ttypdb-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: ttypdb-controller
+subjects:
+- kind: ServiceAccount
+  name: ttypdb-controller
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ttypdb-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: ttypdb-controller
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: ttypdb-controller
+    spec:
+      serviceAccountName: ttypdb-controller
+      containers:
+      - name: monitor
+        image: cybozu/ttypdb-controller:dev
+        imagePullPolicy: Never
+        args:
+        - "-lfoo=bar"
+        - "--interval=5"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: teststs
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      name: teststs
+  serviceName: teststs
+  template:
+    metadata:
+      labels:
+        name: teststs
+        foo: bar
+        hoge: fuga
+    spec:
+      containers:
+      - name: main
+        image: ghcr.io/cybozu/ubuntu:22.04
+        imagePullPolicy: IfNotPresent
+        command: [ "sleep", "infinity" ]
+      - name: ttypdb-sidecar
+        image: cybozu/ttypdb-sidecar:dev
+        imagePullPolicy: Never
+        ports:
+        - name: sidecar
+          containerPort: 8080
+      shareProcessNamespace: true
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: teststs2
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: teststs2
+  serviceName: teststs2
+  template:
+    metadata:
+      labels:
+        name: teststs2
+        foo: baz
+        hoge: piyo
+    spec:
+      containers:
+      - name: main
+        image: ghcr.io/cybozu/ubuntu:22.04
+        imagePullPolicy: IfNotPresent
+        command: [ "sleep", "infinity" ]
+      - name: ttypdb-sidecar
+        image: cybozu/ttypdb-sidecar:dev
+        imagePullPolicy: Never
+        ports:
+        - name: sidecar
+          containerPort: 8080
+      shareProcessNamespace: true
