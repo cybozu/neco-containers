@@ -943,6 +943,15 @@ Only the base image and module dependency should be updated.
 5. Check the [tini release page](https://github.com/krallin/tini/releases) and update `TINI_VERSION` in `Dockerfile` as needed.
 6. Update `TAG` file. The TAG format is `<ca-certificates version>.<patch version>`.
 
+## ttypdb
+
+![Regular Update](./regular_update.svg)
+
+Only the base image and module dependency should be updated.
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+
 ## unbound
 
 ![Kubernetes Update](./kubernetes_update.svg)
