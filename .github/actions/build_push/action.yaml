@@ -23,6 +23,10 @@ inputs:
     description: "make targets before building docker image"
     required: false
     default: ""
+  make-post-targets:
+    description: "make targets after building docker image"
+    required: false
+    default: ""
   request-scan:
     description: "Request image scanning (true, false, or auto)"
     required: false
@@ -69,6 +73,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.dir }}
+        load: true
         platforms: ${{ env.PLATFORM }}
         provenance: false
         push: ${{ steps.prepare.outputs.docker_push }}
@@ -76,6 +81,16 @@ runs:
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
         target: ${{ inputs.target }}
+    - name: Make post targets
+      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build }}
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ steps.prepare.outputs.tag }}
+      run: |
+        for i in ${{ inputs.make-post-targets }}; do
+          echo "Executing make $i..."
+          make -C ${{ inputs.dir }} $i
+        done
     - name: Scan images
       if: ${{ steps.prepare.outputs.scan }}
       uses: ./.github/actions/trivy_scan
