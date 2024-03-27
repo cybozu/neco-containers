@@ -210,6 +210,7 @@ jobs:
             target: "sidecar"
           - dir: "./unbound"
             container-image: "unbound"
+            make-targets: "check-generate"
             make-post-targets: "validate"
           - dir: "./unbound_exporter"
             container-image: "unbound_exporter"
