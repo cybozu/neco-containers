@@ -32,6 +32,7 @@ COPY --from=build /usr/local/unbound/LICENSE /usr/local/unbound/LICENSE
 COPY --from=build /usr/local/unbound/lib /usr/local/unbound/lib
 COPY --from=build /usr/local/unbound/sbin /usr/local/unbound/sbin
 COPY --from=build /usr/local/unbound/etc/unbound/root.key /usr/local/unbound/etc/unbound/root.key
+COPY root.hints /usr/local/unbound/etc/unbound/root.hints
 
 ENV PATH=/usr/local/unbound/sbin:/usr/local/bin:"$PATH"
 EXPOSE 53 53/udp

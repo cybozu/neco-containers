@@ -23,6 +23,10 @@ inputs:
     description: "make targets before building docker image"
     required: false
     default: ""
+  make-post-targets:
+    description: "make targets after building docker image"
+    required: false
+    default: ""
   request-scan:
     description: "Request image scanning (true, false, or auto)"
     required: false
@@ -56,7 +60,7 @@ runs:
         else
           echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
         fi
-    - name: Make targets
+    - name: Make pre-targets
       if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build }}
       shell: bash
       run: |
@@ -64,8 +68,31 @@ runs:
           echo "Executing make $i..."
           make -C ${{ inputs.dir }} $i
         done
-    - name: Build and push
+    - name: Build
       if: ${{ steps.prepare.outputs.build }}
+      uses: docker/build-push-action@v5
+      with:
+        context: ${{ inputs.dir }}
+        load: true
+        platforms: ${{ env.PLATFORM }}
+        provenance: false
+        push: false
+        tags: |
+          ${{ steps.prepare.outputs.tag }}
+          ${{ steps.prepare.outputs.branch }}
+        target: ${{ inputs.target }}
+    - name: Make post-targets
+      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build }}
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ steps.prepare.outputs.tag }}
+      run: |
+        for i in ${{ inputs.make-post-targets }}; do
+          echo "Executing make $i..."
+          make -C ${{ inputs.dir }} $i
+        done
+    - name: Push
+      if: ${{ steps.prepare.outputs.push }}
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.dir }}

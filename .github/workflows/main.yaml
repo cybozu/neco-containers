@@ -210,6 +210,8 @@ jobs:
             target: "sidecar"
           - dir: "./unbound"
             container-image: "unbound"
+            make-targets: "check-generate"
+            make-post-targets: "validate"
           - dir: "./unbound_exporter"
             container-image: "unbound_exporter"
           - dir: "./vault"
@@ -263,6 +265,7 @@ jobs:
           container-image: ${{ matrix.job.container-image }}
           enable_arm64: ${{ matrix.job.enable_arm64 }}
           make-targets: ${{ matrix.job.make-targets }}
+          make-post-targets: ${{ matrix.job.make-post-targets }}
           request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
 
