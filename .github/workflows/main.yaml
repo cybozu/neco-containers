@@ -264,21 +264,12 @@ jobs:
     runs-on: neco-containers-ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
-      - name: Read TAG
-        run: |
-          TAG=$(cat ./envoy/TAG)
-          echo "TAG=${TAG}" >> $GITHUB_ENV
-          VERSION=$(echo $TAG | cut -d \. -f 1,2,3)
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
       - name: Build container image
         uses: ./.github/actions/build_envoy
         with:
-          version: ${{ env.VERSION }}
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           github_token: ${{ secrets.GITHUB_TOKEN }}
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
-      - name: Test envoy
-        run: docker run --rm ghcr.io/cybozu/envoy:${{ env.TAG }} envoy --version
 
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04
