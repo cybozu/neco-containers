@@ -1,7 +1,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG TELEPORT_VERSION=15.1.3
+ARG TELEPORT_VERSION=15.1.10
 ARG RUST_VERSION=1.71.1
 ARG WASM_PACK_VERSION=0.12.1
 
