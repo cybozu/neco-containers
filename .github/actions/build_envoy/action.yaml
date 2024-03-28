@@ -27,7 +27,8 @@ runs:
     - name: Prepare VERSION
       shell: bash
       run: |
-        VERSION=$(echo ${{ steps.prepare.outputs.tag }} | cut -d \. -f 1,2,3)
+        TAG=$(cat ./envoy/TAG)
+        VERSION=$(echo $TAG | cut -d \. -f 1,2,3)
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
     - name: Build
       if: ${{ steps.prepare.outputs.build }}
@@ -100,4 +101,4 @@ runs:
         yamory_token: ${{ inputs.yamory_token }}
     - name: Test image
       shell: bash
-      run: docker run --rm ghcr.io/cybozu/envoy:${{ steps.prepare.outputs.tag }} envoy --version
+      run: docker run --rm ${{ steps.prepare.outputs.tag }} envoy --version
