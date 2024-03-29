@@ -1,9 +1,6 @@
 name: "Build Envoy"
 description: "Build Envoy"
 inputs:
-  version:
-    description: "envoy version"
-    required: true
   clang_archive_path:
     description: "clang archive path"
     required: true
@@ -27,6 +24,12 @@ runs:
       with:
         container-image: envoy
         github_token: ${{ inputs.github_token }}
+    - name: Prepare VERSION
+      shell: bash
+      run: |
+        TAG=$(cat ./envoy/TAG)
+        VERSION=$(echo $TAG | cut -d \. -f 1,2,3)
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
     - name: Build
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
@@ -50,7 +53,7 @@ runs:
         tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
 
         # Clone Envoy repository
-        git clone --depth 1 --branch v${{ inputs.version }} https://github.com/envoyproxy/envoy
+        git clone --depth 1 --branch v${{ env.VERSION }} https://github.com/envoyproxy/envoy
         cd envoy
         bazel/setup_clang.sh $(pwd)/../llvm
         echo "build --config=clang" >> user.bazelrc
@@ -87,6 +90,7 @@ runs:
         tags: |
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
+        load: true
     - name: Scan images
       if: ${{ steps.prepare.outputs.scan }}
       uses: ./.github/actions/trivy_scan
@@ -95,3 +99,6 @@ runs:
         container-image: ${{ inputs.container-image }}
         tag: ${{ steps.prepare.outputs.tag }}
         yamory_token: ${{ inputs.yamory_token }}
+    - name: Test image
+      shell: bash
+      run: docker run --rm ${{ steps.prepare.outputs.tag }} envoy --version
