@@ -30,6 +30,11 @@ runs:
         TAG=$(cat ./envoy/TAG)
         VERSION=$(echo $TAG | cut -d \. -f 1,2,3)
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
+    - name: Test
+      if: ${{ steps.prepare.outputs.build }}
+      shell: bash
+      working-directory: envoy
+      run: make setup test
     - name: Build
       if: ${{ steps.prepare.outputs.build }}
       shell: bash

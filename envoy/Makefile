@@ -4,6 +4,10 @@ SUDO_GO = $(SUDO) $(shell which go)
 .PHONY: all
 all: check-generate test
 
+.PHONY: setup
+setup:
+	go install honnef.co/go/tools/cmd/staticcheck@latest
+
 .PHONY: check-generate
 check-generate:
 	go mod tidy
