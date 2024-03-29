@@ -93,8 +93,6 @@ jobs:
             request-scan: "true"
           - dir: "./grafana"
             container-image: "grafana"
-          - dir: "./grafana_plugins_init"
-            container-image: "grafana_plugins_init"
           - dir: "./grafana-operator"
             container-image: "grafana-operator"
           - dir: "./haproxy"

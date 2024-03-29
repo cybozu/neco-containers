@@ -437,20 +437,6 @@ Ignore!!!
 
 ***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
-
-## grafana_plugins_init
-
-![Regular Update](./regular_update.svg)
-
-grafana_plugins_init does not create [release](https://github.com/grafana-operator/grafana_plugins_init/releases). Use the revision which the operator uses.
-
-1. Check `PluginsInitContainerTag` in `controllers/config/controller_config.go` of grafana-operator.
-   - https://github.com/grafana-operator/grafana-operator/blob/vX.Y.Z/controllers/config/controller_config.go
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana-operator/grafana_plugins_init/blob/A.B.C/Dockerfile
-3. Update `GRAFANA_PLUGINS_INIT_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` according to the value of `PluginsInitContainerTag`.
-
 ## haproxy
 
 ![Regular Update](./regular_update.svg)
