@@ -504,10 +504,6 @@ workflows:
           resource-class: large
           scan: true
       - build:
-          name: build-grafana_plugins_init
-          container-image: grafana_plugins_init
-          scan: true
-      - build:
           name: build-grafana-operator
           container-image: grafana-operator
       - build:
