@@ -100,5 +100,6 @@ runs:
         tag: ${{ steps.prepare.outputs.tag }}
         yamory_token: ${{ inputs.yamory_token }}
     - name: Test image
+      if: ${{ steps.prepare.outputs.build }}
       shell: bash
       run: docker run --rm ${{ steps.prepare.outputs.tag }} envoy --version
