@@ -121,7 +121,7 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
-      path: /validate-integreatly-org-grafanadashboard
+      path: /validate-grafana-integreatly-org-grafanadashboard
   failurePolicy: Fail
   name: vgrafanadashboard.kb.io
   rules:
@@ -129,27 +129,6 @@ webhooks:
     - grafana.integreatly.org
     apiVersions:
     - v1beta1
-    operations:
-    - CREATE
-    - UPDATE
-    resources:
-    - grafanadashboards
-  sideEffects: None
-- admissionReviewVersions:
-  - v1
-  - v1beta1
-  clientConfig:
-    service:
-      name: webhook-service
-      namespace: system
-      path: /validate-integreatly-org-grafanadashboard
-  failurePolicy: Fail
-  name: vgrafanadashboard4.kb.io
-  rules:
-  - apiGroups:
-    - integreatly.org
-    apiVersions:
-    - v1alpha1
     operations:
     - CREATE
     - UPDATE
