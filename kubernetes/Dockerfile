@@ -1,9 +1,9 @@
 # kubernetes container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG K8S_VERSION=1.27.10
+ARG K8S_VERSION=1.28.8
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
