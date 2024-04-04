@@ -57,8 +57,10 @@ runs:
         enable_arm64=${{ inputs.enable_arm64 }}
         if [ "$enable_arm64" = "true" ]; then
           echo "PLATFORM=linux/amd64,linux/arm64" >> $GITHUB_ENV
+          echo "DOCKER_LOAD=false" >> $GITHUB_ENV
         else
           echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
+          echo "DOCKER_LOAD=true" >> $GITHUB_ENV
         fi
     - name: Make pre-targets
       if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build }}
@@ -73,7 +75,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.dir }}
-        load: true
+        load: ${{ env.DOCKER_LOAD }}
         platforms: ${{ env.PLATFORM }}
         provenance: false
         push: false
