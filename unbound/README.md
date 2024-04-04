@@ -9,7 +9,7 @@
 Prepare config file `unbound.conf` at working directory, then execute following command.
 
     $  docker run --mount type=bind,source="$(pwd)"/unbound.conf,target=/etc/unbound.conf \
-        ghcr.io/cybozu/unbound:1.18 -c /etc/unbound.conf
+        ghcr.io/cybozu/unbound:1.19 -c /etc/unbound.conf
  
 ## Docker images
 
