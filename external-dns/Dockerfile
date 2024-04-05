@@ -1,9 +1,9 @@
 # ExternalDNS container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG EXTERNALDNS_VERSION=0.14.0
+ARG EXTERNALDNS_VERSION=0.14.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-sigs/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
