@@ -355,11 +355,10 @@ This section applies to the following containers. These containers are maintaine
 - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
-2. Update `version` of the `build_envoy` job in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml).
-3. Update `clang_archive_path` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml) if you want to update the clang version.
-4. Update image tag in `README.md`.
-5. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-6. Update `BRANCH` and `TAG` files.
+2. Update `clang_archive_path` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml) if you want to update the clang version.
+3. Update image tag in `README.md`.
+4. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+5. Update `BRANCH` and `TAG` files.
 
 ## etcd
 
