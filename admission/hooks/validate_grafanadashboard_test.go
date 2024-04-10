@@ -18,7 +18,6 @@ spec:
   instanceSelector:
     matchLabels:
       foo: bar
-  name: dashboard.json
   json: "{}"
 `
 		gd := &unstructured.Unstructured{}
@@ -35,7 +34,6 @@ metadata:
   name: dashboard-with-plugins
   namespace: default
 spec:
-  name: dashboard-with-plugins.json
   instanceSelector:
     matchLabels:
       foo: bar
