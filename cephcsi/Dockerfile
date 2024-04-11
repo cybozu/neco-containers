@@ -12,7 +12,7 @@ FROM updated_base as builder
 LABEL stage="build"
 
 ARG CSI_IMAGE_NAME=ghcr.io/cybozu/cephcsi
-ARG CSI_IMAGE_VERSION=3.10.1
+ARG CSI_IMAGE_VERSION=3.10.2
 ARG GO_ARCH
 ARG SRC_DIR
 ARG GIT_COMMIT

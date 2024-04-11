@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-focal AS build
+FROM ghcr.io/cybozu/golang:1.21-focal AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-snapshotter
-ARG VERSION=6.3.2
+ARG VERSION=7.0.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
