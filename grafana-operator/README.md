@@ -1,13 +1,13 @@
 Grafana Operator container
 ==================
 
-[Grafana Operator](https://github.com/grafana-operator/grafana-operator) automates deployment of Grafana instances.
+[Grafana Operator](https://github.com/grafana/grafana-operator) automates deployment of Grafana instances.
 
 Usage
 -----
 
 Run this image with the following deployment configuration.<br />
-https://github.com/grafana-operator/grafana-operator/tree/master/deploy
+https://github.com/grafana/grafana-operator/tree/master/deploy
 
 Docker images
 -------------

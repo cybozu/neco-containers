@@ -1,8 +1,8 @@
 # Grafana Operator container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-jammy AS build
-ARG VERSION=5.4.1
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+ARG VERSION=5.8.1
 
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -11,10 +11,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # The source archive on the GitHub Releases does not contain the commit ID of submodules.
 # To get submodules of the specific revision, we clone the grafana-operator instead of downloading the tar archive.
 # https://github.com/grafana-operator/grafana-operator/blob/master/.gitmodules
-RUN git clone --depth 1 --single-branch -b v${VERSION} https://github.com/grafana-operator/grafana-operator.git .
+RUN git clone --depth 1 --single-branch -b v${VERSION} https://github.com/grafana/grafana-operator.git .
 RUN git submodule update --init --recursive --recommend-shallow --depth 1
-COPY 1286.patch /work/1286.patch
-RUN patch -p1 < /work/1286.patch
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # Stage2: setup runtime container

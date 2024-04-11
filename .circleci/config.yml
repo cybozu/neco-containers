@@ -411,14 +411,6 @@ workflows:
           name: build-go-ipfs
           container-image: go-ipfs
       - build:
-          name: build-grafana
-          container-image: grafana
-          resource-class: large
-          scan: true
-      - build:
-          name: build-grafana-operator
-          container-image: grafana-operator
-      - build:
           name: build-heartbeat
           container-image: heartbeat
           scan: true

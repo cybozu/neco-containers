@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-jammy AS build
-ARG GRAFANA_VERSION=10.2.0
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+ARG GRAFANA_VERSION=10.4.1
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -11,13 +11,10 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana
 
-# Install Node.js 18.x & yarn
+# Install Node.js 20.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions
-RUN apt-get update && apt-get install -y --no-install-recommends gnupg \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_18.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update && apt-get install -y --no-install-recommends nodejs \
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
 
