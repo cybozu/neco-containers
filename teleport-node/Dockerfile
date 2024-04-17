@@ -20,9 +20,14 @@ RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravita
     yarn global add wasm-pack@${WASM_PACK_VERSION} && \
     cd teleport && \
     make build/teleport OS=linux
+
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu-debug:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends screen tmux && \
+    rm -rf /var/lib/apt/lists/* 
 
 COPY --from=build /work/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /work/teleport/LICENSE /usr/local/teleport/
