@@ -11,6 +11,7 @@ ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_SINGLE_VERSION
 
 COPY download_and_build.sh /
+COPY scrape_body_size_bytes.patch /
 WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
 RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert vmbackup vmrestore vmctl
 
