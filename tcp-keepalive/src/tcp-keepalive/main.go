@@ -287,7 +287,7 @@ func clientMain(cmd *cobra.Command, args []string) error {
 			if conn == nil {
 				if !retry {
 					cancel()
-					return fmt.Errorf("Got nil from the connection channel")
+					return fmt.Errorf("got nil from the connection channel")
 				}
 				time.Sleep(retryInterval)
 				nextChan <- struct{}{}
