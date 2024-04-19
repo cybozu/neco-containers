@@ -37,11 +37,14 @@ func init() {
 	ServerCmd.Flags().StringP("listen", "l", ":8000", "Listen address and port")
 	ServerCmd.Flags().DurationP("interval", "i", time.Second*5, "Interval to send a keepalive message")
 	ServerCmd.Flags().DurationP("timeout", "t", time.Second*15, "Deadline to receive a keepalive message")
+	ServerCmd.Flags().Int("retry-limit", 0, "The limit to retry, 0 is no limit")
+	ServerCmd.Flags().Bool("silent", false, "Server doesn't send keepalive message")
 	ClientCmd.Flags().StringP("server", "s", "127.0.0.1:8000", "Server running host")
 	ClientCmd.Flags().DurationP("interval", "i", time.Second*5, "Interval to send a keepalive message")
 	ClientCmd.Flags().DurationP("timeout", "t", time.Second*15, "Deadline to receive a keepalive message")
 	ClientCmd.Flags().BoolP("retry", "y", false, "Try to connect after a previous connection is closed")
 	ClientCmd.Flags().DurationP("retry-interval", "r", time.Second, "Connect retry interval")
+	ClientCmd.Flags().Bool("ignore-server-msg", false, "Ignore whether receiving the message from server or not")
 	rootCmd.AddCommand(&ServerCmd)
 	rootCmd.AddCommand(&ClientCmd)
 }
@@ -77,6 +80,18 @@ func serverMain(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	retryLimit, err := cmd.Flags().GetInt("retry-limit")
+	if err != nil {
+		logger.Error("Failed to get retry-limit flag", slog.Any("error", err))
+		return err
+	}
+
+	noMsg, err := cmd.Flags().GetBool("silent")
+	if err != nil {
+		logger.Error("Failed to get silent flag", slog.Any("error", err))
+		return err
+	}
+
 	logger = logger.With("local", addr)
 
 	tcpAddr, err := net.ResolveTCPAddr("tcp", addr)
@@ -88,7 +103,9 @@ func serverMain(cmd *cobra.Command, args []string) error {
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM)
 
-	logger.Info("Start TCP server")
+	logger.Info("Start TCP server", slog.Int("retry-limit", retryLimit), slog.Duration("interval", interval), slog.Duration("timeout", timeout))
+
+	retryCount := 0
 
 	listener, err := net.ListenTCP("tcp", tcpAddr)
 	if err != nil {
@@ -98,6 +115,7 @@ func serverMain(cmd *cobra.Command, args []string) error {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	connections := make(chan *net.TCPConn)
+	closeNotifyChan := make(chan struct{})
 
 	go func(ctx context.Context) {
 		for {
@@ -109,8 +127,9 @@ func serverMain(cmd *cobra.Command, args []string) error {
 				if err != nil {
 					logger.ErrorContext(ctx, "Failed to accept new TCP connection", slog.Any("error", err))
 				}
-				logger.InfoContext(ctx, "Accept new connection.", slog.Any("remote", conn.RemoteAddr()))
+				logger.InfoContext(ctx, "Accept new connection.", slog.Any("remote", conn.RemoteAddr()), slog.Int("retry-count", retryCount))
 				connections <- conn
+				retryCount += 1
 			}
 		}
 
@@ -124,13 +143,19 @@ func serverMain(cmd *cobra.Command, args []string) error {
 			cancel()
 			return nil
 		case conn := <-connections:
-			go handleConnection(ctx, conn, interval, timeout)
+			go handleConnection(ctx, conn, interval, timeout, closeNotifyChan, noMsg, false)
+		case <-closeNotifyChan:
+			if retryLimit != 0 && retryCount >= retryLimit {
+				logger.WarnContext(ctx, "Exceed retry limit. exit.")
+				cancel()
+				return nil
+			}
 		}
 
 	}
 }
 
-func handleConnection(ctx context.Context, conn net.Conn, interval, timeout time.Duration) {
+func handleConnection(ctx context.Context, conn net.Conn, interval, timeout time.Duration, closeNotifyChan chan struct{}, notSendMsg, ignoreRecvMsg bool) {
 	logger := initLogger().With("remote", conn.RemoteAddr())
 
 	intervalTicker := time.NewTicker(interval)
@@ -145,21 +170,37 @@ func handleConnection(ctx context.Context, conn net.Conn, interval, timeout time
 		case <-ctx.Done():
 			logger.InfoContext(ctx, "Close connection")
 			conn.Close()
+			if closeNotifyChan != nil {
+				closeNotifyChan <- struct{}{}
+			}
 			return
 		case <-closeChan:
 			logger.InfoContext(ctx, "Close connection")
 			conn.Close()
+			if closeNotifyChan != nil {
+				closeNotifyChan <- struct{}{}
+			}
 			return
 		case <-intervalTicker.C:
-			if _, err := conn.Write([]byte("keepalive")); err != nil {
-				logger.ErrorContext(ctx, "Failed to send keepalive message", slog.Any("error", err))
+			if !notSendMsg {
+				if _, err := conn.Write([]byte("keepalive")); err != nil {
+					logger.ErrorContext(ctx, "Failed to send keepalive message", slog.Any("error", err))
+					if closeNotifyChan != nil {
+						closeNotifyChan <- struct{}{}
+					}
+					return
+				}
+				logger.InfoContext(ctx, "Send a keepalive message")
+			}
+		case <-timeoutTicker.C:
+			if !ignoreRecvMsg {
+				logger.WarnContext(ctx, "Deadline exceeded to receive a keepalive message. Close connection")
+				conn.Close()
+				if closeNotifyChan != nil {
+					closeNotifyChan <- struct{}{}
+				}
 				return
 			}
-			logger.InfoContext(ctx, "Send a keepalive message")
-		case <-timeoutTicker.C:
-			logger.WarnContext(ctx, "Deadline exceeded to receive a keepalive message. Close connection")
-			conn.Close()
-			return
 		case <-receiveChan:
 			timeoutTicker.Reset(timeout)
 		}
@@ -187,15 +228,21 @@ func clientMain(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	retryInterval, err := cmd.Flags().GetDuration("connect-retry-interval")
+	retryInterval, err := cmd.Flags().GetDuration("retry-interval")
 	if err != nil {
-		logger.Error("Failed to get connect-retry-interval flag", slog.Any("error", err))
+		logger.Error("Failed to get retry-interval flag", slog.Any("error", err))
 		return err
 	}
 
-	retry, err := cmd.Flags().GetBool("connect-retry")
+	retry, err := cmd.Flags().GetBool("retry")
 	if err != nil {
-		logger.Error("Failed to get connect-retry flag", slog.Any("error", err))
+		logger.Error("Failed to get retry flag", slog.Any("error", err))
+		return err
+	}
+
+	ignoreRecvMsg, err := cmd.Flags().GetBool("ignore-server-msg")
+	if err != nil {
+		logger.Error("Failed to get ignore-server-msg flag", slog.Any("error", err))
 		return err
 	}
 
@@ -248,7 +295,7 @@ func clientMain(cmd *cobra.Command, args []string) error {
 			}
 			go func() {
 				logger.InfoContext(ctx, "Start to handle connection")
-				handleConnection(ctx, conn, interval, timeout)
+				handleConnection(ctx, conn, interval, timeout, nil, false, ignoreRecvMsg)
 				waitChan <- struct{}{}
 			}()
 		case <-waitChan:
