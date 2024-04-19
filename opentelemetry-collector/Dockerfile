@@ -1,8 +1,8 @@
 # opentelemetry-collector
 
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG OTELCOL_VERSION=0.88.0
+ARG OTELCOL_VERSION=0.98.0
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in
