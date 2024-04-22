@@ -18,6 +18,7 @@ runs:
       uses: ./.github/actions/setup
       with:
         github_token: ${{ inputs.github_token }}
+        go-version-file: "./envoy/go.mod"
     - id: prepare
       name: Prepare build parameters
       uses: ./.github/actions/prepare_build_params
