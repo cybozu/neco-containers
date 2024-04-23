@@ -1,9 +1,15 @@
 # Makefile for local-pv-provisioner
 
+# Image version
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = ghcr.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
+
 CONTROLLER_TOOLS_VERSION = 0.13.0
 ENVTEST_K8S_VERSION = 1.28.3
+
+# Specify envtest branch according to controller-runtime version
+CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+ENVTEST_BRANCH := release-$(shell echo $(CONTROLLER_RUNTIME_VERSION) | cut -d "." -f 1-2)
 
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
@@ -58,7 +64,7 @@ controller-gen:
 SETUP_ENVTEST = $(CURDIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
-	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_BRANCH))
 
 .PHONY: docker
 docker: build

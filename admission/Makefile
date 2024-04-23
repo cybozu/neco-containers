@@ -6,6 +6,10 @@ GRAFANA_OPERATOR_V4_VERSION = 4.10.1
 GRAFANA_OPERATOR_VERSION = 5.8.1
 ENVTEST_K8S_VERSION = 1.27.1
 
+# Specify envtest branch according to controller-runtime version
+CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+ENVTEST_BRANCH := release-$(shell echo $(CONTROLLER_RUNTIME_VERSION) | cut -d "." -f 1-2)
+
 # Set the shell used to bash for better error handling.
 SHELL = /bin/bash
 .SHELLFLAGS = -e -o pipefail -c
@@ -79,7 +83,7 @@ kustomize:
 SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
-	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@latest)
+	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_BRANCH))
 
 # Download staticcheck locally if necessary
 STATICCHECK = $(PROJECT_DIR)/bin/staticcheck
