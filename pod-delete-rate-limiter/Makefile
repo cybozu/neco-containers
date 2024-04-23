@@ -5,7 +5,7 @@ IMG ?= controller:latest
 ENVTEST_K8S_VERSION = 1.27.1
 
 # Specify envtest branch according to controller-runtime version
-CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
 ENVTEST_BRANCH := release-$(shell echo $(CONTROLLER_RUNTIME_VERSION) | cut -d "." -f 1-2)
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)

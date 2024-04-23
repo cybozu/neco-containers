@@ -7,7 +7,7 @@ GRAFANA_OPERATOR_VERSION = 5.8.1
 ENVTEST_K8S_VERSION = 1.27.1
 
 # Specify envtest branch according to controller-runtime version
-CONTROLLER_RUNTIME_VERSION := $(shell awk '/sigs\.k8s\.io\/controller-runtime/ {print substr($$2, 2)}' go.mod)
+CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
 ENVTEST_BRANCH := release-$(shell echo $(CONTROLLER_RUNTIME_VERSION) | cut -d "." -f 1-2)
 
 # Set the shell used to bash for better error handling.
