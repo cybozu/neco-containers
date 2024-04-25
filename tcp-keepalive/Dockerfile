@@ -10,6 +10,9 @@ RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./tcp-keepalive
 FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
+RUN apt update && \
+	apt install -y iproute2 tcpdump iputils-ping iptables net-tools inetutils-traceroute dnsutils
+
 COPY --from=build /go/bin /usr/bin
 USER 10000:10000
 EXPOSE 8000
