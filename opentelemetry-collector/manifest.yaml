@@ -18,6 +18,7 @@ receivers:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v${OTELCOL_VERSION}
 
 exporters:
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/loadbalancingexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
