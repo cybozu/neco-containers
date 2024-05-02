@@ -39,7 +39,7 @@ var (
 	contourMutatingWebhookPath                     = "/mutate-projectcontour-io-httpproxy"
 	contourValidateWebhookPath                     = "/validate-projectcontour-io-httpproxy"
 	argocdValidateWebhookPath                      = "/validate-argoproj-io-application"
-	grafanaDashboardValidateWebhookPath            = "/validate-integreatly-org-grafanadashboard"
+	grafanaDashboardValidateWebhookPath            = "/validate-grafana-integreatly-org-grafanadashboard"
 	deleteValidateWebhookPath                      = "/validate-delete"
 	preventDeleteValidateWebhookPath               = "/validate-preventdelete"
 	deploymentReplicaCountValidateWebhookPath      = "/validate-deployment-replica-count"

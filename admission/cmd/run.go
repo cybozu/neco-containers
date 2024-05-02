@@ -48,7 +48,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass, &conf.HTTPProxyMutatorConfig))
 	wh.Register("/validate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-argoproj-io-application", hooks.NewArgoCDApplicationValidator(mgr.GetClient(), dec, &conf.ArgoCDApplicationValidatorConfig, config.repositoryPermissive))
-	wh.Register("/validate-integreatly-org-grafanadashboard", hooks.NewGrafanaDashboardValidator(mgr.GetClient(), dec))
+	wh.Register("/validate-grafana-integreatly-org-grafanadashboard", hooks.NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-delete", hooks.NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-preventdelete", hooks.NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-deployment-replica-count", hooks.NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
