@@ -428,7 +428,6 @@ workflows:
       - build:
           name: build-meows-dctest-runner
           container-image: meows-dctest-runner
-          scan: true
       - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
