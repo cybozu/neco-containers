@@ -6,6 +6,6 @@ Build Docker container image for [meows][], which is GitHub Actions self-hosted 
 Docker images
 -------------
 
-Docker images are available on [Quay.io](https://quay.io/repository/cybozu/dctest-meows-runner)
+Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/meows-dctest-runner)
 
 [meows]: https://github.com/cybozu-go/meows
