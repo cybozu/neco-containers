@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/cybozu-go/log"
-	sabakan "github.com/cybozu-go/sabakan/v2"
+	sabakan "github.com/cybozu-go/sabakan/v3"
 	serfclient "github.com/hashicorp/serf/client"
 	"github.com/spf13/pflag"
 	corev1 "k8s.io/api/core/v1"
