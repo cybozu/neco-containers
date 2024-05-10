@@ -1,9 +1,9 @@
-CONTROLLER_TOOLS_VERSION = 0.14.0
-KUSTOMIZE_VERSION = 4.5.7
+CONTROLLER_TOOLS_VERSION = 0.15.0
+KUSTOMIZE_VERSION = 5.4.1
 CONTOUR_VERSION = 1.28.2
 ARGOCD_VERSION = 2.10.7
 GRAFANA_OPERATOR_VERSION = 5.8.1
-ENVTEST_K8S_VERSION = 1.27.1
+ENVTEST_K8S_VERSION = 1.28.3
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
@@ -75,7 +75,7 @@ controller-gen:
 KUSTOMIZE = $(PROJECT_DIR)/bin/kustomize
 .PHONY: kustomize
 kustomize:
-	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v3@v$(KUSTOMIZE_VERSION))
+	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v$(shell echo $(KUSTOMIZE_VERSION) | cut -d "." -f1)@v$(KUSTOMIZE_VERSION))
 
 # Download setup-envtest locally if necessary
 SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
