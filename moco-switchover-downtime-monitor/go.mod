@@ -1,10 +1,10 @@
 module moco-switchover-downtime-monitor
 
-go 1.22.2
+go 1.22.3
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1
-	github.com/prometheus/client_golang v1.19.0
+	github.com/prometheus/client_golang v1.19.1
 	github.com/spf13/pflag v1.0.5
 	go.uber.org/zap v1.27.0
 )
