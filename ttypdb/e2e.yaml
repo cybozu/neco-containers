@@ -42,8 +42,12 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: teststs
+  labels:
+    sts-updater.cybozu.io/strategy: "RollingEviction"
 spec:
-  replicas: 2
+  replicas: 1
+#  updateStrategy:
+#    type: OnDelete
   selector:
     matchLabels:
       name: teststs
