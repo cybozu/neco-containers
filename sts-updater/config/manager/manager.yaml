@@ -32,7 +32,7 @@ spec:
         runAsNonRoot: true
       containers:
       - command:
-        - /manager
+        - /sts-updater
         args:
         - --leader-elect
         image: controller:latest
