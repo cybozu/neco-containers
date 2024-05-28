@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG TELEPORT_VERSION=15.3.7
-ARG RUST_VERSION=1.71.1
+ARG RUST_VERSION=1.77.0
 ARG WASM_PACK_VERSION=0.12.1
 
 # Install Nodejs
