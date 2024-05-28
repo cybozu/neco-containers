@@ -1,12 +1,12 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG TELEPORT_VERSION=15.1.10
+ARG TELEPORT_VERSION=15.3.7
 ARG RUST_VERSION=1.71.1
 ARG WASM_PACK_VERSION=0.12.1
 
 # Install Nodejs
-ARG NODE_VERSION=18.19.1
+ARG NODE_VERSION=20.13.0
 ENV NODE_URL="https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz"
 ENV NODE_PATH="/usr/local/lib/nodejs-linux"
 ENV PATH="$PATH:${NODE_PATH}/bin"
