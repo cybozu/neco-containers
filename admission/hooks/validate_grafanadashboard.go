@@ -16,11 +16,11 @@ import (
 
 type grafanaDashboardValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewGrafanaDashboardValidator creates a webhook handler for GrafanaDashboard.
-func NewGrafanaDashboardValidator(c client.Client, dec *admission.Decoder) http.Handler {
+func NewGrafanaDashboardValidator(c client.Client, dec admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &grafanaDashboardValidator{c, dec}}
 }
 

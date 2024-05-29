@@ -22,13 +22,13 @@ var applog = logf.Log.WithName("application-validator")
 
 type argocdApplicationValidator struct {
 	client               client.Client
-	decoder              *admission.Decoder
+	decoder              admission.Decoder
 	config               *ArgoCDApplicationValidatorConfig
 	repositoryPermissive bool
 }
 
 // NewArgoCDApplicationValidator creates a webhook handler for ArgoCD Application.
-func NewArgoCDApplicationValidator(c client.Client, dec *admission.Decoder, config *ArgoCDApplicationValidatorConfig, repositoryPermissive bool) http.Handler {
+func NewArgoCDApplicationValidator(c client.Client, dec admission.Decoder, config *ArgoCDApplicationValidatorConfig, repositoryPermissive bool) http.Handler {
 	v := &argocdApplicationValidator{
 		client:               c,
 		decoder:              dec,

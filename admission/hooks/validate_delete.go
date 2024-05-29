@@ -20,11 +20,11 @@ const labelDevelopment = "development"
 
 type deleteValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewDeleteValidator creates a webhook handler to validate DELETE requests.
-func NewDeleteValidator(c client.Client, dec *admission.Decoder) http.Handler {
+func NewDeleteValidator(c client.Client, dec admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &deleteValidator{c, dec}}
 }
 

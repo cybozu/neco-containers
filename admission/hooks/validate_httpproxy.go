@@ -16,11 +16,11 @@ import (
 
 type contourHTTPProxyValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewContourHTTPProxyValidator creates a webhook handler for Contour HTTPProxy.
-func NewContourHTTPProxyValidator(c client.Client, dec *admission.Decoder) http.Handler {
+func NewContourHTTPProxyValidator(c client.Client, dec admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &contourHTTPProxyValidator{c, dec}}
 }
 
