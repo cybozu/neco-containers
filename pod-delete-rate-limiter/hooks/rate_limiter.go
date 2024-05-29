@@ -22,18 +22,18 @@ var podlog = logf.Log.WithName("PodDeleteRateLimiter")
 
 type podDeleteRateLimiter struct {
 	client      client.Client
-	decoder     *admission.Decoder
+	decoder     admission.Decoder
 	minInterval time.Duration
 	username    string
 	m           sync.Mutex
 	lastDeleted time.Time
 }
 
-func NewPodDeleteRateLimiterHttpHandler(client client.Client, decoder *admission.Decoder, minInterval time.Duration, username string) http.Handler {
+func NewPodDeleteRateLimiterHttpHandler(client client.Client, decoder admission.Decoder, minInterval time.Duration, username string) http.Handler {
 	return &webhook.Admission{Handler: NewPodDeleteRateLimiter(client, decoder, minInterval, username)}
 }
 
-func NewPodDeleteRateLimiter(client client.Client, decoder *admission.Decoder, minInterval time.Duration, username string) admission.Handler {
+func NewPodDeleteRateLimiter(client client.Client, decoder admission.Decoder, minInterval time.Duration, username string) admission.Handler {
 	return &podDeleteRateLimiter{
 		client:      client,
 		decoder:     decoder,
