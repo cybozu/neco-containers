@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG K8S_VERSION=1.28.8
+ARG K8S_VERSION=1.28.10
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
