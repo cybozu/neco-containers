@@ -556,14 +556,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 ![CSA Update](./csa_update.svg)
 
 1. Update version variables in `Makefile`.
-2. Update go modules.
-   ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
-   $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get -d k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-   $ go get -d sigs.k8s.io/controller-runtime@v<CTRL_VERSION>
-   $ go mod tidy
-   ```
+2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
