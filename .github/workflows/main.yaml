@@ -292,7 +292,7 @@ jobs:
         version: 18.2.1
 
   build_cilium:
-    runs-on: neco-containers-ubuntu-20.04
+    runs-on: neco-containers-ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - name: Build cilium-agent image
@@ -300,5 +300,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
-        cilium-proxy_version: ad831bdec4c93feeb2378aa9e1847c936ada6ef7
+        cilium-proxy_version: cffb43e4ac1fa64788a5d638ade20a3d88e18b67
         image-tools_version: ff22ba3bff1010f4a2dd76ede789663c3beaf8d2
