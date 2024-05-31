@@ -15,10 +15,10 @@ import (
 
 type deploymentReplicaCountScaleValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
-func NewDeploymentReplicaCountScaleValidator(c client.Client, decoder *admission.Decoder) http.Handler {
+func NewDeploymentReplicaCountScaleValidator(c client.Client, decoder admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &deploymentReplicaCountScaleValidator{client: c, decoder: decoder}}
 }
 

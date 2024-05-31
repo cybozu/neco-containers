@@ -6,6 +6,8 @@ This document describes the procedure for updating each container image.
 Besides on-demand container updates, we have two regular renewal operations: `Kubernetes Update` and `Regular Update`.
 The target container of these operations have the following badges, so check before the operations.
 
+In case of components whose Go source code are in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
+
 1 Kubernetes Update (![Kubernetes Update](./kubernetes_update.svg))
    - Upgrade of Kubernetes. Besides the related components of Kubernetes,  update the containers managed by [CKE](https://github.com/cybozu-go/cke/) and some go modules.
 
@@ -31,7 +33,7 @@ In Kubernetes update:
    - `CONTROLLER_TOOLS_VERSION`
    - `KUSTOMIZE_VERSION`
    - `ENVTEST_K8S_VERSION`
-2. Update go modules.
+2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
@@ -133,13 +135,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 ![Kubernetes Update](./kubernetes_update.svg)
 
-1. Update go modules.
-   ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/bmc-reverse-proxy
-   $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get -d k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-   $ go mod tidy
-   ```
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test are green.
    ```bash
    $ make test
@@ -598,13 +594,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Update version variables in `Makefile`.
-2. Update go modules.
-   ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/machines-endpoints
-   $ K8SLIB_VERSION=X.Y.Z # e.g. K8SLIB_VERSION=0.18.9
-   $ go get -d k8s.io/api@v$K8SLIB_VERSION k8s.io/apimachinery@v$K8SLIB_VERSION k8s.io/client-go@v$K8SLIB_VERSION
-   $ go mod tidy
-   ```
+2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Confirm test is green.
    ```bash
    $ make test
@@ -659,7 +649,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 ![Regular Update](./regular_update.svg)
 
-1. Upgrade direct dependencies listed in `go.mod`.
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `TAG` file.
 
 ## nerdctl
@@ -702,7 +692,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - `CONTROLLER_TOOLS_VERSION`
    - `KUSTOMIZE_VERSION`
    - `ENVTEST_K8S_VERSION`
-2. Update go modules.
+2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
    ```bash
    $ cd $GOPATH/src/github.com/cybozu/neco-containers/pod-delete-rate-limiter

@@ -16,13 +16,13 @@ import (
 
 type podValidator struct {
 	client          client.Client
-	decoder         *admission.Decoder
+	decoder         admission.Decoder
 	validPrefixes   []string
 	imagePermissive bool
 }
 
 // NewPodValidator creates a webhook handler for Pod.
-func NewPodValidator(c client.Client, dec *admission.Decoder, validImagePrefixes []string, imagePermissive bool) http.Handler {
+func NewPodValidator(c client.Client, dec admission.Decoder, validImagePrefixes []string, imagePermissive bool) http.Handler {
 	v := &podValidator{
 		client:          c,
 		decoder:         dec,

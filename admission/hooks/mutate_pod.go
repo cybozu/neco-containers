@@ -21,12 +21,12 @@ var (
 
 type podMutator struct {
 	client                     client.Client
-	decoder                    *admission.Decoder
+	decoder                    admission.Decoder
 	ephemeralStoragePermissive bool
 }
 
 // NewPodMutator creates a webhook handler for Pod.
-func NewPodMutator(c client.Client, dec *admission.Decoder, ephemeralStoragePermissive bool) http.Handler {
+func NewPodMutator(c client.Client, dec admission.Decoder, ephemeralStoragePermissive bool) http.Handler {
 	return &webhook.Admission{Handler: &podMutator{c, dec, ephemeralStoragePermissive}}
 }
 

@@ -14,12 +14,12 @@ import (
 
 type preventDeleteValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewPreventDeleteValidator creates a webhook handler to validate DELETE requests
 // only for resources annotated with `prevent: delete`.
-func NewPreventDeleteValidator(c client.Client, dec *admission.Decoder) http.Handler {
+func NewPreventDeleteValidator(c client.Client, dec admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &preventDeleteValidator{c, dec}}
 }
 

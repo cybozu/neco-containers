@@ -16,7 +16,7 @@ const annotationForForceReplicaCount = annotatePrefix + "force-replica-count"
 
 type deploymentReplicaCountValidator struct {
 	client  client.Client
-	decoder *admission.Decoder
+	decoder admission.Decoder
 }
 
 // NewDeploymentReplicaCountValidator returns a webhook handler to validate
@@ -25,7 +25,7 @@ type deploymentReplicaCountValidator struct {
 // This webhook denies a resources if the resource has the annotation
 // `admission.cybozu.com/force-replica-count: "0"` and its .spec.replicas is not
 // zero.
-func NewDeploymentReplicaCountValidator(c client.Client, decoder *admission.Decoder) http.Handler {
+func NewDeploymentReplicaCountValidator(c client.Client, decoder admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &deploymentReplicaCountValidator{client: c, decoder: decoder}}
 }
 

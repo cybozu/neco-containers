@@ -23,13 +23,13 @@ const (
 
 type contourHTTPProxyMutator struct {
 	client       client.Client
-	decoder      *admission.Decoder
+	decoder      admission.Decoder
 	defaultClass string
 	config       *HTTPProxyMutatorConfig
 }
 
 // NewContourHTTPProxyMutator creates a webhook handler for Contour HTTPProxy.
-func NewContourHTTPProxyMutator(c client.Client, dec *admission.Decoder, defaultClass string, config *HTTPProxyMutatorConfig) http.Handler {
+func NewContourHTTPProxyMutator(c client.Client, dec admission.Decoder, defaultClass string, config *HTTPProxyMutatorConfig) http.Handler {
 	return &webhook.Admission{Handler: &contourHTTPProxyMutator{c, dec, defaultClass, config}}
 }
 
