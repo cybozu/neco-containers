@@ -4,8 +4,8 @@
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = ghcr.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
 
-CONTROLLER_TOOLS_VERSION = 0.13.0
-ENVTEST_K8S_VERSION = 1.28.3
+CONTROLLER_TOOLS_VERSION = 0.14.0
+ENVTEST_K8S_VERSION = 1.29.3
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
