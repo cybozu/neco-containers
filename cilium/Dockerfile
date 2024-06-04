@@ -1,4 +1,4 @@
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.20-jammy
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.22-jammy
 ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
