@@ -30,19 +30,19 @@ runs:
         github_token: ${{ inputs.github_token }}
         request-scan: "true"
 
-    - name: Build Cilium Envoy
-      if: ${{ steps.prepare.outputs.build }}
-      uses: ./.github/actions/build_cilium-envoy
-      with:
-        github_token: ${{ inputs.github_token }}
-        cilium-proxy_version: ${{ inputs.cilium-proxy_version }}
-
     - name: Build Cilium image tools
       if: ${{ steps.prepare.outputs.build }}
       uses: ./.github/actions/build_cilium-image-tools
       with:
         github_token: ${{ inputs.github_token }}
         image-tools_version: ${{ inputs.image-tools_version }}
+
+    - name: Download artifacts of cilium-envoy
+      if: ${{ steps.prepare.outputs.build }}
+      uses: actions/download-artifact@v4
+      with:
+        name: cilium-envoy
+        path: cilium/src/workspace/usr
 
     - name: Build cilium-agent image and push
       if: ${{ steps.prepare.outputs.build }}
