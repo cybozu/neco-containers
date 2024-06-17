@@ -29,10 +29,10 @@ runs:
           unzip \
           virtualenv \
           wget \
-          zip
+          zip \
+          software-properties-common
         wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
-        sudo bash -c 'echo "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list'
-        sudo bash -c 'echo "deb-src http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main" >> /etc/apt/sources.list'
+        sudo apt-add-repository -y "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-15 main"
         sudo apt-get update
         sudo apt-get install -y --no-install-recommends \
           clang-15 \
@@ -50,6 +50,13 @@ runs:
         curl -sSLf https://github.com/cilium/proxy/archive/${{ inputs.cilium-proxy_version }}.tar.gz | \
           tar zxf - --strip-components 1 -C cilium/src/cilium-proxy
 
+    - name: Build libcilium.so
+      shell: bash
+      run: |
+        mkdir -p cilium/src/workspace/usr/lib
+        cd cilium/src/cilium-proxy
+        make -C proxylib all && mv proxylib/libcilium.so ../workspace/usr/lib
+
     - name: Build cilium-envoy
       shell: bash
       env:
@@ -57,11 +64,22 @@ runs:
         PKG_BUILD: 1
         DESTDIR: /tmp/install
       run: |
+        rm -rf cilium/proxy/.cache/*
         export PKG_BUILD=${{ env.PKG_BUILD }}
         export DESTDIR=${{ env.DESTDIR }}
         cd cilium/src/cilium-proxy
         echo ${{ inputs.cilium-proxy_version }} > SOURCE_VERSION
-        make bazel-bin/cilium-envoy BAZEL_BUILD_OPTS="${{ env.BAZEL_BUILD_OPTS }}"
+        make bazel-bin/cilium-envoy-starter bazel-bin/cilium-envoy BAZEL_BUILD_OPTS="${{ env.BAZEL_BUILD_OPTS }}"
         ./bazel/get_workspace_status
         make install
         sudo mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
+        sudo mv /tmp/install/usr/bin/cilium-envoy-starter ../workspace/usr/bin/
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: cilium-envoy
+        path: |
+          cilium/src/workspace/usr/bin/cilium-envoy
+          cilium/src/workspace/usr/bin/cilium-envoy-starter
+          cilium/src/workspace/usr/lib/libcilium.so
