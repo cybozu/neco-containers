@@ -42,7 +42,14 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: cilium-envoy
-        path: cilium/src/workspace/usr
+        path: cilium/src/workspace
+
+    - name: Untar cilium-envoy
+      if: ${{ steps.prepare.outputs.build }}
+      shell: bash
+      run: |
+        cd cilium/src/workspace
+        tar -xvf cilium-envoy.tar
 
     - name: Build cilium-agent image and push
       if: ${{ steps.prepare.outputs.build }}
