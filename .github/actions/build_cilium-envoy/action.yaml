@@ -74,12 +74,16 @@ runs:
         make install
         sudo mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
         sudo mv /tmp/install/usr/bin/cilium-envoy-starter ../workspace/usr/bin/
+    
+    - name: Tar files
+      shell: bash
+      run: |
+        cd cilium/src/workspace
+        tar -cvf cilium-envoy.tar usr
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
         name: cilium-envoy
         path: |
-          cilium/src/workspace/usr/bin/cilium-envoy
-          cilium/src/workspace/usr/bin/cilium-envoy-starter
-          cilium/src/workspace/usr/lib/libcilium.so
+          cilium/src/workspace/cilium-envoy.tar
