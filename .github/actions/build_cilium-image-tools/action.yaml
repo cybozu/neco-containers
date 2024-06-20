@@ -50,10 +50,29 @@ runs:
   - name: Build llvm
     shell: bash
     run: |
+      WORKSPACE=$(pwd)/cilium/src/workspace
       cd cilium/src/image-tools
       sudo images/llvm/checkout-llvm.sh
-      sudo images/llvm/build-llvm-native.sh
-      sudo mv /out/linux/amd64/bin/clang /out/linux/amd64/bin/llc /out/linux/amd64/bin/llvm-objcopy ../workspace/bin
+      
+      # images/llvm/build-llvm-native.sh
+      sudo mkdir -p /src/llvm/llvm/build-native
+      cd /src/llvm/llvm/build-native
+      sudo cmake .. -G "Ninja" \
+          -DLLVM_TARGETS_TO_BUILD="BPF" \
+          -DLLVM_ENABLE_PROJECTS="clang" \
+          -DBUILD_SHARED_LIBS="OFF" \
+          -DCMAKE_BUILD_TYPE="Release" \
+          -DLLVM_BUILD_RUNTIME="OFF" \
+          -DCMAKE_INSTALL_PREFIX="/usr/local" \
+          -DLLVM_ENABLE_Z3_SOLVER="OFF"
+      sudo ninja clang llc llvm-objcopy
+      sudo strip bin/clang
+      sudo strip bin/llc
+      sudo strip bin/llvm-objcopy
+      sudo mkdir -p /out/linux/amd64/bin
+      sudo cp bin/clang bin/llc bin/llvm-objcopy /out/linux/amd64/bin
+
+      sudo mv /out/linux/amd64/bin/clang /out/linux/amd64/bin/llc /out/linux/amd64/bin/llvm-objcopy ${WORKSPACE}/bin/
 
   - name: Build bpftool
     shell: bash
