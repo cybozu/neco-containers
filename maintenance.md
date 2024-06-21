@@ -861,13 +861,11 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/gravitational/teleport/releases).
-2. Check the upstream `Makefile` and `docker/Dockerfile`. If they have been updated significantly, update our `Dockerfile`.
-   - https://github.com/gravitational/teleport/blob/vX.Y.Z/Makefile
-   - https://github.com/gravitational/teleport/blob/vX.Y.Z/docker/Dockerfile
-3. Update `NODE_VERSION` in `Dockerfile`. Please use the version in the below file.
-   - https://github.com/gravitational/teleport/blob/vX.Y.Z/build.assets/versions.mk
-4. Update `TELEPORT_VERSION` in `Dockerfile`.
-5. Update `TAG` files.
+2. Run `make -C teleport-node/ check-teleport-update` and check the upstream `Makefile` and `version.mk`.
+3. Update tools version in `Dockerfile`.
+4. Update `Dockerfile` If there are any changes to the build method.
+5. Update `TELEPORT_VERSION` in `Dockerfile`.
+6. Update `TAG` files.
 
 ## tempo
 
