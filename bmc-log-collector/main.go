@@ -18,9 +18,9 @@ type Machines struct {
 
 // コレクターを起動
 func collector(n int) {
-	fmt.Printf("Collector %d  started\n",n )
-	for{
-		if (len(queue) == 0) {
+	fmt.Printf("Collector %d  started\n", n)
+	for {
+		if len(queue) == 0 {
 			time.Sleep(1 * time.Second)
 		} else {
 			v := queue[0]
@@ -37,10 +37,10 @@ func targetReader() Machines {
 	var m Machines
 	for i := 1; i < 100; i++ {
 		mx := Machine{
-			Hostname: fmt.Sprintf("test%d",i),
-			BmcIPadr: fmt.Sprintf("192.168.0.%d",i),
-			NodeIPadr: fmt.Sprintf("172.16.0.%d",i),
-			SerialNo: fmt.Sprintf("ABCDE-%d",i),
+			Hostname:  fmt.Sprintf("test%d", i),
+			BmcIPadr:  fmt.Sprintf("192.168.0.%d", i),
+			NodeIPadr: fmt.Sprintf("172.16.0.%d", i),
+			SerialNo:  fmt.Sprintf("ABCDE-%d", i),
 		}
 		m.machine = append(m.machine, mx)
 	}
@@ -50,14 +50,13 @@ func targetReader() Machines {
 var queue []Machine
 
 // メイン
-func main(){
+func main() {
 
 	//キューを作成
 	queue = make([]Machine, 0)
 
 	// パラメータ取得
-	var wn int
-	wn = 3
+	wn := 3
 
 	// コレクターを起動
 	for i := 0; i < wn; i++ {
@@ -70,10 +69,9 @@ func main(){
 		machineList := targetReader()
 
 		// キューへ積む
-		for _, v := range machineList.machine {
-			queue = append(queue, v)
-		}
+		queue = machineList.machine
 
+		// 待機
 		fmt.Println("スリープ")
 		time.Sleep(120 * time.Second)
 	}
