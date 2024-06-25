@@ -2,27 +2,79 @@ package main
 
 import (
 	"fmt"
-	"io"
-	"net/http"
+	"time"
 )
 
-func main() {
-	requestURL := "http://localhost:8750/virtualMachines"
+type Machine struct {
+	Hostname  string
+	BmcIPadr  string
+	NodeIPadr string
+	SerialNo  string
+}
 
-	// URLをアクセス
-	res, err := http.Get(requestURL)
-	if err != nil {
-		panic(err)
+type Machines struct {
+	machine []Machine
+}
+
+// コレクターを起動
+func collector(n int) {
+	fmt.Printf("Collector %d  started\n",n )
+	for{
+		if (len(queue) == 0) {
+			time.Sleep(1 * time.Second)
+		} else {
+			v := queue[0]
+			queue = queue[1:]
+			time.Sleep(2 * time.Second)
+			fmt.Println(n, v.SerialNo)
+		}
 	}
-	defer res.Body.Close()
+}
 
-	fmt.Printf("Status: %v\n", res.Status)
-	fmt.Printf("StatusCode: %v\n", res.StatusCode)
-
-	body, err := io.ReadAll(res.Body)
-	if err != nil {
-		panic(err)
+// ターゲットを取得定期に取得する
+func targetReader() Machines {
+	fmt.Println("Read target list and post queue")
+	var m Machines
+	for i := 1; i < 100; i++ {
+		mx := Machine{
+			Hostname: fmt.Sprintf("test%d",i),
+			BmcIPadr: fmt.Sprintf("192.168.0.%d",i),
+			NodeIPadr: fmt.Sprintf("172.16.0.%d",i),
+			SerialNo: fmt.Sprintf("ABCDE-%d",i),
+		}
+		m.machine = append(m.machine, mx)
 	}
-	fmt.Println(string(body))
+	return m
+}
 
+var queue []Machine
+
+// メイン
+func main(){
+
+	//キューを作成
+	queue = make([]Machine, 0)
+
+	// パラメータ取得
+	var wn int
+	wn = 3
+
+	// コレクターを起動
+	for i := 0; i < wn; i++ {
+		go collector(i)
+	}
+
+	// メインループ
+	for {
+		// ターゲット読込
+		machineList := targetReader()
+
+		// キューへ積む
+		for _, v := range machineList.machine {
+			queue = append(queue, v)
+		}
+
+		fmt.Println("スリープ")
+		time.Sleep(120 * time.Second)
+	}
 }
