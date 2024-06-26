@@ -1,8 +1,9 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.21-jammy AS build
 
-COPY main.go /work
+COPY *.go /work
 COPY go.mod /work
+COPY testdata/work
 
 WORKDIR /work
 
