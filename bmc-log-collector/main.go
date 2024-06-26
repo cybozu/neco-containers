@@ -5,20 +5,9 @@ import (
 	"time"
 )
 
-type Machine struct {
-	Hostname  string
-	BmcIPadr  string
-	NodeIPadr string
-	SerialNo  string
-}
-
-type Machines struct {
-	machine []Machine
-}
-
 // コレクターを起動
 func collector(n int) {
-	fmt.Printf("Collector %d  started\n", n)
+	fmt.Printf("Log Collector no-%d: Started\n", n)
 	for {
 		if len(queue) == 0 {
 			time.Sleep(1 * time.Second)
@@ -33,7 +22,8 @@ func collector(n int) {
 
 // ターゲットを取得定期に取得する
 func targetReader() Machines {
-	fmt.Println("Read target list and post queue")
+	fmt.Println("コンフィグマップから取得する部分に相当")
+	fmt.Println("Read iDRAC server list")
 	var m Machines
 	for i := 1; i < 100; i++ {
 		mx := Machine{
@@ -52,20 +42,26 @@ var queue []Machine
 // メイン
 func main() {
 
-	//キューを作成
-	queue = make([]Machine, 0)
-
 	// パラメータ取得
+	// コレクターの起動数取得
 	wn := 3
 
-	// コレクターを起動
+	// メインとコレクター（ワーカー）の間を繋ぐキューを作成
+	queue = make([]Machine, 0)
+
+	// コレクター（ワーカー）を起動
 	for i := 0; i < wn; i++ {
 		go collector(i)
 	}
 
 	// メインループ
 	for {
-		// ターゲット読込
+
+		// CSVを読んで、構造体へセットする
+		list, err := MachineListReader("testdata/bmc-list.csv")
+		fmt.Println("list=", list, "err=", err)
+
+		// ターゲット読込(テスト用）
 		machineList := targetReader()
 
 		// キューへ積む
