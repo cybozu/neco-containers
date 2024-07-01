@@ -1,2 +1,4 @@
-*
-!src
+.gitignore
+BRANCH
+README.md
+TAG

@@ -2,9 +2,9 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-COPY src /work/src
+COPY . /work/src
 WORKDIR /work/src
-RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./tcp-keepalive
+RUN CGO_ENABLED=0 go install -ldflags="-w -s" .
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:22.04
