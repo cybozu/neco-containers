@@ -191,7 +191,7 @@ jobs:
             make-targets: "test"
           - dir: "./tcp-keepalive"
             container-image: "tcp-keepalive"
-            make-targets: "setup check-generate test"
+            make-targets: "check-diff test"
           - dir: "./teleport-node"
             container-image: "teleport-node"
           - dir: "./tempo"
