@@ -832,7 +832,7 @@ Only the base image and module dependency should be updated.
 
 1. Check the latest **stable** version at http://www.squid-cache.org/Versions/
 2. Check release notes if a new version is released.
-    - e.g., http://www.squid-cache.org/Versions/v6/squid-6.4-RELEASENOTES.html
+    - e.g., http://www.squid-cache.org/Versions/vX/squid-X.Y-RELEASENOTES.html
 3. Update `SQUID_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.

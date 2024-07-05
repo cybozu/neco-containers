@@ -2,7 +2,7 @@
 
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 as build
 
-ARG SQUID_VERSION=6.9
+ARG SQUID_VERSION=6.10
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
