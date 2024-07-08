@@ -8,12 +8,15 @@ import (
 	"log/slog"
 	"net"
 	"os"
+
+	"github.com/neco-containers/tcp-keepalive/internal/metrics"
 )
 
 var log *slog.Logger
 
 type Server struct {
 	listener *net.TCPListener
+	metrics  *Metrics
 
 	*Config
 }
@@ -26,17 +29,32 @@ func initLogger() {
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }
 
-func NewServer(cfg *Config) (*Server, error) {
+func NewServer(cfg *Config, mcfg *metrics.Config) (*Server, error) {
 	if err := cfg.Validate(); err != nil {
 		return nil, err
 	}
 
-	log.Info("new server", slog.Any("config", cfg))
-	return &Server{Config: cfg}, nil
+	m, err := NewMetrics(mcfg)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("new server", slog.Any("config", cfg), slog.Any("metrics", m))
+	return &Server{Config: cfg, metrics: m}, nil
 }
 
 func (s *Server) Run(ctx context.Context) error {
 	log = log.With("listen", s.ListenAddr)
+
+	if s.metrics.Export {
+		go func() {
+			for {
+				if err := s.metrics.Serve(); err != nil {
+					log.Error("serving metrics failed", slog.Any("error", err))
+				}
+			}
+		}()
+	}
 
 	if err := s.Listen(); err != nil {
 		return err
@@ -134,6 +152,7 @@ func (s *Server) Recieve(conn net.Conn) (string, error) {
 	buf := make([]byte, 1024)
 	l, err := conn.Read(buf)
 	if err != nil {
+		receiveErrorTotal.Inc()
 		if errors.Is(err, io.EOF) {
 			return "", errors.New("got EOF")
 		}
@@ -144,11 +163,15 @@ func (s *Server) Recieve(conn net.Conn) (string, error) {
 		return "", fmt.Errorf("failed to read the response: %w", err)
 	}
 
+	receiveSuccessTotal.Inc()
 	return string(buf[:l]), nil
-
 }
 
 func (s *Server) Send(msg string, conn net.Conn) error {
-	_, err := conn.Write([]byte(msg))
-	return err
+	if _, err := conn.Write([]byte(msg)); err != nil {
+		sendErrorTotal.Inc()
+		return err
+	}
+	sendSuccessTotal.Inc()
+	return nil
 }

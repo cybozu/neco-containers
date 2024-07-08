@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/neco-containers/tcp-keepalive/internal/metrics"
 	"github.com/neco-containers/tcp-keepalive/internal/server"
 
 	"github.com/spf13/cobra"
@@ -20,18 +21,21 @@ var serverCmd = &cobra.Command{
 }
 
 var serverCfg = &server.Config{}
+var serverMetricsCfg = &metrics.Config{}
 
 func init() {
 	rootCmd.AddCommand(serverCmd)
 
 	serverCmd.Flags().StringVarP(&serverCfg.ListenAddr, "listen", "l", "127.0.0.1:8000", "Listen address and port")
+	serverCmd.Flags().BoolVarP(&serverMetricsCfg.Export, "metrics", "m", true, "Enable metrics")
+	serverCmd.Flags().StringVarP(&serverMetricsCfg.AddrPort, "metrics-server", "a", "0.0.0.0:8080", "Metrics server address and port")
 }
 
 func runServer(cmd *cobra.Command, args []string) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	s, err := server.NewServer(serverCfg)
+	s, err := server.NewServer(serverCfg, serverMetricsCfg)
 	if err != nil {
 		log.Error("failed to create server", slog.Any("error", err))
 		return

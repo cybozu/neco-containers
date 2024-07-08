@@ -23,6 +23,16 @@ Flags:
   -l, --listen string   Listen address and port (default "127.0.0.1:8000")
 ```
 
+### Metrics
+
+```
+receive_total{role="server",result="error"}
+receive_total{role="server",result="success"}
+
+send_total{role="server",result="error"}
+send_total{role="server",result="success"}
+```
+
 Client
 -----
 
@@ -40,4 +50,23 @@ Flags:
   -r, --retry-interval duration   Connect retry interval (default 1s)
   -s, --server string             server address (default "127.0.0.1:8000")
   -t, --timeout duration          Deadline to receive a keepalive message (default 15s)
+```
+
+### Metrics
+
+```
+connection{role="client",state="closed"}
+connection{role="client",state="established"}
+connection{role="client",state="unestablished"}
+
+receive_total{role="client",result="error"}
+receive_total{role="client",result="success"}
+receive_total{role="client",result="timeout"}
+
+retry_count{role="client"}
+retry_total{role="client"}
+
+send_total{role="client",result="error"}
+send_total{role="client",result="success"}
+send_total{role="client",result="timeout"}
 ```
