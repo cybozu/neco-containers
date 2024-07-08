@@ -18,8 +18,8 @@ RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
 
 # Install tini
 ARG TINI_VERSION=0.19.0
-RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-static
-RUN chmod +x /usr/local/bin/tini-static
+RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-static && \
+    chmod +x /usr/local/bin/tini-static
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.21-jammy AS argocd-build
@@ -62,7 +62,7 @@ RUN groupadd -g 10000 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git gpg gpg-agent openssh-client && \
+    apt-get install -y --no-install-recommends git git-lfs gpg gpg-agent openssh-client connect-proxy && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
@@ -78,12 +78,12 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
 
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-cmp-server
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-application-controller
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-dex
-RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications
+RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-cmp-server && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-application-controller && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-dex && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications
 
 USER 10000:10000
 
