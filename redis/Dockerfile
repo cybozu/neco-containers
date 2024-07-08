@@ -1,11 +1,11 @@
 # Redis container
-# Refer to this Dockerfile: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
+# Refer to this Dockerfile: https://github.com/redis/docker-library-redis/blob/master/7.0/debian/Dockerfile
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 as build
 
-ARG GOSU_VERSION=1.16
-ARG REDIS_VERSION=7.0.14
+ARG GOSU_VERSION=1.17
+ARG REDIS_VERSION=7.0.15
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \
@@ -28,8 +28,10 @@ RUN wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
     \
 # https://github.com/jemalloc/jemalloc/issues/467 -- we need to patch the "./configure" for the bundled jemalloc to match how Debian compiles, for compatibility
 # (also, we do cross-builds, so we need to embed the appropriate "--build=xxx" values to that "./configure" invocation)
+    && extraJemallocConfigureFlags="--build=x86_64-linux-gnu" \
 # https://salsa.debian.org/debian/jemalloc/-/blob/c0a88c37a551be7d12e4863435365c9a6a51525f/debian/rules#L8-23
-    && sed -ri 's!cd jemalloc && ./configure !&'"--build=x86_64-linux-gnu --with-lg-page=12 --with-lg-hugepage=21"' !' /usr/src/redis/deps/Makefile \
+    && extraJemallocConfigureFlags="$extraJemallocConfigureFlags --with-lg-hugepage=21" \
+    && sed -ri 's!cd jemalloc && ./configure !&'"$extraJemallocConfigureFlags"' !' /usr/src/redis/deps/Makefile \
     \
     && BUILD_TLS=yes make -C /usr/src/redis PREFIX=/usr/local/redis -j "$(nproc)" all \
     && BUILD_TLS=yes make -C /usr/src/redis PREFIX=/usr/local/redis install
@@ -53,4 +55,6 @@ ENV PATH=/usr/local/redis/bin:"$PATH"
 EXPOSE 6379
 USER 10000:10000
 
+# the line below is different from upstream Dockerfile
+# if you want to use this outside of Neco, you may need to edit ENTRYPOINT and COMMAND apporpriately
 ENTRYPOINT ["redis-server"]
