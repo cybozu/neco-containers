@@ -7,7 +7,6 @@ import (
 	"io"
 	"log/slog"
 	"net"
-	"net/netip"
 	"os"
 	"time"
 )
@@ -77,11 +76,11 @@ func (c *Client) run(ctx context.Context) error {
 }
 
 func (c *Client) Dial() error {
-	ap, err := netip.ParseAddrPort(c.ServerAddr)
+	ap, err := net.ResolveTCPAddr("tcp", c.ServerAddr)
 	if err != nil {
 		return err
 	}
-	c.conn, err = net.DialTCP("tcp", nil, net.TCPAddrFromAddrPort(ap))
+	c.conn, err = net.DialTCP("tcp", nil, ap)
 	return err
 }
 
