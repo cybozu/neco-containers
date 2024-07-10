@@ -1,7 +1,7 @@
 package server
 
 import (
-	"net/netip"
+	"net"
 )
 
 type Config struct {
@@ -9,7 +9,7 @@ type Config struct {
 }
 
 func (c *Config) Validate() error {
-	if _, err := netip.ParseAddrPort(c.ListenAddr); err != nil {
+	if _, err := net.ResolveTCPAddr("tcp", c.ListenAddr); err != nil {
 		return err
 	}
 	return nil

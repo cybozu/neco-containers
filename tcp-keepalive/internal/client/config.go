@@ -1,7 +1,7 @@
 package client
 
 import (
-	"net/netip"
+	"net"
 	"time"
 )
 
@@ -14,7 +14,7 @@ type Config struct {
 }
 
 func (c *Config) Validate() error {
-	if _, err := netip.ParseAddrPort(c.ServerAddr); err != nil {
+	if _, err := net.ResolveTCPAddr("tcp", c.ServerAddr); err != nil {
 		return err
 	}
 	return nil
