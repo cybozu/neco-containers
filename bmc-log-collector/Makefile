@@ -16,6 +16,7 @@ check-generate:
 
 .PHONY: test
 test:
+	rm -f pointers/*
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"

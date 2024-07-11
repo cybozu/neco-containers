@@ -2,73 +2,78 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
+
+	"github.com/cybozu-go/log"
 )
 
-// コレクターを起動
-func collector(n int) {
-	fmt.Printf("Log Collector no-%d: Started\n", n)
+// queue and mutex
+var queue []Machine
+var wg sync.WaitGroup
+var mu sync.Mutex
+
+// Get queue
+func getQueue() Machine {
+	var v Machine
 	for {
+		fmt.Println("read que")
 		if len(queue) == 0 {
 			time.Sleep(1 * time.Second)
 		} else {
-			v := queue[0]
+			mu.Lock()
+			v = queue[0]
 			queue = queue[1:]
-			time.Sleep(2 * time.Second)
-			fmt.Println(n, v.SerialNo)
+			mu.Unlock()
+			break
+		}
+	}
+	return v
+}
+
+// Put queue
+func putQueue(m []Machine) {
+	mu.Lock()
+	queue = m
+	mu.Unlock()
+}
+
+// Log collector
+func collector(n int, url string) {
+	wg.Add(1)
+	defer wg.Done()
+	for {
+		v := getQueue()
+		url := "https://" + v.BmcIP + url
+		b, err := bmcClient(url)
+		if err != nil {
+			log.Error("Error", nil)
+		}
+		printLogs(b, v)
+		if n == 0 {
+			return
 		}
 	}
 }
 
-// ターゲットを取得定期に取得する
-func targetReader() Machines {
-	fmt.Println("コンフィグマップから取得する部分に相当")
-	fmt.Println("Read iDRAC server list")
-	var m Machines
-	for i := 1; i < 100; i++ {
-		mx := Machine{
-			Hostname:  fmt.Sprintf("test%d", i),
-			BmcIPadr:  fmt.Sprintf("192.168.0.%d", i),
-			NodeIPadr: fmt.Sprintf("172.16.0.%d", i),
-			SerialNo:  fmt.Sprintf("ABCDE-%d", i),
-		}
-		m.machine = append(m.machine, mx)
-	}
-	return m
-}
-
-var queue []Machine
-
-// メイン
 func main() {
 
-	// パラメータ取得
-	// コレクターの起動数取得
-	wn := 3
-
-	// メインとコレクター（ワーカー）の間を繋ぐキューを作成
+	var redfish_url = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 	queue = make([]Machine, 0)
 
-	// コレクター（ワーカー）を起動
+	// Start iDRAC log collector
+	wn := 3 // 起動数
 	for i := 0; i < wn; i++ {
-		go collector(i)
+		go collector(i, redfish_url) // ログコレクター起動
 	}
 
-	// メインループ
+	// Main loop
 	for {
-
-		// CSVを読んで、構造体へセットする
-		list, err := MachineListReader("testdata/bmc-list.csv")
-		fmt.Println("list=", list, "err=", err)
-
-		// ターゲット読込(テスト用）
-		machineList := targetReader()
-
-		// キューへ積む
-		queue = machineList.machine
-
-		// 待機
-		fmt.Println("スリープ")
-		time.Sleep(120 * time.Second)
+		machineList, err := machineListReader("conf/serverlist.csv")
+		if err != nil {
+			log.Error("cat not read server list", nil)
+		}
+		putQueue(machineList.machine)
+		time.Sleep(20 * time.Second)
 	}
 }
