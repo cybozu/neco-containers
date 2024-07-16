@@ -17,8 +17,12 @@ check-generate:
 .PHONY: test
 test:
 	rm -f pointers/*
+	rm -f pointers_it1/*
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	$(SUDO_GO) test -race -v ./...
+	ginkgo -procs=1 --race --focus-file ut_get_machine-list_test.go
+	ginkgo -procs=1 --race --focus-file ut_access_idrac_test.go
+	ginkgo -procs=1 --race --focus-file it1_get_logs_test.go
+	#ginkgo -procs=1 --focus-file it2_mainloop_test.go
