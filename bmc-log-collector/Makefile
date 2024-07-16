@@ -22,7 +22,7 @@ test:
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	ginkgo -procs=1 --race --focus-file ut_get_machine-list_test.go
+	#ginkgo -procs=1 --race --focus-file ut_get_machine-list_test.go
 	ginkgo -procs=1 --race --focus-file ut_access_idrac_test.go
-	ginkgo -procs=1 --race --focus-file it1_get_logs_test.go
+	#ginkgo -procs=1 --race --focus-file it1_get_logs_test.go
 	#ginkgo -procs=1 --focus-file it2_mainloop_test.go

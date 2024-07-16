@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -12,9 +13,11 @@ import (
 Test the behavior of bmcClient() accessing iDRAC internal web services
 */
 var _ = Describe("Access BMC", Ordered, func() {
+	var mu sync.Mutex
+
 	BeforeAll(func() {
 		fmt.Println("*** Start iDRAC Simulator UT-1")
-		start_iDRAC_Simulator_ut()
+		start_iDRAC_Simulator_ut(&mu)
 		time.Sleep(10 * time.Second)
 	})
 	BeforeEach(func() {
@@ -22,7 +25,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 		os.Setenv("BMC_PASS", "pass")
 	})
 
-	var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/EntriesUT1"
+	var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 
 	Context("Access iDRAC server to get SEL", func() {
 		It("Normal access", func() {
@@ -32,7 +35,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 		})
 
 		It("Abnormal access, not existing web server", func() {
-			test_url := "https://127.0.0.1:8090/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/EntriesUT1"
+			test_url := "https://127.0.0.1:8090/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 			byteJSON, err := bmcClient(test_url)
 			Expect(err).To(HaveOccurred())
 			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.1:8090: connect: connection refused", test_url)
@@ -41,7 +44,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 		})
 
 		It("Abnormal access, wrong path", func() {
-			wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesXX"
+			wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
 			_, err := bmcClient(wrong_url)
 			Expect(err).To(HaveOccurred())
 		})
