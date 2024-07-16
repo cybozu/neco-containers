@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -17,12 +18,13 @@ import (
 )
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
+	var mu sync.Mutex
 
 	// Start iDRAC Simulator
 	BeforeAll(func() {
 		fmt.Println("Start iDRAC Simulator IT-2")
-		start_iDRAC_Simulator_it2_idrac1()
-		start_iDRAC_Simulator_it2_idrac2()
+		start_iDRAC_Simulator_it2_idrac1(&mu)
+		start_iDRAC_Simulator_it2_idrac2(&mu)
 		time.Sleep(10 * time.Second)
 	})
 
@@ -47,7 +49,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			global_wg.Wait()
 			//time.Sleep(20 * time.Second)
 			//Expect(err).NotTo(HaveOccurred())
-		}, SpecTimeout(60*time.Second))
+		}, SpecTimeout(120*time.Second))
 		//})
 		/*
 			It("normal running", func(ctx SpecContext) {

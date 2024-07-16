@@ -41,6 +41,7 @@ func machineListReader(filename string) (Machines, error) {
 
 // Get from Redfish on iDRAC webserver
 func bmcClient(url string) ([]byte, error) {
+	fmt.Println("================ server ", url)
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 	}
