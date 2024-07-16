@@ -15,9 +15,6 @@ import (
 	"time"
 )
 
-// Log latest pointer folder
-var ptrDbDir string = "pointers"
-
 // Get iDRAC server list from CSV file
 func machineListReader(filename string) (Machines, error) {
 	var mlist Machines
@@ -50,31 +47,31 @@ func bmcClient(url string) ([]byte, error) {
 	client := &http.Client{Timeout: time.Duration(10) * time.Second, Transport: tr}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		slog.Error("failed to setup HTTP client")
+		//slog.Error("failed to setup HTTP client")
 		return nil, err
 	}
 	req.SetBasicAuth(os.Getenv("BMC_USER"), os.Getenv("BMC_PASS"))
 	resp, err := client.Do(req)
 	if err != nil {
-		slog.Error("failed to iDRAC accessing")
+		//slog.Error("failed to iDRAC accessing")
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	fmt.Println("HTTP status code ", resp.StatusCode)
+	//fmt.Println("HTTP status code ", resp.StatusCode)
 	if resp.StatusCode == 401 {
-		slog.Error("unauthorized for iDRAC accessing")
+		//slog.Error("unauthorized for iDRAC accessing")
 		err := errors.New("unauthorized")
 		return nil, err
 	} else if resp.StatusCode != 200 {
-		slog.Error("failed to access web-page in iDRAC accessing")
+		//slog.Error("failed to access web-page in iDRAC accessing")
 		err := errors.New("not found contents")
 		return nil, err
 	}
 
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("read error web-pages")
+		//slog.Error("read error web-pages")
 		err := errors.New("can not read contents")
 		return nil, err
 	}
@@ -82,14 +79,17 @@ func bmcClient(url string) ([]byte, error) {
 }
 
 // Print iDRAC log without duplicated
-func printLogs(byteJSON []byte, server Machine) {
+func printLogs(byteJSON []byte, server Machine, ptrDir string) {
+
+	// ポインタDIRは環境変数
+
 	var members Redfish
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
 		slog.Error("failed to convert struct from JSON")
 		return
 	}
 
-	lastPtr, err := readLastPointer(server.Serial)
+	lastPtr, err := readLastPointer(server.Serial, ptrDir)
 	if err != nil {
 		slog.Error("failed to get last log pointer")
 		return
@@ -106,11 +106,16 @@ func printLogs(byteJSON []byte, server Machine) {
 		members.Sel[i].Serial = server.Serial
 		members.Sel[i].BmcIP = server.BmcIP
 		members.Sel[i].NodeIP = server.NodeIP
-		// 暫定 IDの大小で比較して出力 クリアでId=1に戻った処理の追加
-		// 最後のポインタ以降であればログ出力
+
+		// IDの大小で比較して出力 クリアでId=1に戻った時はシリアル時刻の大小で比較
 		if lastPtr.LastReadId < lastId {
 			v, _ := json.Marshal(members.Sel[i])
 			fmt.Println(string(v))
+		} else if lastPtr.LastReadId > lastId {
+			if lastPtr.LastReadTime < createUnixtime {
+				v, _ := json.Marshal(members.Sel[i])
+				fmt.Println(string(v))
+			}
 		}
 	}
 
@@ -118,20 +123,21 @@ func printLogs(byteJSON []byte, server Machine) {
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,
-	})
+	}, ptrDir)
 	if err != nil {
-		slog.Error("failed to update log pointer")
+		//slog.Error("failed to update log pointer")
 		return
 	}
 }
 
-func readLastPointer(serial string) (LastPointer, error) {
+// 排他制御を入れること！！
+func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
-	f, err := os.Open(path.Join(ptrDbDir, serial))
+	f, err := os.Open(path.Join(ptrDir, serial))
 	if errors.Is(err, os.ErrNotExist) {
-		f, err = os.Create(path.Join(ptrDbDir, serial))
+		f, err = os.Create(path.Join(ptrDir, serial))
 		if err != nil {
-			slog.Error("failed to create pointer file")
+			//slog.Error("failed to create pointer file")
 			return lptr, err
 		}
 		lptr := LastPointer{
@@ -142,13 +148,13 @@ func readLastPointer(serial string) (LastPointer, error) {
 		f.Close()
 		return lptr, err
 	} else if err != nil {
-		slog.Error("failed to open pointer file")
+		//slog.Error("failed to open pointer file")
 		return lptr, err
 	}
 	defer f.Close()
 	st, err := f.Stat()
 	if err != nil {
-		slog.Error("failed to get the status of the file")
+		//slog.Error("failed to get the status of the file")
 		return lptr, err
 	}
 	if st.Size() == 0 {
@@ -156,31 +162,32 @@ func readLastPointer(serial string) (LastPointer, error) {
 	}
 	byteJSON, err := io.ReadAll(f)
 	if err != nil {
-		slog.Error("failed to read pointer file")
+		//slog.Error("failed to read pointer file")
 		return lptr, err
 	}
 	if json.Unmarshal(byteJSON, &lptr) != nil {
-		slog.Error("failed to convert the struct from JSON")
+		//slog.Error("failed to convert the struct from JSON")
 		return lptr, err
 	}
 	return lptr, err
 }
 
-func updateLastPointer(lptr LastPointer) error {
-	file, err := os.Create(path.Join(ptrDbDir, lptr.Serial))
+func updateLastPointer(lptr LastPointer, ptrDir string) error {
+	file, err := os.Create(path.Join(ptrDir, lptr.Serial))
 	if err != nil {
-		slog.Error("failed to open pointer file")
+		//slog.Error("failed to open pointer file")
 		return err
 	}
 	defer file.Close()
 	byteJSON, err := json.Marshal(lptr)
 	if err != nil {
-		slog.Error("failed to convert JSON")
+		//slog.Error("failed to convert JSON")
 		return err
 	}
 	n, err := file.WriteString(string(byteJSON))
-	if err != nil || n == 0 {
-		slog.Error("failed to save the log pointer")
+	if err != nil { //|| n == 0 {
+		//slog.Error("failed to save the log pointer")
+		fmt.Println("wrote bytes=", n)
 		return err
 	}
 	return nil
