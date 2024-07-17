@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG MEMCACHED_EXPORTER_VERSION=0.14.2
+ARG MEMCACHED_EXPORTER_VERSION=0.14.4
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
