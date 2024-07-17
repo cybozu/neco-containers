@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG PROMETHEUS_ADAPTER_VERSION=0.11.2
+ARG PROMETHEUS_ADAPTER_VERSION=0.12.0
 
 RUN curl -fsSL -o pa.tar.gz https://github.com/kubernetes-sigs/prometheus-adapter/archive/v${PROMETHEUS_ADAPTER_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f pa.tar.gz \
