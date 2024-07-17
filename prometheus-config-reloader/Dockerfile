@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG PROMETHEUS_OPERATOR_VERSION=0.72.0
+ARG PROMETHEUS_OPERATOR_VERSION=0.75.1
 
 RUN curl -fsSL -o prometheus-operator.tar.gz "https://github.com/prometheus-operator/prometheus-operator/archive/v${PROMETHEUS_OPERATOR_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f prometheus-operator.tar.gz \

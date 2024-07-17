@@ -725,7 +725,7 @@ This is used by victoria-metrics operator too.
 
 1. Check the latest release of `prometheus-operator`
 2. Update version variable in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files.
+3. Update `TAG` file.
 
 ## promtail
 
