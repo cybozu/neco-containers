@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG LOKI_VERSION=2.9.5
+ARG LOKI_VERSION=2.9.9
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
