@@ -5,7 +5,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"os"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -13,11 +13,15 @@ import (
 Test the behavior of bmcClient() accessing iDRAC internal web services
 */
 var _ = Describe("Access BMC", Ordered, func() {
-	var mu sync.Mutex
-
+	//var mu sync.Mutex
 	BeforeAll(func() {
-		fmt.Println("*** Start iDRAC Simulator UT-1")
-		start_iDRAC_Simulator_ut(&mu)
+		fmt.Println("*** Start iDRAC Stub")
+		bm := bmcMock{
+			host:   "127.0.0.1:8080",
+			resDir: "testdata/redfish_response_1",
+			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
+		}
+		bm.startMock()
 		time.Sleep(10 * time.Second)
 	})
 	BeforeEach(func() {
@@ -35,10 +39,10 @@ var _ = Describe("Access BMC", Ordered, func() {
 		})
 
 		It("Abnormal access, not existing web server", func() {
-			test_url := "https://127.0.0.1:8090/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+			test_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 			byteJSON, err := bmcClient(test_url)
 			Expect(err).To(HaveOccurred())
-			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.1:8090: connect: connection refused", test_url)
+			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", test_url)
 			Expect(err.Error()).To(Equal(errmsg))
 			Expect(len(byteJSON)).To(Equal(0))
 		})

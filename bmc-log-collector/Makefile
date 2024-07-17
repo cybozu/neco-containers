@@ -16,13 +16,14 @@ check-generate:
 
 .PHONY: test
 test:
-	rm -f pointers/*
-	rm -f pointers_it1/*
+	rm -f testdata/pointers/*
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	#ginkgo -procs=1 --race --focus-file ut_get_machine-list_test.go
-	ginkgo -procs=1 --race --focus-file ut_access_idrac_test.go
-	#ginkgo -procs=1 --race --focus-file it1_get_logs_test.go
-	#ginkgo -procs=1 --focus-file it2_mainloop_test.go
+	ginkgo -v -procs=1 --race --focus-file queue_test.go
+	ginkgo -v -procs=1 --race --focus-file log-collector1_test.go
+	ginkgo -v -procs=1 --race --focus-file log-collector2_test.go
+	ginkgo -v -procs=1 --race --focus-file machines-list_test.go
+	ginkgo -v -procs=1 --race --focus-file bmc-http-client_test.go
+	ginkgo -v -procs=1 --race --focus-file log-pointer_test.go
