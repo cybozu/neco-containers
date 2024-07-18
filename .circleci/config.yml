@@ -418,11 +418,6 @@ workflows:
           name: build-ipfs-cluster
           container-image: ipfs-cluster
       - build:
-          name: build-kube-storage-version-migrator
-          container-image: storage-version-migration
-          dir: kube-storage-version-migrator
-          targets: initializer migrator trigger
-      - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
       - build:
