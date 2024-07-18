@@ -725,7 +725,7 @@ This is used by victoria-metrics operator too.
 
 1. Check the latest release of `prometheus-operator`
 2. Update version variable in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files.
+3. Update `TAG` file.
 
 ## promtail
 
@@ -748,7 +748,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/prometheus/pushgateway/blob/vX.Y.Z/Dockerfile
 3. Update version variables in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` file.
 
 ## redis
 
@@ -969,4 +969,4 @@ Only the base image and module dependency should be updated.
 1. Check the [release page](https://github.com/VictoriaMetrics/operator/releases).
 2. Check upstream Makefile and Dockerfile, and update our Dockerfile if needed.
 3. Update `VICTORIAMETRICS_OPERATOR_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` file.

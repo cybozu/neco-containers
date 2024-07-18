@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG LOKI_VERSION=2.9.5
+ARG LOKI_VERSION=2.9.9
 ARG SYSTEMD_VERSION=252
 
 WORKDIR /work

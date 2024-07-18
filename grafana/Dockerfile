@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG GRAFANA_VERSION=10.4.1
+ARG GRAFANA_VERSION=10.4.5
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 

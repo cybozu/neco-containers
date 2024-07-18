@@ -2,7 +2,7 @@
 
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG OTELCOL_VERSION=0.98.0
+ARG OTELCOL_VERSION=0.105.0
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in
