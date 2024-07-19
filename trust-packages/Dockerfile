@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG TRUST_MANAGER_VERSION=0.9.2
+ARG TRUST_MANAGER_VERSION=0.12.0
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/cert-manager/trust-manager/archive/v${TRUST_MANAGER_VERSION}.tar.gz | \
