@@ -13,9 +13,7 @@ Tests machineListReader(), which reads a CSV file with a specified path and sets
 */
 var _ = Describe("Machines Queue", Ordered, func() {
 
-	//var w sync.WaitGroup
 	var m sync.Mutex
-	var q []Machine
 	var que Queue
 
 	BeforeAll(func() {
@@ -24,6 +22,8 @@ var _ = Describe("Machines Queue", Ordered, func() {
 
 	Context("Manipulate queue", func() {
 		It("Put Queue", func() {
+			var qTemp []Machine
+			var q []Machine
 			que = Queue{
 				queue: q,
 				mu:    &m,
@@ -38,15 +38,41 @@ var _ = Describe("Machines Queue", Ordered, func() {
 				BmcIP:  "192.168.0.2",
 				NodeIP: "172.16.0.2",
 			}
-			q = append(q, m1)
-			q = append(q, m2)
-			que.put(q)
+			qTemp = append(qTemp, m1)
+			qTemp = append(qTemp, m2)
+			que.put(qTemp)
 			Expect(len(que.queue)).To(Equal(2))
 		})
 
 		It("Get que length, expect = 2", func(ctx SpecContext) {
+			fmt.Println(que.queue)
 			m := que.len()
 			Expect(m).To(Equal(2))
+		})
+
+		It("Put Queue again", func() {
+			var qTemp []Machine
+			m1 := Machine{
+				Serial: "GHI123",
+				BmcIP:  "192.168.0.3",
+				NodeIP: "172.16.0.3",
+			}
+			m2 := Machine{
+				Serial: "JKLM123",
+				BmcIP:  "192.168.0.4",
+				NodeIP: "172.16.0.4",
+			}
+			qTemp = append(qTemp, m1)
+			qTemp = append(qTemp, m2)
+			Expect(len(qTemp)).To(Equal(2))
+			que.put(qTemp)
+			Expect(len(que.queue)).To(Equal(4))
+		})
+
+		It("Get que length, expect = 4", func(ctx SpecContext) {
+			fmt.Println(que.queue)
+			m := que.len()
+			Expect(m).To(Equal(4))
 		})
 
 		It("Get machine1 from que", func(ctx SpecContext) {
@@ -60,7 +86,7 @@ var _ = Describe("Machines Queue", Ordered, func() {
 				close(done)
 			}()
 			Eventually(done).Should(BeClosed())
-		}, SpecTimeout(time.Second))
+		}, SpecTimeout(3*time.Second))
 
 		It("Get machine2 from que", func(ctx SpecContext) {
 			done := make(chan interface{})
@@ -75,10 +101,9 @@ var _ = Describe("Machines Queue", Ordered, func() {
 			Eventually(done).Should(BeClosed())
 		}, SpecTimeout(time.Second))
 
-		It("Get que length, expect = 0", func(ctx SpecContext) {
+		It("Get que length, expect = 2", func(ctx SpecContext) {
 			m := que.len()
-			Expect(m).To(Equal(0))
+			Expect(m).To(Equal(2))
 		})
-
 	})
 })

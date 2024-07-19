@@ -6,9 +6,14 @@ package main
 */
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	//"io"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -26,6 +31,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
+		os.Remove("testdata/pointers/683FPQ3")
+		os.Remove("testdata/output/683FPQ3")
 		ctx, cancel := context.WithCancel(context.Background())
 		mq := Queue{
 			queue: q,
@@ -43,11 +50,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			que:          mq, // コレクターのキュー
 			interval:     20, // 待機秒数
 			wg:           &wg,
+			testMode:     true,
+			testOut:      "testdata/output/",
 		}
 		GinkgoWriter.Println("Start iDRAC Stub")
 		bm := bmcMock{
 			host:   "127.0.0.1:9080",
-			resDir: "testdata/redfish_response_1",
+			resDir: "testdata/redfish_response",
 			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
 		}
 		bm.startMock()
@@ -62,6 +71,11 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	Context("single worker", func() {
 		var machinesList Machines
 		var err error
+		var rslt, rslt2 SystemEventLog
+		var serial1 string = "683FPQ3"
+		var file *os.File
+		var reader *bufio.Reader
+
 		It("get machine list", func() {
 			machinesList, err = machineListReader(lc.machinesPath)
 			Expect(err).NotTo(HaveOccurred())
@@ -88,11 +102,37 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(l).To(Equal(1))
 		})
 
-		It("output SEL", func() {
+		It("Check output SEL 1st", func() {
 			go lc.worker(1)
-			time.Sleep(30 * time.Second)
-			// テスト確認方法？
+			time.Sleep(3 * time.Second)
+			for {
+				file, err = os.Open(path.Join(lc.testOut, serial1))
+				if errors.Is(err, os.ErrNotExist) {
+					time.Sleep(3 * time.Second)
+					continue
+				}
+				reader = bufio.NewReaderSize(file, 4096)
+				stringJSON, _ := reader.ReadString('\n')
+				json.Unmarshal([]byte(stringJSON), &rslt)
+				GinkgoWriter.Println("------ ", string(rslt.Serial))
+				GinkgoWriter.Println("------ ", string(rslt.Id))
+				break
+			}
+			Expect(rslt.Serial).To(Equal(serial1))
+			Expect(rslt.Id).To(Equal("1"))
 		})
+
+		It("Check output SEL 2nd", func() {
+			stringJSON, _ := reader.ReadString('\n')
+			fmt.Println("*3 stringJSON=", stringJSON)
+			json.Unmarshal([]byte(stringJSON), &rslt2)
+			GinkgoWriter.Println("------ ", string(rslt2.Serial))
+			GinkgoWriter.Println("------ ", string(rslt2.Id))
+			Expect(rslt2.Serial).To(Equal(serial1))
+			Expect(rslt2.Id).To(Equal("2"))
+		})
+		file.Close()
+
 	})
 	AfterAll(func() {
 		fmt.Println("shutdown workers")
