@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG TRUST_MANAGER_VERSION=0.9.2
+ARG TRUST_MANAGER_VERSION=0.11.1
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/cert-manager/trust-manager/archive/v${TRUST_MANAGER_VERSION}.tar.gz | \
@@ -14,7 +14,7 @@ RUN CGO_ENABLED=0 go build -o copyandmaybepause main.go
 RUN CGO_ENABLED=0 go install github.com/cert-manager/trust-manager/cmd/validate-trust-package@main
 
 # Stage2: copy ca-certificates from ubuntu
-FROM quay.io/cybozu/ubuntu:22.04 as debbase
+FROM ghcr.io/cybozu/ubuntu:22.04 as debbase
 
 ARG EXPECTED_VERSION=20230311ubuntu0.22.04.1
 ARG VERSION_SUFFIX=.0
