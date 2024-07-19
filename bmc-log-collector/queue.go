@@ -34,7 +34,9 @@ func (q *Queue) get() Machine {
 // Put queue
 func (q *Queue) put(m []Machine) {
 	q.mu.Lock()
-	q.queue = m
+	for i := 0; i < len(m); i++ {
+		q.queue = append(q.queue, m[i])
+	}
 	q.mu.Unlock()
 }
 

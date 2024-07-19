@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"os"
+	"path"
 	"strconv"
 	"sync"
 	"time"
@@ -54,11 +56,13 @@ type logCollector struct {
 	que          Queue           // マシンのキュー
 	interval     time.Duration   // サイクル間の待機秒数
 	wg           *sync.WaitGroup // 待ち合わせ用
+	testMode     bool            // テストモード 出力をファイルへ出す
+	testOut      string          // テスト用出力先
 }
 
 func (c *logCollector) worker(n int) {
 
-	fmt.Printf("collector #%d Started\n", n)
+	slog.Info(fmt.Sprintf("log-collector %d started", n))
 
 	c.wg.Add(1)
 	defer c.wg.Done()
@@ -71,22 +75,17 @@ func (c *logCollector) worker(n int) {
 		default:
 			targetMachine := c.que.get()
 			slog.Debug(fmt.Sprintf("Worker %d", n))
-
-			// タイムアウトが必要
 			byteBuf, err := bmcClient("https://" + targetMachine.BmcIP + c.rfUrl)
 			if err != nil {
 				slog.Error("Error")
 			}
-			// unmarshal log record
-			// 下のレイヤーでプリントしないで、いったん、戻して、アウトプットしては？
-			// 画面に出すか？ファイルへ出すか選択できると良い？
-			printLogs(byteBuf, targetMachine, c.ptrDir)
-
+			c.printLogs(byteBuf, targetMachine, c.ptrDir)
+			time.Sleep(c.interval * time.Second)
 		}
 	}
 }
 
-func printLogs(byteJSON []byte, server Machine, ptrDir string) {
+func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string) {
 
 	var members Redfish
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -103,6 +102,7 @@ func printLogs(byteJSON []byte, server Machine, ptrDir string) {
 	layout := "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
+	var offset int
 
 	for i := len(members.Sel) - 1; i >= 0; i-- {
 		t, _ := time.Parse(layout, members.Sel[i].Create)
@@ -116,21 +116,40 @@ func printLogs(byteJSON []byte, server Machine, ptrDir string) {
 		if lastPtr.LastReadId < lastId {
 			v, _ := json.Marshal(members.Sel[i])
 			fmt.Println(string(v))
+			lastPtr.LastReadId = lastId
+			lastPtr.LastReadTime = createUnixtime
+			if c.testMode {
+				testPrint(c.testOut, server.Serial, string(v))
+			}
 		} else if lastPtr.LastReadId > lastId {
 			if lastPtr.LastReadTime < createUnixtime {
 				v, _ := json.Marshal(members.Sel[i])
 				fmt.Println(string(v))
+				lastPtr.LastReadId = lastId
+				lastPtr.LastReadTime = createUnixtime
+				if c.testMode {
+					testPrint(c.testOut, server.Serial, string(v))
+				}
 			}
 		}
+
 	}
 
 	err = updateLastPointer(LastPointer{
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,
+		OffSet:       offset,
 	}, ptrDir)
 	if err != nil {
-		//slog.Error("failed to update log pointer")
+		slog.Error("failed to update log pointer")
 		return
 	}
+}
+
+func testPrint(dir string, serial string, output string) {
+	fn := path.Join(dir, serial)
+	file, _ := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	defer file.Close()
+	file.WriteString(fmt.Sprintln(string(output)))
 }

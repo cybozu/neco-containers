@@ -18,7 +18,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 		fmt.Println("*** Start iDRAC Stub")
 		bm := bmcMock{
 			host:   "127.0.0.1:8080",
-			resDir: "testdata/redfish_response_1",
+			resDir: "testdata/redfish_response",
 			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
 		}
 		bm.startMock()

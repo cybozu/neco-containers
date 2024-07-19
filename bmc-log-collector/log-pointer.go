@@ -13,6 +13,7 @@ type LastPointer struct {
 	Serial       string
 	LastReadTime int64
 	LastReadId   int
+	OffSet       int
 }
 
 // 排他制御を入れること！！
@@ -29,6 +30,7 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 			Serial:       serial,
 			LastReadTime: 0,
 			LastReadId:   0,
+			OffSet:       0,
 		}
 		f.Close()
 		return lptr, err
