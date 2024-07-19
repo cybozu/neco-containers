@@ -25,5 +25,4 @@ test:
 	#ginkgo -v -procs=1 --race --focus-file bmc-http-client_test.go
 	#ginkgo -v -procs=1 --race --focus-file log-pointer_test.go
 	#ginkgo -v -procs=1 --race --focus-file log-collector1_test.go
-	#ginkgo -v -procs=1 --race --focus-file log-collector2_test.go
-	ginkgo -v -procs=1 --race --focus-file log-collector3_test.go
+	ginkgo -v -procs=1 --race --focus-file log-collector2_test.go
