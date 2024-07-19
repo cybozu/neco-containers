@@ -1,7 +1,7 @@
 # machines-endpoints container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 COPY . /work
 

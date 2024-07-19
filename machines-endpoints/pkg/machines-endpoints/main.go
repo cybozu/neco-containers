@@ -42,7 +42,7 @@ const (
 )
 
 const graphQLQuery = `
-query search() {
+query search {
   searchMachines(having: null, notHaving: null) {
     spec {
       ipv4
