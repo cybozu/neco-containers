@@ -11,7 +11,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	//"io"
 	"os"
 	"path"
 	"sync"
@@ -23,23 +22,19 @@ import (
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
-	// setup queue
-	var m sync.Mutex
 	var wg sync.WaitGroup
-	var q []Machine = make([]Machine, 0)
 	var lc logCollector
+	var mq MessageQueue
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/683FPQ3")
 		os.Remove("testdata/output/683FPQ3")
 		ctx, cancel := context.WithCancel(context.Background())
-		mq := Queue{
-			queue: q,
-			mu:    &m,
-		}
+		mq.queue = make(chan Machine, 1000)
+
 		lc = logCollector{
-			machinesPath: "testdata/configmap/bmc-list-it.csv",
+			machinesPath: "testdata/configmap/log-collector-test.csv",
 			miniNum:      1,  // 最小
 			maxiNum:      10, // 最大
 			currNum:      0,  // 決定コレクター数
@@ -84,12 +79,12 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		// ブロックする可能性があるので追加が必要
 		It("put que for worker", func(ctx SpecContext) {
 			fmt.Println(machinesList.machine)
-			lc.que.put(machinesList.machine)
+			lc.que.put3(machinesList.machine)
 		}, SpecTimeout(time.Second))
 
 		// Start log collector
 		It("get SEL by bmcClient", func() {
-			v := lc.que.get()
+			v := lc.que.get2()
 			byteData, err := bmcClient("https://" + v.BmcIP + lc.rfUrl)
 			GinkgoWriter.Println("got log =", string(byteData))
 			Expect(err).NotTo(HaveOccurred())
@@ -97,8 +92,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 		It("put machine list to queue again for test", func() {
 			GinkgoWriter.Println("Put que ==", machinesList.machine)
-			lc.que.put(machinesList.machine)
-			l := lc.que.len()
+			lc.que.put3(machinesList.machine)
+			l := lc.que.len2()
 			Expect(l).To(Equal(1))
 		})
 

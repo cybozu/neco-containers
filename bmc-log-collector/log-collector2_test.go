@@ -23,11 +23,9 @@ import (
 
 var _ = Describe("Collecting by parallel workers", Ordered, func() {
 
-	// setup queue
-	var m sync.Mutex
 	var wg sync.WaitGroup
-	var q []Machine = make([]Machine, 0)
 	var lc logCollector
+	var mq MessageQueue
 
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/683FPQ3")
@@ -40,10 +38,8 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 		os.Remove("testdata/output/J7N6MW3")
 
 		ctx, cancel := context.WithCancel(context.Background())
-		mq := Queue{
-			queue: q,
-			mu:    &m,
-		}
+		mq.queue = make(chan Machine, 1000)
+
 		lc = logCollector{
 			machinesPath: "testdata/configmap/serverlist2.csv",
 			miniNum:      1,  // 最小
@@ -110,20 +106,20 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 		// ３サイクル分の処理をキューに積む
 		It("put que 1", func(ctx SpecContext) {
 			GinkgoWriter.Println(machinesList.machine)
-			lc.que.put(machinesList.machine)
-			fmt.Println("que len = ", lc.que.len())
+			lc.que.put3(machinesList.machine)
+			fmt.Println("que len = ", lc.que.len2())
 		}, SpecTimeout(3*time.Second))
 
 		It("put que 2", func(ctx SpecContext) {
 			GinkgoWriter.Println(machinesList.machine)
-			lc.que.put(machinesList.machine)
-			fmt.Println("que len = ", lc.que.len())
+			lc.que.put3(machinesList.machine)
+			fmt.Println("que len = ", lc.que.len2())
 		}, SpecTimeout(3*time.Second))
 
 		It("put que 3", func(ctx SpecContext) {
 			GinkgoWriter.Println(machinesList.machine)
-			lc.que.put(machinesList.machine)
-			fmt.Println("que len = ", lc.que.len())
+			lc.que.put3(machinesList.machine)
+			fmt.Println("que len = ", lc.que.len2())
 		}, SpecTimeout(3*time.Second))
 
 		// 複数のワーカーを起動

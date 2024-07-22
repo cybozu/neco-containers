@@ -1,46 +1,32 @@
 package main
 
 import (
-	"sync"
-	"time"
+// "fmt"
 )
 
-type Queue struct {
-	queue []Machine
-	mu    *sync.Mutex
+type MessageQueue struct {
+	queue chan Machine
 }
 
 // Get queue
-func (q *Queue) get() Machine {
-	var m Machine
-	for {
-		q.mu.Lock()
-		l := len(q.queue)
-		q.mu.Unlock()
-
-		if l == 0 {
-			time.Sleep(1 * time.Second)
-		} else {
-			q.mu.Lock()
-			m = q.queue[0]
-			q.queue = q.queue[1:]
-			q.mu.Unlock()
-			break
-		}
-	}
-	return m
+func (q *MessageQueue) get2() Machine {
+	return <-q.queue
 }
 
-// Put queue
-func (q *Queue) put(m []Machine) {
-	q.mu.Lock()
+// Put
+//func (q *MessageQueue) put2(m Machine) {
+//	q.queue <- m
+//}
+
+// Put
+func (q *MessageQueue) put3(m []Machine) {
 	for i := 0; i < len(m); i++ {
-		q.queue = append(q.queue, m[i])
+		q.queue <- m[i]
 	}
-	q.mu.Unlock()
+	//q.queue <- m
 }
 
-// Put queue
-func (q *Queue) len() int {
+func (q *MessageQueue) len2() int {
 	return len(q.queue)
+
 }

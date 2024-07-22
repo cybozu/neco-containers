@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"path"
 )
@@ -13,7 +14,6 @@ type LastPointer struct {
 	Serial       string
 	LastReadTime int64
 	LastReadId   int
-	OffSet       int
 }
 
 // 排他制御を入れること！！
@@ -23,25 +23,24 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	if errors.Is(err, os.ErrNotExist) {
 		f, err = os.Create(path.Join(ptrDir, serial))
 		if err != nil {
-			//slog.Error("failed to create pointer file")
+			slog.Error(fmt.Sprintf("%s", err))
 			return lptr, err
 		}
 		lptr := LastPointer{
 			Serial:       serial,
 			LastReadTime: 0,
 			LastReadId:   0,
-			OffSet:       0,
 		}
 		f.Close()
 		return lptr, err
 	} else if err != nil {
-		//slog.Error("failed to open pointer file")
+		slog.Error(fmt.Sprintf("%s", err))
 		return lptr, err
 	}
 	defer f.Close()
 	st, err := f.Stat()
 	if err != nil {
-		//slog.Error("failed to get the status of the file")
+		slog.Error(fmt.Sprintf("%s", err))
 		return lptr, err
 	}
 	if st.Size() == 0 {
@@ -49,11 +48,11 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	}
 	byteJSON, err := io.ReadAll(f)
 	if err != nil {
-		//slog.Error("failed to read pointer file")
+		slog.Error(fmt.Sprintf("%s", err))
 		return lptr, err
 	}
 	if json.Unmarshal(byteJSON, &lptr) != nil {
-		//slog.Error("failed to convert the struct from JSON")
+		slog.Error(fmt.Sprintf("%s", err))
 		return lptr, err
 	}
 	return lptr, err
@@ -62,19 +61,18 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 func updateLastPointer(lptr LastPointer, ptrDir string) error {
 	file, err := os.Create(path.Join(ptrDir, lptr.Serial))
 	if err != nil {
-		//slog.Error("failed to open pointer file")
+		slog.Error(fmt.Sprintf("%s", err))
 		return err
 	}
 	defer file.Close()
 	byteJSON, err := json.Marshal(lptr)
 	if err != nil {
-		//slog.Error("failed to convert JSON")
+		slog.Error(fmt.Sprintf("%s", err))
 		return err
 	}
-	n, err := file.WriteString(string(byteJSON))
-	if err != nil { //|| n == 0 {
-		//slog.Error("failed to save the log pointer")
-		fmt.Println("wrote bytes=", n)
+	_, err = file.WriteString(string(byteJSON))
+	if err != nil {
+		slog.Error(fmt.Sprintf("%s", err))
 		return err
 	}
 	return nil
