@@ -20,6 +20,7 @@ test:
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
+	find / -name ginkgo -print
 	$(GINKGO) -v -procs=1 --race --focus-file queue_test.go
 	$(GINKGO) -v -procs=1 --race --focus-file machines-list_test.go
 	$(GINKGO) -v -procs=1 --race --focus-file bmc-http-client_test.go
