@@ -7,6 +7,7 @@ all: check-generate test
 setup:
 	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@latest
 	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install github.com/onsi/ginkgo/v2/ginkgo
 
 .PHONY: check-generate
 check-generate:
