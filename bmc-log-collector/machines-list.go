@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/csv"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -22,21 +23,27 @@ func machineListReader(filename string) (Machines, error) {
 	var mlist Machines
 	file, err := os.Open(filename)
 	if err != nil {
-		slog.Error("failed open file")
+		slog.Error(fmt.Sprintf("%s", err))
 		return mlist, err
 	}
 	defer file.Close()
 	csvReader := csv.NewReader(file)
 	for {
-		item, err := csvReader.Read()
+		items, err := csvReader.Read()
 		if err == io.EOF {
 			break
 		}
 		if err != nil {
-			slog.Error("failed read file")
+			slog.Error(fmt.Sprintf("%s", err))
 			return mlist, err
 		}
-		mlist.machine = append(mlist.machine, Machine{Serial: item[0], BmcIP: item[1], NodeIP: item[2]})
+		n := len(items)
+		if n != 3 {
+			err := fmt.Errorf("invalid machine list CSV, number of items = %d", len(items))
+			slog.Error(fmt.Sprintf("%s", err))
+			return mlist, err
+		}
+		mlist.machine = append(mlist.machine, Machine{Serial: items[0], BmcIP: items[1], NodeIP: items[2]})
 	}
 	return mlist, nil
 }

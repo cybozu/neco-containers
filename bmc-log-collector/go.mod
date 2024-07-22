@@ -3,7 +3,6 @@ module log-collector
 go 1.22.2
 
 require (
-	github.com/cybozu-go/log v1.7.0
 	github.com/onsi/ginkgo/v2 v2.19.0
 	github.com/onsi/gomega v1.33.1
 )

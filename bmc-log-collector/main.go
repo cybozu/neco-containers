@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/cybozu-go/log"
 	"log/slog"
 	"os"
 	"os/signal"
@@ -15,18 +14,11 @@ import (
 
 // start main-loop at main()
 func main() {
-	// setup queue
-	var m sync.Mutex
 	var wg sync.WaitGroup
-	var q []Machine = make([]Machine, 0)
-
-	// setup context
 	ctx, cancel := context.WithCancel(context.Background())
+	var mq MessageQueue
+	mq.queue = make(chan Machine, 1000)
 
-	mq := Queue{
-		queue: q,
-		mu:    &m,
-	}
 	lc := logCollector{
 		machinesPath: "testdata/conf/serverlist.csv",
 		miniNum:      1,  // 最小
@@ -45,13 +37,19 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	// check parameter
-	numCollector, _ := strconv.Atoi(os.Getenv("LOG_COLLECTOR"))
+	numCollector, err := strconv.Atoi(os.Getenv("LOG_COLLECTOR"))
+	if err != nil {
+		slog.Error(fmt.Sprintf("%s", err))
+		return
+	}
 
 	if numCollector < lc.miniNum {
-		slog.Error("less than minimum_collectors")
+		err := fmt.Errorf("less than minimum_collectors")
+		slog.Error(fmt.Sprintf("%s", err))
 		os.Exit(1)
 	} else if numCollector > lc.miniNum {
-		slog.Error("greater than the maximum number")
+		err := fmt.Errorf("greater than the maximum number")
+		slog.Error(fmt.Sprintf("%s", err))
 		os.Exit(1)
 	}
 	lc.currNum = numCollector
@@ -67,14 +65,15 @@ func main() {
 		select {
 		case <-sigs:
 			s := <-sigs
-			slog.Error(fmt.Sprintf("Got signal %s", s))
+			err := fmt.Errorf("got signal %s", s)
+			slog.Error(fmt.Sprintf("%s", err))
 			return
 		default:
 			machineList, err := machineListReader(lc.machinesPath)
 			if err != nil {
-				log.Error("cat not read server list", nil)
+				slog.Error(fmt.Sprintf("%s", err))
 			}
-			lc.que.put(machineList.machine)
+			lc.que.put3(machineList.machine)
 		}
 		// wait until next collecting cycle
 		time.Sleep(lc.interval * time.Second)

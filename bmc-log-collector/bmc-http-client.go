@@ -2,9 +2,10 @@ package main
 
 import (
 	"crypto/tls"
-	"errors"
+	//"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -22,32 +23,26 @@ func bmcClient(url string) ([]byte, error) {
 	client := &http.Client{Timeout: time.Duration(10) * time.Second, Transport: tr}
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		//slog.Error("failed to setup HTTP client")
+		slog.Error(fmt.Sprintf("%s", err))
 		return nil, err
 	}
 	req.SetBasicAuth(os.Getenv("BMC_USER"), os.Getenv("BMC_PASS"))
 	resp, err := client.Do(req)
 	if err != nil {
-		//slog.Error("failed to iDRAC accessing")
+		slog.Error(fmt.Sprintf("%s", err))
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	//fmt.Println("HTTP status code ", resp.StatusCode)
-	if resp.StatusCode == 401 {
-		//slog.Error("unauthorized for iDRAC accessing")
-		err := errors.New("unauthorized")
-		return nil, err
-	} else if resp.StatusCode != 200 {
-		//slog.Error("failed to access web-page in iDRAC accessing")
-		err := errors.New("not found contents")
+	if resp.StatusCode != 200 {
+		err := fmt.Errorf("HTTP status code = %d", resp.StatusCode)
+		slog.Error(fmt.Sprintf("%s", err))
 		return nil, err
 	}
 
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
-		//slog.Error("read error web-pages")
-		err := errors.New("can not read contents")
+		slog.Error(fmt.Sprintf("%s", err))
 		return nil, err
 	}
 	return buf, nil

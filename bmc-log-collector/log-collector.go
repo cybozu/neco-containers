@@ -53,7 +53,7 @@ type logCollector struct {
 	ptrDir       string          // ポインタ用ディレクトリ
 	ctx          context.Context // コンテキスト
 	cancel       context.CancelFunc
-	que          Queue           // マシンのキュー
+	que          MessageQueue    // マシンのキュー
 	interval     time.Duration   // サイクル間の待機秒数
 	wg           *sync.WaitGroup // 待ち合わせ用
 	testMode     bool            // テストモード 出力をファイルへ出す
@@ -61,7 +61,6 @@ type logCollector struct {
 }
 
 func (c *logCollector) worker(n int) {
-
 	slog.Info(fmt.Sprintf("log-collector %d started", n))
 
 	c.wg.Add(1)
@@ -70,16 +69,18 @@ func (c *logCollector) worker(n int) {
 	for {
 		select {
 		case <-c.ctx.Done():
-			slog.Error("log-collectors stopped")
+			slog.Info("log-collectors stopped")
 			return
 		default:
-			targetMachine := c.que.get()
-			slog.Debug(fmt.Sprintf("Worker %d", n))
+			targetMachine := c.que.get2()
+			slog.Info(fmt.Sprintf("Worker %d", n))
 			byteBuf, err := bmcClient("https://" + targetMachine.BmcIP + c.rfUrl)
 			if err != nil {
-				slog.Error("Error")
+				errmsg := fmt.Sprintf("%s", err)
+				slog.Error(errmsg)
 			}
 			c.printLogs(byteBuf, targetMachine, c.ptrDir)
+			// Interval timer
 			time.Sleep(c.interval * time.Second)
 		}
 	}
@@ -89,20 +90,19 @@ func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string)
 
 	var members Redfish
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
-		slog.Error("failed to convert struct from JSON")
+		slog.Error(fmt.Sprintf("%s", err))
 		return
 	}
 
 	lastPtr, err := readLastPointer(server.Serial, ptrDir)
 	if err != nil {
-		slog.Error("failed to get last log pointer")
+		slog.Error(fmt.Sprintf("%s", err))
 		return
 	}
 
 	layout := "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
-	var offset int
 
 	for i := len(members.Sel) - 1; i >= 0; i-- {
 		t, _ := time.Parse(layout, members.Sel[i].Create)
@@ -132,24 +132,26 @@ func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string)
 				}
 			}
 		}
-
 	}
 
 	err = updateLastPointer(LastPointer{
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,
-		OffSet:       offset,
 	}, ptrDir)
 	if err != nil {
-		slog.Error("failed to update log pointer")
+		slog.Error(fmt.Sprintf("%s", err))
 		return
 	}
 }
 
 func testPrint(dir string, serial string, output string) {
 	fn := path.Join(dir, serial)
-	file, _ := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	file, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		slog.Error(fmt.Sprintf("%s", err))
+		return
+	}
 	defer file.Close()
 	file.WriteString(fmt.Sprintln(string(output)))
 }

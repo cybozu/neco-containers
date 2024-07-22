@@ -7,7 +7,6 @@ import (
 	"os"
 	"path"
 	"sync"
-	//"time"
 )
 
 var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
@@ -84,6 +83,4 @@ func redfishMock(w http.ResponseWriter, r *http.Request) {
 	//time.Sleep(5 * time.Second)
 	stringJSON, _ := io.ReadAll(file)
 	fmt.Fprint(w, string(stringJSON))
-	fmt.Println("============================================== reply")
-
 }
