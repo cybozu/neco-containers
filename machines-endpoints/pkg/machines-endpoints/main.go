@@ -39,6 +39,9 @@ const (
 
 	// BMC Proxy ConfigMap
 	bmcProxyConfigMapName = "bmc-reverse-proxy"
+
+	// BMC Log Collector ConfigMap
+	bmcLogCollectorConfigMapName = "bmc-log-collector"	
 )
 
 const graphQLQuery = `
@@ -64,6 +67,7 @@ query search {
 var (
 	flgMonitoringEndpoints = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
 	flgBMCConfigMap        = pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
+	flgBMCCMForCollector   = pflag.Bool("log-collector", false, "generate ConfigMap for BMC log collector")
 	flgNodeExporterPort    = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
 	flgEtcdMetricsPort     = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
@@ -302,6 +306,59 @@ func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine)
 	return err
 }
 
+/////////////////////////////////////////////////////////////////
+func (c client) updateBMCPConfigMapLogCollector(ctx context.Context, machines []Machine) error {
+	ns, _, err := c.kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+
+	addresses := make(map[string]string)
+	for _, machine := range machines {
+		if machine.Spec.BMC.IPv4 == "" {
+			continue
+		}
+
+		var hostname string
+		if machine.Spec.Role == "boot" {
+			// Though full hostname is like "stage0-boot-0",
+			// the part of "stage0-" is insignificant in a cluster while it is hard to get.
+			// So use "boot-0" for resolving.
+			hostname = fmt.Sprintf("boot-%d", machine.Spec.Rack)
+		} else {
+			hostname = fmt.Sprintf("rack%d-%s%d", machine.Spec.Rack, machine.Spec.Role, machine.Spec.IndexInRack)
+		}
+		addresses[hostname] = machine.Spec.BMC.IPv4
+
+		// "a.b.c.d" does not match the wildcard in "*.bmc.<cluster>.<base>".  "a-b-c-d" does match.
+		addresses[strings.ReplaceAll(machine.Spec.IPv4[0], ".", "-")] = machine.Spec.BMC.IPv4
+
+		addresses[machine.Spec.Serial] = machine.Spec.BMC.IPv4
+	}
+
+	configMap := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bmcLogCollectorConfigMapName,
+		},
+		Data: addresses,
+	}
+
+	cms := c.k8s.CoreV1().ConfigMaps(ns)
+	_, err = cms.Get(ctx, bmcLogCollectorConfigMapName, metav1.GetOptions{})
+	switch {
+	case err == nil:
+		_, err := cms.Update(ctx, &configMap, metav1.UpdateOptions{})
+		return err
+	case k8serrors.IsNotFound(err):
+		_, err := cms.Create(ctx, &configMap, metav1.CreateOptions{})
+		return err
+	}
+	return err
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
 func (c client) GetMembers() ([]member, error) {
 	serfMembers, err := c.serf.Members()
 	if err != nil {
@@ -417,5 +474,11 @@ func main() {
 		if err != nil {
 			log.ErrorExit(err)
 		}
+	}
+
+	if *flgBMCCMForCollector {
+		fmt.Println("xxx")
+		err = client.updateBMCPConfigMapLogCollector(ctx, machines)
+
 	}
 }
