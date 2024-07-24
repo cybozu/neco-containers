@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
