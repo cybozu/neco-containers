@@ -16,7 +16,14 @@ Redfish is a standard for server management. It provides REST API service by BMC
 
 The following figure shows an architectural diagram of BMC Log Collector.
 
-![](art_of_log-collector.png)
+```mermaid
+flowchart TB
+  PS[(Pointer File Store)] <---> LC 
+  CF[CSV File]-->LC[Log Collector]
+  BMC[BMC]-->LC
+  LC-->LS[Log Server]
+```
+
 
 1. "CSV File" has BMC IP list, server identity string, server's IP address.
 2. "Pointer File Store" has latest pointer information for each BMC.
@@ -48,18 +55,18 @@ There are two ways to obtain the latest BMC listings.
 - Method 2: Create a CSV file by adding to the existing functions.
 
 #### Advantages of using Method 1
-Reduced risk of failure due to fewer dependent components
+- Reduced risk of failure due to fewer dependent components
 
 #### Disadvantages of using Method 1
-Complex processes to retrieve data from databases, serfs, etc. must be written.
+- Complex processes to retrieve data from databases, serfs, etc. must be written.
 
 #### Advantages of adopting Method 2
-Programming and testing can be reduced, and the construction period can be shortened.
+- Programming and testing can be reduced, and the construction period can be shortened.
 
 #### Disadvantages of adopting Method 2
-If an existing function fails, the main function stops.
+- If an existing function fails, the main function stops.
 
-#### Decision
+### Decision and Reason
 Adopt method 2.
 As a countermeasure against failure, minimize the impact by using the last updated CSV file when the existing function stops.
 
@@ -74,19 +81,18 @@ There are two possible methods to obtain event logs from the BMC.
 
 
 #### Advantages of Method 1
-Workload can be controlled by the number of worker tasks
+- Workload can be controlled by the number of worker tasks
 
 #### Disadvantages of Method 1
-Management of queues and worker processes becomes complicated
+- Management of queues and worker processes becomes complicated
 
 #### Advantages of Method 2
-Simplifies Go programming
+- Simplifies Go programming
 
 #### Disadvantages of Method 2
-Load surges occur at the beginning of each collection cycle when there are many target BMCs,
-Unable to control the load.
+- Load surges occur at the beginning of each collection cycle when there are many target BMCs,Unable to control the load.
 
-#### Decision
+### Decision and Reason
 Method 2
 With the current number of BMCs, load is not a problem.
 
