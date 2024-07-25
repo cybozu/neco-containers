@@ -1,7 +1,7 @@
 package main
 
 import (
-	"encoding/csv"
+	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -9,41 +9,36 @@ import (
 )
 
 type Machine struct {
-	Serial string
-	BmcIP  string
-	NodeIP string
+	Serial string `json:"serial"`
+	BmcIP  string `json:"bmc_ip"`
+	NodeIP string `json:"ipv4"`
 }
 
 type Machines struct {
-	machine []Machine
+	Machine []Machine
 }
 
 // Get iDRAC server list from CSV file
 func machineListReader(filename string) (Machines, error) {
-	var mlist Machines
+	var ml Machines
+
 	file, err := os.Open(filename)
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
-		return mlist, err
+		return ml, err
 	}
 	defer file.Close()
-	csvReader := csv.NewReader(file)
-	for {
-		items, err := csvReader.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			slog.Error(fmt.Sprintf("%s", err))
-			return mlist, err
-		}
-		n := len(items)
-		if n != 3 {
-			err := fmt.Errorf("invalid machine list CSV, number of items = %d", len(items))
-			slog.Error(fmt.Sprintf("%s", err))
-			return mlist, err
-		}
-		mlist.machine = append(mlist.machine, Machine{Serial: items[0], BmcIP: items[1], NodeIP: items[2]})
+
+	byteData, err := io.ReadAll(file)
+	if err != nil {
+		return ml, err
 	}
-	return mlist, nil
+
+	err = json.Unmarshal(byteData, &ml)
+	if err != nil {
+		slog.Error(fmt.Sprintf("%s", err))
+		return ml, err
+	}
+
+	return ml, nil
 }

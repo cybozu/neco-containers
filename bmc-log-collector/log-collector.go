@@ -45,48 +45,36 @@ type Redfish struct {
 }
 
 type logCollector struct {
-	machinesPath string          // ログ収集対象マシンのPath
-	miniNum      int             // 最小ワーカー数
-	maxiNum      int             // 最大ワーカー数
-	currNum      int             // 現在のワーカー数
-	rfUrl        string          // Redfishのパス
-	ptrDir       string          // ポインタ用ディレクトリ
-	ctx          context.Context // コンテキスト
-	cancel       context.CancelFunc
-	que          MessageQueue    // マシンのキュー
-	interval     time.Duration   // サイクル間の待機秒数
-	wg           *sync.WaitGroup // 待ち合わせ用
-	testMode     bool            // テストモード 出力をファイルへ出す
-	testOut      string          // テスト用出力先
+	machinesPath string          // Machine list path
+	rfUrl        string          // Redfish API address
+	ptrDir       string          // Pointer store
+	wg           *sync.WaitGroup // wait ????????????????
+	testMode     bool            // when testMode is true, write text file for test
+	testOut      string          // Test output directory
 }
 
-func (c *logCollector) worker(n int) {
-	slog.Info(fmt.Sprintf("log-collector %d started", n))
-
+func (c *logCollector) worker(ctx context.Context, m Machine) {
 	c.wg.Add(1)
 	defer c.wg.Done()
 
 	for {
 		select {
-		case <-c.ctx.Done():
-			slog.Info("log-collectors stopped")
+		case <-ctx.Done():
 			return
+
 		default:
-			targetMachine := c.que.get2()
-			slog.Info(fmt.Sprintf("Worker %d", n))
-			byteBuf, err := bmcClient("https://" + targetMachine.BmcIP + c.rfUrl)
+			byteBuf, err := bmcClient("https://" + m.BmcIP + c.rfUrl)
 			if err != nil {
 				errmsg := fmt.Sprintf("%s", err)
 				slog.Error(errmsg)
 			}
-			c.printLogs(byteBuf, targetMachine, c.ptrDir)
-			// Interval timer
-			time.Sleep(c.interval * time.Second)
+			c.antiDuplicatefilter(byteBuf, m, c.ptrDir)
+			return
 		}
 	}
 }
 
-func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string) {
+func (c *logCollector) antiDuplicatefilter(byteJSON []byte, server Machine, ptrDir string) {
 
 	var members Redfish
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -112,7 +100,7 @@ func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string)
 		members.Sel[i].BmcIP = server.BmcIP
 		members.Sel[i].NodeIP = server.NodeIP
 
-		// IDの大小で比較して出力 クリアでId=1に戻った時はシリアル時刻の大小で比較
+		// Anti duplication
 		if lastPtr.LastReadId < lastId {
 			v, _ := json.Marshal(members.Sel[i])
 			fmt.Println(string(v))
@@ -122,6 +110,7 @@ func (c *logCollector) printLogs(byteJSON []byte, server Machine, ptrDir string)
 				testPrint(c.testOut, server.Serial, string(v))
 			}
 		} else if lastPtr.LastReadId > lastId {
+			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
 			if lastPtr.LastReadTime < createUnixtime {
 				v, _ := json.Marshal(members.Sel[i])
 				fmt.Println(string(v))

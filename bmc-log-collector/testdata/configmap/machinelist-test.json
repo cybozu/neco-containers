@@ -1,0 +1,1 @@
+{"Machine":[{"serial":"server1","bmc_ip":"192.168.0.1","ipv4":"172.16.0.1"},{"serial":"server2","bmc_ip":"192.168.0.2","ipv4":"172.16.0.2"},{"serial":"server3","bmc_ip":"192.168.0.3","ipv4":"172.16.0.3"},{"serial":"server4","bmc_ip":"192.168.0.4","ipv4":"172.16.0.4"},{"serial":"server5","bmc_ip":"192.168.0.5","ipv4":"172.16.0.5"}]}
