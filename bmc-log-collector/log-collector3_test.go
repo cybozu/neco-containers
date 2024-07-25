@@ -1,8 +1,8 @@
 package main
 
 /*
-マシンリストを読んで、iDRACへアクセスする。
-重複防止機能を確認する
+  Read the machine list and access iDRAC mock.
+  Verify anti-duplicate filter.
 */
 
 import (
@@ -24,26 +24,16 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	var wg sync.WaitGroup
 	var lc logCollector
-	var mq MessageQueue
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/683FPQ3")
 		os.Remove("testdata/output/683FPQ3")
-		ctx, cancel := context.WithCancel(context.Background())
-		mq.queue = make(chan Machine, 1000)
 
 		lc = logCollector{
-			machinesPath: "testdata/configmap/log-collector-test.csv",
-			miniNum:      1,  // 最小
-			maxiNum:      10, // 最大
-			currNum:      0,  // 決定コレクター数
+			machinesPath: "testdata/configmap/log-collector-test.json",
 			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:       "testdata/pointers",
-			ctx:          ctx, // コンテキスト
-			cancel:       cancel,
-			que:          mq, // コレクターのキュー
-			interval:     20, // 待機秒数
 			wg:           &wg,
 			testMode:     true,
 			testOut:      "testdata/output/",
@@ -54,7 +44,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			resDir: "testdata/redfish_response",
 			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
 		}
-		bm.startMock()
+		bm.startMock() // Mockにコンテキストが欲しい
 		time.Sleep(10 * time.Second)
 	})
 
@@ -63,7 +53,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		os.Setenv("BMC_PASS", "pass")
 	})
 
-	Context("single worker", func() {
+	Context("single worker with go-routine", func() {
 		var machinesList Machines
 		var err error
 		var rslt, rslt2 SystemEventLog
@@ -74,32 +64,23 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("get machine list", func() {
 			machinesList, err = machineListReader(lc.machinesPath)
 			Expect(err).NotTo(HaveOccurred())
+			fmt.Println("Machine List = ", machinesList)
 		})
 
-		// ブロックする可能性があるので追加が必要
-		It("put que for worker", func(ctx SpecContext) {
-			fmt.Println(machinesList.machine)
-			lc.que.put3(machinesList.machine)
-		}, SpecTimeout(time.Second))
+		// ワーカースレッドの停止のテストが欲しい
 
 		// Start log collector
-		It("get SEL by bmcClient", func() {
-			v := lc.que.get2()
-			byteData, err := bmcClient("https://" + v.BmcIP + lc.rfUrl)
-			GinkgoWriter.Println("got log =", string(byteData))
-			Expect(err).NotTo(HaveOccurred())
+		It("run worker with the go routine (1st time)", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			for i := 0; i < len(machinesList.Machine); i++ {
+				go lc.worker(ctx, machinesList.Machine[i])
+				Expect(err).NotTo(HaveOccurred())
+				time.Sleep(3 * time.Second)
+			}
+			defer cancel()
 		})
 
-		It("put machine list to queue again for test", func() {
-			GinkgoWriter.Println("Put que ==", machinesList.machine)
-			lc.que.put3(machinesList.machine)
-			l := lc.que.len2()
-			Expect(l).To(Equal(1))
-		})
-
-		It("Check output SEL 1st", func() {
-			go lc.worker(1)
-			time.Sleep(3 * time.Second)
+		It("verify output of collector (1st time)", func() {
 			for {
 				file, err = os.Open(path.Join(lc.testOut, serial1))
 				if errors.Is(err, os.ErrNotExist) {
@@ -117,7 +98,19 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(rslt.Id).To(Equal("1"))
 		})
 
-		It("Check output SEL 2nd", func() {
+		// Start log collector
+		It("run worker with the go routine (2nd time)", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			GinkgoWriter.Println("------ ", machinesList.Machine)
+			for i := 0; i < len(machinesList.Machine); i++ {
+				go lc.worker(ctx, machinesList.Machine[i])
+				Expect(err).NotTo(HaveOccurred())
+				time.Sleep(3 * time.Second)
+			}
+			defer cancel()
+		})
+
+		It("verify output of collector (2nd time)", func() {
 			stringJSON, _ := reader.ReadString('\n')
 			fmt.Println("*3 stringJSON=", stringJSON)
 			json.Unmarshal([]byte(stringJSON), &rslt2)
@@ -131,7 +124,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	})
 	AfterAll(func() {
 		fmt.Println("shutdown workers")
-		lc.cancel()
 		time.Sleep(5 * time.Second)
 	})
 })

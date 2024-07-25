@@ -1,12 +1,15 @@
 package main
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path"
 	"sync"
+	"time"
 )
 
 var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
@@ -70,6 +73,7 @@ func redfishMock(w http.ResponseWriter, r *http.Request) {
 	fn := responseFiles[key][accessCounter[key]]
 	responseFile := path.Join(responseDir[key], fn)
 	accessCounter[key] = accessCounter[key] + 1 // race
+	fmt.Println("------------------------------------- Access Count =", accessCounter[key])
 	mutex.Unlock()
 
 	file, err := os.Open(responseFile)
@@ -83,4 +87,32 @@ func redfishMock(w http.ResponseWriter, r *http.Request) {
 	//time.Sleep(5 * time.Second)
 	stringJSON, _ := io.ReadAll(file)
 	fmt.Fprint(w, string(stringJSON))
+}
+
+func OpenTestResultLog(fn string) (*os.File, error) {
+	var file *os.File
+	var err error
+	for {
+		file, err = os.Open(fn)
+		if errors.Is(err, os.ErrNotExist) {
+			time.Sleep(3 * time.Second)
+			continue
+		}
+		break
+	}
+	return file, err
+}
+
+func ReadingTestResultLogNext(b *bufio.Reader) (string, error) {
+	var stringJSON string
+	var err error
+	for {
+		stringJSON, err = b.ReadString('\n')
+		if err == io.EOF {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		break
+	}
+	return stringJSON, err
 }
