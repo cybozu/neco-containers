@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/neco-containers/tcp-keepalive/internal/client"
+	"github.com/neco-containers/tcp-keepalive/internal/metrics"
 
 	"github.com/spf13/cobra"
 )
@@ -20,6 +21,7 @@ var clientCmd = &cobra.Command{
 }
 
 var clientCfg = &client.Config{}
+var clientMetricsCfg = &metrics.Config{}
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
@@ -29,13 +31,15 @@ func init() {
 	clientCmd.Flags().IntVarP(&clientCfg.RetryNum, "retry", "y", 0, "Number of retries (-1 means infinite)")
 	clientCmd.Flags().DurationVarP(&clientCfg.SendInterval, "interval", "i", time.Second*5, "Interval to send a keepalive message")
 	clientCmd.Flags().StringVarP(&clientCfg.ServerAddr, "server", "s", "127.0.0.1:8000", "server address")
+	clientCmd.Flags().BoolVarP(&clientMetricsCfg.Export, "metrics", "m", true, "Enable metrics")
+	clientCmd.Flags().StringVarP(&clientMetricsCfg.AddrPort, "metrics-server", "a", "0.0.0.0:8080", "Metrics server address and port")
 }
 
 func runClient(cmd *cobra.Command, args []string) {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	c, err := client.NewClient(clientCfg)
+	c, err := client.NewClient(clientCfg, clientMetricsCfg)
 	if err != nil {
 		log.Error("failed to create client", slog.Any("error", err))
 		return
