@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"path"
 	"strconv"
@@ -45,17 +46,26 @@ type Redfish struct {
 }
 
 type logCollector struct {
-	machinesPath string          // Machine list path
-	rfUrl        string          // Redfish API address
-	ptrDir       string          // Pointer store
-	wg           *sync.WaitGroup // wait ????????????????
-	testMode     bool            // when testMode is true, write text file for test
-	testOut      string          // Test output directory
+	machinesPath string       // Machine list path
+	rfUrl        string       // Redfish API address
+	ptrDir       string       // Pointer store
+	testMode     bool         // when testMode is true, write text file for test
+	testOut      string       // Test output directory
+	user         string       // iDRAC user
+	password     string       // iDRAC password
+	rfclient     *http.Client // to reuse HTTP transport
+	mutex        *sync.Mutex  // execlusive lock for pointer
 }
 
-func (c *logCollector) worker(ctx context.Context, m Machine) {
-	c.wg.Add(1)
-	defer c.wg.Done()
+func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine) {
+	wg.Add(1)
+	defer wg.Done()
+
+	rfc := RedfishClient{
+		user:     c.user,
+		password: c.password,
+		client:   c.rfclient,
+	}
 
 	for {
 		select {
@@ -63,18 +73,18 @@ func (c *logCollector) worker(ctx context.Context, m Machine) {
 			return
 
 		default:
-			byteBuf, err := bmcClient("https://" + m.BmcIP + c.rfUrl)
+			byteBuf, err := rfc.requestToBmc("https://" + m.BmcIP + c.rfUrl)
 			if err != nil {
 				errmsg := fmt.Sprintf("%s", err)
 				slog.Error(errmsg)
 			}
-			c.antiDuplicatefilter(byteBuf, m, c.ptrDir)
+			c.antiDuplicationFilter(byteBuf, m, c.ptrDir)
 			return
 		}
 	}
 }
 
-func (c *logCollector) antiDuplicatefilter(byteJSON []byte, server Machine, ptrDir string) {
+func (c *logCollector) antiDuplicationFilter(byteJSON []byte, server Machine, ptrDir string) {
 
 	var members Redfish
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -82,7 +92,7 @@ func (c *logCollector) antiDuplicatefilter(byteJSON []byte, server Machine, ptrD
 		return
 	}
 
-	lastPtr, err := readLastPointer(server.Serial, ptrDir)
+	lastPtr, err := c.readLastPointer(server.Serial, ptrDir)
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
 		return
@@ -123,7 +133,7 @@ func (c *logCollector) antiDuplicatefilter(byteJSON []byte, server Machine, ptrD
 		}
 	}
 
-	err = updateLastPointer(LastPointer{
+	err = c.updateLastPointer(LastPointer{
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,

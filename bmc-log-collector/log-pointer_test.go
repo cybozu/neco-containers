@@ -4,12 +4,19 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"os"
+	"sync"
 )
 
 var _ = Describe("Get Machines List", Ordered, func() {
 
 	var ptr LastPointer
 	var err error
+	var mu sync.Mutex
+
+	lc := logCollector{
+		testMode: false,
+		mutex:    &mu,
+	}
 
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/ABCDEF")
@@ -17,7 +24,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 
 	Context("Normal CSV file", func() {
 		It("Read ptr file", func() {
-			ptr, err = readLastPointer("ABCDEF", "testdata/pointers")
+			ptr, err = lc.readLastPointer("ABCDEF", "testdata/pointers")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ptr.Serial).To(Equal("ABCDEF"))
 			Expect(ptr.LastReadTime).To(Equal(int64(0)))
@@ -27,7 +34,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		It("Update ptr", func() {
 			ptr.LastReadTime = 1
 			ptr.LastReadId = 1
-			err = updateLastPointer(ptr, "testdata/pointers")
+			err = lc.updateLastPointer(ptr, "testdata/pointers")
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

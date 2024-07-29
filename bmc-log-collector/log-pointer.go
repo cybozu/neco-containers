@@ -16,9 +16,12 @@ type LastPointer struct {
 	LastReadId   int
 }
 
-// 排他制御を入れること！！
-func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
+func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+	// **************************************************リファクタリングすること
 	f, err := os.Open(path.Join(ptrDir, serial))
 	if errors.Is(err, os.ErrNotExist) {
 		f, err = os.Create(path.Join(ptrDir, serial))
@@ -55,10 +58,16 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 		slog.Error(fmt.Sprintf("%s", err))
 		return lptr, err
 	}
+	//mutex.Unlock()
+
 	return lptr, err
 }
 
-func updateLastPointer(lptr LastPointer, ptrDir string) error {
+func (c *logCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
+
+	c.mutex.Lock()
+	defer c.mutex.Unlock()
+
 	file, err := os.Create(path.Join(ptrDir, lptr.Serial))
 	if err != nil {
 		slog.Error(fmt.Sprintf("%s", err))
@@ -75,5 +84,7 @@ func updateLastPointer(lptr LastPointer, ptrDir string) error {
 		slog.Error(fmt.Sprintf("%s", err))
 		return err
 	}
+	//mutex.Unlock()
+
 	return nil
 }
