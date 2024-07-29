@@ -10,8 +10,10 @@ package main
 import (
 	"bufio"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"sync"
@@ -23,8 +25,10 @@ import (
 
 var _ = Describe("Collecting by parallel workers", Ordered, func() {
 
-	var wg sync.WaitGroup
 	var lc logCollector
+	var tr *http.Transport
+	var cl *http.Client
+	var mu sync.Mutex
 
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/683FPQ3")
@@ -36,13 +40,24 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 		os.Remove("testdata/pointers/J7N6MW3")
 		os.Remove("testdata/output/J7N6MW3")
 
+		tr = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+		cl = &http.Client{
+			Timeout:   time.Duration(10) * time.Second,
+			Transport: tr,
+		}
+
 		lc = logCollector{
 			machinesPath: "testdata/configmap/serverlist2.json",
 			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:       "testdata/pointers",
-			wg:           &wg,
 			testMode:     true,
 			testOut:      "testdata/output",
+			user:         "user",
+			password:     "pass",
+			rfclient:     cl,
+			mutex:        &mu,
 		}
 		GinkgoWriter.Println("Start iDRAC Stub")
 
@@ -65,14 +80,10 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 			resDir: "testdata/redfish_response",
 			files:  []string{"J7N6MW3-1.json", "J7N6MW3-2.json", "J7N6MW3-3.json"},
 		}
-		bm3.startMock() // コンテキストを入れる
+		bm3.startMock()
 
 		// Wait starting stub servers
 		time.Sleep(10 * time.Second)
-	})
-	BeforeEach(func() {
-		os.Setenv("BMC_USER", "user")
-		os.Setenv("BMC_PASS", "pass")
 	})
 
 	Context("three workers", func() {
@@ -93,33 +104,36 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 		// Start Log collector in parallel.  Cycle=1
 		It("run worker with the go routine (Cycle=1)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
 			for i := 0; i < len(machinesList.Machine); i++ {
-				go lc.worker(ctx, machinesList.Machine[i])
-				//Expect(err).NotTo(HaveOccurred())
-				time.Sleep(3 * time.Second)
+				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
+				time.Sleep(1 * time.Second)
 			}
+			wg.Wait()
 			defer cancel()
 		})
 
 		// Start Log collector in parallel.  Cycle=2
 		It("run worker with the go routine (Cycle=2)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
 			for i := 0; i < len(machinesList.Machine); i++ {
-				go lc.worker(ctx, machinesList.Machine[i])
-				//Expect(err).NotTo(HaveOccurred())
+				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
 				time.Sleep(3 * time.Second)
 			}
+			wg.Wait()
 			defer cancel()
 		})
 
 		// Start Log collector in parallel.  Cycle=3
 		It("run worker with the go routine (Cycle=3)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
 			for i := 0; i < len(machinesList.Machine); i++ {
-				go lc.worker(ctx, machinesList.Machine[i])
-				//Expect(err).NotTo(HaveOccurred())
+				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
 				time.Sleep(3 * time.Second)
 			}
+			wg.Wait()
 			defer cancel()
 		})
 
@@ -358,6 +372,7 @@ var _ = Describe("Collecting by parallel workers", Ordered, func() {
 
 	AfterAll(func() {
 		fmt.Println("shutdown workers")
+		cl.CloseIdleConnections()
 		time.Sleep(5 * time.Second)
 	})
 })

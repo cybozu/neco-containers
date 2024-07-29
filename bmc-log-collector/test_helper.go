@@ -40,6 +40,7 @@ type bmcMock struct {
 	files  []string
 }
 
+// Mock server of iDRAC
 func (b *bmcMock) startMock() {
 	if !isInitmap {
 		init_map()
@@ -51,14 +52,14 @@ func (b *bmcMock) startMock() {
 	mutex.Unlock()
 
 	server := http.NewServeMux()
-	server.HandleFunc(redfishPath, redfishMock)
+	server.HandleFunc(redfishPath, redfishSel)
 	go func() {
 		http.ListenAndServeTLS(b.host, "testdata/ssl/localhost.crt", "testdata/ssl/localhost.key", server)
 	}()
 }
 
-// Redfish REST Service
-func redfishMock(w http.ResponseWriter, r *http.Request) {
+// DELL System Event Log Service at Redfish REST
+func redfishSel(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json;odata.metadata=minimal;charset=utf-8")
 	// basic authentication
@@ -68,14 +69,15 @@ func redfishMock(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Exclusive lock against other mock server which parallel running
 	mutex.Lock()
 	key := string(r.Host)
 	fn := responseFiles[key][accessCounter[key]]
 	responseFile := path.Join(responseDir[key], fn)
-	accessCounter[key] = accessCounter[key] + 1 // race
-	fmt.Println("------------------------------------- Access Count =", accessCounter[key])
+	accessCounter[key] = accessCounter[key] + 1
 	mutex.Unlock()
 
+	// Create HTTP response from the response file
 	file, err := os.Open(responseFile)
 	if err != nil {
 		// create not found response
@@ -89,6 +91,7 @@ func redfishMock(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, string(stringJSON))
 }
 
+// Method for Test
 func OpenTestResultLog(fn string) (*os.File, error) {
 	var file *os.File
 	var err error
@@ -103,6 +106,7 @@ func OpenTestResultLog(fn string) (*os.File, error) {
 	return file, err
 }
 
+// Method for Test
 func ReadingTestResultLogNext(b *bufio.Reader) (string, error) {
 	var stringJSON string
 	var err error

@@ -16,13 +16,16 @@ import (
 	"path"
 	"sync"
 	"time"
-
+	"os/signal"
+	"syscall"
+	"log/slog"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
+	/*
 	var lc logCollector
 	var tr *http.Transport
 	var cl *http.Client
@@ -62,18 +65,56 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		bm.startMock()
 		time.Sleep(10 * time.Second)
 	})
+	*/
 
-	Context("single worker with go-routine", func() {
-		var machinesList Machines
-		var err error
-		var serial1 string = "683FPQ3"
-		var file *os.File
-		var reader *bufio.Reader
+	Context("stub of main equivalent", func() {
 
-		It("get machine list", func() {
-			machinesList, err = machineListReader(lc.machinesPath)
-			Expect(err).NotTo(HaveOccurred())
-			fmt.Println("Machine List = ", machinesList)
+		It("main function", func() {
+			var wg sync.WaitGroup
+			ctx, cancel := context.WithCancel(context.Background())
+			tr := &http.Transport{
+				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+			}
+			cl := &http.Client{
+				Timeout:   time.Duration(10) * time.Second,
+				Transport: tr,
+			}
+			lc := logCollector{
+				machinesPath: "testdata/conf/serverlist.json",
+				rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+				ptrDir:       "pointers",
+				rfclient:     cl,
+				testMode:     false,
+			}
+		
+			// signal handler
+			sigs := make(chan os.Signal, 1)
+			signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+		
+			// Main loop
+			for i := 0; i < 3; i++ {
+				select {
+				// Stop by Signal
+				case <-sigs:
+					s := <-sigs
+					// Stop running logCollectorWorker
+					/////////////////////////////////////////  ワーカーを止めること
+					err := fmt.Errorf("got signal %s", s)
+					slog.Error(fmt.Sprintf("%s", err))
+					return
+				default:
+					machinesList, err := machineListReader(lc.machinesPath)
+					if err != nil {
+						slog.Error(fmt.Sprintf("%s", err))
+					}
+					for i := 0; i < len(machinesList.Machine); i++ {
+						go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
+					}
+					wg.Wait()
+					lc.rfclient.CloseIdleConnections()
+					defer cancel()
+				}
+			}
 		})
 
 		// ワーカースレッドの停止のテストが欲しい
