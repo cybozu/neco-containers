@@ -86,7 +86,10 @@ func redfishSel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
-	//time.Sleep(5 * time.Second)
+	// BMC working time
+	time.Sleep(1 * time.Second)
+
+	// Reply
 	stringJSON, _ := io.ReadAll(file)
 	fmt.Fprint(w, string(stringJSON))
 }

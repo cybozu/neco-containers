@@ -18,7 +18,7 @@ type Machines struct {
 	Machine []Machine
 }
 
-// Get iDRAC server list from CSV file
+// get BMC list from JSON file
 func machineListReader(filename string) (Machines, error) {
 	var ml Machines
 

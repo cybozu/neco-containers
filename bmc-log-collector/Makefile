@@ -23,5 +23,5 @@ test:
 	$(GINKGO) -v -procs=1 --race --focus-file machines-list_test.go
 	$(GINKGO) -v -procs=1 --race --focus-file bmc-http-client_test.go
 	$(GINKGO) -v -procs=1 --race --focus-file log-pointer_test.go
-	$(GINKGO) -v -procs=1 --race --focus-file log-collector3_test.go
-	$(GINKGO) -v -procs=1 --race --focus-file log-collector4_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file log-collector_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file main_test.go

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"net"
 	"net/http"
-	//"os"
 	"time"
 )
 
@@ -15,19 +15,23 @@ Test the behavior of accessing iDRAC internal web services
 */
 var _ = Describe("Access BMC", Ordered, func() {
 
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-	}
 	client := &http.Client{
-		Timeout:   time.Duration(10) * time.Second,
-		Transport: tr,
+		Timeout: time.Duration(10) * time.Second,
+		Transport: &http.Transport{
+			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+			DisableKeepAlives:   true,
+			TLSHandshakeTimeout: 20 * time.Second,
+			DialContext: (&net.Dialer{
+				Timeout: 15 * time.Second,
+			}).DialContext,
+		},
 	}
 	rfc := RedfishClient{
 		user:     "user",
 		password: "pass",
 		client:   client,
 	}
-	//var mu sync.Mutex
+
 	BeforeAll(func() {
 		fmt.Println("*** Start iDRAC Stub")
 		bm1 := bmcMock{
@@ -39,16 +43,10 @@ var _ = Describe("Access BMC", Ordered, func() {
 		// Wait for starting mock web server
 		time.Sleep(10 * time.Second)
 	})
-	/*
-		BeforeEach(func() {
-			os.Setenv("BMC_USER", "user")
-			os.Setenv("BMC_PASS", "pass")
-		})
-	*/
-
-	var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 
 	Context("Access iDRAC server to get SEL", func() {
+		var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+
 		It("Normal access", func() {
 			byteJSON, err := rfc.requestToBmc(redfish_url)
 			Expect(err).NotTo(HaveOccurred())
@@ -81,10 +79,10 @@ var _ = Describe("Access BMC", Ordered, func() {
 			_, err := rfc.requestToBmc(redfish_url)
 			Expect(err).To(HaveOccurred())
 		})
-
 	})
+
 	AfterAll(func() {
-		fmt.Println("*** Shutdown iDRAC Simulator UT-1")
+		GinkgoWriter.Println("shutdown BMC stub")
 		client.CloseIdleConnections()
 	})
 })

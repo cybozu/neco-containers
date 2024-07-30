@@ -11,6 +11,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -24,7 +25,6 @@ import (
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	var lc logCollector
-	var tr *http.Transport
 	var cl *http.Client
 	var mu sync.Mutex
 
@@ -33,32 +33,12 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		os.Remove("testdata/pointers/683FPQ3")
 		os.Remove("testdata/output/683FPQ3")
 
-		tr = &http.Transport{
-			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
-		}
-		cl = &http.Client{
-			Timeout:   time.Duration(10) * time.Second,
-			Transport: tr,
-		}
-
-		lc = logCollector{
-			machinesPath: "testdata/configmap/log-collector-test.json",
-			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-			ptrDir:       "testdata/pointers",
-			testMode:     true,
-			testOut:      "testdata/output",
-			user:         "user",
-			password:     "pass",
-			rfclient:     cl,
-			mutex:        &mu,
-		}
 		GinkgoWriter.Println("Start iDRAC Stub")
 		bm := bmcMock{
 			host:   "127.0.0.1:8180",
 			resDir: "testdata/redfish_response",
 			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
 		}
-
 		bm.startMock()
 		time.Sleep(10 * time.Second)
 	})
@@ -70,28 +50,49 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		var file *os.File
 		var reader *bufio.Reader
 
+		cl = &http.Client{
+			Timeout: time.Duration(10) * time.Second,
+			Transport: &http.Transport{
+				TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+				DisableKeepAlives:   true,
+				TLSHandshakeTimeout: 20 * time.Second,
+				DialContext: (&net.Dialer{
+					Timeout: 15 * time.Second,
+				}).DialContext,
+			},
+		}
+		lc = logCollector{
+			machinesPath: "testdata/configmap/log-collector-test.json",
+			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+			ptrDir:       "testdata/pointers",
+			testMode:     true,
+			testOut:      "testdata/output",
+			user:         "user",
+			password:     "pass",
+			rfClient:     cl,
+			mutex:        &mu,
+		}
+
 		It("get machine list", func() {
 			machinesList, err = machineListReader(lc.machinesPath)
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Println("Machine List = ", machinesList)
 		})
 
-		// ワーカースレッドの停止のテストが欲しい
-
 		// Start log collector
 		It("run worker with the go routine (1st time)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			var wg sync.WaitGroup
 			for i := 0; i < len(machinesList.Machine); i++ {
+				wg.Add(1)
 				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
-				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(1 * time.Second)
 			}
 			wg.Wait()
-			defer cancel()
 		})
 
-		It("verify output of collector (1st time)", func() {
+		It("verify output of collector (1st time)", func(ctx SpecContext) {
 			var result SystemEventLog
 			file, err = OpenTestResultLog(path.Join(lc.testOut, serial1))
 			Expect(err).ToNot(HaveOccurred())
@@ -113,7 +114,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial1))
 			Expect(result.Id).To(Equal("1"))
-		})
+		}, SpecTimeout(3*time.Second))
 
 		// Start log collector
 		It("run worker with the go routine (2nd time)", func() {
@@ -121,6 +122,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			var wg sync.WaitGroup
 			GinkgoWriter.Println("------ ", machinesList.Machine)
 			for i := 0; i < len(machinesList.Machine); i++ {
+				wg.Add(1)
 				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
 				Expect(err).NotTo(HaveOccurred())
 				time.Sleep(1 * time.Second)
@@ -129,7 +131,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		})
 
-		It("verify output of collector (2nd time)", func() {
+		It("verify output of collector (2nd time)", func(ctx SpecContext) {
 			var result SystemEventLog
 
 			// Read test log
@@ -146,12 +148,11 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial1))
 			Expect(result.Id).To(Equal("2"))
-		})
+		}, SpecTimeout(3*time.Second))
 		file.Close()
 	})
 	AfterAll(func() {
 		fmt.Println("shutdown workers")
 		cl.CloseIdleConnections()
-		time.Sleep(5 * time.Second)
 	})
 })
