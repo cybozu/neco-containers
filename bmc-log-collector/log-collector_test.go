@@ -22,7 +22,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
+var _ = Describe("gathering up logs", Ordered, func() {
 
 	var lc logCollector
 	var cl *http.Client
@@ -43,7 +43,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		time.Sleep(10 * time.Second)
 	})
 
-	Context("single worker with go-routine", func() {
+	Context("log collector function test", func() {
 		var machinesList Machines
 		var err error
 		var serial1 string = "683FPQ3"
@@ -80,7 +80,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		})
 
 		// Start log collector
-		It("run worker with the go routine (1st time)", func() {
+		It("run logCollectorWorker", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			var wg sync.WaitGroup
@@ -92,7 +92,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		})
 
-		It("verify output of collector (1st time)", func(ctx SpecContext) {
+		It("verify output of collector", func(ctx SpecContext) {
 			var result SystemEventLog
 			file, err = OpenTestResultLog(path.Join(lc.testOut, serial1))
 			Expect(err).ToNot(HaveOccurred())
@@ -116,8 +116,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(result.Id).To(Equal("1"))
 		}, SpecTimeout(3*time.Second))
 
-		// Start log collector
-		It("run worker with the go routine (2nd time)", func() {
+		// Start log collector (2nd)
+		It("run logCollectorWorker (2nd)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
 			GinkgoWriter.Println("------ ", machinesList.Machine)
@@ -131,7 +131,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		})
 
-		It("verify output of collector (2nd time)", func(ctx SpecContext) {
+		It("verify output of collector (2nd)", func(ctx SpecContext) {
 			var result SystemEventLog
 
 			// Read test log
@@ -148,8 +148,10 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial1))
 			Expect(result.Id).To(Equal("2"))
+
+			file.Close()
 		}, SpecTimeout(3*time.Second))
-		file.Close()
+
 	})
 	AfterAll(func() {
 		fmt.Println("shutdown workers")
