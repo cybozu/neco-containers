@@ -53,18 +53,17 @@ type logCollector struct {
 	testOut      string       // Test output directory
 	user         string       // iDRAC user
 	password     string       // iDRAC password
-	rfclient     *http.Client // to reuse HTTP transport
+	rfClient     *http.Client // to reuse HTTP transport
 	mutex        *sync.Mutex  // execlusive lock for pointer
 }
 
 func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine) {
-	wg.Add(1)
 	defer wg.Done()
 
 	rfc := RedfishClient{
 		user:     c.user,
 		password: c.password,
-		client:   c.rfclient,
+		client:   c.rfClient,
 	}
 
 	for {
@@ -73,10 +72,12 @@ func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGrou
 			return
 
 		default:
-			byteBuf, err := rfc.requestToBmc("https://" + m.BmcIP + c.rfUrl)
+			url := "https://" + m.BmcIP + c.rfUrl
+			byteBuf, err := rfc.requestToBmc(url)
 			if err != nil {
-				errmsg := fmt.Sprintf("%s", err)
-				slog.Error(errmsg)
+				errMsg := fmt.Sprintf("%s: %s", err, url)
+				slog.Error(errMsg)
+				return
 			}
 			c.antiDuplicationFilter(byteBuf, m, c.ptrDir)
 			return
@@ -113,22 +114,24 @@ func (c *logCollector) antiDuplicationFilter(byteJSON []byte, server Machine, pt
 		// Anti duplication
 		if lastPtr.LastReadId < lastId {
 			v, _ := json.Marshal(members.Sel[i])
-			fmt.Println(string(v))
-			lastPtr.LastReadId = lastId
-			lastPtr.LastReadTime = createUnixtime
 			if c.testMode {
 				testPrint(c.testOut, server.Serial, string(v))
+			} else {
+				fmt.Fprintln(os.Stdout, string(v))
 			}
+			lastPtr.LastReadId = lastId
+			lastPtr.LastReadTime = createUnixtime
 		} else if lastPtr.LastReadId > lastId {
 			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
 			if lastPtr.LastReadTime < createUnixtime {
 				v, _ := json.Marshal(members.Sel[i])
-				fmt.Println(string(v))
-				lastPtr.LastReadId = lastId
-				lastPtr.LastReadTime = createUnixtime
 				if c.testMode {
 					testPrint(c.testOut, server.Serial, string(v))
+				} else {
+					fmt.Fprintln(os.Stdout, string(v))
 				}
+				lastPtr.LastReadId = lastId
+				lastPtr.LastReadTime = createUnixtime
 			}
 		}
 	}

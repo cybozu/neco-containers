@@ -22,7 +22,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		os.Remove("testdata/pointers/ABCDEF")
 	})
 
-	Context("Normal CSV file", func() {
+	Context("Normal JSON file", func() {
 		It("Read ptr file", func() {
 			ptr, err = lc.readLastPointer("ABCDEF", "testdata/pointers")
 			Expect(err).NotTo(HaveOccurred())
