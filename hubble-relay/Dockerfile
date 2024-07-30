@@ -8,12 +8,11 @@ FROM ${GOLANG_IMAGE} as build
 COPY TAG /
 
 # LICENSE.all
-WORKDIR /go/src/github.com/cybozu-go/
+WORKDIR /go/src/github.com/cilium/
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    # Since we use the fork and patched repogitory, we need to specify the branch name
-    && BRANCH=v${VERSION}-lb-dsr-patch \
+    && BRANCH=v${VERSION} \
     && echo ${BRANCH} \
-    && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
+    && git clone --depth 1 --branch ${BRANCH} https://github.com/cilium/cilium \
     && cd cilium \
     && make licenses-all \
     && apt-get update \
@@ -21,7 +20,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && images/runtime/build-gops.sh
 
 # hubble-relay
-WORKDIR /go/src/github.com/cybozu-go/cilium/hubble-relay
+WORKDIR /go/src/github.com/cilium/cilium/hubble-relay
 RUN make
 
 # Stage2: runtime
@@ -30,8 +29,8 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
-COPY --from=build /go/src/github.com/cybozu-go/cilium/LICENSE.all /LICENSE
-COPY --from=build /go/src/github.com/cybozu-go/cilium/hubble-relay/hubble-relay /usr/bin/hubble-relay
+COPY --from=build /go/src/github.com/cilium/cilium/LICENSE.all /LICENSE
+COPY --from=build /go/src/github.com/cilium/cilium/hubble-relay/hubble-relay /usr/bin/hubble-relay
 
 WORKDIR /
 ENV GOPS_CONFIG_DIR=/

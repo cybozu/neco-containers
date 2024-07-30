@@ -1,10 +1,10 @@
 ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.22-jammy
 ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 ARG BACKEND_IMAGE=scratch
-ARG NGINX_VERSION=1.23.4
-ARG NJS_VERSION=0.7.11
+ARG NGINX_VERSION=1.25.3
+ARG NJS_VERSION=0.8.2
 ARG PKG_RELEASE=1~jammy
-ARG NGINX_UNPRIVILEGED_COMMIT_HASH=582fa68a7609f2d3dad7fb2121af0244b3ce976c
+ARG NGINX_UNPRIVILEGED_COMMIT_HASH=c235526b3e1da79e8eb187373cdfd867063f9782
 
 # Stage 1: build
 FROM ${GOLANG_IMAGE} AS builder-base
@@ -52,21 +52,25 @@ ARG GID=101
 
 RUN set -x \
     # create nginx user/group first, to be consistent throughout docker variants
-    && addgroup --system --gid $GID nginx || true \
-    && adduser --system --disabled-login --ingroup nginx --no-create-home --home /nonexistent --gecos "nginx user" --shell /bin/false --uid $UID nginx || true \
+    && groupadd --system --gid $GID nginx || true \
+    && useradd --system --gid nginx --no-create-home --home /nonexistent --comment "nginx user" --shell /bin/false --uid $UID nginx || true \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y gnupg1 ca-certificates \
     && \
     NGINX_GPGKEY=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62; \
+    NGINX_GPGKEY_PATH=/usr/share/keyrings/nginx-archive-keyring.gpg; \
+    export GNUPGHOME="$(mktemp -d)"; \
     found=''; \
     for server in \
         hkp://keyserver.ubuntu.com:80 \
         pgp.mit.edu \
     ; do \
         echo "Fetching GPG key $NGINX_GPGKEY from $server"; \
-        apt-key adv --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break; \
+        gpg1 --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break; \
     done; \
     test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_GPGKEY" && exit 1; \
+    gpg1 --export "$NGINX_GPGKEY" > "$NGINX_GPGKEY_PATH" ; \
+    rm -rf "$GNUPGHOME"; \
     apt-get remove --purge --auto-remove -y gnupg1 && rm -rf /var/lib/apt/lists/* \
     && nginxPackages=" \
         nginx=${NGINX_VERSION}-${PKG_RELEASE} \
@@ -75,7 +79,7 @@ RUN set -x \
         nginx-module-image-filter=${NGINX_VERSION}-${PKG_RELEASE} \
         nginx-module-njs=${NGINX_VERSION}+${NJS_VERSION}-${PKG_RELEASE} \
     " \
-    && echo "deb https://nginx.org/packages/mainline/ubuntu/ jammy nginx" >> /etc/apt/sources.list.d/nginx.list \
+    && echo "deb [signed-by=$NGINX_GPGKEY_PATH] https://nginx.org/packages/mainline/ubuntu/ jammy nginx" >> /etc/apt/sources.list.d/nginx.list \
     && apt-get update \
     && apt-get install --no-install-recommends --no-install-suggests -y \
                         $nginxPackages \
@@ -94,6 +98,7 @@ RUN set -x \
 # create a docker-entrypoint.d directory
     && mkdir /docker-entrypoint.d \
     && for entrypoint in \
+            15-local-resolvers.envsh \
             20-envsubst-on-templates.sh \
             30-tune-worker-processes.sh \
         ; do \
