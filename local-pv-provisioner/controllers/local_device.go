@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"io"
-	"os"
 	"path/filepath"
 )
 
@@ -11,7 +10,7 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, []Device, error) {
 	var devs []Device
 	var errDevs []Device
 
-	err := filepath.Walk(dd.deviceDir, func(path string, info os.FileInfo, err error) error {
+	err := fs.Walk(dd.deviceDir, func(path string, info FileInfo, err error) error {
 		if err != nil {
 			log.Error(err, "failure accessing a path", "path", path)
 			return err
@@ -41,7 +40,7 @@ func (dd *DeviceDetector) listLocalDevices() ([]Device, []Device, error) {
 }
 
 func (dd *DeviceDetector) getCapacityBytes(path string) (int64, error) {
-	file, err := os.Open(path)
+	file, err := fs.Open(path)
 	if err != nil {
 		return 0, err
 	}
