@@ -15,6 +15,7 @@ type fileSystem interface {
 	OpenFile(name string, flag int, perm FileMode) (file, error)
 	Walk(root string, fn func(path string, info FileInfo, err error) error) error
 	MkdirAll(path string, perm FileMode) error
+	Remove(name string) error
 }
 
 type file interface {
@@ -38,6 +39,9 @@ func (osFS) Walk(root string, f func(path string, info FileInfo, err error) erro
 }
 func (osFS) MkdirAll(path string, perm FileMode) error {
 	return os.MkdirAll(path, perm)
+}
+func (osFS) Remove(name string) error {
+	return os.Remove(name)
 }
 
 const O_WRONLY = os.O_WRONLY

@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"os"
-	"path/filepath"
-	"regexp"
 
 	"github.com/cybozu/neco-containers/local-pv-provisioner/controllers"
 	corev1 "k8s.io/api/core/v1"
@@ -38,26 +36,6 @@ func run() error {
 		setupLog.Error(err, "validation error")
 		return err
 	}
-	if !filepath.IsAbs(config.deviceDir) {
-		err := errors.New("device-dir must be an absolute path")
-		setupLog.Error(err, "device-dir must be an absolute path")
-		return err
-	}
-	info, err := os.Stat(config.deviceDir)
-	if err != nil {
-		setupLog.Error(err, "unable to get status of device directory", "device-dir", config.deviceDir)
-		return err
-	}
-	if !info.Mode().IsDir() {
-		err = errors.New("device-dir is not a directory")
-		setupLog.Error(err, "device-dir is not a directory")
-		return err
-	}
-	re, err := regexp.Compile(config.deviceNameFilter)
-	if err != nil {
-		setupLog.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
-		return err
-	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:         scheme,
@@ -74,9 +52,26 @@ func run() error {
 		FillCount:     100,
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(),
-		ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName),
-		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
+	ddLogger := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
+
+	workingNamespace, ok := os.LookupEnv("LP_NAMESPACE")
+	if !ok {
+		err := errors.New("LP_NAMESPACE env var not found")
+		setupLog.Error(err, "LP_NAMESPACE env var not found")
+		return err
+	}
+
+	dd := controllers.NewDeviceDetector(
+		mgr.GetClient(),
+		mgr.GetAPIReader(),
+		ddLogger,
+		config.nodeName,
+		config.pollingInterval,
+		scheme,
+		&deleter,
+		config.defaultPVSpecConfigMap,
+		workingNamespace,
+	)
 	err = mgr.Add(dd)
 	if err != nil {
 		setupLog.Error(err, "unable to add device-detector to manager")
