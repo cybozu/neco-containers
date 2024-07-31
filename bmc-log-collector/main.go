@@ -39,8 +39,6 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 		return
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	cl := &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 		Transport: &http.Transport{
@@ -77,6 +75,14 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
+	//ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	// set interval timer
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
 	// Main loop
 	for {
 		if testMode {
@@ -86,13 +92,9 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 			}
 		}
 		select {
-		case <-sigs: // Stop by Signal
-			s := <-sigs
-			err := fmt.Errorf("got signal %s", s)
-			slog.Error(fmt.Sprintf("%s", err))
+		case <-ctx.Done():
 			return
-		default:
-			// get target machines list
+		case <-ticker.C:
 			machinesList, err := machineListReader(lc.machinesPath)
 			if err != nil {
 				slog.Error(fmt.Sprintf("%s", err))
@@ -103,14 +105,10 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 			for i := 0; i < len(machinesList.Machine); i++ {
 				wg.Add(1)
 				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
-				// timer for stable running of go-routine
-				time.Sleep(1 * time.Second)
 			}
 			wg.Wait()
+			lc.rfClient.CloseIdleConnections()
 		}
-		// interval timer for next loop
-		time.Sleep(10 * time.Second)
-		lc.rfClient.CloseIdleConnections()
 	}
 }
 

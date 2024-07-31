@@ -6,7 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
-	"time"
+	//"time"
 )
 
 type RedfishClient struct {
@@ -16,7 +16,7 @@ type RedfishClient struct {
 }
 
 // Get from Redfish on BMC REST service
-func (r *RedfishClient) requestToBmc(url string) ([]byte, error) {
+func (r *RedfishClient) requestToBmc(ctx context.Context, url string) ([]byte, error) {
 
 	// create Redfish request
 	req, err := http.NewRequest("GET", url, nil)
@@ -27,14 +27,13 @@ func (r *RedfishClient) requestToBmc(url string) ([]byte, error) {
 	req.SetBasicAuth(r.user, r.password)
 
 	// set timeout
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
+	//ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	//defer cancel()
 	req = req.WithContext(ctx)
 
 	// execute access
 	resp, err := r.client.Do(req)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
 		return nil, err
 	}
 	defer resp.Body.Close()

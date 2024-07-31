@@ -73,8 +73,9 @@ func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGrou
 
 		default:
 			url := "https://" + m.BmcIP + c.rfUrl
-			byteBuf, err := rfc.requestToBmc(url)
+			byteBuf, err := rfc.requestToBmc(ctx, url)
 			if err != nil {
+				// When canceled by context, the pointer files is never updated because the return is made here.
 				errMsg := fmt.Sprintf("%s: %s", err, url)
 				slog.Error(errMsg)
 				return
