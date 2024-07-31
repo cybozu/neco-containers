@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	. "github.com/onsi/ginkgo/v2"
@@ -46,16 +47,17 @@ var _ = Describe("Access BMC", Ordered, func() {
 
 	Context("Access iDRAC server to get SEL", func() {
 		var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
 		It("Normal access", func() {
-			byteJSON, err := rfc.requestToBmc(redfish_url)
+			byteJSON, err := rfc.requestToBmc(ctx, redfish_url)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(byteJSON)).To(Equal(776))
 		})
 
 		It("Abnormal access, not existing web server", func() {
 			test_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-			byteJSON, err := rfc.requestToBmc(test_url)
+			byteJSON, err := rfc.requestToBmc(ctx, test_url)
 			Expect(err).To(HaveOccurred())
 			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", test_url)
 			Expect(err.Error()).To(Equal(errmsg))
@@ -64,19 +66,19 @@ var _ = Describe("Access BMC", Ordered, func() {
 
 		It("Abnormal access, wrong path", func() {
 			wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
-			_, err := rfc.requestToBmc(wrong_url)
+			_, err := rfc.requestToBmc(ctx, wrong_url)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal access, wrong username", func() {
 			rfc.user = "badname"
-			_, err := rfc.requestToBmc(redfish_url)
+			_, err := rfc.requestToBmc(ctx, redfish_url)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal access, wrong password", func() {
 			rfc.password = "badpw"
-			_, err := rfc.requestToBmc(redfish_url)
+			_, err := rfc.requestToBmc(ctx, redfish_url)
 			Expect(err).To(HaveOccurred())
 		})
 	})
