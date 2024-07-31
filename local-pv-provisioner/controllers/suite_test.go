@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -85,7 +87,83 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Test functions", func() {
+	Context("do", testDo)
+	Context("has annotations set by another configuration", testHasAnnotsSetByAnotherConfiguration)
+	Context("parse pv spec configmap", testParsePVSpecConfigMap)
 	Context("create pv", testDeviceDetectorCreatePV)
 	Context("persistent volume reconciler", testPersistentVolumeReconciler)
 	Context("fill deleter", testFillDeleter)
 })
+
+type testFS struct {
+	pathPrefix string
+	realFS     osFS
+}
+
+var _ fileSystem = &testFS{}
+
+func NewTestFS(pathPrefix string) (*testFS, error) {
+	return &testFS{pathPrefix: pathPrefix}, nil
+}
+func (fs *testFS) getPath(name string) string     { return filepath.Join(fs.pathPrefix, name) }
+func (fs *testFS) Open(name string) (file, error) { return fs.realFS.Open(fs.getPath(name)) }
+func (fs *testFS) Stat(name string) (FileInfo, error) {
+	return fs.realFS.Stat(fs.getPath(name))
+}
+func (fs *testFS) OpenFile(name string, flag int, perm FileMode) (file, error) {
+	return fs.realFS.OpenFile(fs.getPath(name), flag, perm)
+}
+func (fs *testFS) Walk(root string, f func(path string, info FileInfo, err error) error) error {
+	return fs.realFS.Walk(fs.getPath(root), func(path string, info FileInfo, err error) error {
+		testFSPath, err2 := filepath.Rel(fs.pathPrefix, path)
+		if err2 != nil {
+			panic("filepath.Rel failed: " + path)
+		}
+		testFSPath = "/" + testFSPath
+		return f(testFSPath, info, err)
+	})
+}
+func (fs *testFS) MkdirAll(path string, perm FileMode) error {
+	return fs.realFS.MkdirAll(fs.getPath(path), perm)
+}
+func (fs *testFS) Remove(name string) error {
+	return fs.realFS.Remove(fs.getPath(name))
+}
+
+func useTestFS(files map[string]string, f func()) {
+	originalFS := fs
+
+	pathPrefix, err := os.MkdirTemp("", "lpp-*")
+	if err != nil {
+		panic("os.MkdirTemp failed")
+	}
+	defer os.RemoveAll(pathPrefix)
+
+	testFS, err := NewTestFS(pathPrefix)
+	if err != nil {
+		panic("NewTmpFS failed")
+	}
+	fs = testFS
+	defer func() { fs = originalFS }()
+
+	for path, body := range files {
+		if !filepath.IsAbs(path) {
+			panic("Not every path of files is absolute: " + path)
+		}
+		if err := fs.MkdirAll(filepath.Dir(path), 0700); err != nil {
+			panic("tmpFS.MkdirAll failed: " + path)
+		}
+		file, err := fs.OpenFile(path, O_WRONLY|O_CREATE, 0600)
+		if err != nil {
+			panic("fs.OpenFile failed: " + path)
+		}
+		if _, err := file.Write([]byte(body)); err != nil {
+			panic("file.Write failed: " + path)
+		}
+		if err := file.Close(); err != nil {
+			panic("file.Close failed: " + path)
+		}
+	}
+
+	f()
+}

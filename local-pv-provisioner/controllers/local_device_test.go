@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
-func TestDeviceDetectorListLocalDevices(t *testing.T) {
+func TestFsLocalDevicesLister(t *testing.T) {
 	tests := []struct {
 		name             string
 		deviceNameFilter string
@@ -76,12 +76,10 @@ func TestDeviceDetectorListLocalDevices(t *testing.T) {
 			defer os.RemoveAll(symlinkDir)
 
 			dd := &DeviceDetector{
-				log:              log,
-				deviceDir:        symlinkDir,
-				deviceNameFilter: regexp.MustCompile(tt.deviceNameFilter),
-				nodeName:         "test-node-name",
+				log:      log,
+				nodeName: "test-node-name",
 			}
-			got, errDev, err := dd.listLocalDevices()
+			got, errDev, err := dd.listLocalDevices(symlinkDir, regexp.MustCompile(tt.deviceNameFilter))
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DeviceDetector.listLocalDevices() error = %v, wantErr %v", err, tt.wantErr)
 			}
