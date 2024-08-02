@@ -117,7 +117,7 @@ jobs:
             container-image: "kubernetes"
           - dir: "./local-pv-provisioner"
             container-image: "local-pv-provisioner"
-            make-targets: "check-generate test"
+            make-targets: "check-generate test ci-e2e-test"
           - dir: "./loki"
             container-image: "loki"
           - dir: "./machines-endpoints"
