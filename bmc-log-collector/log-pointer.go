@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	//"fmt"
-	"github.com/gofrs/flock"
+	//"github.com/gofrs/flock"
 	"io"
 	"log/slog"
 	"os"
@@ -70,9 +70,9 @@ func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointe
 func (c *logCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
 
 	filePath := path.Join(ptrDir, lptr.Serial)
-	lock := flock.New(filePath)
-	lock.Lock()
-	defer lock.Unlock()
+	//lock := flock.New(filePath)
+	//lock.Lock()
+	//defer lock.Unlock()
 
 	file, err := os.Create(filePath)
 	if err != nil {
