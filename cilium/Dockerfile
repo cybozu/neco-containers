@@ -8,12 +8,11 @@ ARG DESTDIR
 ENV DESTDIR=${DESTDIR}
 COPY TAG /
 
-WORKDIR /go/src/github.com/cybozu-go/
+WORKDIR /go/src/github.com/cilium/
 RUN mkdir -p ${DESTDIR} \
     && VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    # Since we use the fork and patched repogitory, we need to specify the branch name
-    && BRANCH=v${VERSION}-lb-dsr-patch \
-    && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
+    && BRANCH=v${VERSION} \
+    && git clone --depth 1 --branch ${BRANCH} https://github.com/cilium/cilium \
     && cd cilium \
     && make licenses-all \
     && mv LICENSE.all ${DESTDIR}/LICENSE \
@@ -29,7 +28,6 @@ RUN mkdir -p ${DESTDIR} \
     && mkdir -p ${DESTDIR}/usr/sbin \
     && cp images/runtime/iptables-wrapper-installer.sh \
       images/cilium/init-container.sh \
-      plugins/cilium-cni/cni-install.sh \
       plugins/cilium-cni/install-plugin.sh \
       plugins/cilium-cni/cni-uninstall.sh \
         ${DESTDIR} \
@@ -39,7 +37,7 @@ RUN mkdir -p ${DESTDIR} \
 FROM build-base as builder
 COPY src/workspace/bin/llvm-objcopy /bin/
 COPY src/workspace/bin/clang src/workspace/bin/llc /bin/
-WORKDIR /go/src/github.com/cybozu-go/cilium
+WORKDIR /go/src/github.com/cilium/cilium
 ARG LIBNETWORK_PLUGIN
 ARG DESTDIR
 ENV PKG_BUILD=1
