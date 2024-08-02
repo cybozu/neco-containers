@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -24,7 +23,7 @@ func machineListReader(filename string) (Machines, error) {
 
 	file, err := os.Open(filename)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error("os.Open()", "err", err, "filename", filename)
 		return ml, err
 	}
 	defer file.Close()
@@ -36,7 +35,7 @@ func machineListReader(filename string) (Machines, error) {
 
 	err = json.Unmarshal(byteData, &ml)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error("json.Unmarshal()", "err", err, "byteData", string(byteData))
 		return ml, err
 	}
 
