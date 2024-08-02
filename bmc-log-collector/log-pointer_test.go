@@ -14,8 +14,8 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var mu sync.Mutex
 
 	lc := logCollector{
-		testMode: false,
-		mutex:    &mu,
+		//testMode: false,
+		mutex: &mu,
 	}
 
 	BeforeAll(func() {

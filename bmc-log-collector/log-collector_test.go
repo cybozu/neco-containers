@@ -65,12 +65,12 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			machinesPath: "testdata/configmap/log-collector-test.json",
 			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:       "testdata/pointers",
-			testMode:     true,
-			testOut:      "testdata/output",
-			user:         "user",
-			password:     "pass",
-			rfClient:     cl,
-			mutex:        &mu,
+			//testMode:     true,
+			testOut:    "testdata/output",
+			user:       "user",
+			password:   "pass",
+			httpClient: cl,
+			mutex:      &mu,
 		}
 
 		It("get machine list", func() {
@@ -84,10 +84,15 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			var wg sync.WaitGroup
+			logWriter := logTest{outputDir: lc.testOut}
 			for i := 0; i < len(machinesList.Machine); i++ {
 				wg.Add(1)
-				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
-				time.Sleep(1 * time.Second)
+				go func() {
+					lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i], logWriter)
+					Expect(err).NotTo(HaveOccurred())
+					wg.Done()
+				}()
+				//time.Sleep(1 * time.Second)
 			}
 			wg.Wait()
 		})
@@ -121,11 +126,17 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
 			GinkgoWriter.Println("------ ", machinesList.Machine)
+
+			// choice test logWriter to write local file
+			logWriter := logTest{outputDir: lc.testOut}
 			for i := 0; i < len(machinesList.Machine); i++ {
 				wg.Add(1)
-				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
-				Expect(err).NotTo(HaveOccurred())
-				time.Sleep(1 * time.Second)
+				go func() {
+					lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i], logWriter)
+					Expect(err).NotTo(HaveOccurred())
+					wg.Done()
+				}()
+				//time.Sleep(1 * time.Second)
 			}
 			defer cancel()
 			wg.Wait()

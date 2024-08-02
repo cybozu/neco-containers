@@ -3,11 +3,11 @@ package main
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"path"
+	//"os"
+	//"path"
 	"strconv"
 	"sync"
 	"time"
@@ -35,7 +35,7 @@ type SystemEventLog struct {
 	BmcIP             string
 }
 
-type Redfish struct {
+type RedfishJsonSchema struct {
 	Name        string           `json:"Name"`
 	Count       int              `json:"Members@odata.count"`
 	Context     string           `json:"@odata.context"`
@@ -46,57 +46,46 @@ type Redfish struct {
 }
 
 type logCollector struct {
-	machinesPath string       // Machine list path
-	rfUrl        string       // Redfish API address
-	ptrDir       string       // Pointer store
-	testMode     bool         // when testMode is true, write text file for test
-	testOut      string       // Test output directory
-	user         string       // iDRAC user
-	password     string       // iDRAC password
-	rfClient     *http.Client // to reuse HTTP transport
-	mutex        *sync.Mutex  // execlusive lock for pointer
+	machinesPath string // Machine list path
+	rfUrl        string // Redfish API address
+	ptrDir       string // Pointer store
+	//testMode     bool         // when testMode is true, write text file for test
+	testOut    string       // Test output directory
+	user       string       // iDRAC user
+	password   string       // iDRAC password
+	httpClient *http.Client // to reuse HTTP transport
+	mutex      *sync.Mutex  // execlusive lock for pointer
 }
 
-func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine) {
-	defer wg.Done()
-
+func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine, logWriter bmcLogWriter) {
+	//defer wg.Done()
 	rfc := RedfishClient{
 		user:     c.user,
 		password: c.password,
-		client:   c.rfClient,
+		client:   c.httpClient,
 	}
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-
-		default:
-			url := "https://" + m.BmcIP + c.rfUrl
-			byteBuf, err := rfc.requestToBmc(ctx, url)
-			if err != nil {
-				// When canceled by context, the pointer files is never updated because the return is made here.
-				errMsg := fmt.Sprintf("%s: %s", err, url)
-				slog.Error(errMsg)
-				return
-			}
-			c.antiDuplicationFilter(byteBuf, m, c.ptrDir)
-			return
-		}
+	url := "https://" + m.BmcIP + c.rfUrl
+	//byteBuf, err := rfc.requestToBmc(ctx, url)
+	byteBuf, err := requestToBmc(ctx, url, rfc)
+	if err != nil {
+		// When canceled by context, the pointer files is never updated because the return is made here.
+		slog.Error("requestToBmc()", "err", err, "url", url)
+		return
 	}
+	c.bmcLogOutputWithoutDuplication(byteBuf, m, c.ptrDir, logWriter)
 }
 
-func (c *logCollector) antiDuplicationFilter(byteJSON []byte, server Machine, ptrDir string) {
+func (c *logCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Machine, ptrDir string, logWriter bmcLogWriter) {
 
-	var members Redfish
+	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error("json.Unmarshal()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
 		return
 	}
 
 	lastPtr, err := c.readLastPointer(server.Serial, ptrDir)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error("readLastPointer()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
 		return
 	}
 
@@ -114,23 +103,15 @@ func (c *logCollector) antiDuplicationFilter(byteJSON []byte, server Machine, pt
 
 		// Anti duplication
 		if lastPtr.LastReadId < lastId {
-			v, _ := json.Marshal(members.Sel[i])
-			if c.testMode {
-				testPrint(c.testOut, server.Serial, string(v))
-			} else {
-				fmt.Fprintln(os.Stdout, string(v))
-			}
+			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
+			logWriter.writer(string(bmcByteJsonLog), server.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
 		} else if lastPtr.LastReadId > lastId {
 			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
 			if lastPtr.LastReadTime < createUnixtime {
-				v, _ := json.Marshal(members.Sel[i])
-				if c.testMode {
-					testPrint(c.testOut, server.Serial, string(v))
-				} else {
-					fmt.Fprintln(os.Stdout, string(v))
-				}
+				bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
+				logWriter.writer(string(bmcByteJsonLog), server.Serial)
 				lastPtr.LastReadId = lastId
 				lastPtr.LastReadTime = createUnixtime
 			}
@@ -143,18 +124,7 @@ func (c *logCollector) antiDuplicationFilter(byteJSON []byte, server Machine, pt
 		LastReadId:   lastId,
 	}, ptrDir)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
+		slog.Error("updateLastPointer()", "err", err, "serial", server.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", ptrDir)
 		return
 	}
-}
-
-func testPrint(dir string, serial string, output string) {
-	fn := path.Join(dir, serial)
-	file, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		slog.Error(fmt.Sprintf("%s", err))
-		return
-	}
-	defer file.Close()
-	file.WriteString(fmt.Sprintln(string(output)))
 }

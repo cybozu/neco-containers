@@ -3,7 +3,8 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
+	//"fmt"
+	"github.com/gofrs/flock"
 	"io"
 	"log/slog"
 	"os"
@@ -19,16 +20,13 @@ type LastPointer struct {
 func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
 
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	filePath := path.Join(ptrDir, serial)
 	f, err := os.Open(filePath)
 	// when new file, create file and set initial data.
 	if errors.Is(err, os.ErrNotExist) {
 		f, err = os.Create(filePath)
 		if err != nil {
-			slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+			slog.Error("os.Create()", "err", err, "filename", filePath)
 			return lptr, err
 		}
 		lptr := LastPointer{
@@ -40,14 +38,14 @@ func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointe
 		return lptr, err
 		// when other error occur
 	} else if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("os.Open()", "err", err, "filename", filePath)
 		return lptr, err
 	}
 	defer f.Close()
 
 	st, err := f.Stat()
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("f.Stat()", "err", err, "filename", filePath)
 		return lptr, err
 	}
 
@@ -57,12 +55,12 @@ func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointe
 
 	byteJSON, err := io.ReadAll(f)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("io.ReadAll()", "err", err, "filename", filePath)
 		return lptr, err
 	}
 
 	if json.Unmarshal(byteJSON, &lptr) != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("json.Unmarshal()", "err", err, "byteJSON", string(byteJSON))
 		return lptr, err
 	}
 
@@ -71,24 +69,25 @@ func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointe
 
 func (c *logCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
 
-	c.mutex.Lock()
-	defer c.mutex.Unlock()
-
 	filePath := path.Join(ptrDir, lptr.Serial)
+	lock := flock.New(filePath)
+	lock.Lock()
+	defer lock.Unlock()
+
 	file, err := os.Create(filePath)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("os.Create()", "err", err, "filename", filePath)
 		return err
 	}
 	defer file.Close()
 	byteJSON, err := json.Marshal(lptr)
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("json.Marshal()", "err", err)
 		return err
 	}
 	_, err = file.WriteString(string(byteJSON))
 	if err != nil {
-		slog.Error(fmt.Sprintf("%s, %s", err, filePath))
+		slog.Error("file.WriteString()", "err", err, "writing data", string(byteJSON))
 		return err
 	}
 	return nil

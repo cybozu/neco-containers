@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log"
 	"log/slog"
 	"net"
 	"net/http"
@@ -14,17 +15,17 @@ import (
 	"time"
 )
 
-func doMainLoop(testMode bool, testModeConfig logCollector) {
+type bmcLogWriter interface {
+	writer(stringJson string, serial string) (err error)
+}
+
+func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 	var testModeLoop int
 
-	// setup slog
-	opts := &slog.HandlerOptions{
-		AddSource: true,
-	}
-	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
-	slog.SetDefault(logger)
+	flag := interface{}(logWriter)
+	_, testMode := flag.(logTest)
 
 	// check parameter
 	userId := os.Getenv("BMC_USER_ID")
@@ -54,16 +55,16 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 		machinesPath: "/config/serverlist.json",
 		rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:       "/data/pointers",
-		rfClient:     cl,
+		httpClient:   cl,
 		mutex:        &mu,
 		user:         userId,
 		password:     password,
-		testMode:     false,
+		//testMode:     false,
 	}
 
 	// test mode
 	if testMode {
-		lc.testMode = true
+		//lc.testMode = true
 		lc.testOut = "testdata/output"
 		lc.machinesPath = testModeConfig.machinesPath
 		lc.ptrDir = testModeConfig.ptrDir
@@ -79,12 +80,13 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	// set interval timer
-	ticker := time.NewTicker(5 * time.Second)
+	// set first interval timer
+	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	// Main loop
+	// main loop
 	for {
+		// when use the test mode, must break infinite loop
 		if testMode {
 			testModeLoop++
 			if testModeLoop > 3 {
@@ -93,25 +95,56 @@ func doMainLoop(testMode bool, testModeConfig logCollector) {
 		}
 		select {
 		case <-ctx.Done():
+			//cancel()
 			return
 		case <-ticker.C:
 			machinesList, err := machineListReader(lc.machinesPath)
 			if err != nil {
-				slog.Error(fmt.Sprintf("%s", err))
-				cancel()
+				slog.Error("machineListReader()", "err", err, "path", lc.machinesPath)
 				return
 			}
 			// start log collector workers by BMC
-			for i := 0; i < len(machinesList.Machine); i++ {
+			//for i := 0; i < len(machinesList.Machine); i++ {
+			for _, m := range machinesList.Machine {
 				wg.Add(1)
-				go lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i])
+				go func() {
+					lc.logCollectorWorker(ctx, &wg, m, logWriter)
+					wg.Done()
+				}()
 			}
 			wg.Wait()
-			lc.rfClient.CloseIdleConnections()
+			lc.httpClient.CloseIdleConnections()
 		}
+		// scrape cycle: 30min (=1800sec)
+		fmt.Println("*********** waiting ********************")
+		intervalTime := 1800 * time.Second
+		if testMode {
+			intervalTime = 10 * time.Second
+		}
+		ticker = time.NewTicker(intervalTime)
 	}
 }
 
+// BMC log writer to forward Loki via promtail
+type logProd struct{}
+
+func (l logProd) writer(stringJson string, serial string) error {
+	// use default logger to prevent to mix log messages cross go-routine
+	log.SetOutput(os.Stdout)
+	log.SetFlags(0)
+	log.Print(stringJson)
+	return nil
+}
+
 func main() {
-	doMainLoop(false, logCollector{})
+	// setup slog
+	opts := &slog.HandlerOptions{
+		AddSource: true,
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
+	slog.SetDefault(logger)
+
+	// set BMC log writer
+	logWriter := logProd{}
+	doMainLoop(logCollector{}, logWriter)
 }

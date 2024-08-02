@@ -67,7 +67,10 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				user:         "user",
 				password:     "pass",
 			}
-			doMainLoop(true, lc)
+
+			// setup logWriter for test
+			logWriter := logTest{outputDir: "testdata/output"}
+			doMainLoop(lc, logWriter)
 		})
 	})
 

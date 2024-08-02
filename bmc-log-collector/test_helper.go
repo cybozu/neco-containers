@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -122,4 +123,22 @@ func ReadingTestResultLogNext(b *bufio.Reader) (string, error) {
 		break
 	}
 	return stringJSON, err
+}
+
+type logTest struct {
+	outputDir string
+}
+
+func (l logTest) writer(byteJson string, serial string) error {
+	fn := path.Join(l.outputDir, serial)
+	file, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		slog.Error("OpenFile()", "err", err, "filename", fn)
+		return err
+	}
+	defer file.Close()
+	fmt.Println("=============================================  ", serial)
+	file.WriteString(fmt.Sprintln(string(byteJson)))
+	fmt.Println(byteJson)
+	return nil
 }

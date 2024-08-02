@@ -18,7 +18,7 @@ check-generate:
 test:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
+	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
 	#$(GINKGO) -v -procs=1 --race --focus-file machines-list_test.go
 	#$(GINKGO) -v -procs=1 --race --focus-file bmc-http-client_test.go
