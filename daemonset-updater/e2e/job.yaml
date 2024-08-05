@@ -1,0 +1,88 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: daemonset-updater
+spec:
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: daemonset-updater-worker
+      containers:
+      - name: daemosnet-updater 
+        image: ghcr.io/cybozu/daemonset-updater:dev
+        args:
+          - --app-label
+          - app=testhttpd
+          - --desired-image
+          - ghcr.io/cybozu/testhttpd:0.2.5
+          - --drain-timeout
+          - 10m
+          - --timeout
+          - 30m
+          - --ignore
+          - daemonset-updater-worker
+      restartPolicy: Never
+      serviceAccountName: daemonset-updater
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: daemonset-updater
+automountServiceAccountToken: true
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: daemonset-updater
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: daemonset-updater
+subjects:
+  - kind: ServiceAccount
+    name: daemonset-updater
+    namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: daemonset-updater
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
+  - list
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - pods/eviction
+  verbs:
+  - create
+- apiGroups:
+  - "apps"
+  resources:
+  - daemonsets
+  - statefulsets
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - extenstions
+  resources:
+  - daemonsets
+  - replicasets
+  verbs:
+  - get
+  - list

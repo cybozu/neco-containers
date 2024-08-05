@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: testhttpd 
+spec:
+  selector:
+    matchLabels:
+      app: testhttpd
+  updateStrategy:
+    type: OnDelete
+  template:
+    metadata:
+      labels:
+        app: testhttpd
+    spec:
+      tolerations:
+      - key: node-role.kubernetes.io/control-plane
+        operator: Exists
+        effect: NoSchedule
+      containers:
+      - image: ghcr.io/cybozu/testhttpd:0.2.4
+        name: testhttpd
