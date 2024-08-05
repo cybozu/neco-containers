@@ -81,3 +81,15 @@ runs:
       sudo images/bpftool/checkout-linux.sh
       sudo images/bpftool/build-bpftool-native.sh
       sudo mv /out/linux/amd64/bin/bpftool ../workspace/usr/local/bin/
+
+  - name: Build iproute2
+    shell: bash
+    run: |
+      cd cilium/src/image-tools
+      sed -i -e "s/libbpf-/cilium-libbpf-/g" images/iproute2/checkout-libbpf.sh
+      sudo images/iproute2/checkout-libbpf.sh
+      sudo images/iproute2/build-libbpf-native.sh
+      sudo images/iproute2/checkout-iproute2.sh
+      sudo images/iproute2/build-iproute2-native.sh
+      sudo mv /out/linux/amd64/lib64/libbpf* ../workspace/usr/lib/
+      sudo mv /out/linux/amd64/bin/ip /out/linux/amd64/bin/tc /out/linux/amd64/bin/ss ../workspace/usr/local/bin/
