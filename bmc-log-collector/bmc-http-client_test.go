@@ -29,10 +29,11 @@ var _ = Describe("Access BMC", Ordered, func() {
 			}).DialContext,
 		},
 	}
-	rfc := RedfishClient{
-		user:     "user",
+	rfRequest := redfishSelRequest{
+		username: "user",
 		password: "pass",
 		client:   client,
+		url:      "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 	}
 
 	BeforeAll(func() {
@@ -48,37 +49,45 @@ var _ = Describe("Access BMC", Ordered, func() {
 	})
 
 	Context("Access iDRAC server to get SEL", func() {
-		var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+		//var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 		It("Normal access", func() {
-			byteJSON, err := requestToBmc(ctx, redfish_url, rfc)
+			byteJSON, err := requestToBmc(ctx, rfRequest)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(byteJSON)).To(Equal(776))
 		})
 
 		It("Abnormal access, not existing web server", func() {
-			test_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-			byteJSON, err := requestToBmc(ctx, test_url, rfc)
+			//test_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+			rfRequest.url = "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+			//byteJSON, err := requestToBmc(ctx, test_url, rfc)
+			byteJSON, err := requestToBmc(ctx, rfRequest)
 			Expect(err).To(HaveOccurred())
-			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", test_url)
+			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", rfRequest.url)
 			Expect(err.Error()).To(Equal(errmsg))
 			Expect(len(byteJSON)).To(Equal(0))
 		})
 
 		It("Abnormal access, wrong path", func() {
-			wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
-			_, err := requestToBmc(ctx, wrong_url, rfc)
+			//wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
+			rfRequest.url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
+			//_, err := requestToBmc(ctx, wrong_url, rfc)
+			_, err := requestToBmc(ctx, rfRequest)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal access, wrong username", func() {
-			rfc.user = "badname"
-			_, err := requestToBmc(ctx, redfish_url, rfc)
+			//rfc.username = "badname"
+			rfRequest.username = "badname"
+			_, err := requestToBmc(ctx, rfRequest)
+			//_, err := requestToBmc(ctx, redfish_url, rfc)
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal access, wrong password", func() {
-			rfc.password = "badpw"
-			_, err := requestToBmc(ctx, redfish_url, rfc)
+			//rfc.password = "badpw"
+			rfRequest.password = "badpw"
+			//_, err := requestToBmc(ctx, redfish_url, rfc)
+			_, err := requestToBmc(ctx, rfRequest)
 			Expect(err).To(HaveOccurred())
 		})
 	})

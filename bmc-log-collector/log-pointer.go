@@ -3,8 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	//"fmt"
-	//"github.com/gofrs/flock"
 	"io"
 	"log/slog"
 	"os"
@@ -17,7 +15,9 @@ type LastPointer struct {
 	LastReadId   int
 }
 
-func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointer, error) {
+// sellCollector は、ひつようか？
+// func (c *selCollector) readLastPointer(serial string, ptrDir string) (LastPointer, error) {
+func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
 
 	filePath := path.Join(ptrDir, serial)
@@ -67,13 +67,10 @@ func (c *logCollector) readLastPointer(serial string, ptrDir string) (LastPointe
 	return lptr, err
 }
 
-func (c *logCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
-
+// これも selCollectorは不要かも
+// func (c *selCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
+func updateLastPointer(lptr LastPointer, ptrDir string) error {
 	filePath := path.Join(ptrDir, lptr.Serial)
-	//lock := flock.New(filePath)
-	//lock.Lock()
-	//defer lock.Unlock()
-
 	file, err := os.Create(filePath)
 	if err != nil {
 		slog.Error("os.Create()", "err", err, "filename", filePath)

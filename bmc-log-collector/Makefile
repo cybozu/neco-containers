@@ -20,8 +20,8 @@ test:
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	#$(GINKGO) -v -procs=1 --race --focus-file machines-list_test.go
-	#$(GINKGO) -v -procs=1 --race --focus-file bmc-http-client_test.go
-	#$(GINKGO) -v -procs=1 --race --focus-file log-pointer_test.go
-	#$(GINKGO) -v -procs=1 --race --focus-file log-collector_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file machines-list_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file bmc-http-client_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file log-pointer_test.go
+	$(GINKGO) -v -procs=1 --race --focus-file log-collector_test.go
 	$(GINKGO) -v -procs=1 --race --focus-file main_test.go

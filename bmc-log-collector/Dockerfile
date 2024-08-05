@@ -1,10 +1,7 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-jammy AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-COPY *.go /work
-COPY go.mod /work
-COPY testdata /work
-
+COPY . /work
 WORKDIR /work
 
 RUN CGO_ENABLED=0 go install -ldflags="-w -s" 
