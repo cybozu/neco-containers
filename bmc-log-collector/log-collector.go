@@ -3,13 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
-	//"fmt"
 	"log/slog"
 	"net/http"
-	//"os"
-	//"path"
 	"strconv"
-	"sync"
+	//"sync"
 	"time"
 )
 
@@ -45,37 +42,38 @@ type RedfishJsonSchema struct {
 	Sel         []SystemEventLog `json:"Members"`
 }
 
-type logCollector struct {
-	machinesPath string // Machine list path
-	rfUrl        string // Redfish API address
-	ptrDir       string // Pointer store
-	//testMode     bool         // when testMode is true, write text file for test
-	testOut    string       // Test output directory
-	user       string       // iDRAC user
-	password   string       // iDRAC password
-	httpClient *http.Client // to reuse HTTP transport
-	mutex      *sync.Mutex  // execlusive lock for pointer
+// SEL(System Event Log) Collector
+// type logCollector struct {
+type selCollector struct {
+	machinesListDir string       // Directory of the machines list
+	rfUriSel        string       // SEL path of Redfish API address
+	ptrDir          string       // Pointer store
+	testOutputDir   string       // Test output directory
+	username        string       // iDRAC username　　これも
+	password        string       // iDRAC password　　これもだぶっていないか？
+	httpClient      *http.Client // to reuse HTTP transport  だぶっているかも？
+	//mutex           *sync.Mutex  // execlusive lock for pointer
 }
 
-func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine, logWriter bmcLogWriter) {
-	//defer wg.Done()
-	rfc := RedfishClient{
-		user:     c.user,
+func (c *selCollector) selCollectorWorker(ctx context.Context, m Machine, logWriter bmcLogWriter) {
+	//func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine, logWriter bmcLogWriter) {
+	rfRq := redfishSelRequest{
+		username: c.username,
 		password: c.password,
 		client:   c.httpClient,
+		url:      "https://" + m.BmcIP + c.rfUriSel,
 	}
-	url := "https://" + m.BmcIP + c.rfUrl
-	//byteBuf, err := rfc.requestToBmc(ctx, url)
-	byteBuf, err := requestToBmc(ctx, url, rfc)
+	//url := "https://" + m.BmcIP + c.rfUriSel
+	byteBuf, err := requestToBmc(ctx, rfRq)
 	if err != nil {
 		// When canceled by context, the pointer files is never updated because the return is made here.
-		slog.Error("requestToBmc()", "err", err, "url", url)
+		slog.Error("requestToBmc()", "err", err, "url", rfRq.url)
 		return
 	}
 	c.bmcLogOutputWithoutDuplication(byteBuf, m, c.ptrDir, logWriter)
 }
 
-func (c *logCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Machine, ptrDir string, logWriter bmcLogWriter) {
+func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Machine, ptrDir string, logWriter bmcLogWriter) {
 
 	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -83,7 +81,8 @@ func (c *logCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		return
 	}
 
-	lastPtr, err := c.readLastPointer(server.Serial, ptrDir)
+	//lastPtr, err := c.readLastPointer(server.Serial, ptrDir)
+	lastPtr, err := readLastPointer(server.Serial, ptrDir)
 	if err != nil {
 		slog.Error("readLastPointer()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
 		return
@@ -118,7 +117,8 @@ func (c *logCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		}
 	}
 
-	err = c.updateLastPointer(LastPointer{
+	//err = c.updateLastPointer(LastPointer{
+	err = updateLastPointer(LastPointer{
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,

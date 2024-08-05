@@ -4,26 +4,26 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 )
 
-type RedfishClient struct {
-	user     string
+// Request of SEL in Redfish API
+type redfishSelRequest struct {
+	username string
 	password string
 	client   *http.Client
+	url      string
 }
 
-// Get from Redfish on BMC REST service
-// func (r *RedfishClient) requestToBmc(ctx context.Context, url string) ([]byte, error) {
-func requestToBmc(ctx context.Context, url string, r RedfishClient) ([]byte, error) {
+// Get from Redfish API on BMC REST service
+// func requestToBmc(ctx context.Context, url string, r RedfishClient) ([]byte, error) {
+func requestToBmc(ctx context.Context, r redfishSelRequest) ([]byte, error) {
 	// create Redfish request
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest("GET", r.url, nil)
 	if err != nil {
-		slog.Error("http.NewRequest()", "err", err, "URL", url)
 		return nil, err
 	}
-	req.SetBasicAuth(r.user, r.password)
+	req.SetBasicAuth(r.username, r.password)
 	req = req.WithContext(ctx)
 	resp, err := r.client.Do(req)
 	if err != nil {
@@ -33,13 +33,11 @@ func requestToBmc(ctx context.Context, url string, r RedfishClient) ([]byte, err
 
 	if resp.StatusCode != http.StatusOK {
 		err := fmt.Errorf("HTTP status code = %d", resp.StatusCode)
-		slog.Error("resp.StatusCode", "err", err)
 		return nil, err
 	}
 
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
-		slog.Error("io.ReadAll()", "err", err)
 		return nil, err
 	}
 

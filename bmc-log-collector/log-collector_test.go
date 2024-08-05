@@ -24,9 +24,10 @@ import (
 
 var _ = Describe("gathering up logs", Ordered, func() {
 
-	var lc logCollector
+	//var lc logCollector
+	var lc selCollector
 	var cl *http.Client
-	var mu sync.Mutex
+	//var mu sync.Mutex
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
@@ -44,7 +45,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 	})
 
 	Context("log collector function test", func() {
-		var machinesList Machines
+		var machinesList []Machine
 		var err error
 		var serial1 string = "683FPQ3"
 		var file *os.File
@@ -61,60 +62,54 @@ var _ = Describe("gathering up logs", Ordered, func() {
 				}).DialContext,
 			},
 		}
-		lc = logCollector{
-			machinesPath: "testdata/configmap/log-collector-test.json",
-			rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-			ptrDir:       "testdata/pointers",
-			//testMode:     true,
-			testOut:    "testdata/output",
-			user:       "user",
-			password:   "pass",
-			httpClient: cl,
-			mutex:      &mu,
+		lc = selCollector{
+			machinesListDir: "testdata/configmap/log-collector-test.json",
+			rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+			ptrDir:          "testdata/pointers",
+			testOutputDir:   "testdata/output",
+			username:        "user",
+			password:        "pass",
+			httpClient:      cl,
+			//mutex:           &mu,
 		}
 
 		It("get machine list", func() {
-			machinesList, err = machineListReader(lc.machinesPath)
+			machinesList, err = machineListReader(lc.machinesListDir)
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Println("Machine List = ", machinesList)
 		})
 
-		// Start log collector
+		// Start sel collector
 		It("run logCollectorWorker", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			var wg sync.WaitGroup
-			logWriter := logTest{outputDir: lc.testOut}
-			for i := 0; i < len(machinesList.Machine); i++ {
+			logWriter := logTest{outputDir: lc.testOutputDir}
+			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i], logWriter)
+					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
+					lc.selCollectorWorker(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()
-				//time.Sleep(1 * time.Second)
 			}
 			wg.Wait()
 		})
 
 		It("verify output of collector", func(ctx SpecContext) {
 			var result SystemEventLog
-			file, err = OpenTestResultLog(path.Join(lc.testOut, serial1))
+			file, err = OpenTestResultLog(path.Join(lc.testOutputDir, serial1))
 			Expect(err).ToNot(HaveOccurred())
 
-			// Read test log
 			reader = bufio.NewReaderSize(file, 4096)
-
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &result)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("---- serial = ", string(result.Serial))
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial1))
@@ -125,18 +120,18 @@ var _ = Describe("gathering up logs", Ordered, func() {
 		It("run logCollectorWorker (2nd)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
-			GinkgoWriter.Println("------ ", machinesList.Machine)
+			GinkgoWriter.Println("------ ", machinesList)
 
 			// choice test logWriter to write local file
-			logWriter := logTest{outputDir: lc.testOut}
-			for i := 0; i < len(machinesList.Machine); i++ {
+			logWriter := logTest{outputDir: lc.testOutputDir}
+			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.logCollectorWorker(ctx, &wg, machinesList.Machine[i], logWriter)
+					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
+					lc.selCollectorWorker(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()
-				//time.Sleep(1 * time.Second)
 			}
 			defer cancel()
 			wg.Wait()
@@ -145,16 +140,13 @@ var _ = Describe("gathering up logs", Ordered, func() {
 		It("verify output of collector (2nd)", func(ctx SpecContext) {
 			var result SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &result)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("---- serial = ", string(result.Serial))
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial1))

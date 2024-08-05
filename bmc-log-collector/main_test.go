@@ -58,19 +58,19 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	Context("stub of main equivalent", func() {
 		It("main loop test", func() {
-			os.Setenv("BMC_USER_ID", "user")
+			os.Setenv("BMC_USERNAME", "user")
 			os.Setenv("BMC_PASSWORD", "pass")
-			lc := logCollector{
-				machinesPath: "testdata/configmap/serverlist2.json",
-				rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-				ptrDir:       "testdata/pointers",
-				user:         "user",
-				password:     "pass",
+			lc := selCollector{
+				machinesListDir: "testdata/configmap/serverlist2.json",
+				rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+				ptrDir:          "testdata/pointers",
+				username:        "user",
+				password:        "pass",
 			}
 
 			// setup logWriter for test
 			logWriter := logTest{outputDir: "testdata/output"}
-			doMainLoop(lc, logWriter)
+			doLogScrapingLoop(lc, logWriter)
 		})
 	})
 
@@ -86,19 +86,14 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			file, err = OpenTestResultLog(path.Join(testOut, serial))
 			Expect(err).ToNot(HaveOccurred())
 
-			// Read test log
 			reader = bufio.NewReaderSize(file, 4096)
-
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("---- serial = ", string(rslt.Serial))
 			GinkgoWriter.Println("-------- id = ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -108,16 +103,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("2nd reply", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("---- serial = ", string(rslt.Serial))
 			GinkgoWriter.Println("-------- id = ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -137,20 +129,15 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			file, err = OpenTestResultLog(path.Join(testOut, serial))
 			Expect(err).ToNot(HaveOccurred())
-
-			// Read test log
 			reader = bufio.NewReaderSize(file, 4096)
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -160,16 +147,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 2nd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -179,16 +163,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 3rd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -198,16 +179,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 4th log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -227,20 +205,15 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			file, err = OpenTestResultLog(path.Join(testOut, serial))
 			Expect(err).ToNot(HaveOccurred())
-
-			// Read test log
 			reader = bufio.NewReaderSize(file, 4096)
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -250,16 +223,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 2nd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -269,16 +239,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 3rd log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -288,16 +255,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 4th log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
@@ -307,16 +271,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("check 5th log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
 
-			// Read test log
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
 
-			// JSON to struct
 			err = json.Unmarshal([]byte(stringJSON), &rslt)
 			Expect(err).ToNot(HaveOccurred())
 
-			// Verify serial & id
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))

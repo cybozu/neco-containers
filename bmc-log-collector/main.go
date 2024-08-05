@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -19,18 +18,18 @@ type bmcLogWriter interface {
 	writer(stringJson string, serial string) (err error)
 }
 
-func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
+func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 	var wg sync.WaitGroup
-	var mu sync.Mutex
+	//var mu sync.Mutex
 	var testModeLoop int
 
 	flag := interface{}(logWriter)
 	_, testMode := flag.(logTest)
 
 	// check parameter
-	userId := os.Getenv("BMC_USER_ID")
-	if len(userId) == 0 {
-		slog.Error("The environment variable BMC_USER_ID should be set")
+	username := os.Getenv("BMC_USERNAME")
+	if len(username) == 0 {
+		slog.Error("The environment variable BMC_USERNAME should be set")
 		return
 	}
 
@@ -51,24 +50,22 @@ func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 			}).DialContext,
 		},
 	}
-	lc := logCollector{
-		machinesPath: "/config/serverlist.json",
-		rfUrl:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-		ptrDir:       "/data/pointers",
-		httpClient:   cl,
-		mutex:        &mu,
-		user:         userId,
-		password:     password,
-		//testMode:     false,
+	lc := selCollector{
+		machinesListDir: "/config/serverlist.json",
+		rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+		ptrDir:          "/data/pointers",
+		httpClient:      cl,
+		//mutex:           &mu,
+		username: username,
+		password: password,
 	}
 
-	// test mode
+	// test mode setup
 	if testMode {
-		//lc.testMode = true
-		lc.testOut = "testdata/output"
-		lc.machinesPath = testModeConfig.machinesPath
+		lc.testOutputDir = "testdata/output"
+		lc.machinesListDir = testModeConfig.machinesListDir
 		lc.ptrDir = testModeConfig.ptrDir
-		lc.user = testModeConfig.user
+		lc.username = testModeConfig.username
 		lc.password = testModeConfig.password
 	}
 
@@ -76,7 +73,6 @@ func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
-	//ctx, cancel := context.WithCancel(context.Background())
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
@@ -84,7 +80,7 @@ func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	// main loop
+	// scraping loop
 	for {
 		// when use the test mode, must break infinite loop
 		if testMode {
@@ -95,20 +91,19 @@ func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 		}
 		select {
 		case <-ctx.Done():
-			//cancel()
 			return
 		case <-ticker.C:
-			machinesList, err := machineListReader(lc.machinesPath)
+			machinesList, err := machineListReader(lc.machinesListDir)
 			if err != nil {
-				slog.Error("machineListReader()", "err", err, "path", lc.machinesPath)
+				slog.Error("machineListReader()", "err", err, "path", lc.machinesListDir)
 				return
 			}
-			// start log collector workers by BMC
-			//for i := 0; i < len(machinesList.Machine); i++ {
-			for _, m := range machinesList.Machine {
+			// start log collector workers by BMCs
+			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.logCollectorWorker(ctx, &wg, m, logWriter)
+					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
+					lc.selCollectorWorker(ctx, m, logWriter)
 					wg.Done()
 				}()
 			}
@@ -116,7 +111,6 @@ func doMainLoop(testModeConfig logCollector, logWriter bmcLogWriter) {
 			lc.httpClient.CloseIdleConnections()
 		}
 		// scrape cycle: 30min (=1800sec)
-		fmt.Println("*********** waiting ********************")
 		intervalTime := 1800 * time.Second
 		if testMode {
 			intervalTime = 10 * time.Second
@@ -144,7 +138,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
-	// set BMC log writer
+	// setup BMC log writer
 	logWriter := logProd{}
-	doMainLoop(logCollector{}, logWriter)
+
+	// log scraping loop
+	doLogScrapingLoop(selCollector{}, logWriter)
 }
