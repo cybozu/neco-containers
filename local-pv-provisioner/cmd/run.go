@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"os"
 
 	"github.com/cybozu/neco-containers/local-pv-provisioner/controllers"
 	corev1 "k8s.io/api/core/v1"
@@ -54,13 +53,6 @@ func run() error {
 
 	ddLogger := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
 
-	workingNamespace, ok := os.LookupEnv("LP_NAMESPACE")
-	if !ok {
-		err := errors.New("LP_NAMESPACE env var not found")
-		setupLog.Error(err, "LP_NAMESPACE env var not found")
-		return err
-	}
-
 	dd := controllers.NewDeviceDetector(
 		mgr.GetClient(),
 		mgr.GetAPIReader(),
@@ -70,7 +62,7 @@ func run() error {
 		scheme,
 		&deleter,
 		config.defaultPVSpecConfigMap,
-		workingNamespace,
+		config.namespaceName,
 	)
 	err = mgr.Add(dd)
 	if err != nil {

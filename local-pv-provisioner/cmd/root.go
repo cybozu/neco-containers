@@ -20,6 +20,7 @@ var config struct {
 	pollingInterval        time.Duration
 	zapOpts                zap.Options
 	defaultPVSpecConfigMap string
+	namespaceName          string
 }
 
 var rootCmd = &cobra.Command{
@@ -33,6 +34,7 @@ var rootCmd = &cobra.Command{
 		config.defaultPVSpecConfigMap = viper.GetString("default-pv-spec-configmap")
 		config.nodeName = viper.GetString("node-name")
 		config.pollingInterval = viper.GetDuration("polling-interval")
+		config.namespaceName = viper.GetString("namespace-name")
 		return run()
 	},
 }
@@ -52,6 +54,7 @@ func init() {
 	fs.String("node-name", "", "The name of Node on which this program is running")
 	fs.Duration("polling-interval", 5*time.Minute, "Polling interval to check devices.")
 	fs.String("default-pv-spec-configmap", "", "A ConfigMap name that should be used if the Node doesn't have the pv-spec-configmap annotation.")
+	fs.String("namespace-name", "", "the name of the namespace in which this program is running")
 
 	if err := viper.BindPFlags(fs); err != nil {
 		panic(err)

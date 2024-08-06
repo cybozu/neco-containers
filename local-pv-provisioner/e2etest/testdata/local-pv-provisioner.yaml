@@ -22,7 +22,7 @@ spec:
             - --polling-interval=10s
           imagePullPolicy: IfNotPresent
           env:
-            - name: LP_NAMESPACE
+            - name: LP_NAMESPACE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
