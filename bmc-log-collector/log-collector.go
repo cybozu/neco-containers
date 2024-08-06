@@ -108,10 +108,12 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 	}
 
 	err = updateLastPointer(LastPointer{
-		Serial:       server.Serial,
-		LastReadTime: createUnixtime,
-		LastReadId:   lastId,
+		Serial:         server.Serial,
+		LastReadTime:   createUnixtime,
+		LastReadId:     lastId,
+		LastUpdateTime: time.Now().Unix(),
 	}, ptrDir)
+
 	if err != nil {
 		slog.Error("updateLastPointer()", "err", err, "serial", server.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", ptrDir)
 		return

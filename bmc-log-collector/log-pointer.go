@@ -7,12 +7,14 @@ import (
 	"log/slog"
 	"os"
 	"path"
+	"time"
 )
 
 type LastPointer struct {
-	Serial       string
-	LastReadTime int64
-	LastReadId   int
+	Serial         string
+	LastReadTime   int64
+	LastReadId     int
+	LastUpdateTime int64
 }
 
 func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
@@ -28,9 +30,10 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 			return lptr, err
 		}
 		lptr := LastPointer{
-			Serial:       serial,
-			LastReadTime: 0,
-			LastReadId:   0,
+			Serial:         serial,
+			LastReadTime:   0,
+			LastReadId:     0,
+			LastUpdateTime: time.Now().Unix(),
 		}
 		f.Close()
 		return lptr, err
@@ -52,6 +55,7 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	}
 
 	byteJSON, err := io.ReadAll(f)
+
 	if err != nil {
 		slog.Error("io.ReadAll()", "err", err, "filename", filePath)
 		return lptr, err
@@ -61,7 +65,6 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 		slog.Error("json.Unmarshal()", "err", err, "byteJSON", string(byteJSON))
 		return lptr, err
 	}
-
 	return lptr, err
 }
 
@@ -82,6 +85,43 @@ func updateLastPointer(lptr LastPointer, ptrDir string) error {
 	if err != nil {
 		slog.Error("file.WriteString()", "err", err, "writing data", string(byteJSON))
 		return err
+	}
+	return nil
+}
+
+// Delete pointer files that have not been updated
+func deleteUnUpdatedFiles(ptrDir string) error {
+
+	files, err := os.ReadDir(ptrDir)
+	if err != nil {
+		return err
+	}
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		filePath := path.Join(ptrDir, file.Name())
+		file, err := os.Open(filePath)
+		if err != nil {
+			return err
+		}
+
+		byteJSON, err := io.ReadAll(file)
+		if err != nil {
+			return err
+		}
+
+		var lptr LastPointer
+		err = json.Unmarshal(byteJSON, &lptr)
+		if err != nil {
+			return err
+		}
+		file.Close()
+
+		// Remove a file that no update for 6 months
+		if (time.Now().Unix() - lptr.LastUpdateTime) >= 3600*24*30*6 {
+			os.Remove(file.Name())
+		}
 	}
 	return nil
 }
