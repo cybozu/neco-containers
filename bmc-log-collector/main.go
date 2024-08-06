@@ -113,6 +113,13 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 			intervalTime = 10 * time.Second
 		}
 		ticker = time.NewTicker(intervalTime)
+
+		// Remove ptr files that no update for 6 months
+		err := deleteUnUpdatedFiles(lc.machinesListDir)
+		if err != nil {
+			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", lc.machinesListDir)
+		}
+
 	}
 }
 
