@@ -46,11 +46,13 @@ var (
 type Config struct {
 	interval      time.Duration
 	metricsServer string
+	ignoreJobPod  bool
 }
 
 func init() {
 	cmd.Flags().DurationVarP(&cfg.interval, "interval", "i", time.Second*30, "Interval to check missing CEPs or Pods")
 	cmd.Flags().StringVarP(&cfg.metricsServer, "metrics-server", "m", "0.0.0.0:8080", "Metrics server address and port")
+	cmd.Flags().BoolVar(&cfg.ignoreJobPod, "ignore-job-pod", true, "Ignore Pods created by Job")
 
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }
@@ -138,7 +140,11 @@ func checkAll(ctx context.Context, client client.Client) (map[string]string, err
 	missings := make(map[string]string)
 
 	// pod -> cep
-	for key := range pods {
+	for key, val := range pods {
+		if cfg.ignoreJobPod && val {
+			// skip job pod
+			continue
+		}
 		if _, ok := ceps[key]; !ok {
 			// To avoid a miss detection, check again
 			res, err := check(ctx, client, key)
@@ -214,9 +220,12 @@ func check(ctx context.Context, c client.Client, key string) (string, error) {
 	return "", nil
 }
 
-// list pods that is not in host network and that is running all namespaces
-func getPods(ctx context.Context, client client.Client) (map[string]struct{}, error) {
-	pods := make(map[string]struct{})
+// getPods returns map[string]bool.
+// This lists pods that is not in host network and that is running all namespaces.
+// The map key is the pair of namespace and name(namespace/name).
+// The map value is the bool value where its pod is owned by the Job resource; it is set to true.
+func getPods(ctx context.Context, client client.Client) (map[string]bool, error) {
+	pods := make(map[string]bool)
 
 	podList := &corev1.PodList{}
 	if err := client.List(ctx, podList); err != nil {
@@ -234,7 +243,14 @@ func getPods(ctx context.Context, client client.Client) (map[string]struct{}, er
 			continue
 		}
 		key := fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())
-		pods[key] = struct{}{}
+		// Check the pod is owned by Job
+		ownedByJob := false
+		for _, ref := range pod.OwnerReferences {
+			if ref.Kind == "Job" {
+				ownedByJob = true
+			}
+		}
+		pods[key] = ownedByJob
 	}
 
 	return pods, nil
