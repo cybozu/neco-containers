@@ -25,7 +25,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 ## admission (neco-admission)
 
 ![Kubernetes Update](./kubernetes_update.svg)
-![Regular Update](./regular_update.svg)
 
 In Kubernetes update:
 
@@ -45,6 +44,8 @@ In Kubernetes update:
    $ make build test
    ```
 5. Update `TAG` file.
+
+![Regular Update](./regular_update.svg)
 
 In Regular update, do the following as part of the update of each CRD-providing product:
 
