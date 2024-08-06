@@ -23,11 +23,8 @@ import (
 )
 
 var _ = Describe("gathering up logs", Ordered, func() {
-
-	//var lc logCollector
 	var lc selCollector
 	var cl *http.Client
-	//var mu sync.Mutex
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
@@ -70,7 +67,6 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			username:        "user",
 			password:        "pass",
 			httpClient:      cl,
-			//mutex:           &mu,
 		}
 
 		It("get machine list", func() {
@@ -88,7 +84,6 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
 					lc.selCollectorWorker(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
@@ -127,7 +122,6 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
 					lc.selCollectorWorker(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()

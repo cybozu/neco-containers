@@ -20,8 +20,7 @@ type bmcLogWriter interface {
 
 func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 	var wg sync.WaitGroup
-	//var mu sync.Mutex
-	var testModeLoop int
+	var testModeLoopCounter int
 
 	flag := interface{}(logWriter)
 	_, testMode := flag.(logTest)
@@ -55,9 +54,8 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 		rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:          "/data/pointers",
 		httpClient:      cl,
-		//mutex:           &mu,
-		username: username,
-		password: password,
+		username:        username,
+		password:        password,
 	}
 
 	// test mode setup
@@ -84,8 +82,8 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 	for {
 		// when use the test mode, must break infinite loop
 		if testMode {
-			testModeLoop++
-			if testModeLoop > 3 {
+			testModeLoopCounter++
+			if testModeLoopCounter > 3 {
 				return
 			}
 		}
@@ -102,7 +100,6 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					//lc.logCollectorWorker(ctx, &wg, m, logWriter)
 					lc.selCollectorWorker(ctx, m, logWriter)
 					wg.Done()
 				}()
@@ -119,7 +116,7 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 	}
 }
 
-// BMC log writer to forward Loki via promtail
+// BMC log writer to forward Loki
 type logProd struct{}
 
 func (l logProd) writer(stringJson string, serial string) error {

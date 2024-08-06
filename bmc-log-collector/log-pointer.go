@@ -15,8 +15,6 @@ type LastPointer struct {
 	LastReadId   int
 }
 
-// sellCollector は、ひつようか？
-// func (c *selCollector) readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
 
@@ -67,8 +65,6 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	return lptr, err
 }
 
-// これも selCollectorは不要かも
-// func (c *selCollector) updateLastPointer(lptr LastPointer, ptrDir string) error {
 func updateLastPointer(lptr LastPointer, ptrDir string) error {
 	filePath := path.Join(ptrDir, lptr.Serial)
 	file, err := os.Create(filePath)

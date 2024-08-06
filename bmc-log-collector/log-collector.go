@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	//"sync"
 	"time"
 )
 
@@ -43,34 +42,26 @@ type RedfishJsonSchema struct {
 }
 
 // SEL(System Event Log) Collector
-// type logCollector struct {
 type selCollector struct {
 	machinesListDir string       // Directory of the machines list
 	rfUriSel        string       // SEL path of Redfish API address
 	ptrDir          string       // Pointer store
 	testOutputDir   string       // Test output directory
-	username        string       // iDRAC username　　これも
-	password        string       // iDRAC password　　これもだぶっていないか？
-	httpClient      *http.Client // to reuse HTTP transport  だぶっているかも？
-	//mutex           *sync.Mutex  // execlusive lock for pointer
+	username        string       // iDRAC username
+	password        string       // iDRAC password
+	httpClient      *http.Client // to reuse HTTP transport
 }
 
 func (c *selCollector) selCollectorWorker(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	//func (c *logCollector) logCollectorWorker(ctx context.Context, wg *sync.WaitGroup, m Machine, logWriter bmcLogWriter) {
-	rfRq := redfishSelRequest{
-		username: c.username,
-		password: c.password,
-		client:   c.httpClient,
-		url:      "https://" + m.BmcIP + c.rfUriSel,
-	}
-	//url := "https://" + m.BmcIP + c.rfUriSel
-	byteBuf, err := requestToBmc(ctx, rfRq)
+	bmcUrl := "https://" + m.BmcIP + c.rfUriSel
+	byteJSON, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
+
 	if err != nil {
 		// When canceled by context, the pointer files is never updated because the return is made here.
-		slog.Error("requestToBmc()", "err", err, "url", rfRq.url)
+		slog.Error("requestToBmc()", "err", err, "url", c.rfUriSel)
 		return
 	}
-	c.bmcLogOutputWithoutDuplication(byteBuf, m, c.ptrDir, logWriter)
+	c.bmcLogOutputWithoutDuplication(byteJSON, m, c.ptrDir, logWriter)
 }
 
 func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Machine, ptrDir string, logWriter bmcLogWriter) {
@@ -81,7 +72,6 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		return
 	}
 
-	//lastPtr, err := c.readLastPointer(server.Serial, ptrDir)
 	lastPtr, err := readLastPointer(server.Serial, ptrDir)
 	if err != nil {
 		slog.Error("readLastPointer()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
@@ -117,7 +107,6 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		}
 	}
 
-	//err = c.updateLastPointer(LastPointer{
 	err = updateLastPointer(LastPointer{
 		Serial:       server.Serial,
 		LastReadTime: createUnixtime,

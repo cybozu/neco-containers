@@ -17,7 +17,8 @@ Test the behavior of accessing iDRAC internal web services
 var _ = Describe("Access BMC", Ordered, func() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-
+	username := "user"
+	password := "pass"
 	client := &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 		Transport: &http.Transport{
@@ -29,12 +30,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 			}).DialContext,
 		},
 	}
-	rfRequest := redfishSelRequest{
-		username: "user",
-		password: "pass",
-		client:   client,
-		url:      "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-	}
+	url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 
 	BeforeAll(func() {
 		fmt.Println("*** Start iDRAC Stub")
@@ -49,46 +45,47 @@ var _ = Describe("Access BMC", Ordered, func() {
 	})
 
 	Context("Access iDRAC server to get SEL", func() {
-		//var redfish_url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 		It("Normal access", func() {
-			byteJSON, err := requestToBmc(ctx, rfRequest)
+			byteJSON, err := requestToBmc(ctx, username, password, client, url)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(len(byteJSON)).To(Equal(776))
 		})
 
 		It("Abnormal access, not existing web server", func() {
-			//test_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-			rfRequest.url = "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-			//byteJSON, err := requestToBmc(ctx, test_url, rfc)
-			byteJSON, err := requestToBmc(ctx, rfRequest)
+			bad_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+			byteJSON, err := requestToBmc(ctx, username, password, client, bad_url)
 			Expect(err).To(HaveOccurred())
-			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", rfRequest.url)
+			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", bad_url)
 			Expect(err.Error()).To(Equal(errmsg))
 			Expect(len(byteJSON)).To(Equal(0))
 		})
 
 		It("Abnormal access, wrong path", func() {
-			//wrong_url := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
-			rfRequest.url = "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
-			//_, err := requestToBmc(ctx, wrong_url, rfc)
-			_, err := requestToBmc(ctx, rfRequest)
+			wrong_path := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
+			byteJSON, err := requestToBmc(ctx, username, password, client, wrong_path)
+			errmsg := "HTTP status code = 404"
 			Expect(err).To(HaveOccurred())
+			Expect(err.Error()).To(Equal(errmsg))
+			Expect(len(byteJSON)).To(Equal(0))
+
 		})
 
 		It("Abnormal access, wrong username", func() {
-			//rfc.username = "badname"
-			rfRequest.username = "badname"
-			_, err := requestToBmc(ctx, rfRequest)
-			//_, err := requestToBmc(ctx, redfish_url, rfc)
+			bad_username := "badname"
+			byteJSON, err := requestToBmc(ctx, bad_username, password, client, url)
 			Expect(err).To(HaveOccurred())
+			errmsg := "HTTP status code = 401"
+			Expect(err.Error()).To(Equal(errmsg))
+			Expect(len(byteJSON)).To(Equal(0))
 		})
 
 		It("Abnormal access, wrong password", func() {
-			//rfc.password = "badpw"
-			rfRequest.password = "badpw"
-			//_, err := requestToBmc(ctx, redfish_url, rfc)
-			_, err := requestToBmc(ctx, rfRequest)
+			bad_password := "badpassword"
+			byteJSON, err := requestToBmc(ctx, username, bad_password, client, url)
 			Expect(err).To(HaveOccurred())
+			errmsg := "HTTP status code = 401"
+			Expect(err.Error()).To(Equal(errmsg))
+			Expect(len(byteJSON)).To(Equal(0))
 		})
 	})
 
