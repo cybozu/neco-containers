@@ -306,35 +306,36 @@ func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine)
 	return err
 }
 
-/////////////////////////////////////////////////////////////////
-func (c client) updateBMCPConfigMapLogCollector(ctx context.Context, machines []Machine) error {
+func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []Machine) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
 		return err
 	}
 
-	addresses := make(map[string]string)
+	type Machine struct {
+		Serial string `json:"serial"`
+		BmcIP  string `json:"bmc_ip"`
+		NodeIP string `json:"ipv4"`
+	}
+
+	var ml []Machine
+	var m Machine
 	for _, machine := range machines {
 		if machine.Spec.BMC.IPv4 == "" {
 			continue
 		}
-
-		var hostname string
-		if machine.Spec.Role == "boot" {
-			// Though full hostname is like "stage0-boot-0",
-			// the part of "stage0-" is insignificant in a cluster while it is hard to get.
-			// So use "boot-0" for resolving.
-			hostname = fmt.Sprintf("boot-%d", machine.Spec.Rack)
-		} else {
-			hostname = fmt.Sprintf("rack%d-%s%d", machine.Spec.Rack, machine.Spec.Role, machine.Spec.IndexInRack)
-		}
-		addresses[hostname] = machine.Spec.BMC.IPv4
-
-		// "a.b.c.d" does not match the wildcard in "*.bmc.<cluster>.<base>".  "a-b-c-d" does match.
-		addresses[strings.ReplaceAll(machine.Spec.IPv4[0], ".", "-")] = machine.Spec.BMC.IPv4
-
-		addresses[machine.Spec.Serial] = machine.Spec.BMC.IPv4
+		m.Serial = machine.Spec.Serial
+		m.BmcIP  = machine.Spec.BMC.IPv4
+		m.NodeIP = machine.Spec.IPv4[0]
+		ml = append(ml, m)
 	}
+
+	byteJSON, err := json.Marshal(ml)
+	if err != nil {
+		return err
+	}
+	addresses := make(map[string]string)
+	addresses["serverlist.json"] = string(byteJSON)
 
 	configMap := corev1.ConfigMap{
 		ObjectMeta: metav1.ObjectMeta{
@@ -355,9 +356,6 @@ func (c client) updateBMCPConfigMapLogCollector(ctx context.Context, machines []
 	}
 	return err
 }
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 
 func (c client) GetMembers() ([]member, error) {
 	serfMembers, err := c.serf.Members()
@@ -477,8 +475,10 @@ func main() {
 	}
 
 	if *flgBMCCMForCollector {
-		fmt.Println("xxx")
-		err = client.updateBMCPConfigMapLogCollector(ctx, machines)
-
+		// create BMC & Server list configmap on all servers
+		err = client.updateBMCLogCollectorConfigMap(ctx, machines)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
 }
