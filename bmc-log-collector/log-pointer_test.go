@@ -14,6 +14,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var err error
 
 	BeforeAll(func() {
+		os.Mkdir("testdata/pointers", 0766)
 		os.Remove("testdata/pointers/ABCDEF")
 		file, _ := os.Create("testdata/pointers/WITHDRAWED")
 		lptr := LastPointer{
