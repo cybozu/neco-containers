@@ -67,7 +67,7 @@ query search() {
 var (
 	flgMonitoringEndpoints = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
 	flgBMCConfigMap        = pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
-	flgBMCCMForCollector   = pflag.Bool("log-collector", false, "generate ConfigMap for BMC log collector")
+	flgBMCCollector        = pflag.Bool("log-collector", false, "generate ConfigMap for BMC log collector")
 	flgNodeExporterPort    = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
 	flgEtcdMetricsPort     = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
@@ -474,7 +474,7 @@ func main() {
 		}
 	}
 
-	if *flgBMCCMForCollector {
+	if *flgBMCCollector {
 		// create BMC & Server list configmap on all servers
 		err = client.updateBMCLogCollectorConfigMap(ctx, machines)
 		if err != nil {
