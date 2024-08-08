@@ -1059,8 +1059,8 @@ func testDeviceDetectorCreatePV() {
 
 			By("checking labels")
 			Expect(pv.ObjectMeta.Labels).To(HaveLen(2))
-			Expect(pv.ObjectMeta.Labels).To(HaveKey(localPVProvisionerLabelKey))
-			Expect(pv.ObjectMeta.Labels[localPVProvisionerLabelKey]).To(Equal(node.Name))
+			Expect(pv.ObjectMeta.Labels).To(HaveKey(lppLegacyLabelKey))
+			Expect(pv.ObjectMeta.Labels[lppLegacyLabelKey]).To(Equal(node.Name))
 			Expect(pv.ObjectMeta.Labels).To(HaveKey("local-pv-provisioner.cybozu.io/node"))
 			Expect(pv.ObjectMeta.Labels["local-pv-provisioner.cybozu.io/node"]).To(Equal(node.Name))
 

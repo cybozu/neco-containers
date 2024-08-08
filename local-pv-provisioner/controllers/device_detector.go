@@ -31,7 +31,7 @@ const (
 	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
 	StorageClass = "local-storage"
 
-	localPVProvisionerLabelKey = "local-pv-provisioner.cybozu.com/node"
+	lppLegacyLabelKey = "local-pv-provisioner.cybozu.com/node"
 
 	lppAnnotPrefix           = "local-pv-provisioner.cybozu.io/"
 	lppAnnotNode             = lppAnnotPrefix + "node"
@@ -231,7 +231,7 @@ func (dd *DeviceDetector) do() {
 	var alreadyCreatedPVs corev1.PersistentVolumeList
 	if err := dd.List(ctx, &alreadyCreatedPVs, &client.ListOptions{
 		LabelSelector: labels.SelectorFromSet(map[string]string{
-			localPVProvisionerLabelKey: node.Name,
+			lppLegacyLabelKey: node.Name,
 		}),
 	}); err != nil {
 		log.Error(err, "unable to fetch pv list")
@@ -293,7 +293,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		if pv.ObjectMeta.Labels == nil {
 			pv.ObjectMeta.Labels = make(map[string]string)
 		}
-		pv.ObjectMeta.Labels[localPVProvisionerLabelKey] = node.Name
+		pv.ObjectMeta.Labels[lppLegacyLabelKey] = node.Name
 		pv.ObjectMeta.Labels[lppAnnotNode] = node.Name
 
 		if pv.ObjectMeta.Annotations == nil {
