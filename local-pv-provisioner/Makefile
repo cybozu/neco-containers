@@ -21,7 +21,7 @@ all: build
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: simple-test setup-envtest
+test: manifests generate simple-test setup-envtest
 	{ \
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	go test -race -v -count 1 ./... ; \
@@ -48,7 +48,7 @@ check-generate:
 
 # Build manager binary
 .PHONY: build
-build:
+build: manifests generate
 	CGO_ENABLED=0 go build -o bin/local-pv-provisioner main.go
 
 # Generate manifests e.g. RBAC etc.
