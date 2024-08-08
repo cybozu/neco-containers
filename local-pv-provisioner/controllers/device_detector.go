@@ -102,8 +102,8 @@ func parsePVSpecConfigMap(cm *corev1.ConfigMap) (*pvSpec, error) {
 	}, nil
 }
 
-// doesConflict checks that pvSpec's settings are the same as those in alreadyCreatedPVs.
-func doesConflict(pvSpec *pvSpec, alreadyCreatedPVs []corev1.PersistentVolume) bool {
+// hasAnnotsSetByAnotherConfiguration checks that pvSpec's settings are the same as those in alreadyCreatedPVs.
+func hasAnnotsSetByAnotherConfiguration(pvSpec *pvSpec, alreadyCreatedPVs []corev1.PersistentVolume) bool {
 	conflicted := false
 	for _, pv := range alreadyCreatedPVs {
 		annot := pv.GetAnnotations()
@@ -236,7 +236,11 @@ func (dd *DeviceDetector) do() {
 		log.Error(err, "unable to fetch pv list")
 		return
 	}
-	if doesConflict(pvSpec, alreadyCreatedPVs.Items) {
+	if hasAnnotsSetByAnotherConfiguration(pvSpec, alreadyCreatedPVs.Items) {
+		log.Error(
+			errors.New("there are already some PVs that are created with different settings"),
+			"there are already some PVs that are created with different settings",
+		)
 		return
 	}
 

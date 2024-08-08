@@ -797,7 +797,7 @@ func testDoesConflict() {
 			})
 		}
 
-		got := doesConflict(pvSpec, alreadyCreatedPVs)
+		got := hasAnnotsSetByAnotherConfiguration(pvSpec, alreadyCreatedPVs)
 		Expect(got).To(Equal(expected))
 	},
 		Entry(
