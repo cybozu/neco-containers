@@ -9,18 +9,15 @@ import (
 	"os"
 )
 
-
 type Machine struct {
-	Serial string	`json:"serial"`
-	BmcIP  string	`json:"bmc_ip"`
-	NodeIP string	`json:"ipv4"`
+	Serial string `json:"serial"`
+	BmcIP  string `json:"bmc_ip"`
+	NodeIP string `json:"ipv4"`
 }
 
 type Machines struct {
 	Machine []Machine
 }
-
-
 
 // Get iDRAC server list from CSV file
 func machineListReader(filename string) (Machines, error) {
@@ -52,7 +49,6 @@ func machineListReader(filename string) (Machines, error) {
 	return m, nil
 }
 
-
 func convJSONtext(m Machines, fn string) error {
 	file, err := os.Create(fn)
 	if err != nil {
@@ -72,9 +68,6 @@ func convJSONtext(m Machines, fn string) error {
 	}
 	return nil
 }
-
-
-
 
 func main() {
 	var m Machines
