@@ -10,6 +10,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
@@ -40,6 +41,11 @@ func run() error {
 		Scheme:         scheme,
 		Metrics:        metricsserver.Options{BindAddress: config.metricsAddr},
 		LeaderElection: false,
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{
+				config.namespaceName: {},
+			},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")

@@ -25,21 +25,19 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
 )
 
-//+kubebuilder:rbac:groups="",resources=configmaps,verbs=get;list;watch
-
 const (
 	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
 	StorageClass = "local-storage"
 
 	lppLegacyLabelKey = "local-pv-provisioner.cybozu.com/node"
 
-	lppAnnotPrefix           = "local-pv-provisioner.cybozu.io/"
-	lppAnnotNode             = lppAnnotPrefix + "node"
-	lppAnnotPVSpecConfigMap  = lppAnnotPrefix + "pv-spec-configmap"
-	lppAnnotVolumeMode       = lppAnnotPrefix + "volumeMode"
-	lppAnnotFSType           = lppAnnotPrefix + "fsType"
-	lppAnnotDeviceDir        = lppAnnotPrefix + "deviceDir"
-	lppAnnotDeviceNameFilter = lppAnnotPrefix + "deviceNameFilter"
+	lppDomain                = "local-pv-provisioner.cybozu.io/"
+	lppAnnotNode             = lppDomain + "node"
+	lppAnnotPVSpecConfigMap  = lppDomain + "pv-spec-configmap"
+	lppAnnotVolumeMode       = lppDomain + "volumeMode"
+	lppAnnotFSType           = lppDomain + "fsType"
+	lppAnnotDeviceDir        = lppDomain + "deviceDir"
+	lppAnnotDeviceNameFilter = lppDomain + "deviceNameFilter"
 
 	pvSpecCMKeyVolumeMode       = "volumeMode"
 	pvSpecCMKeyFsType           = "fsType"
@@ -81,18 +79,18 @@ func parsePVSpecConfigMap(cm *corev1.ConfigMap) (*pvSpec, error) {
 		return nil, errors.New("fsType should be 'ext4' if volumeMode is 'Filesystem'")
 	}
 	if !filepath.IsAbs(pvSpecDeviceDir) {
-		return nil, errors.New("device-dir must be an absolute path")
+		return nil, errors.New("deviceDir must be an absolute path")
 	}
 	info, err := fs.Stat(pvSpecDeviceDir)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get status of device directory: %s: %w", pvSpecDeviceDir, err)
 	}
 	if !info.Mode().IsDir() {
-		return nil, errors.New("device-dir is not a directory")
+		return nil, errors.New("deviceDir is not a directory")
 	}
 	pvSpecDeviceNameFilterCompiled, err := regexp.Compile(pvSpecDeviceNameFilter)
 	if err != nil {
-		return nil, fmt.Errorf("unable to compile device filter: %s: %w", pvSpecDeviceNameFilter, err)
+		return nil, fmt.Errorf("unable to compile deviceNameFilter: %s: %w", pvSpecDeviceNameFilter, err)
 	}
 
 	return &pvSpec{
@@ -188,6 +186,7 @@ func (dd *DeviceDetector) Start(ctx context.Context) error {
 
 // +kubebuilder:rbac:groups="",resources=nodes,verbs=get;list;watch
 // +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch
+// +kubebuilder:rbac:namespace=default,groups="",resources=configmaps,verbs=get;list;watch
 
 func (dd *DeviceDetector) do() {
 	ctx := context.Background()
