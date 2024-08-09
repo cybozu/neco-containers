@@ -1,6 +1,5 @@
-ARG BASE_IMAGE=scratch
+ARG BASE_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.22-jammy
-ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
@@ -27,13 +26,15 @@ RUN make
 FROM ${BASE_IMAGE}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
-COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+# Add nonroot user for the neco environment
+RUN useradd nonroot -u 10000 -U -m
+
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build /go/src/github.com/cilium/cilium/LICENSE.all /LICENSE
 COPY --from=build /go/src/github.com/cilium/cilium/hubble-relay/hubble-relay /usr/bin/hubble-relay
 
-WORKDIR /
-ENV GOPS_CONFIG_DIR=/
+# use uid:gid for the nonroot user for compatibility with runAsNonRoot
+USER 10000:10000
 
 ENTRYPOINT ["/usr/bin/hubble-relay"]
 CMD ["serve"]
