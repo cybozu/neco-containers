@@ -24,7 +24,7 @@ apt-get update
 # because libraries that conflict with this library are installed.
 # Therefore, it should be installed explicitly.
 # See. https://github.com/actions/runner-images/issues/6399#issuecomment-1286050292
-apt-get install -y libunwind-dev
+## apt-get install -y libunwind-dev
 
 apt-get install -y curl
 ./install-deps.sh
