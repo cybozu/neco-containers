@@ -43,22 +43,25 @@ type RedfishJsonSchema struct {
 
 // SEL(System Event Log) Collector
 type selCollector struct {
-	machinesListDir string       // Directory of the machines list
-	rfUriSel        string       // SEL path of Redfish API address
-	ptrDir          string       // Pointer store
-	testOutputDir   string       // Test output directory
-	username        string       // iDRAC username
-	password        string       // iDRAC password
-	httpClient      *http.Client // to reuse HTTP transport
+	machinesListDir string        // Directory of the machines list
+	rfSelPath       string        // SEL path of Redfish API address
+	ptrDir          string        // Pointer store
+	username        string        // iDRAC username
+	password        string        // iDRAC password
+	httpClient      *http.Client  // to reuse HTTP transport
+	intervalTime    time.Duration // interval time of scraping
+	maxLoop         int           // if 0 is infinite loop
 }
 
-func (c *selCollector) selCollectorWorker(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	bmcUrl := "https://" + m.BmcIP + c.rfUriSel
-	byteJSON, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 
+// 一つに統合したら？
+func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
+	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
+	byteJSON, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
+	// 繰り返し出さない？
 	if err != nil {
 		// When canceled by context, the pointer files is never updated because the return is made here.
-		slog.Error("requestToBmc()", "err", err, "url", c.rfUriSel)
+		slog.Error("requestToBmc()", "err", err, "url", c.rfSelPath)
 		return
 	}
 	c.bmcLogOutputWithoutDuplication(byteJSON, m, c.ptrDir, logWriter)
@@ -78,6 +81,9 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		return
 	}
 
+//続けてエラーが発生した時は、エラーを抑止する
+
+
 	layout := "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
@@ -93,14 +99,14 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 		// Anti duplication
 		if lastPtr.LastReadId < lastId {
 			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
-			logWriter.writer(string(bmcByteJsonLog), server.Serial)
+			logWriter.write(string(bmcByteJsonLog), server.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
 		} else if lastPtr.LastReadId > lastId {
 			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
 			if lastPtr.LastReadTime < createUnixtime {
 				bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
-				logWriter.writer(string(bmcByteJsonLog), server.Serial)
+				logWriter.write(string(bmcByteJsonLog), server.Serial)
 				lastPtr.LastReadId = lastId
 				lastPtr.LastReadTime = createUnixtime
 			}

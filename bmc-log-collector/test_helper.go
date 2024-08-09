@@ -129,7 +129,7 @@ type logTest struct {
 	outputDir string
 }
 
-func (l logTest) writer(byteJson string, serial string) error {
+func (l logTest) write(byteJson string, serial string) error {
 	fn := path.Join(l.outputDir, serial)
 	file, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
