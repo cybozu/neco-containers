@@ -13,7 +13,7 @@ type Machine struct {
 }
 
 // get BMC list from JSON file
-func machineListReader(filename string) ([]Machine, error) {
+func readMachineList(filename string) ([]Machine, error) {
 	var ml []Machine
 
 	file, err := os.Open(filename)
