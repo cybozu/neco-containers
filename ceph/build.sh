@@ -36,6 +36,10 @@ apt-get install -y python3-routes
 # Build Ceph packages
 sed -i -e 's/WITH_CEPHFS_JAVA=ON/WITH_CEPHFS_JAVA=OFF/' debian/rules
 sed -i -e 's@usr/share/java/libcephfs-test.jar@@' debian/ceph-test.install
+# CMake in the self-build environment did not allow space-separated URLs.
+# As a workaround, the following patch is applied ahead of upstream.
+# https://github.com/ceph/ceph/commit/35435420781f84e9b71f72b10e6842a89c06de7f
+patch -p1 < ${CEPH_DIR}/boost-url.patch
 rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dashboard*
 # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
 dpkg-buildpackage --build=binary -uc -us -j10

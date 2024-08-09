@@ -356,7 +356,7 @@ workflows:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
       - build-ceph:
-          version: 18.2.1
+          version: 18.2.4
       - build:
           name: build-ceph-container
           container-image: ceph
