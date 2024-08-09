@@ -14,13 +14,13 @@ import (
 )
 
 var config struct {
-	metricsAddr      string
-	nodeName         string
-	deviceDir        string
-	deviceNameFilter string
-	development      bool
-	pollingInterval  time.Duration
-	zapOpts          zap.Options
+	metricsAddr            string
+	nodeName               string
+	development            bool
+	pollingInterval        time.Duration
+	zapOpts                zap.Options
+	defaultPVSpecConfigMap string
+	namespaceName          string
 }
 
 var rootCmd = &cobra.Command{
@@ -31,10 +31,10 @@ var rootCmd = &cobra.Command{
 		cmd.SilenceUsage = true
 		config.metricsAddr = viper.GetString("metrics-addr")
 		config.development = viper.GetBool("development")
-		config.deviceDir = viper.GetString("device-dir")
-		config.deviceNameFilter = viper.GetString("device-name-filter")
+		config.defaultPVSpecConfigMap = viper.GetString("default-pv-spec-configmap")
 		config.nodeName = viper.GetString("node-name")
 		config.pollingInterval = viper.GetDuration("polling-interval")
+		config.namespaceName = viper.GetString("namespace-name")
 		return run()
 	},
 }
@@ -51,10 +51,10 @@ func init() {
 	fs := rootCmd.Flags()
 	fs.String("metrics-addr", ":8080", "Listen address for metrics")
 	fs.Bool("development", false, "Use development logger config")
-	fs.String("device-dir", "/dev/disk/by-path/", "Path to the directory that stores the devices for which PersistentVolumes are created.")
-	fs.String("device-name-filter", ".*", "A regular expression that allows selection of devices on device-idr to be created PersistentVolume.")
 	fs.String("node-name", "", "The name of Node on which this program is running")
 	fs.Duration("polling-interval", 5*time.Minute, "Polling interval to check devices.")
+	fs.String("default-pv-spec-configmap", "", "A ConfigMap name that should be used if the Node doesn't have the pv-spec-configmap annotation.")
+	fs.String("namespace-name", "", "the name of the namespace in which this program is running")
 
 	if err := viper.BindPFlags(fs); err != nil {
 		panic(err)

@@ -1,0 +1,156 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: local-pv-provisioner
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: local-pv-provisioner
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: local-pv-provisioner
+      annotations:
+        prometheus.io/port: "8080"
+    spec:
+      containers:
+        - name: local-pv-provisioner
+          image: ghcr.io/cybozu/local-pv-provisioner:latest
+          args:
+            - --polling-interval=10s
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: LP_NAMESPACE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: LP_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          ports:
+            - containerPort: 8080
+              name: metrics
+          volumeMounts:
+            - name: dev
+              mountPath: /dev/e2etest
+              readOnly: true
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+            privileged: true
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 8080
+              scheme: HTTP
+      serviceAccountName: local-pv-provisioner
+      volumes:
+        - name: dev
+          hostPath:
+            path: /dev/e2etest
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: local-pv-provisioner
+  namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: local-pv-provisioner
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumes
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: local-pv-provisioner
+  namespace: kube-system
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: local-pv-provisioner
+  namespace: kube-system
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: local-pv-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: local-pv-provisioner
+    namespace: kube-system
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: local-pv-provisioner
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: local-pv-provisioner
+subjects:
+  - kind: ServiceAccount
+    name: local-pv-provisioner
+    namespace: kube-system
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-spec-cm-block
+  namespace: kube-system
+data:
+  volumeMode: Block
+  deviceDir: /dev/e2etest
+  deviceNameFilter: "loop[01]"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-spec-cm-fs
+  namespace: kube-system
+data:
+  volumeMode: Filesystem
+  fsType: ext4
+  deviceDir: /dev/e2etest
+  deviceNameFilter: "loop[01]"

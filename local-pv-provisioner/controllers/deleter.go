@@ -1,7 +1,5 @@
 package controllers
 
-import "os"
-
 // Deleter clean up the block device
 type Deleter interface {
 	Delete(path string) error
@@ -15,7 +13,7 @@ type FillDeleter struct {
 
 // Delete implements Deleter's method.
 func (d *FillDeleter) Delete(path string) error {
-	file, err := os.OpenFile(path, os.O_WRONLY, 0)
+	file, err := fs.OpenFile(path, O_WRONLY, 0)
 	if err != nil {
 		return err
 	}

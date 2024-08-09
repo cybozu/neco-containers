@@ -3,9 +3,6 @@ package cmd
 import (
 	"context"
 	"errors"
-	"os"
-	"path/filepath"
-	"regexp"
 
 	"github.com/cybozu/neco-containers/local-pv-provisioner/controllers"
 	corev1 "k8s.io/api/core/v1"
@@ -13,6 +10,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 )
@@ -38,31 +36,16 @@ func run() error {
 		setupLog.Error(err, "validation error")
 		return err
 	}
-	if !filepath.IsAbs(config.deviceDir) {
-		err := errors.New("device-dir must be an absolute path")
-		setupLog.Error(err, "device-dir must be an absolute path")
-		return err
-	}
-	info, err := os.Stat(config.deviceDir)
-	if err != nil {
-		setupLog.Error(err, "unable to get status of device directory", "device-dir", config.deviceDir)
-		return err
-	}
-	if !info.Mode().IsDir() {
-		err = errors.New("device-dir is not a directory")
-		setupLog.Error(err, "device-dir is not a directory")
-		return err
-	}
-	re, err := regexp.Compile(config.deviceNameFilter)
-	if err != nil {
-		setupLog.Error(err, "unable to compile device filter", "device-name-filter", config.deviceNameFilter)
-		return err
-	}
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:         scheme,
 		Metrics:        metricsserver.Options{BindAddress: config.metricsAddr},
 		LeaderElection: false,
+		Cache: cache.Options{
+			DefaultNamespaces: map[string]cache.Config{
+				config.namespaceName: {},
+			},
+		},
 	})
 	if err != nil {
 		setupLog.Error(err, "unable to start manager")
@@ -74,9 +57,19 @@ func run() error {
 		FillCount:     100,
 	}
 
-	dd := controllers.NewDeviceDetector(mgr.GetClient(), mgr.GetAPIReader(),
-		ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName),
-		config.deviceDir, re, config.nodeName, config.pollingInterval, scheme, &deleter)
+	ddLogger := ctrl.Log.WithName("local-pv-provisioner").WithValues("node", config.nodeName)
+
+	dd := controllers.NewDeviceDetector(
+		mgr.GetClient(),
+		mgr.GetAPIReader(),
+		ddLogger,
+		config.nodeName,
+		config.pollingInterval,
+		scheme,
+		&deleter,
+		config.defaultPVSpecConfigMap,
+		config.namespaceName,
+	)
 	err = mgr.Add(dd)
 	if err != nil {
 		setupLog.Error(err, "unable to add device-detector to manager")

@@ -5,18 +5,46 @@ local-pv-provisioner
 
 * The PVs will be removed along with the deletion of the node because of using `ownerReferences`.
 
-## How to discover devices
+## How `local-pv-provisioner` works
 
-`local-pv-provisioner` searches for devices according to `--device-path` and `--device-name-filter` options.
+`local-pv-provisioner` operates based on a configmap specified in the annotations of the node.
+We'll refer to this ConfigMap as the "PV spec Configmap" throughout this text.
 
-* `--device-path` option specifies the path to search the devices.
-* `--device-name-filter` option filters the device names using a regular expression.
+First, `local-pv-provisioner` checks for an annotation named `local-pv-provisioner.cybozu.io/pv-spec-configmap` 
+on the node. This annotation should have the name of the PV spec ConfigMap.
+If this annotation is not specified, `local-pv-provisioner` will use the value provided by the command-line argument
+`--default-pv-spec-configmap`. If neither the annotation nor the command-line argument is specified,
+`local-pv-provisioner` will stop working.
 
-If you specify the following condition, all devices under `/dev/disk/by-path/` will be selected.
+Next, `local-pv-provisioner` fetches the content of the specified PV spec ConfigMap and looks for
+the following values:
 
-```console
-$ local-pv-provisioner --device-path="/dev/disk/by-path/" --device-name-filter=".*"
+- `deviceDir`: The directory where `local-pv-provisioner` searches for devices.
+- `deviceNameFilter`: The regular expression used to filter the devices.
+- `volumeMode`: The mode of the PV created by `local-pv-provisioner`, which should be either "Filesystem" or "Block".
+- `fsType`: The type of the filesystem, which should be set if and only if `volumeMode` is `"Filesystem"`. Currently, `local-pv-provisioner` only supports ext4 for this field.
+
+After obtaining these values, `local-pv-provisioner` searches for devices, based on `deviceDir` and `deviceNameFilter`.
+It then creates one PV for each found device, using the
+`volumeMode` and `fsType` values specified in the PV spec ConfigMap.
+
+### An example
+
+Let's consider the following PV spec ConfigMap:
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-spec-cm-fs
+data:
+  volumeMode: Filesystem
+  fsType: ext4
+  deviceDir: /dev/disk/by-path/
+  deviceNameFilter: ".*"
 ```
+
+If we use this as a PV spec ConfigMap, all the devices under `/dev/disk/by-path/` should be selected.
+And each created PV should be formatted as a ext4 filesystem.
 
 ## What resources are created
 
@@ -81,30 +109,43 @@ spec:
 
 ### Start `local-pv-provisioner`
 
-1. Create symbolic links to device files that you want to expose for pods in `/dev/crypt-disk/by-path`.
-
-2. Prepare kind environment.
+1. Start a minikube cluster:
     ```
-    $ kind create cluster --config cluster.yaml --wait=300s
+    $ make -C e2etest launch-cluster MINIKUBE_PROFILE=test
     ```
 
-3. Deploy `local-pv-provisioner`.
+2. Create some loop devices for PVs:
     ```
-    $ kubectl apply -f local-pv-provisioner.yaml
+    $ make -C e2etest create-loop-dev
     ```
 
-4. Check that the pods have started and PVs have been created.
+3. Start `local-pv-provisioner`:
     ```
-    $ kubectl get pod,pv
-    NAME                             READY   STATUS    RESTARTS   AGE
-    pod/local-pv-provisioner-5kn9n   1/1     Running   0          49s
-    pod/local-pv-provisioner-rq8sm   1/1     Running   0          46s
+    $ make -C e2etest launch-local-pv-provisioner
+    ```
 
-    NAME                                               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    REASON   AGE
-    persistentvolume/local-kind-worker-dummy-dev-01    1Ki        RWO            Retain           Available           local-storage            37s
-    persistentvolume/local-kind-worker-dummy-dev-02    1Ki        RWO            Retain           Available           local-storage            37s
-    persistentvolume/local-kind-worker2-dummy-dev-01   1Ki        RWO            Retain           Available           local-storage            34s
-    persistentvolume/local-kind-worker2-dummy-dev-02   1Ki        RWO            Retain           Available           local-storage            34s
+4. Annotate the node:
+    ```
+    # If you'd like to deploy Block PVs, use pv-spec-cm-block instead.
+    $ kubectl annotate node minikube-worker local-pv-provisioner.cybozu.io/pv-spec-configmap=pv-spec-cm-fs
+    ```
+
+6. Check that the pods have started and PVs have been created.
+    ```
+    $ kubectl get pod,pv -n kube-system
+    NAME                                          READY   STATUS    RESTARTS      AGE
+    pod/coredns-5d78c9869d-t6n55                  1/1     Running   0             13m
+    pod/etcd-minikube-worker                      1/1     Running   0             13m
+    pod/kube-apiserver-minikube-worker            1/1     Running   0             13m
+    pod/kube-controller-manager-minikube-worker   1/1     Running   0             13m
+    pod/kube-proxy-xkq4d                          1/1     Running   0             13m
+    pod/kube-scheduler-minikube-worker            1/1     Running   0             13m
+    pod/local-pv-provisioner-4ltjn                1/1     Running   0             8m3s
+    pod/storage-provisioner                       1/1     Running   2 (11m ago)   13m
+
+    NAME                                           CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM   STORAGECLASS    REASON   AGE
+    persistentvolume/local-minikube-worker-loop0   1Gi        RWO            Retain           Available           local-storage            62s
+    persistentvolume/local-minikube-worker-loop1   1Gi        RWO            Retain           Available           local-storage            61s
     ```
 
 ### How to use volumes
@@ -119,7 +160,7 @@ spec:
       storageClassName: local-storage
       accessModes:
         - ReadWriteOnce
-      volumeMode: Block
+      volumeMode: Filesystem
       resources:
         requests:
           storage: 1Ki
@@ -127,7 +168,7 @@ spec:
     Set the values according to PV as follows:
     * `spec.storageClassName`: `local-storage`
     * `spec.accessModes`: `ReadWriteOnce`
-    * `spec.volumeMode`: `Block`
+    * `spec.volumeMode`: `Filesystem`
 
 2. Create a pod as follows:
     ```yaml
@@ -140,9 +181,9 @@ spec:
         - name: ubuntu
           image: ghcr.io/cybozu/ubuntu:20.04
           command: ["/usr/local/bin/pause"]
-          volumeDevices:
+          volumeMounts:
             - name: sample-volume
-              devicePath: /dev/sample-dev
+              mountPath: /mnt/test-vol
       volumes:
         - name: sample-volume
           persistentVolumeClaim:
@@ -152,15 +193,17 @@ spec:
 3. The PVC will be bound to a PV.
     ```
     $ kubectl get pv,pvc
-    NAME                                               CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM                STORAGECLASS    REASON   AGE
-    persistentvolume/local-kind-worker-dummy-dev-01    1Ki        RWO            Retain           Available                        local-storage            3m29s
-    persistentvolume/local-kind-worker-dummy-dev-02    1Ki        RWO            Retain           Available                        local-storage            3m29s
-    persistentvolume/local-kind-worker2-dummy-dev-01   1Ki        RWO            Retain           Available                        local-storage            3m26s
-    persistentvolume/local-kind-worker2-dummy-dev-02   1Ki        RWO            Retain           Bound       default/sample-pvc   local-storage            3m26s
+    NAME                                           CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS      CLAIM                STORAGECLASS    REASON   AGE
+    persistentvolume/local-minikube-worker-loop0   1Gi        RWO            Retain           Bound       default/sample-pvc   local-storage            4m22s
+    persistentvolume/local-minikube-worker-loop1   1Gi        RWO            Retain           Available                        local-storage            4m21s
 
-    NAME                               STATUS   VOLUME                            CAPACITY   ACCESS MODES   STORAGECLASS    AGE
-    persistentvolumeclaim/sample-pvc   Bound    local-kind-worker2-dummy-dev-02   1Ki        RWO            local-storage   29s
+    NAME                               STATUS   VOLUME                        CAPACITY   ACCESS MODES   STORAGECLASS    AGE
+    persistentvolumeclaim/sample-pvc   Bound    local-minikube-worker-loop0   1Gi        RWO            local-storage   38s
     ```
+
+### Stop the test environment
+
+Please use `make -C e2etest clean`.
 
 ## How to cleanup released PVs
 
@@ -174,14 +217,13 @@ Note that this cleanup process is also executed periodically (interval: 1 hour).
 
 ## Command-line flags and environment variables
 
-| Flag               | Env name              | Default              | Description                                                                                         |
-| ------------------ | --------------------- | -------------------- | --------------------------------------------------------------------------------------------------- |
-| metrics-addr       | LP_METRICS_ADDR       | `:8080`              | Bind address for the metrics endpoint.                                                              |
-| device-dir         | LP_DEVICE_DIR         | `/dev/disk/by-path/` | Path to the directory that stores the devices for which PersistentVolumes are created.              |
-| device-name-filter | LP_DEVICE_NAME_FILTER | `.*`                 | A regular expression that allows selection of devices on device-idr to be created PersistentVolume. |
-| node-name          | LP_NODE_NAME          |                      | The name of Node on which this program is running. It is a required flag.                           |
-| polling-interval   | LP_POLLING_INTERVAL   | `5m`                 | Polling interval to check devices.                                                                  |
-| development        | LP_DEVELOPMENT        | `false`              | Use development logger config.                                                                      |
+| Flag             | Env name            | Default | Description                                                                        |
+| ---------------- | ------------------- | ------- | ---------------------------------------------------------------------------------- |
+| metrics-addr     | LP_METRICS_ADDR     | `:8080` | Bind address for the metrics endpoint.                                             |
+| node-name        | LP_NODE_NAME        |         | The name of Node on which this program is running. It is a required flag.          |
+| polling-interval | LP_POLLING_INTERVAL | `5m`    | Polling interval to check devices.                                                 |
+| development      | LP_DEVELOPMENT      | `false` | Use development logger config.                                                     |
+| namespace-name   | LP_NAMESPACE_NAME   |         | The name of the namespace in which this program is running. It is a required flag. |
 
 ## Docker images
 

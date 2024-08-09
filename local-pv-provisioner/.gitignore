@@ -14,3 +14,4 @@
 # ignore tools
 /bin
 /testbin
+e2etest/bin
