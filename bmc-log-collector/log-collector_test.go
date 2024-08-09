@@ -25,6 +25,7 @@ import (
 var _ = Describe("gathering up logs", Ordered, func() {
 	var lc selCollector
 	var cl *http.Client
+	var testOutputDir = "testdata/output"
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
@@ -63,14 +64,13 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			machinesListDir: "testdata/configmap/log-collector-test.json",
 			rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:          "testdata/pointers",
-			testOutputDir:   "testdata/output",
 			username:        "user",
 			password:        "pass",
 			httpClient:      cl,
 		}
 
 		It("get machine list", func() {
-			machinesList, err = machineListReader(lc.machinesListDir)
+			machinesList, err = readMachineList(lc.machinesListDir)
 			Expect(err).NotTo(HaveOccurred())
 			fmt.Println("Machine List = ", machinesList)
 		})
@@ -80,11 +80,11 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			var wg sync.WaitGroup
-			logWriter := logTest{outputDir: lc.testOutputDir}
+			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.selCollectorWorker(ctx, m, logWriter)
+					lc.collectSystemEventLog(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()
@@ -94,7 +94,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 
 		It("verify output of collector", func(ctx SpecContext) {
 			var result SystemEventLog
-			file, err = OpenTestResultLog(path.Join(lc.testOutputDir, serial1))
+			file, err = OpenTestResultLog(path.Join(testOutputDir, serial1))
 			Expect(err).ToNot(HaveOccurred())
 
 			reader = bufio.NewReaderSize(file, 4096)
@@ -118,11 +118,11 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", machinesList)
 
 			// choice test logWriter to write local file
-			logWriter := logTest{outputDir: lc.testOutputDir}
+			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.selCollectorWorker(ctx, m, logWriter)
+					lc.collectSystemEventLog(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()

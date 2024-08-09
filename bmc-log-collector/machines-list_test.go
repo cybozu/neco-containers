@@ -11,7 +11,7 @@ Tests machineListReader(), which reads a CSV file with a specified path and sets
 var _ = Describe("Get Machines List", Ordered, func() {
 	Context("Normal", func() {
 		It("Read JSON file", func() {
-			ml, err := machineListReader("testdata/configmap/machinelist-test.json")
+			ml, err := readMachineList("testdata/configmap/machinelist-test.json")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ml[0].Serial).To(Equal("server1"))
 			Expect(ml[0].BmcIP).To(Equal("192.168.0.1"))
@@ -25,17 +25,17 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	Context("Abnormal", func() {
 
 		It("Abnormal, no existing file", func() {
-			_, err := machineListReader("testdata/configmap/noexist.json")
+			_, err := readMachineList("testdata/configmap/noexist.json")
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal, lack of element", func() {
-			_, err := machineListReader("testdata/configmap/damaged.json")
+			_, err := readMachineList("testdata/configmap/damaged.json")
 			Expect(err).To(HaveOccurred())
 		})
 
 		It("Abnormal, read empty JSON file", func() {
-			_, err := machineListReader("testdata/configmap/empty.json")
+			_, err := readMachineList("testdata/configmap/empty.json")
 			Expect(err).To(HaveOccurred())
 		})
 	})

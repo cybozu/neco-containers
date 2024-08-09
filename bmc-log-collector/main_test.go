@@ -58,19 +58,21 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	Context("stub of main equivalent", func() {
 		It("main loop test", func() {
-			os.Setenv("BMC_USERNAME", "user")
-			os.Setenv("BMC_PASSWORD", "pass")
-			lc := selCollector{
+			lcConfig := selCollector{
 				machinesListDir: "testdata/configmap/serverlist2.json",
-				rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 				ptrDir:          "testdata/pointers",
 				username:        "user",
 				password:        "pass",
+				intervalTime:    10,
+				maxLoop:         3,
 			}
 
 			// setup logWriter for test
-			logWriter := logTest{outputDir: "testdata/output"}
-			doLogScrapingLoop(lc, logWriter)
+			logWriter := logTest{
+				outputDir: "testdata/output",
+			}
+			doLogScrapingLoop(lcConfig, logWriter)
 		})
 	})
 

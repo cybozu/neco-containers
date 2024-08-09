@@ -15,30 +15,14 @@ import (
 )
 
 type bmcLogWriter interface {
-	writer(stringJson string, serial string) (err error)
+	write(stringJson string, serial string) (err error)
 }
 
-func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
+func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	var wg sync.WaitGroup
-	var testModeLoopCounter int
+	var loopCounter = 0
 
-	flag := interface{}(logWriter)
-	_, testMode := flag.(logTest)
-
-	// check parameter
-	username := os.Getenv("BMC_USERNAME")
-	if len(username) == 0 {
-		slog.Error("The environment variable BMC_USERNAME should be set")
-		return
-	}
-
-	password := os.Getenv("BMC_PASSWORD")
-	if len(password) == 0 {
-		slog.Error("The environment variable BMC_PASSWORD should be set")
-		return
-	}
-
-	cl := &http.Client{
+	config.httpClient = &http.Client{
 		Timeout: time.Duration(10) * time.Second,
 		Transport: &http.Transport{
 			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
@@ -49,23 +33,6 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 			}).DialContext,
 		},
 	}
-	lc := selCollector{
-		machinesListDir: "/config/serverlist.json",
-		rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-		ptrDir:          "/data/pointers",
-		httpClient:      cl,
-		username:        username,
-		password:        password,
-	}
-
-	// test mode setup
-	if testMode {
-		lc.testOutputDir = "testdata/output"
-		lc.machinesListDir = testModeConfig.machinesListDir
-		lc.ptrDir = testModeConfig.ptrDir
-		lc.username = testModeConfig.username
-		lc.password = testModeConfig.password
-	}
 
 	// signal handler
 	sigs := make(chan os.Signal, 1)
@@ -75,66 +42,73 @@ func doLogScrapingLoop(testModeConfig selCollector, logWriter bmcLogWriter) {
 	defer cancel()
 
 	// set first interval timer
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(config.intervalTime)
 	defer ticker.Stop()
 
 	// scraping loop
 	for {
 		// when use the test mode, must break infinite loop
-		if testMode {
-			testModeLoopCounter++
-			if testModeLoopCounter > 3 {
+		if config.maxLoop > 0 {
+			loopCounter++
+			if loopCounter > config.maxLoop {
 				return
 			}
 		}
+
 		select {
 		case <-ctx.Done():
+			s := <-sigs
+			slog.Info("ctx.Done", "Signal", s.String())
 			return
 		case <-ticker.C:
-			machinesList, err := machineListReader(lc.machinesListDir)
+			machinesList, err := readMachineList(config.machinesListDir)
 			if err != nil {
-				slog.Error("machineListReader()", "err", err, "path", lc.machinesListDir)
+				slog.Error("machineListReader()", "err", err, "path", config.machinesListDir)
 				return
 			}
 			// start log collector workers by BMCs
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.selCollectorWorker(ctx, m, logWriter)
+					config.collectSystemEventLog(ctx, m, logWriter)
 					wg.Done()
 				}()
 			}
 			wg.Wait()
-			lc.httpClient.CloseIdleConnections()
 		}
-		// scrape cycle: 30min (=1800sec)
-		intervalTime := 1800 * time.Second
-		if testMode {
-			intervalTime = 10 * time.Second
-		}
-		ticker = time.NewTicker(intervalTime)
 
 		// Remove ptr files that no update for 6 months
-		err := deleteUnUpdatedFiles(lc.machinesListDir)
+		err := deleteUnUpdatedFiles(config.machinesListDir)
 		if err != nil {
-			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", lc.machinesListDir)
+			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", config.machinesListDir)
 		}
-
 	}
 }
 
 // BMC log writer to forward Loki
 type logProd struct{}
 
-func (l logProd) writer(stringJson string, serial string) error {
+func (l logProd) write(stringJson string, serial string) error {
 	// use default logger to prevent to mix log messages cross go-routine
-	log.SetOutput(os.Stdout)
-	log.SetFlags(0)
 	log.Print(stringJson)
 	return nil
 }
 
 func main() {
+
+	// check parameter
+	username := os.Getenv("BMC_USERNAME")
+	if len(username) == 0 {
+		slog.Error("The environment variable BMC_USERNAME should be set")
+		os.Exit(1)
+	}
+
+	password := os.Getenv("BMC_PASSWORD")
+	if len(password) == 0 {
+		slog.Error("The environment variable BMC_PASSWORD should be set")
+		os.Exit(1)
+	}
+
 	// setup slog
 	opts := &slog.HandlerOptions{
 		AddSource: true,
@@ -142,9 +116,21 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
-	// setup BMC log writer
-	logWriter := logProd{}
+	// setup log scraping loop
+	configLc := selCollector{
+		machinesListDir: "/config/serverlist.json",
+		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+		ptrDir:          "/data/pointers",
+		username:        username,
+		password:        password,
+		intervalTime:    1800,
+		maxLoop:         0,
+	}
 
-	// log scraping loop
-	doLogScrapingLoop(selCollector{}, logWriter)
+	// set BMC log writer
+	logWriter := logProd{}
+	log.SetOutput(os.Stdout)
+	log.SetFlags(0)
+
+	doLogScrapingLoop(configLc, logWriter)
 }
