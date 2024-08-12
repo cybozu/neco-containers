@@ -11,10 +11,11 @@ import (
 )
 
 type LastPointer struct {
-	Serial         string
-	LastReadTime   int64
-	LastReadId     int
-	LastUpdateTime int64
+	Serial       string
+	LastReadTime int64
+	LastReadId   int
+	//LastUpdateTime int64
+	LastError error
 }
 
 func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
@@ -30,10 +31,10 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 			return lptr, err
 		}
 		lptr := LastPointer{
-			Serial:         serial,
-			LastReadTime:   0,
-			LastReadId:     0,
-			LastUpdateTime: time.Now().Unix(),
+			Serial:       serial,
+			LastReadTime: 0,
+			LastReadId:   0,
+			//LastUpdateTime: time.Now().Unix(),
 		}
 		f.Close()
 		return lptr, err
@@ -44,18 +45,7 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 	}
 	defer f.Close()
 
-	st, err := f.Stat()
-	if err != nil {
-		slog.Error("f.Stat()", "err", err, "filename", filePath)
-		return lptr, err
-	}
-
-	if st.Size() == 0 {
-		return lptr, nil
-	}
-
 	byteJSON, err := io.ReadAll(f)
-
 	if err != nil {
 		slog.Error("io.ReadAll()", "err", err, "filename", filePath)
 		return lptr, err
@@ -105,21 +95,14 @@ func deleteUnUpdatedFiles(ptrDir string) error {
 		if err != nil {
 			return err
 		}
-
-		byteJSON, err := io.ReadAll(file)
+		defer file.Close()
+		st, err := file.Stat()
 		if err != nil {
 			return err
 		}
-
-		var lptr LastPointer
-		err = json.Unmarshal(byteJSON, &lptr)
-		if err != nil {
-			return err
-		}
-		file.Close()
 
 		// Remove a file that no update for 6 months
-		if (time.Now().Unix() - lptr.LastUpdateTime) >= 3600*24*30*6 {
+		if (time.Now().Unix() - st.ModTime().Unix()) >= 3600*24*30*6 {
 			os.Remove(file.Name())
 		}
 	}

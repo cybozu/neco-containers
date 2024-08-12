@@ -62,7 +62,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 		}
 		lc = selCollector{
 			machinesListDir: "testdata/configmap/log-collector-test.json",
-			rfUriSel:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+			rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:          "testdata/pointers",
 			username:        "user",
 			password:        "pass",
