@@ -53,60 +53,60 @@ type selCollector struct {
 	maxLoop         int           // if 0 is infinite loop
 }
 
-
 // 一つに統合したら？
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
-	byteJSON, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
-	// 繰り返し出さない？
-	if err != nil {
-		// When canceled by context, the pointer files is never updated because the return is made here.
-		slog.Error("requestToBmc()", "err", err, "url", c.rfSelPath)
-		return
-	}
-	c.bmcLogOutputWithoutDuplication(byteJSON, m, c.ptrDir, logWriter)
-}
-
-func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Machine, ptrDir string, logWriter bmcLogWriter) {
-
-	var members RedfishJsonSchema
-	if err := json.Unmarshal(byteJSON, &members); err != nil {
-		slog.Error("json.Unmarshal()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
-		return
-	}
-
-	lastPtr, err := readLastPointer(server.Serial, ptrDir)
-	if err != nil {
-		slog.Error("readLastPointer()", "err", err, "serial", server.Serial, "ptrDir", ptrDir)
-		return
-	}
-
-//続けてエラーが発生した時は、エラーを抑止する
-
 
 	layout := "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
 
+	lastPtr, err := readLastPointer(m.Serial, c.ptrDir)
+	if err != nil {
+		slog.Error("readLastPointer()", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		return
+	}
+
+	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
+	byteJSON, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
+	if err != nil {
+		// When canceled by context, the pointer files is never updated because the return is made here.
+		// Suppress log output of the same error
+		if lastPtr.LastError != err {
+			slog.Error("requestToBmc()", "err", err, "url", c.rfSelPath)
+		}
+		lastPtr.LastError = err
+		err = updateLastPointer(lastPtr, c.ptrDir)
+		if err != nil {
+			slog.Error("updateLastPointer()", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+		}
+		return
+	}
+
+	var members RedfishJsonSchema
+	if err := json.Unmarshal(byteJSON, &members); err != nil {
+		slog.Error("json.Unmarshal()", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		return
+	}
+
 	for i := len(members.Sel) - 1; i >= 0; i-- {
 		t, _ := time.Parse(layout, members.Sel[i].Create)
 		createUnixtime = t.Unix()
 		lastId, _ = strconv.Atoi(members.Sel[i].Id)
-		members.Sel[i].Serial = server.Serial
-		members.Sel[i].BmcIP = server.BmcIP
-		members.Sel[i].NodeIP = server.NodeIP
+		members.Sel[i].Serial = m.Serial
+		members.Sel[i].BmcIP = m.BmcIP
+		members.Sel[i].NodeIP = m.NodeIP
 
 		// Anti duplication
 		if lastPtr.LastReadId < lastId {
 			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
-			logWriter.write(string(bmcByteJsonLog), server.Serial)
+			logWriter.write(string(bmcByteJsonLog), m.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
 		} else if lastPtr.LastReadId > lastId {
 			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
 			if lastPtr.LastReadTime < createUnixtime {
 				bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
-				logWriter.write(string(bmcByteJsonLog), server.Serial)
+				logWriter.write(string(bmcByteJsonLog), m.Serial)
 				lastPtr.LastReadId = lastId
 				lastPtr.LastReadTime = createUnixtime
 			}
@@ -114,14 +114,13 @@ func (c *selCollector) bmcLogOutputWithoutDuplication(byteJSON []byte, server Ma
 	}
 
 	err = updateLastPointer(LastPointer{
-		Serial:         server.Serial,
-		LastReadTime:   createUnixtime,
-		LastReadId:     lastId,
-		LastUpdateTime: time.Now().Unix(),
-	}, ptrDir)
-
+		Serial:       m.Serial,
+		LastReadTime: createUnixtime,
+		LastReadId:   lastId,
+		LastError:    nil,
+	}, c.ptrDir)
 	if err != nil {
-		slog.Error("updateLastPointer()", "err", err, "serial", server.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", ptrDir)
+		slog.Error("updateLastPointer()", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		return
 	}
 }

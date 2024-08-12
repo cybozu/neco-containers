@@ -6,7 +6,8 @@ import (
 	. "github.com/onsi/gomega"
 	"os"
 	"path"
-	"time"
+	//"time"
+	"os/exec"
 )
 
 var _ = Describe("Get Machines List", Ordered, func() {
@@ -18,14 +19,15 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		os.Remove("testdata/pointers/ABCDEF")
 		file, _ := os.Create("testdata/pointers/WITHDRAWED")
 		lptr := LastPointer{
-			Serial:         "WITHDRAWED",
-			LastReadTime:   0,
-			LastReadId:     0,
-			LastUpdateTime: time.Now().Unix() - (3600 * 24 * 30 * 6),
+			Serial:       "WITHDRAWED",
+			LastReadTime: 0,
+			LastReadId:   0,
+			//LastUpdateTime: time.Now().Unix() - (3600 * 24 * 30 * 6),
 		}
 		byteJSON, _ := json.Marshal(lptr)
 		file.WriteString(string(byteJSON))
 		file.Close()
+		exec.Command("touch", "-t", "202401011200.00", "testdata/pointers/WITHDRAWED").Run()
 	})
 
 	Context("normal JSON file", func() {
