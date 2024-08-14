@@ -3,6 +3,7 @@
 # Image version
 IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = ghcr.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
+IMAGE_TAG_LATEST = ghcr.io/cybozu/local-pv-provisioner:latest
 
 CONTROLLER_TOOLS_VERSION = 0.14.0
 ENVTEST_K8S_VERSION = 1.29.3
@@ -20,11 +21,17 @@ all: build
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: simple-test setup-envtest
+test: manifests generate simple-test setup-envtest
 	{ \
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	go test -race -v -count 1 ./... ; \
 	}
+
+.PHONY: ci-e2e-test
+ci-e2e-test:
+	e2etest/ci-setup-kvm.sh
+	$(MAKE) -C e2etest setup
+	$(MAKE) -C e2etest test
 
 .PHONY: simple-test
 simple-test: staticcheck
@@ -41,7 +48,7 @@ check-generate:
 
 # Build manager binary
 .PHONY: build
-build:
+build: manifests generate
 	CGO_ENABLED=0 go build -o bin/local-pv-provisioner main.go
 
 # Generate manifests e.g. RBAC etc.
@@ -69,6 +76,7 @@ setup-envtest:
 .PHONY: docker
 docker: build
 	docker build . -t $(IMAGE_TAG)
+	docker tag $(IMAGE_TAG) $(IMAGE_TAG_LATEST)
 
 .PHONY: clean
 clean:

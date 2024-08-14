@@ -85,7 +85,7 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) 
 		ObjectMeta: v1.ObjectMeta{
 			Name: "local-pv",
 			Labels: map[string]string{
-				localPVProvisionerLabelKey: node,
+				lppLegacyLabelKey: node,
 			},
 		},
 		Spec: corev1.PersistentVolumeSpec{

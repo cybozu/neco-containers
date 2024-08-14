@@ -36,7 +36,7 @@ func (r *PersistentVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if name, ok := pv.ObjectMeta.Labels[localPVProvisionerLabelKey]; !ok || name != r.NodeName {
+	if name, ok := pv.ObjectMeta.Labels[lppLegacyLabelKey]; !ok || name != r.NodeName {
 		return ctrl.Result{}, nil
 	}
 
@@ -118,7 +118,7 @@ func (w *persistentVolumeWatcher) Start(ctx context.Context) error {
 func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 	var pvs corev1.PersistentVolumeList
 	err := w.client.List(ctx, &pvs, &client.ListOptions{
-		LabelSelector: labels.SelectorFromSet(map[string]string{localPVProvisionerLabelKey: w.nodeName}),
+		LabelSelector: labels.SelectorFromSet(map[string]string{lppLegacyLabelKey: w.nodeName}),
 	})
 	if err != nil {
 		return err
