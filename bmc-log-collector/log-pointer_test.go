@@ -2,12 +2,12 @@ package main
 
 import (
 	"encoding/json"
+	"os"
+	"os/exec"
+	"path"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"os"
-	"path"
-	//"time"
-	"os/exec"
 )
 
 var _ = Describe("Get Machines List", Ordered, func() {
@@ -22,6 +22,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 			Serial:       "WITHDRAWED",
 			LastReadTime: 0,
 			LastReadId:   0,
+			// 過去の成功と失敗を記録、連続２回の成功で、過去の失敗をリセットなど
 			//LastUpdateTime: time.Now().Unix() - (3600 * 24 * 30 * 6),
 		}
 		byteJSON, _ := json.Marshal(lptr)

@@ -49,11 +49,10 @@ type selCollector struct {
 	username        string        // iDRAC username
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
-	intervalTime    time.Duration // interval time of scraping
-	maxLoop         int           // if 0 is infinite loop
+	intervalTime    time.Duration // interval (sec) time of scraping
+	//maxLoop         int           // if 0 is infinite loop
 }
 
-// 一つに統合したら？
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 
 	layout := "2006-01-02T15:04:05Z07:00"
@@ -62,7 +61,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	lastPtr, err := readLastPointer(m.Serial, c.ptrDir)
 	if err != nil {
-		slog.Error("readLastPointer()", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		return
 	}
 
@@ -72,19 +71,20 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		// When canceled by context, the pointer files is never updated because the return is made here.
 		// Suppress log output of the same error
 		if lastPtr.LastError != err {
-			slog.Error("requestToBmc()", "err", err, "url", c.rfSelPath)
+			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath)
 		}
+		// メトリックスに出すとなると、ここを修正する必要がある。
 		lastPtr.LastError = err
 		err = updateLastPointer(lastPtr, c.ptrDir)
 		if err != nil {
-			slog.Error("updateLastPointer()", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		}
 		return
 	}
 
 	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
-		slog.Error("json.Unmarshal()", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		slog.Error("failed to translate JSON to go struct.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		return
 	}
 
@@ -120,7 +120,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		LastError:    nil,
 	}, c.ptrDir)
 	if err != nil {
-		slog.Error("updateLastPointer()", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		return
 	}
 }

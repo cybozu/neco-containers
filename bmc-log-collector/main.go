@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"log/slog"
 	"net"
@@ -18,9 +19,10 @@ type bmcLogWriter interface {
 	write(stringJson string, serial string) (err error)
 }
 
+// func doLogScrapingLoop(ch chan string, config selCollector, logWriter bmcLogWriter) {
 func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	var wg sync.WaitGroup
-	var loopCounter = 0
+	//var loopCounter = 0
 
 	config.httpClient = &http.Client{
 		Timeout: time.Duration(10) * time.Second,
@@ -35,30 +37,35 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	}
 
 	// signal handler
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+	//sigs := make(chan os.Signal, 1)
+	//signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
 	// set first interval timer
-	ticker := time.NewTicker(config.intervalTime)
+	ticker := time.NewTicker(config.intervalTime * time.Second)
 	defer ticker.Stop()
 
 	// scraping loop
 	for {
 		// when use the test mode, must break infinite loop
-		if config.maxLoop > 0 {
-			loopCounter++
-			if loopCounter > config.maxLoop {
-				return
+		/*
+			if config.maxLoop > 0 {
+				loopCounter++
+				if loopCounter > config.maxLoop {
+					return
+				}
 			}
-		}
-
+		*/
 		select {
+		//case <-ch:
+		//	fmt.Println("stop by channel~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+		//	return
 		case <-ctx.Done():
-			s := <-sigs
-			slog.Info("ctx.Done", "Signal", s.String())
+			fmt.Println("stop by signal~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
+			//s := <-sigs
+			//slog.Info("ctx.Done", "Signal", s.String()) 代替手段を調べる ctxで出せるかも
 			return
 		case <-ticker.C:
 			machinesList, err := readMachineList(config.machinesListDir)
@@ -74,14 +81,18 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 					wg.Done()
 				}()
 			}
+			fmt.Println("================== wait collector ======================")
 			wg.Wait()
 		}
 
 		// Remove ptr files that no update for 6 months
-		err := deleteUnUpdatedFiles(config.machinesListDir)
+		//err := deleteUnUpdatedFiles(config.machinesListDir)
+		err := deleteUnUpdatedFiles(config.ptrDir)
 		if err != nil {
-			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", config.machinesListDir)
+			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", config.ptrDir)
 		}
+
+		fmt.Println("================== wait for ======================")
 	}
 }
 
@@ -124,7 +135,7 @@ func main() {
 		username:        username,
 		password:        password,
 		intervalTime:    1800,
-		maxLoop:         0,
+		//maxLoop:         0,
 	}
 
 	// set BMC log writer
@@ -132,5 +143,7 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
 
+	//ch := make(chan string, 1)
+	//doLogScrapingLoop(ch, configLc, logWriter)
 	doLogScrapingLoop(configLc, logWriter)
 }

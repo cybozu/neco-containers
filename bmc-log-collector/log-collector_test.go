@@ -1,10 +1,5 @@
 package main
 
-/*
-  Read the machine list and access iDRAC mock.
-  Verify anti-duplicate filter.
-*/
-
 import (
 	"bufio"
 	"context"
@@ -21,6 +16,11 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
+
+/*
+  Read the machine list and access iDRAC mock.
+  Verify anti-duplicate filter.
+*/
 
 var _ = Describe("gathering up logs", Ordered, func() {
 	var lc selCollector
@@ -148,10 +148,5 @@ var _ = Describe("gathering up logs", Ordered, func() {
 
 			file.Close()
 		}, SpecTimeout(3*time.Second))
-
-	})
-	AfterAll(func() {
-		fmt.Println("shutdown workers")
-		cl.CloseIdleConnections()
 	})
 })

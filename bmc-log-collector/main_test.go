@@ -17,6 +17,7 @@ import (
 )
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
+	//ch := make(chan string, 1)
 
 	BeforeAll(func() {
 		os.Remove("testdata/pointers/683FPQ3")
@@ -65,14 +66,20 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				username:        "user",
 				password:        "pass",
 				intervalTime:    10,
-				maxLoop:         3,
+				//maxLoop:         3,
 			}
 
 			// setup logWriter for test
 			logWriter := logTest{
 				outputDir: "testdata/output",
 			}
-			doLogScrapingLoop(lcConfig, logWriter)
+			func() {
+				//go doLogScrapingLoop(ch, lcConfig, logWriter)
+				go doLogScrapingLoop(lcConfig, logWriter)
+			}()
+			// stop scraper after 15 sec
+			//time.Sleep(15 * time.Second)
+			//ch <- "end"
 		})
 	})
 
@@ -100,7 +107,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("1"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("2nd reply", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -116,7 +123,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("2"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 	})
 
 	Context("verify HN3CLP3", func() {
@@ -144,7 +151,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("1"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(39*time.Second))
 
 		It("check 2nd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -160,7 +167,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("2"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 3rd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -176,7 +183,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("3"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 4th log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -192,7 +199,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("4"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 	})
 
 	Context("verify J7N6MW3", func() {
@@ -220,7 +227,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("1"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 2nd log record", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -236,7 +243,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("2"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 3rd log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -252,7 +259,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("1"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 4th log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -268,7 +275,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("2"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(30*time.Second))
 
 		It("check 5th log record which after SEL cleanup", func(ctx SpecContext) {
 			var rslt SystemEventLog
@@ -282,13 +289,14 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
+			GinkgoWriter.Println("xxxxxxxxxxxxxxxxxxxxxxxx ------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("3"))
-		}, SpecTimeout(3*time.Second))
-
+		}, SpecTimeout(30*time.Second))
 	})
-
 	AfterAll(func() {
-		fmt.Println("shutdown stub servers")
+		//Sleep.Time
+		fmt.Println("===== wait complete test=========================================")
+		time.Sleep(15 * time.Second)
 	})
 })
