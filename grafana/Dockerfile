@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG GRAFANA_VERSION=10.4.5
+ARG GRAFANA_VERSION=10.4.7
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -19,7 +19,7 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
     && npm install --global yarn
 
 RUN yarn install --immutable
-ENV NODE_ENV production
+ENV NODE_ENV=production
 RUN yarn build
 
 RUN go mod verify
