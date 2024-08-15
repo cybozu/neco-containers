@@ -6,7 +6,7 @@ bmc-log-collector
 The following products are assumed as BMC.
 - DELL integrated Dell Remote Access Controller (iDRAC) 
 
-This program reads the "server-list" in JSON format and retrieves the System Event Log from each BMC. It adds the serial and the node name that gets from  "server list" to the logs it reads and outputs them to stdout in JSON format. 
+This program reads the "server-list" in JSON format and retrieves the System Event Log from each BMC. "bmc-log-collector" adds the serial and the node name to own output. the serial and the node are from the "server-list" 
 
 
 ## server-list JSON file
@@ -16,9 +16,9 @@ server-list includes serial, BMC IP address, Server IP address in below JSON for
 ```
 [
     {
-	    serial: "ABC123",
+        serial: "ABC123",
         bmc_ip: "192.168.1.1"
-    	ipv4:   "192.168.10.1"
+        ipv4:   "192.168.10.1"
     },
     {
         // Next server 
@@ -29,4 +29,4 @@ server-list includes serial, BMC IP address, Server IP address in below JSON for
 
 ## Usage 
 
-under writing
+ *** under writing ***

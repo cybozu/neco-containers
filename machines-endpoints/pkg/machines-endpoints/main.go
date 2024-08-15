@@ -65,11 +65,11 @@ query search() {
 `
 
 var (
-	flgMonitoringEndpoints		= pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
-	flgBMCReverseProxyConfigMap	= pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
-	flgBMCLogCollectorConfigMap	= pflag.Bool("log-collector", false, "generate ConfigMap for BMC log collector")
-	flgNodeExporterPort			= pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
-	flgEtcdMetricsPort			= pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
+	flgMonitoringEndpoints      = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
+	flgBMCReverseProxyConfigMap = pflag.Bool("bmc-configmap", false, "generate ConfigMap for BMC reverse proxy")
+	flgBMCLogCollectorConfigMap = pflag.Bool("log-collector", false, "generate ConfigMap for BMC log collector")
+	flgNodeExporterPort         = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
+	flgEtcdMetricsPort          = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
 
 // Machine represents a machine registered with sabakan.
