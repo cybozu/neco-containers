@@ -20,14 +20,20 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	//ch := make(chan string, 1)
 
 	BeforeAll(func() {
-		os.Remove("testdata/pointers/683FPQ3")
-		os.Remove("testdata/output/683FPQ3")
+		/*
+			os.Remove("testdata/pointers/683FPQ3")
+			os.Remove("testdata/output/683FPQ3")
 
-		os.Remove("testdata/pointers/HN3CLP3")
-		os.Remove("testdata/output/HN3CLP3")
+			os.Remove("testdata/pointers/HN3CLP3")
+			os.Remove("testdata/output/HN3CLP3")
 
-		os.Remove("testdata/pointers/J7N6MW3")
-		os.Remove("testdata/output/J7N6MW3")
+			os.Remove("testdata/pointers/J7N6MW3")
+			os.Remove("testdata/output/J7N6MW3")
+		*/
+		os.Remove("testdata/pointers")
+		os.Remove("testdata/output")
+		os.MkdirAll("testdata/pointers", 0750)
+		os.MkdirAll("testdata/output", 0750)
 
 		GinkgoWriter.Println("start BMC stub servers")
 
