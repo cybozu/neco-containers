@@ -78,7 +78,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				go doLogScrapingLoop(lcConfig, logWriter)
 			}()
 			// stop scraper after 15 sec
-			//time.Sleep(15 * time.Second)
+			time.Sleep(15 * time.Second)
 			//ch <- "end"
 		})
 	})
@@ -295,8 +295,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		}, SpecTimeout(30*time.Second))
 	})
 	AfterAll(func() {
-		//Sleep.Time
-		fmt.Println("===== wait complete test=========================================")
+		fmt.Println("===== wait complete test =========================================")
+		// wait to prevent stop go routine
 		time.Sleep(15 * time.Second)
 	})
 })
