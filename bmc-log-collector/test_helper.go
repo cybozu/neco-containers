@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"path"
@@ -70,23 +69,22 @@ func redfishSel(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Exclusive lock against other mock server which parallel running
 	mutex.Lock()
 	defer mutex.Unlock()
+
+	// Check a response file is available
 	key := string(r.Host)
-	fmt.Println("------------------------------------- ", key, " =============== ", accessCounter[key], "---", len(responseFiles[key]))
 	if accessCounter[key] > (len(responseFiles[key]) - 1) {
 		time.Sleep(3 * time.Second)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
 		return
 	}
-	// Exclusive lock against other mock server which parallel running
-	//mutex.Lock()
 
 	fn := responseFiles[key][accessCounter[key]]
 	responseFile := path.Join(responseDir[key], fn)
 	accessCounter[key] = accessCounter[key] + 1
-	//mutex.Unlock()
 
 	// Create HTTP response from the response file
 	file, err := os.Open(responseFile)
@@ -143,11 +141,9 @@ func (l logTest) write(byteJson string, serial string) error {
 	fn := path.Join(l.outputDir, serial)
 	file, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		slog.Error("OpenFile()", "err", err, "filename", fn) // テストでは不要
 		return err
 	}
 	defer file.Close()
-	fmt.Println("=============================================  ", serial) // 消す
 	file.WriteString(fmt.Sprintln(string(byteJson)))
 	fmt.Println(byteJson)
 	return nil
