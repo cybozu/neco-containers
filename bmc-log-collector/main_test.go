@@ -8,34 +8,26 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path"
+	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"github.com/prometheus/common/expfmt"
 )
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
-	//ch := make(chan string, 1)
-
 	BeforeAll(func() {
-		/*
-			os.Remove("testdata/pointers/683FPQ3")
-			os.Remove("testdata/output/683FPQ3")
-
-			os.Remove("testdata/pointers/HN3CLP3")
-			os.Remove("testdata/output/HN3CLP3")
-
-			os.Remove("testdata/pointers/J7N6MW3")
-			os.Remove("testdata/output/J7N6MW3")
-		*/
+		GinkgoWriter.Println("start BMC stub servers")
 		os.Remove("testdata/pointers")
 		os.Remove("testdata/output")
 		os.MkdirAll("testdata/pointers", 0750)
 		os.MkdirAll("testdata/output", 0750)
-
-		GinkgoWriter.Println("start BMC stub servers")
 
 		bm1 := bmcMock{
 			host:   "127.0.0.1:7180",
@@ -57,7 +49,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			files:  []string{"J7N6MW3-1.json", "J7N6MW3-2.json", "J7N6MW3-3.json"},
 		}
 		bm3.startMock()
-
 		// Wait starting stub servers
 		time.Sleep(10 * time.Second)
 
@@ -71,8 +62,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				ptrDir:          "testdata/pointers",
 				username:        "user",
 				password:        "pass",
-				intervalTime:    10,
-				//maxLoop:         3,
+				intervalTime:    10, // sec
 			}
 
 			// setup logWriter for test
@@ -80,12 +70,265 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				outputDir: "testdata/output",
 			}
 			func() {
-				//go doLogScrapingLoop(ch, lcConfig, logWriter)
 				go doLogScrapingLoop(lcConfig, logWriter)
 			}()
 			// stop scraper after 15 sec
-			time.Sleep(15 * time.Second)
-			//ch <- "end"
+			time.Sleep(60 * time.Second)
+		})
+	})
+
+	Context("verify metrics", func() {
+		var metricsLines []string
+		It("get metrics", func() {
+			url := "http://localhost:8080/metrics"
+			req, err := http.NewRequest("GET", url, nil)
+			Expect(err).NotTo(HaveOccurred())
+			client := &http.Client{Timeout: time.Duration(10) * time.Second}
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+			buf, err := io.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println(string(buf))
+			defer resp.Body.Close()
+			metricsLines = strings.Split(string(buf), "\n")
+			fmt.Println(metricsLines)
+		})
+
+		It("verify HELP line in metrics", func() {
+			Expect(metricsLines[0]).To(Equal("# HELP failed_counter The failed count for Redfish of BMC accessing"))
+		})
+		It("verify TYPE line in metrics", func() {
+			Expect(metricsLines[1]).To(Equal("# TYPE failed_counter counter"))
+		})
+
+		It("iDRAC 683FPQ3 127.0.0.1:7180", func() {
+			metricsLine := metricsLines[2]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("failed_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7180"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("683FPQ3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("404"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("2", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
+		})
+
+		It("iDRAC HN3CLP3 127.0.0.1:7280", func() {
+			metricsLine := metricsLines[3]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("failed_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7280"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("HN3CLP3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("404"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("2", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
+		})
+
+		It("iDRAC J7N6MW3 127.0.0.1:7380", func() {
+			metricsLine := metricsLines[4]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("failed_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7380"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("J7N6MW3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("404"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("2", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
+		})
+
+		It("verify HELP line in metrics", func() {
+			Expect(metricsLines[5]).To(Equal("# HELP success_counter The success count for Redfish of BMC accessing"))
+		})
+
+		It("verify TYPE line in metrics", func() {
+			Expect(metricsLines[6]).To(Equal("# TYPE success_counter counter"))
+		})
+
+		It("iDRAC 683FPQ3 127.0.0.1:7180", func() {
+			metricsLine := metricsLines[7]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("success_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7180"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("683FPQ3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("200"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("3", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
+		})
+
+		It("iDRAC HN3CLP3 127.0.0.1:7280", func() {
+			metricsLine := metricsLines[8]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("success_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7280"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("HN3CLP3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("200"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("3", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
+		})
+
+		It("iDRAC J7N6MW3 127.0.0.1:7380", func() {
+			metricsLine := metricsLines[9]
+			p := expfmt.TextParser{}
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			if err != nil {
+				fmt.Println("err ", err)
+			}
+
+			for _, v := range metricsFamily {
+				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
+				Expect(v.GetName()).To(Equal("success_counter"))
+			}
+
+			for _, v := range metricsFamily {
+				for idx, l := range v.GetMetric()[0].Label {
+					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
+					switch idx {
+					case 0:
+						Expect(l.GetName()).To(Equal("ip_addr"))
+						Expect(l.GetValue()).To(Equal("127.0.0.1:7380"))
+					case 1:
+						Expect(l.GetName()).To(Equal("serial"))
+						Expect(l.GetValue()).To(Equal("J7N6MW3"))
+					case 2:
+						Expect(l.GetName()).To(Equal("status"))
+						Expect(l.GetValue()).To(Equal("200"))
+					}
+				}
+				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+				f, err := strconv.ParseFloat("3", 64)
+				if err != nil {
+					GinkgoWriter.Printf("error %w", err)
+				}
+				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
+			}
 		})
 	})
 
@@ -295,14 +538,9 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			GinkgoWriter.Println("------ ", string(rslt.Serial))
 			GinkgoWriter.Println("------ ", string(rslt.Id))
-			GinkgoWriter.Println("xxxxxxxxxxxxxxxxxxxxxxxx ------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("3"))
 		}, SpecTimeout(30*time.Second))
 	})
-	AfterAll(func() {
-		fmt.Println("===== wait complete test =========================================")
-		// wait to prevent stop go routine
-		time.Sleep(15 * time.Second)
-	})
+
 })

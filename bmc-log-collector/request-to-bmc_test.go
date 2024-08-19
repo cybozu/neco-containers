@@ -47,52 +47,43 @@ var _ = Describe("Access BMC", Ordered, func() {
 
 	Context("Access iDRAC server to get SEL", func() {
 		It("Normal access", func() {
-			byteJSON, err := requestToBmc(ctx, username, password, client, url)
+			byteJSON, httpStatusCode, err := requestToBmc(ctx, username, password, client, url)
 			Expect(err).NotTo(HaveOccurred())
+			Expect(httpStatusCode).To(Equal(200))
 			Expect(len(byteJSON)).To(Equal(776))
 		})
 
 		It("Abnormal access, not existing web server", func() {
 			bad_url := "https://127.0.0.9:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
-			byteJSON, err := requestToBmc(ctx, username, password, client, bad_url)
+			_, _, err := requestToBmc(ctx, username, password, client, bad_url)
 			Expect(err).To(HaveOccurred())
-			errmsg := fmt.Sprintf("Get \"%s\": dial tcp 127.0.0.9:8080: connect: connection refused", bad_url)
-			Expect(err.Error()).To(Equal(errmsg))
-			Expect(len(byteJSON)).To(Equal(0))
 		})
 
 		It("Abnormal access, wrong path", func() {
 			wrong_path := "https://127.0.0.1:8080/redfish/v1/Managers/iDRAC.Embedded.1/LogServ1ces/Sel/EntriesWrong"
-			byteJSON, err := requestToBmc(ctx, username, password, client, wrong_path)
-			errmsg := "HTTP status code = 404"
-			Expect(err).To(HaveOccurred())
-			Expect(err.Error()).To(Equal(errmsg))
-			Expect(len(byteJSON)).To(Equal(0))
-
+			_, httpStatusCode, err := requestToBmc(ctx, username, password, client, wrong_path)
+			Expect(httpStatusCode).To(Equal(404))
+			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Abnormal access, wrong username", func() {
 			bad_username := "badname"
-			byteJSON, err := requestToBmc(ctx, bad_username, password, client, url)
-			Expect(err).To(HaveOccurred())
-			errmsg := "HTTP status code = 401"
-			Expect(err.Error()).To(Equal(errmsg))
-			Expect(len(byteJSON)).To(Equal(0))
+			_, httpStatusCode, err := requestToBmc(ctx, bad_username, password, client, url)
+			Expect(err).ToNot(HaveOccurred())
+			Expect(httpStatusCode).To(Equal(401))
 		})
 
 		It("Abnormal access, wrong password", func() {
 			bad_password := "badpassword"
-			byteJSON, err := requestToBmc(ctx, username, bad_password, client, url)
-			Expect(err).To(HaveOccurred())
-			errmsg := "HTTP status code = 401"
-			Expect(err.Error()).To(Equal(errmsg))
-			Expect(len(byteJSON)).To(Equal(0))
+			_, httpStatusCode, err := requestToBmc(ctx, username, bad_password, client, url)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(httpStatusCode).To(Equal(401))
 		})
 	})
 
 	AfterAll(func() {
-		GinkgoWriter.Println("shutdown BMC stub")
-		client.CloseIdleConnections()
+		//	GinkgoWriter.Println("shutdown BMC stub")
+		//	client.CloseIdleConnections()
 		cancel()
 	})
 })

@@ -16,7 +16,19 @@ var _ = Describe("Get Machines List", Ordered, func() {
 			Expect(ml[0].Serial).To(Equal("server1"))
 			Expect(ml[0].BmcIP).To(Equal("192.168.0.1"))
 			Expect(ml[0].NodeIP).To(Equal("172.16.0.1"))
-			// テストデータの数だけ確認すること
+
+			Expect(ml[1].Serial).To(Equal("server2"))
+			Expect(ml[1].BmcIP).To(Equal("192.168.0.2"))
+			Expect(ml[1].NodeIP).To(Equal("172.16.0.2"))
+
+			Expect(ml[2].Serial).To(Equal("server3"))
+			Expect(ml[2].BmcIP).To(Equal("192.168.0.3"))
+			Expect(ml[2].NodeIP).To(Equal("172.16.0.3"))
+
+			Expect(ml[3].Serial).To(Equal("server4"))
+			Expect(ml[3].BmcIP).To(Equal("192.168.0.4"))
+			Expect(ml[3].NodeIP).To(Equal("172.16.0.4"))
+
 			Expect(ml[4].Serial).To(Equal("server5"))
 			Expect(ml[4].BmcIP).To(Equal("192.168.0.5"))
 			Expect(ml[4].NodeIP).To(Equal("172.16.0.5"))
