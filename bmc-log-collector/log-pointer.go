@@ -13,8 +13,7 @@ type LastPointer struct {
 	Serial       string
 	LastReadTime int64
 	LastReadId   int
-	//LastUpdateTime int64
-	LastError error
+	LastError    error
 }
 
 func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
@@ -32,7 +31,6 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 			Serial:       serial,
 			LastReadTime: 0,
 			LastReadId:   0,
-			//LastUpdateTime: time.Now().Unix(),
 		}
 		f.Close()
 		return lptr, err

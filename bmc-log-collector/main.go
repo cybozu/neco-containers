@@ -41,7 +41,7 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	defer ticker.Stop()
 
 	// Expose metrics via HTTP
-	go metrics()
+	go metrics("/metrics", ":8080")
 
 	// scraping loop
 	for {

@@ -13,29 +13,30 @@ import (
 var _ = Describe("Get Machines List", Ordered, func() {
 	var ptr LastPointer
 	var err error
+	var testPointerDir = "testdata/pointers_get_machines"
+	var serial = "ABCDEF"
+	var serialForDelete = "WITHDRAWED"
 
 	BeforeAll(func() {
-		os.Mkdir("testdata/pointers", 0766)
-		os.Remove("testdata/pointers/ABCDEF")
-		file, _ := os.Create("testdata/pointers/WITHDRAWED")
+		os.Mkdir(testPointerDir, 0766)
+		os.Remove(path.Join(testPointerDir, serial))
+		file, _ := os.Create(path.Join(testPointerDir, serialForDelete))
 		lptr := LastPointer{
-			Serial:       "WITHDRAWED",
+			Serial:       serialForDelete,
 			LastReadTime: 0,
 			LastReadId:   0,
-			// 過去の成功と失敗を記録、連続２回の成功で、過去の失敗をリセットなど
-			//LastUpdateTime: time.Now().Unix() - (3600 * 24 * 30 * 6),
 		}
 		byteJSON, _ := json.Marshal(lptr)
 		file.WriteString(string(byteJSON))
 		file.Close()
-		exec.Command("touch", "-t", "202401011200.00", "testdata/pointers/WITHDRAWED").Run()
+		exec.Command("touch", "-t", "202401011200.00", path.Join(testPointerDir, serialForDelete)).Run()
 	})
 
 	Context("normal JSON file", func() {
 		It("read ptr file", func() {
-			ptr, err = readLastPointer("ABCDEF", "testdata/pointers")
+			ptr, err = readLastPointer(serial, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.Serial).To(Equal("ABCDEF"))
+			Expect(ptr.Serial).To(Equal(serial))
 			Expect(ptr.LastReadTime).To(Equal(int64(0)))
 			Expect(ptr.LastReadId).To(Equal(0))
 			GinkgoWriter.Println(ptr)
@@ -43,24 +44,21 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		It("update ptr", func() {
 			ptr.LastReadTime = 1
 			ptr.LastReadId = 1
-			err := updateLastPointer(ptr, "testdata/pointers")
+			err := updateLastPointer(ptr, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
 
 	Context("delete retired server ptr file", func() {
 		It("do delete", func() {
-			err := deleteUnUpdatedFiles("testdata/pointers")
+			err := deleteUnUpdatedFiles(testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("check that file has been deleted", func() {
-			filePath := path.Join("testdata/pointers", "WITHDRAWED")
+			filePath := path.Join(testPointerDir, serialForDelete)
 			_, err := os.Open(filePath)
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	AfterAll(func() {
-		os.Remove("testdata/pointers/ABCDEF")
-	})
 })

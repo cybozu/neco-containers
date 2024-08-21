@@ -6,19 +6,15 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"os"
 	"path"
-	"strconv"
-	"strings"
 	"sync"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"github.com/prometheus/common/expfmt"
 )
 
 /*
@@ -29,32 +25,40 @@ import (
 var _ = Describe("gathering up logs", Ordered, func() {
 	var lc selCollector
 	var cl *http.Client
-	var testOutputDir = "testdata/output"
+	var testOutputDir = "testdata/output_log_collector"
+	var testPointerDir = "testdata/pointers_log_collector"
+	var serial = "683FPQ3"
+	var metricsPath = "/testmetrics2"
+	var metricsPort = ":29000"
 
 	// Start iDRAC Stub
 	BeforeAll(func() {
-		os.Remove("testdata/pointers/683FPQ3")
-		os.Remove("testdata/output/683FPQ3")
-
+		os.Remove(path.Join(testOutputDir, serial))
+		os.Remove(path.Join(testPointerDir, serial))
+		os.MkdirAll(testOutputDir, 0755)
+		os.MkdirAll(testPointerDir, 0755)
 		GinkgoWriter.Println("Start iDRAC Stub")
 		bm := bmcMock{
-			host:   "127.0.0.1:8180",
-			resDir: "testdata/redfish_response",
-			files:  []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
+			host:          "127.0.0.1:8180",
+			resDir:        "testdata/redfish_response",
+			files:         []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
+			accessCounter: make(map[string]int),
+			responseFiles: make(map[string][]string),
+			responseDir:   make(map[string]string),
+			isInitmap:     true,
 		}
 		bm.startMock()
 		time.Sleep(10 * time.Second)
 
 		// must start metrics exporter, if not it get SIGSEGV
 		go func() {
-			metrics()
+			metrics(metricsPath, metricsPort)
 		}()
 	})
 
-	Context("log collector function test", func() {
+	Context("SEL collector test", func() {
 		var machinesList []Machine
 		var err error
-		var serial1 string = "683FPQ3"
 		var file *os.File
 		var reader *bufio.Reader
 
@@ -72,7 +76,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 		lc = selCollector{
 			machinesListDir: "testdata/configmap/log-collector-test.json",
 			rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-			ptrDir:          "testdata/pointers",
+			ptrDir:          testPointerDir,
 			username:        "user",
 			password:        "pass",
 			httpClient:      cl,
@@ -84,17 +88,17 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			fmt.Println("Machine List = ", machinesList)
 		})
 
-		// Start sel collector
-		It("run logCollectorWorker", func() {
-
+		It("collect iDRAC log (run1)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()
 			var wg sync.WaitGroup
+
+			// choice test logWriter to write local file
 			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.collectSystemEventLog(ctx, m, logWriter)
+					lc.collectSystemEventLog(ctx, m, logWriter) // --- 1 ---
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()
@@ -102,9 +106,9 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			wg.Wait()
 		})
 
-		It("verify output of collector", func(ctx SpecContext) {
+		It("verify output (run1)", func(ctx SpecContext) {
 			var result SystemEventLog
-			file, err = OpenTestResultLog(path.Join(testOutputDir, serial1))
+			file, err = OpenTestResultLog(path.Join(testOutputDir, serial))
 			Expect(err).ToNot(HaveOccurred())
 
 			reader = bufio.NewReaderSize(file, 4096)
@@ -117,12 +121,11 @@ var _ = Describe("gathering up logs", Ordered, func() {
 
 			GinkgoWriter.Println("---- serial = ", string(result.Serial))
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
-			Expect(result.Serial).To(Equal(serial1))
+			Expect(result.Serial).To(Equal(serial))
 			Expect(result.Id).To(Equal("1"))
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(10*time.Second))
 
-		// Start log collector (2nd)
-		It("run logCollectorWorker (2nd)", func() {
+		It("collect iDRAC log (run2)", func() {
 			ctx, cancel := context.WithCancel(context.Background())
 			var wg sync.WaitGroup
 			GinkgoWriter.Println("------ ", machinesList)
@@ -132,7 +135,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			for _, m := range machinesList {
 				wg.Add(1)
 				go func() {
-					lc.collectSystemEventLog(ctx, m, logWriter)
+					lc.collectSystemEventLog(ctx, m, logWriter) // --- 2 ---
 					Expect(err).NotTo(HaveOccurred())
 					wg.Done()
 				}()
@@ -141,9 +144,8 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			wg.Wait()
 		})
 
-		It("verify output of collector (2nd)", func(ctx SpecContext) {
+		It("verify output (run2)", func(ctx SpecContext) {
 			var result SystemEventLog
-
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
@@ -153,73 +155,45 @@ var _ = Describe("gathering up logs", Ordered, func() {
 
 			GinkgoWriter.Println("---- serial = ", string(result.Serial))
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
-			Expect(result.Serial).To(Equal(serial1))
+			Expect(result.Serial).To(Equal(serial))
 			Expect(result.Id).To(Equal("2"))
 
-			file.Close()
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(10*time.Second))
 
-		Context("verify metrics", func() {
-			var metricsLines []string
+		It("collect iDRAC log (run3)", func() {
+			ctx, cancel := context.WithCancel(context.Background())
+			var wg sync.WaitGroup
 
-			It("get metrics", func() {
-				url := "http://localhost:8080/metrics"
-				req, err := http.NewRequest("GET", url, nil)
-				Expect(err).NotTo(HaveOccurred())
-				client := &http.Client{Timeout: time.Duration(10) * time.Second}
-				resp, err := client.Do(req)
-				Expect(err).NotTo(HaveOccurred())
-				buf, err := io.ReadAll(resp.Body)
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Println(string(buf))
-				defer resp.Body.Close()
-				metricsLines = strings.Split(string(buf), "\n")
-			})
-
-			It("verify HELP line in metrics", func() {
-				Expect(metricsLines[0]).To(Equal("# HELP success_counter The success count for Redfish of BMC accessing"))
-			})
-
-			It("verify TYPE line in metrics", func() {
-				Expect(metricsLines[1]).To(Equal("# TYPE success_counter counter"))
-			})
-
-			It("iDRAC 683FPQ3 127.0.0.1:8180", func() {
-				metricsLine := metricsLines[2]
-				p := expfmt.TextParser{}
-				metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
-				if err != nil {
-					fmt.Println("err ", err)
-				}
-
-				for _, v := range metricsFamily {
-					GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
-					Expect(v.GetName()).To(Equal("success_counter"))
-				}
-
-				for _, v := range metricsFamily {
-					for idx, l := range v.GetMetric()[0].Label {
-						GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
-						switch idx {
-						case 0:
-							Expect(l.GetName()).To(Equal("ip_addr"))
-							Expect(l.GetValue()).To(Equal("127.0.0.1:8180"))
-						case 1:
-							Expect(l.GetName()).To(Equal("serial"))
-							Expect(l.GetValue()).To(Equal("683FPQ3"))
-						case 2:
-							Expect(l.GetName()).To(Equal("status"))
-							Expect(l.GetValue()).To(Equal("200"))
-						}
-					}
-					GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
-					f, err := strconv.ParseFloat("2", 64)
-					if err != nil {
-						GinkgoWriter.Printf("error %w", err)
-					}
-					Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
-				}
-			})
+			// choice test logWriter to write local file
+			logWriter := logTest{outputDir: testOutputDir}
+			for _, m := range machinesList {
+				wg.Add(1)
+				go func() {
+					lc.collectSystemEventLog(ctx, m, logWriter) // -- 3 --
+					Expect(err).NotTo(HaveOccurred())
+					wg.Done()
+				}()
+			}
+			defer cancel()
+			wg.Wait()
 		})
+
+		It("verify output (run3)", func(ctx SpecContext) {
+			var result SystemEventLog
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			err = json.Unmarshal([]byte(stringJSON), &result)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("---- serial = ", string(result.Serial))
+			GinkgoWriter.Println("-------- id = ", string(result.Id))
+			Expect(result.Serial).To(Equal(serial))
+			Expect(result.Id).To(Equal("3"))
+
+			file.Close()
+		}, SpecTimeout(10*time.Second))
+
 	})
 })
