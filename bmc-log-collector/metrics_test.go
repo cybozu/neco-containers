@@ -1,11 +1,6 @@
 package main
 
 import (
-	//"fmt"
-	//"io"
-	//"net/http"
-	//"time"
-
 	"fmt"
 	"io"
 	"net/http"
@@ -25,22 +20,24 @@ Test metrics
 メトリックスの定義とコレクターの書き方を調べること。
 */
 var _ = Describe("Get Metrics export", Ordered, func() {
+	var metricsPath = "/testmetrics1"
+	var metricsPort = ":28000"
 	BeforeAll(func() {
 		go func() {
-			metrics()
+			metrics(metricsPath, metricsPort)
 		}()
 	})
 
 	Context("Normal", func() {
 		var metricsLines []string
-		It("get metrics", func() {
+		It("put metrics at failed case", func() {
 			counterRequestFailed.WithLabelValues("404", "ABC123X", "172.16.0.1").Inc()
 		})
-		It("get metrics", func() {
+		It("get metrics at success case", func() {
 			counterRequestSuccess.WithLabelValues("200", "ABC123X", "172.16.0.1").Inc()
 		})
 		It("get metrics", func() {
-			url := "http://localhost:8080/metrics"
+			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
 			Expect(err).NotTo(HaveOccurred())
 
@@ -51,20 +48,26 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 
 			buf, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
-			fmt.Println(string(buf), "==========================================")
 			metricsLines = strings.Split(string(buf), "\n")
+			for i, v := range metricsLines {
+				GinkgoWriter.Println(i, v)
+			}
 			fmt.Println(metricsLines)
 		})
 
+		ix := 0
 		It("verify HELP line in metrics", func() {
-			Expect(metricsLines[0]).To(Equal("# HELP failed_counter The failed count for Redfish of BMC accessing"))
+			Expect(metricsLines[ix]).To(Equal("# HELP failed_counter The failed count for Redfish of BMC accessing"))
+			ix++
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(metricsLines[1]).To(Equal("# TYPE failed_counter counter"))
+			Expect(metricsLines[ix]).To(Equal("# TYPE failed_counter counter"))
+			ix++
 		})
 
-		It("iDRAC 683FPQ3 127.0.0.1:8180", func() {
-			metricsLine := metricsLines[2]
+		It("iDRAC ABC123X 172.16.0.1 failed", func() {
+			metricsLine := metricsLines[ix]
+			ix++
 			p := expfmt.TextParser{}
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
 			if err != nil {
@@ -75,41 +78,45 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 				GinkgoWriter.Printf("name=%s, type=%s \n", v.GetName(), v.GetType())
 				Expect(v.GetName()).To(Equal("failed_counter"))
 			}
-
 			for _, v := range metricsFamily {
 				for idx, l := range v.GetMetric()[0].Label {
 					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
-					switch idx {
-					case 0:
-						Expect(l.GetName()).To(Equal("ip_addr"))
-						Expect(l.GetValue()).To(Equal("172.16.0.1"))
-					case 1:
-						Expect(l.GetName()).To(Equal("serial"))
-						Expect(l.GetValue()).To(Equal("ABC123X"))
-					case 2:
-						Expect(l.GetName()).To(Equal("status"))
-						Expect(l.GetValue()).To(Equal("404"))
+					if l.GetValue() == "172.16.0.1" {
+						switch idx {
+						case 0:
+							Expect(l.GetName()).To(Equal("ip_addr"))
+							Expect(l.GetValue()).To(Equal("172.16.0.1"))
+						case 1:
+							Expect(l.GetName()).To(Equal("serial"))
+							Expect(l.GetValue()).To(Equal("ABC123X"))
+						case 2:
+							Expect(l.GetName()).To(Equal("status"))
+							Expect(l.GetValue()).To(Equal("404"))
+						}
+						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+						f, err := strconv.ParseFloat("1", 64)
+						if err != nil {
+							GinkgoWriter.Printf("error %w", err)
+						}
+						Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
 					}
 				}
-				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
-				f, err := strconv.ParseFloat("1", 64)
-				if err != nil {
-					GinkgoWriter.Printf("error %w", err)
-				}
-				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
 			}
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(metricsLines[3]).To(Equal("# HELP success_counter The success count for Redfish of BMC accessing"))
+			Expect(metricsLines[ix]).To(Equal("# HELP success_counter The success count for Redfish of BMC accessing"))
+			ix++
 		})
 
 		It("verify TYPE line in metrics", func() {
-			Expect(metricsLines[4]).To(Equal("# TYPE success_counter counter"))
+			Expect(metricsLines[ix]).To(Equal("# TYPE success_counter counter"))
+			ix++
 		})
 
-		It("iDRAC 683FPQ3 127.0.0.1:8180", func() {
-			metricsLine := metricsLines[5]
+		It("iDRAC ABC123X 172.16.0.1 success", func() {
+			metricsLine := metricsLines[ix]
+			ix++
 			p := expfmt.TextParser{}
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
 			if err != nil {
@@ -124,24 +131,26 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			for _, v := range metricsFamily {
 				for idx, l := range v.GetMetric()[0].Label {
 					GinkgoWriter.Printf("idx=%d  label name=%s, value=%s \n", idx, l.GetName(), l.GetValue())
-					switch idx {
-					case 0:
-						Expect(l.GetName()).To(Equal("ip_addr"))
-						Expect(l.GetValue()).To(Equal("172.16.0.1"))
-					case 1:
-						Expect(l.GetName()).To(Equal("serial"))
-						Expect(l.GetValue()).To(Equal("ABC123X"))
-					case 2:
-						Expect(l.GetName()).To(Equal("status"))
-						Expect(l.GetValue()).To(Equal("200"))
+					if l.GetValue() == "172.16.0.1" {
+						switch idx {
+						case 0:
+							Expect(l.GetName()).To(Equal("ip_addr"))
+							Expect(l.GetValue()).To(Equal("172.16.0.1"))
+						case 1:
+							Expect(l.GetName()).To(Equal("serial"))
+							Expect(l.GetValue()).To(Equal("ABC123X"))
+						case 2:
+							Expect(l.GetName()).To(Equal("status"))
+							Expect(l.GetValue()).To(Equal("200"))
+						}
+						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
+						f, err := strconv.ParseFloat("1", 64)
+						if err != nil {
+							GinkgoWriter.Printf("error %w", err)
+						}
+						Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
 					}
 				}
-				GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
-				f, err := strconv.ParseFloat("1", 64)
-				if err != nil {
-					GinkgoWriter.Printf("error %w", err)
-				}
-				Expect(v.GetMetric()[0].Untyped.GetValue()).To(Equal(f))
 			}
 		})
 	})

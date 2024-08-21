@@ -15,11 +15,11 @@ import (
 var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 
 // access counter foreach web-server
-var accessCounter map[string]int
-var responseFiles map[string][]string
-var responseDir map[string]string
-var isInitmap bool = false
-var mutex sync.Mutex
+//var accessCounter map[string]int
+//var responseFiles map[string][]string
+//var responseDir map[string]string
+//var isInitmap bool = false
+//var mutex sync.Mutex
 
 // id & password for basic authentication
 const (
@@ -27,39 +27,44 @@ const (
 	basicAuthPassword = "pass"
 )
 
-func init_map() {
-	accessCounter = make(map[string]int)
-	responseFiles = make(map[string][]string)
-	responseDir = make(map[string]string)
-	isInitmap = true
-}
+//func (b *bmcMock) init_map() {
+//	b.accessCounter = make(map[string]int)
+//	b.responseFiles = make(map[string][]string)
+//	b.responseDir = make(map[string]string)
+//	b.isInitmap = true
+//}
 
 type bmcMock struct {
-	host   string
-	resDir string
-	files  []string
+	host          string
+	resDir        string
+	files         []string
+	accessCounter map[string]int
+	responseFiles map[string][]string
+	responseDir   map[string]string
+	isInitmap     bool
+	mutex         sync.Mutex
 }
 
 // Mock server of iDRAC
 func (b *bmcMock) startMock() {
-	if !isInitmap {
-		init_map()
-	}
-	mutex.Lock()
-	accessCounter[b.host] = 0
-	responseFiles[b.host] = b.files
-	responseDir[b.host] = b.resDir
-	mutex.Unlock()
+	//if !b.isInitmap {
+	//	b.init_map()
+	//}
+	b.mutex.Lock()
+	b.accessCounter[b.host] = 0
+	b.responseFiles[b.host] = b.files
+	b.responseDir[b.host] = b.resDir
+	b.mutex.Unlock()
 
 	server := http.NewServeMux()
-	server.HandleFunc(redfishPath, redfishSel)
+	server.HandleFunc(redfishPath, b.redfishSel)
 	go func() {
 		http.ListenAndServeTLS(b.host, "testdata/ssl/localhost.crt", "testdata/ssl/localhost.key", server)
 	}()
 }
 
 // DELL System Event Log Service at Redfish REST
-func redfishSel(w http.ResponseWriter, r *http.Request) {
+func (b *bmcMock) redfishSel(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json;odata.metadata=minimal;charset=utf-8")
 	// basic authentication
@@ -70,21 +75,23 @@ func redfishSel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Exclusive lock against other mock server which parallel running
-	mutex.Lock()
-	defer mutex.Unlock()
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
 
 	// Check a response file is available
 	key := string(r.Host)
-	if accessCounter[key] > (len(responseFiles[key]) - 1) {
+	if b.accessCounter[key] > (len(b.responseFiles[key]) - 1) {
 		time.Sleep(3 * time.Second)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.WriteHeader(http.StatusNotFound)
+		fmt.Println("error accessCounter[key]", b.accessCounter[key], key, r)
 		return
 	}
 
-	fn := responseFiles[key][accessCounter[key]]
-	responseFile := path.Join(responseDir[key], fn)
-	accessCounter[key] = accessCounter[key] + 1
+	fn := b.responseFiles[key][b.accessCounter[key]]
+	responseFile := path.Join(b.responseDir[key], fn)
+	b.accessCounter[key] = b.accessCounter[key] + 1
+	fmt.Println("accessCounter[key]", b.accessCounter[key], key, r)
 
 	// Create HTTP response from the response file
 	file, err := os.Open(responseFile)

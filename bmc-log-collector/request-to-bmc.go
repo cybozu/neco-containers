@@ -20,11 +20,6 @@ func requestToBmc(ctx context.Context, username string, password string, client 
 	}
 	defer resp.Body.Close()
 
-	// ステータスコードをそのまま返した方が良い？
-	//if resp.StatusCode != http.StatusOK {
-	//	return nil, fmt.Errorf("failed to access URL %s: status code = %d", url, resp.StatusCode)
-	//}
-
 	buf, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, resp.StatusCode, err

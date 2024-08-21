@@ -9,11 +9,8 @@ import (
 	"strconv"
 
 	"fmt"
-	//"sync"
 	"time"
 )
-
-//var mutex sync.Mutex
 
 type SystemEventLog struct {
 	Od_Id             string   `json:"@odata.id"`
@@ -56,14 +53,9 @@ type selCollector struct {
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
 	intervalTime    time.Duration // interval (sec) time of scraping
-	//maxLoop         int           // if 0 is infinite loop
 }
 
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	// Exclusive lock against other mock server which parallel running
-	//mutex.Lock()
-	//defer mutex.Unlock()
-
 	layout := "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
@@ -75,25 +67,12 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
-	// ステータスコードを返すように変更が良い
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
-
 	if statusCode != 200 || err != nil {
-		//counterRequestFailed.WithLabelValues(fmt.Sprintf("%v", err), m.Serial, m.BmcIP).Inc()
-		//}
-		//if err != nil {
-		// exports prometheus metrics
-		//mutex.Lock()
 		counterRequestFailed.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
-		//mutex.Unlock()
-		//counterRequestFailed.Inc()
-
-		// When canceled by context, the pointer files is never updated because the return is made here.
-		// Suppress log output of the same error
 		if lastPtr.LastError != err {
 			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath, "httpStatusCode", statusCode)
 		}
-
 		lastPtr.LastError = err
 		err = updateLastPointer(lastPtr, c.ptrDir)
 		if err != nil {
@@ -102,11 +81,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
-	// 修正するべき
-	//mutex.Lock()
 	counterRequestSuccess.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
-	//mutex.Unlock()
-	//counterRequestSuccess.Inc() /// <<<<< ここ
 
 	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -122,27 +97,19 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		members.Sel[i].BmcIP = m.BmcIP
 		members.Sel[i].NodeIP = m.NodeIP
 
-		// Anti duplication
-		// 今回が大きい
 		if lastPtr.LastReadId < lastId {
 			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
 			logWriter.write(string(bmcByteJsonLog), m.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
-			//} else if lastPtr.LastReadId > lastId {
 		} else {
-			// 同じか前回が大きい
-			// ID set to 1 with iDRAC log clear by WebUI, should compare with both its unixtime to identify the latest.
-			// 生成時刻で判定、timeが大きい方を出力
 			if lastPtr.LastReadTime < createUnixtime {
 				bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
 				logWriter.write(string(bmcByteJsonLog), m.Serial)
 				lastPtr.LastReadId = lastId
 				lastPtr.LastReadTime = createUnixtime
 			}
-			// それ以外は何もしない
 		}
-
 	}
 
 	err = updateLastPointer(LastPointer{
@@ -151,6 +118,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		LastReadId:   lastId,
 		LastError:    nil,
 	}, c.ptrDir)
+
 	if err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		return
