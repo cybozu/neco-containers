@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"sync"
 	"time"
 )
@@ -154,4 +155,30 @@ func (l logTest) write(byteJson string, serial string) error {
 	file.WriteString(fmt.Sprintln(string(byteJson)))
 	fmt.Println(byteJson)
 	return nil
+}
+
+func searchMetricsComment(lines []string, keyword string) bool {
+	for _, line := range lines {
+		if line == keyword {
+			return true
+		}
+	}
+	return false
+}
+
+func findMetrics(lines []string, keyword string) (string, error) {
+
+	pattern := `^` + keyword + `{+`
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return "", err
+	}
+
+	for _, line := range lines {
+		matches := re.FindAllString(line, -1)
+		if len(matches) > 0 {
+			return line + "\n", nil
+		}
+	}
+	return "", nil
 }
