@@ -33,28 +33,32 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 		},
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
+	// set up signal handling
+	ctx, cancelCause := context.WithCancelCause(context.Background())
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		sig := <-c
+		cancelCause(fmt.Errorf("%v", sig))
+	}()
 
 	// set interval timer
 	ticker := time.NewTicker(config.intervalTime * time.Second)
 	defer ticker.Stop()
 
-	// Expose metrics via HTTP
+	// expose metrics via HTTP
 	go metrics("/metrics", ":8080")
 
 	// scraping loop
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("stop by signal~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-			//s := <-sigs
-			//slog.Info("ctx.Done", "Signal", s.String()) 代替手段を調べる ctxで出せるかも
+			slog.Error("stopped by", "signal", context.Cause(ctx))
 			return
 		case <-ticker.C:
 			machinesList, err := readMachineList(config.machinesListDir)
 			if err != nil {
-				slog.Error("machineListReader()", "err", err, "path", config.machinesListDir)
+				slog.Error("can't read the machine list", "err", err, "path", config.machinesListDir)
 				return
 			}
 			// start log collector workers by BMCs
@@ -71,7 +75,7 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 		// Remove ptr files that no update for 6 months
 		err := deleteUnUpdatedFiles(config.ptrDir)
 		if err != nil {
-			slog.Error("deleteUnUpdatedFiles()", "err", err, "path", config.ptrDir)
+			slog.Error("failed remove pointer file which did not update for 6 month.", "err", err, "path", config.ptrDir)
 		}
 	}
 }

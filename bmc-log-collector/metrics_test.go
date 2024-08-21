@@ -55,21 +55,19 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			fmt.Println(metricsLines)
 		})
 
-		ix := 0
 		It("verify HELP line in metrics", func() {
-			Expect(metricsLines[ix]).To(Equal("# HELP failed_counter The failed count for Redfish of BMC accessing"))
-			ix++
+			Expect(searchMetricsComment(metricsLines, "# HELP failed_counter The failed count for Redfish of BMC accessing")).To(Equal(true))
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(metricsLines[ix]).To(Equal("# TYPE failed_counter counter"))
-			ix++
+			Expect(searchMetricsComment(metricsLines, "# TYPE failed_counter counter")).To(Equal(true))
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 failed", func() {
-			metricsLine := metricsLines[ix]
-			ix++
+			metricsLine, err := findMetrics(metricsLines, "failed_counter")
+			Expect(err).NotTo(HaveOccurred())
+
 			p := expfmt.TextParser{}
-			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
 				fmt.Println("err ", err)
 			}
@@ -105,20 +103,18 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(metricsLines[ix]).To(Equal("# HELP success_counter The success count for Redfish of BMC accessing"))
-			ix++
+			Expect(searchMetricsComment(metricsLines, "# HELP success_counter The success count for Redfish of BMC accessing")).To(Equal(true))
 		})
 
 		It("verify TYPE line in metrics", func() {
-			Expect(metricsLines[ix]).To(Equal("# TYPE success_counter counter"))
-			ix++
+			Expect(searchMetricsComment(metricsLines, "# TYPE success_counter counter")).To(Equal(true))
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 success", func() {
-			metricsLine := metricsLines[ix]
-			ix++
+			metricsLine, err := findMetrics(metricsLines, "success_counter")
+			Expect(err).NotTo(HaveOccurred())
 			p := expfmt.TextParser{}
-			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine + "\n"))
+			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
 				fmt.Println("err ", err)
 			}
