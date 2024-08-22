@@ -15,25 +15,11 @@ import (
 
 var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
 
-// access counter foreach web-server
-//var accessCounter map[string]int
-//var responseFiles map[string][]string
-//var responseDir map[string]string
-//var isInitmap bool = false
-//var mutex sync.Mutex
-
 // id & password for basic authentication
 const (
 	basicAuthUser     = "user"
 	basicAuthPassword = "pass"
 )
-
-//func (b *bmcMock) init_map() {
-//	b.accessCounter = make(map[string]int)
-//	b.responseFiles = make(map[string][]string)
-//	b.responseDir = make(map[string]string)
-//	b.isInitmap = true
-//}
 
 type bmcMock struct {
 	host          string

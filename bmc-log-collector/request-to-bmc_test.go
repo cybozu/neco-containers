@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"crypto/tls"
-	"fmt"
 	"net"
 	"net/http"
 	"time"
@@ -33,7 +32,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 	}
 
 	BeforeAll(func() {
-		fmt.Println("*** Start iDRAC Stub")
+		GinkgoWriter.Println("*** Start iDRAC Stub")
 		bm1 := bmcMock{
 			host:          "127.0.0.1:19082",
 			resDir:        "testdata/redfish_response",

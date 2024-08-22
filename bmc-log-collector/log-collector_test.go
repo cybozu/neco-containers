@@ -5,7 +5,6 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -85,7 +84,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 		It("get machine list", func() {
 			machinesList, err = readMachineList(lc.machinesListDir)
 			Expect(err).NotTo(HaveOccurred())
-			fmt.Println("Machine List = ", machinesList)
+			GinkgoWriter.Println("Machine List = ", machinesList)
 		})
 
 		It("collect iDRAC log (run1)", func() {
