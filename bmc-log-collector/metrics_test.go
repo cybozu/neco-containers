@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -22,7 +21,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		}()
 	})
 
-	Context("Normal", func() {
+	Context("Normal case", func() {
 		var metricsLines []string
 		It("put metrics at failed case", func() {
 			counterRequestFailed.WithLabelValues("ABC123X", "172.16.0.1").Inc()
@@ -46,7 +45,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			for i, v := range metricsLines {
 				GinkgoWriter.Println(i, v)
 			}
-			fmt.Println(metricsLines)
+			GinkgoWriter.Println(metricsLines)
 		})
 
 		It("verify HELP line in metrics", func() {
@@ -63,7 +62,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			p := expfmt.TextParser{}
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
-				fmt.Println("err ", err)
+				GinkgoWriter.Println("err ", err)
 			}
 
 			for _, v := range metricsFamily {
@@ -81,9 +80,6 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 						case 1:
 							Expect(l.GetName()).To(Equal("serial"))
 							Expect(l.GetValue()).To(Equal("ABC123X"))
-							//case 2:
-							//	Expect(l.GetName()).To(Equal("status"))
-							//	Expect(l.GetValue()).To(Equal("404"))
 						}
 						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
 						f, err := strconv.ParseFloat("1", 64)
@@ -110,7 +106,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			p := expfmt.TextParser{}
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
-				fmt.Println("err ", err)
+				GinkgoWriter.Println("err ", err)
 			}
 
 			for _, v := range metricsFamily {
@@ -129,9 +125,6 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 						case 1:
 							Expect(l.GetName()).To(Equal("serial"))
 							Expect(l.GetValue()).To(Equal("ABC123X"))
-							//case 2:
-							//	Expect(l.GetName()).To(Equal("status"))
-							//	Expect(l.GetValue()).To(Equal("200"))
 						}
 						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
 						f, err := strconv.ParseFloat("1", 64)
@@ -143,5 +136,38 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 				}
 			}
 		})
+	})
+	Context("Delete case", func() {
+		var metricsLines []string
+		It("delete miDRAC ABC123X 172.16.0.1 success", func() {
+			deleteMetrics("ABC123X", "172.16.0.1")
+		})
+
+		It("after delete, get metrics", func() {
+			url := "http://localhost" + metricsPort + metricsPath
+			req, err := http.NewRequest("GET", url, nil)
+			Expect(err).NotTo(HaveOccurred())
+
+			client := &http.Client{Timeout: time.Duration(10) * time.Second}
+			resp, err := client.Do(req)
+			Expect(err).NotTo(HaveOccurred())
+			defer resp.Body.Close()
+
+			buf, err := io.ReadAll(resp.Body)
+			Expect(err).NotTo(HaveOccurred())
+			metricsLines = strings.Split(string(buf), "\n")
+			for i, v := range metricsLines {
+				GinkgoWriter.Println(i, v)
+			}
+			GinkgoWriter.Println(metricsLines)
+		})
+		It("after delete,  verify HELP line in metrics", func() {
+			Expect(searchMetricsComment(metricsLines, "# HELP failed_counter The failed count for Redfish of BMC accessing")).NotTo(Equal(true))
+		})
+
+		It("after delete, verify HELP line in metrics", func() {
+			Expect(searchMetricsComment(metricsLines, "# HELP success_counter The success count for Redfish of BMC accessing")).NotTo(Equal(true))
+		})
+
 	})
 })
