@@ -13,12 +13,6 @@ import (
 	"github.com/prometheus/common/expfmt"
 )
 
-/*
-Test metrics
-テストでＢＭＣのモックを起動して、スクレイプを実行、
-スクレイプの結果がメトリックスとして正しいことを検証する
-メトリックスの定義とコレクターの書き方を調べること。
-*/
 var _ = Describe("Get Metrics export", Ordered, func() {
 	var metricsPath = "/testmetrics1"
 	var metricsPort = ":28000"

@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/json"
-
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -69,6 +68,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 	if statusCode != 200 || err != nil {
+		// increment the metrics counter
 		counterRequestFailed.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
 		if lastPtr.LastError != err {
 			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath, "httpStatusCode", statusCode)
@@ -81,6 +81,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
+	// increment the metrics counter
 	counterRequestSuccess.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
 
 	var members RedfishJsonSchema
@@ -98,11 +99,15 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		members.Sel[i].NodeIP = m.NodeIP
 
 		if lastPtr.LastReadId < lastId {
+			// normal case
 			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
 			logWriter.write(string(bmcByteJsonLog), m.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
 		} else {
+			// If the log is reset in iDRAC, the ID starts from 1.
+			// In that case, determine if the log has already been
+			// issued based on the time it was generated.
 			if lastPtr.LastReadTime < createUnixtime {
 				bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
 				logWriter.write(string(bmcByteJsonLog), m.Serial)
@@ -118,7 +123,6 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		LastReadId:   lastId,
 		LastError:    nil,
 	}, c.ptrDir)
-
 	if err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		return
