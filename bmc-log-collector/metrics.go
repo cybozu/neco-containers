@@ -13,7 +13,7 @@ var counterRequestFailed = promauto.NewCounterVec(
 		Name: "failed_counter",
 		Help: "The failed count for Redfish of BMC accessing",
 	},
-	[]string{"status", "serial", "ip_addr"},
+	[]string{"serial", "ip_addr"},
 )
 
 var counterRequestSuccess = promauto.NewCounterVec(
@@ -21,7 +21,7 @@ var counterRequestSuccess = promauto.NewCounterVec(
 		Name: "success_counter",
 		Help: "The success count for Redfish of BMC accessing",
 	},
-	[]string{"status", "serial", "ip_addr"},
+	[]string{"serial", "ip_addr"},
 )
 
 func metrics(path string, port string) {
@@ -38,4 +38,9 @@ func metrics(path string, port string) {
 		},
 	))
 	http.ListenAndServe(port, nil)
+}
+
+func deleteMetrics(serial string, nodeIp string) {
+	counterRequestSuccess.DeleteLabelValues(serial, nodeIp)
+	counterRequestFailed.DeleteLabelValues(serial, nodeIp)
 }

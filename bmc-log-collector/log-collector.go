@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"fmt"
 	"time"
 )
 
@@ -59,7 +58,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	var createUnixtime int64
 	var lastId int
 
-	lastPtr, err := readLastPointer(m.Serial, c.ptrDir)
+	lastPtr, err := readLastPointer(m.Serial, m.NodeIP, c.ptrDir)
 	if err != nil {
 		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		return
@@ -69,7 +68,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 	if statusCode != 200 || err != nil {
 		// increment the metrics counter
-		counterRequestFailed.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
+		counterRequestFailed.WithLabelValues(m.Serial, m.BmcIP).Inc()
 		if lastPtr.LastError != err {
 			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath, "httpStatusCode", statusCode)
 		}
@@ -82,7 +81,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	// increment the metrics counter
-	counterRequestSuccess.WithLabelValues(fmt.Sprintf("%v", statusCode), m.Serial, m.BmcIP).Inc()
+	counterRequestSuccess.WithLabelValues(m.Serial, m.BmcIP).Inc()
 
 	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {
@@ -119,6 +118,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	err = updateLastPointer(LastPointer{
 		Serial:       m.Serial,
+		NodeIP:       m.NodeIP,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,
 		LastError:    nil,

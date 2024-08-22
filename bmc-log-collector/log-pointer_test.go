@@ -15,6 +15,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var err error
 	var testPointerDir = "testdata/pointers_get_machines"
 	var serial = "ABCDEF"
+	var nodeIP = "10.0.0.1"
 	var serialForDelete = "WITHDRAWED"
 
 	BeforeAll(func() {
@@ -23,6 +24,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		file, _ := os.Create(path.Join(testPointerDir, serialForDelete))
 		lptr := LastPointer{
 			Serial:       serialForDelete,
+			NodeIP:       nodeIP,
 			LastReadTime: 0,
 			LastReadId:   0,
 		}
@@ -34,9 +36,10 @@ var _ = Describe("Get Machines List", Ordered, func() {
 
 	Context("normal JSON file", func() {
 		It("read ptr file", func() {
-			ptr, err = readLastPointer(serial, testPointerDir)
+			ptr, err = readLastPointer(serial, nodeIP, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ptr.Serial).To(Equal(serial))
+			Expect(ptr.NodeIP).To(Equal(nodeIP))
 			Expect(ptr.LastReadTime).To(Equal(int64(0)))
 			Expect(ptr.LastReadId).To(Equal(0))
 			GinkgoWriter.Println(ptr)

@@ -11,12 +11,13 @@ import (
 
 type LastPointer struct {
 	Serial       string
+	NodeIP       string
 	LastReadTime int64
 	LastReadId   int
 	LastError    error
 }
 
-func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
+func readLastPointer(serial string, nodeIp string, ptrDir string) (LastPointer, error) {
 	var lptr LastPointer
 
 	filePath := path.Join(ptrDir, serial)
@@ -29,6 +30,7 @@ func readLastPointer(serial string, ptrDir string) (LastPointer, error) {
 		}
 		lptr := LastPointer{
 			Serial:       serial,
+			NodeIP:       nodeIp,
 			LastReadTime: 0,
 			LastReadId:   0,
 		}
@@ -93,6 +95,27 @@ func deleteUnUpdatedFiles(ptrDir string) error {
 
 		// Remove a file that no update for 6 months
 		if (time.Now().Unix() - st.ModTime().Unix()) >= 3600*24*30*6 {
+
+			// remove metrics
+			f, err := os.Open(file.Name())
+			if err != nil {
+				return err
+			}
+			defer f.Close()
+
+			byteJSON, err := io.ReadAll(f)
+			if err != nil {
+				return err
+			}
+
+			var lptr LastPointer
+			if json.Unmarshal(byteJSON, &lptr) != nil {
+				return err
+			}
+
+			// close before delete
+			f.Close()
+			deleteMetrics(lptr.Serial, lptr.NodeIP)
 			os.Remove(file.Name())
 		}
 	}
