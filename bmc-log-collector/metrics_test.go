@@ -25,10 +25,10 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 	Context("Normal", func() {
 		var metricsLines []string
 		It("put metrics at failed case", func() {
-			counterRequestFailed.WithLabelValues("404", "ABC123X", "172.16.0.1").Inc()
+			counterRequestFailed.WithLabelValues("ABC123X", "172.16.0.1").Inc()
 		})
 		It("get metrics at success case", func() {
-			counterRequestSuccess.WithLabelValues("200", "ABC123X", "172.16.0.1").Inc()
+			counterRequestSuccess.WithLabelValues("ABC123X", "172.16.0.1").Inc()
 		})
 		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
@@ -81,9 +81,9 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 						case 1:
 							Expect(l.GetName()).To(Equal("serial"))
 							Expect(l.GetValue()).To(Equal("ABC123X"))
-						case 2:
-							Expect(l.GetName()).To(Equal("status"))
-							Expect(l.GetValue()).To(Equal("404"))
+							//case 2:
+							//	Expect(l.GetName()).To(Equal("status"))
+							//	Expect(l.GetValue()).To(Equal("404"))
 						}
 						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
 						f, err := strconv.ParseFloat("1", 64)
@@ -129,9 +129,9 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 						case 1:
 							Expect(l.GetName()).To(Equal("serial"))
 							Expect(l.GetValue()).To(Equal("ABC123X"))
-						case 2:
-							Expect(l.GetName()).To(Equal("status"))
-							Expect(l.GetValue()).To(Equal("200"))
+							//case 2:
+							//	Expect(l.GetName()).To(Equal("status"))
+							//	Expect(l.GetValue()).To(Equal("200"))
 						}
 						GinkgoWriter.Printf("untyped value=%f \n", v.GetMetric()[0].Untyped.GetValue())
 						f, err := strconv.ParseFloat("1", 64)
