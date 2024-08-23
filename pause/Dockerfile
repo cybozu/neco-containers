@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
 ARG K8S_VERSION=1.30.4
-ARG PAUSE_VERSION=3.10
+ARG PAUSE_VERSION=3.9
 
 RUN mkdir /work
 
