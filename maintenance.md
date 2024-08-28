@@ -800,9 +800,12 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile
-3. Update `ROOK_VERSION` in `Dockerfile`.
-4. Update ceph image tag in `Dockerfile`.
-5. Update `BRANCH` and `TAG` files.
+3. update build image tag in `Dockerfile` if necessary.
+4. Update `ROOK_VERSION` in `Dockerfile`.
+5. Update ceph image tag in `Dockerfile`.
+6. Update `BRANCH` and `TAG` files.
+
+***NOTE:*** You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod.
 
 ## s3gw
 
