@@ -1,9 +1,9 @@
-CONTROLLER_TOOLS_VERSION = 0.15.0
-KUSTOMIZE_VERSION = 5.4.2
+CONTROLLER_TOOLS_VERSION = 0.16.1
+KUSTOMIZE_VERSION = 5.4.3
 CONTOUR_VERSION = 1.29.1
 ARGOCD_VERSION = 2.11.4
 GRAFANA_OPERATOR_VERSION = 5.10.0
-ENVTEST_K8S_VERSION = 1.29.3
+ENVTEST_K8S_VERSION = 1.30.3
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
@@ -66,19 +66,19 @@ generate: controller-gen
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 # Download controller-gen locally if necessary
-CONTROLLER_GEN = $(PROJECT_DIR)/bin/controller-gen
+CONTROLLER_GEN = $(CURDIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
 
 # Download kustomize locally if necessary
-KUSTOMIZE = $(PROJECT_DIR)/bin/kustomize
+KUSTOMIZE = $(CURDIR)/bin/kustomize
 .PHONY: kustomize
 kustomize:
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v$(shell echo $(KUSTOMIZE_VERSION) | cut -d "." -f1)@v$(KUSTOMIZE_VERSION))
 
 # Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(PROJECT_DIR)/bin/setup-envtest
+SETUP_ENVTEST = $(CURDIR)/bin/setup-envtest
 .PHONY: setup-envtest
 setup-envtest:
 	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_BRANCH))

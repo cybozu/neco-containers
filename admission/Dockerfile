@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 COPY . /work
-RUN make build
+RUN CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
 
 FROM scratch
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
