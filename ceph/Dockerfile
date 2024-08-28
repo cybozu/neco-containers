@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/ubuntu:22.04 AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-ENV DEBIAN_FRONTEND noninteractive
+ENV DEBIAN_FRONTEND=noninteractive
 
 COPY workspace/*.deb /tmp/
 COPY workspace/rocksdb/* /usr/bin/

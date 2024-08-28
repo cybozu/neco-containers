@@ -1,0 +1,26 @@
+From 35435420781f84e9b71f72b10e6842a89c06de7f Mon Sep 17 00:00:00 2001
+From: Adam Emerson <aemerson@redhat.com>
+Date: Wed, 22 May 2024 14:38:21 -0400
+Subject: [PATCH] build: Make boost_url a list
+
+Cmake 3.29 does not appreciate a space separated string being
+substituted in.
+
+Signed-off-by: Adam Emerson <aemerson@redhat.com>
+---
+ cmake/modules/BuildBoost.cmake | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/cmake/modules/BuildBoost.cmake b/cmake/modules/BuildBoost.cmake
+index 3b3b2688426bb..52464ee299f39 100644
+--- a/cmake/modules/BuildBoost.cmake
++++ b/cmake/modules/BuildBoost.cmake
+@@ -164,7 +164,7 @@ function(do_build_boost root_dir version)
+     set(boost_version 1.82.0)
+     set(boost_sha256 a6e1ab9b0860e6a2881dd7b21fe9f737a095e5f33a3a874afc6a345228597ee6)
+     string(REPLACE "." "_" boost_version_underscore ${boost_version} )
+-    string(JOIN " " boost_url
++    list(APPEND boost_url
+       https://boostorg.jfrog.io/artifactory/main/release/${boost_version}/source/boost_${boost_version_underscore}.tar.bz2
+       https://download.ceph.com/qa/boost_${boost_version_underscore}.tar.bz2)
+     set(source_dir
