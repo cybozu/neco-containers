@@ -70,9 +70,15 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				}()
 			}
 			wg.Wait()
+
+			// drop metrics which retired machine
+			err = dropMetricsWhichRetiredMachine(config.ptrDir, machinesList)
+			if err != nil {
+				slog.Error("failed to drop metrics", "err", err, "pointer directory", config.ptrDir)
+			}
 		}
 
-		// Remove ptr files that no update for 6 months
+		// remove ptr files that no update for 6 months
 		err := deleteUnUpdatedFiles(config.ptrDir)
 		if err != nil {
 			slog.Error("failed remove pointer file which did not update for 6 month.", "err", err, "path", config.ptrDir)
@@ -86,6 +92,47 @@ type logProd struct{}
 func (l logProd) write(stringJson string, serial string) error {
 	// use default logger to prevent to mix log messages cross go-routine
 	log.Print(stringJson)
+	return nil
+}
+
+func dropMetricsWhichRetiredMachine(ptrDir string, machinesList []Machine) error {
+	type retiredMachine struct {
+		serial string
+		nodeIP string
+	}
+
+	// 連想配列に変換
+	x := make(map[string]bool, len(machinesList))
+	for _, m := range machinesList {
+		x[m.Serial] = true
+	}
+
+	// 過去のアクセス記録からリストを取得
+	// 連想配列を返せないか？
+	machines, err := getMachineListWhichEverAccessed(ptrDir)
+	if err != nil {
+		return err
+	}
+
+	var dropList []retiredMachine
+	// append で削除リストを作るのが良い
+	for _, server := range machines {
+		_, isExist := x[server.Serial]
+		fmt.Printf("check isExist %v\n", isExist)
+		//fmt.Println("============================= key", server.Serial, "val", machines[server.Serial])
+		if !isExist {
+			dropList = append(dropList, retiredMachine{
+				serial: server.Serial,
+				nodeIP: server.NodeIP,
+			})
+		}
+	}
+	fmt.Println("================================== Drop List", dropList)
+
+	// 削除リストにあるものを削除
+	for _, v := range dropList {
+		deleteMetrics(v.serial, v.nodeIP)
+	}
 	return nil
 }
 

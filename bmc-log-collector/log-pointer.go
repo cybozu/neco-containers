@@ -94,30 +94,52 @@ func deleteUnUpdatedFiles(ptrDir string) error {
 		}
 
 		// Remove a file that no update for 6 months
-		if (time.Now().Unix() - st.ModTime().Unix()) >= 3600*24*30*6 {
-
-			// remove metrics
-			f, err := os.Open(file.Name())
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
-			byteJSON, err := io.ReadAll(f)
-			if err != nil {
-				return err
-			}
-
-			var lptr LastPointer
-			if json.Unmarshal(byteJSON, &lptr) != nil {
-				return err
-			}
-
-			// close before delete
-			f.Close()
-			deleteMetrics(lptr.Serial, lptr.NodeIP)
+		if (time.Now().UTC().Unix() - st.ModTime().UTC().Unix()) >= 3600*24*30*6 {
 			os.Remove(file.Name())
 		}
 	}
 	return nil
+}
+
+// func getMachineListWhichEverAccessed(ptrDir string) ([]LastPointer, error) {
+func getMachineListWhichEverAccessed(ptrDir string) (map[string]LastPointer, error) {
+	//var machines []LastPointer
+	//machineList := make(map[string]LastPointer)
+
+	files, err := os.ReadDir(ptrDir)
+	if err != nil {
+		return nil, err
+	}
+	machineList := make(map[string]LastPointer, len(files))
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
+		filePath := path.Join(ptrDir, file.Name())
+		file, err := os.Open(filePath)
+		if err != nil {
+			return nil, err
+		}
+		defer file.Close()
+
+		f, err := os.Open(file.Name())
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+
+		byteJSON, err := io.ReadAll(f)
+		if err != nil {
+			return nil, err
+		}
+		var machine LastPointer
+		if json.Unmarshal(byteJSON, &machine) != nil {
+			return nil, err
+		}
+		//machines = append(machines, machine)
+		machineList[machine.Serial] = machine
+	}
+
+	return machineList, nil
 }

@@ -2,9 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -14,32 +16,36 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var ptr LastPointer
 	var err error
 	var testPointerDir = "testdata/pointers_get_machines"
-	var serial = "ABCDEF"
-	var nodeIP = "10.0.0.1"
+	var serialNormal = "ABCDEF"
+	var nodeIPNormal = "10.0.0.1"
 	var serialForDelete = "WITHDRAWED"
+	var nodeIPForDelete = "10.0.0.2"
 
 	BeforeAll(func() {
 		os.Mkdir(testPointerDir, 0766)
-		os.Remove(path.Join(testPointerDir, serial))
+		os.Remove(path.Join(testPointerDir, serialNormal))
+		os.Remove(path.Join(testPointerDir, serialForDelete))
 		file, _ := os.Create(path.Join(testPointerDir, serialForDelete))
 		lptr := LastPointer{
 			Serial:       serialForDelete,
-			NodeIP:       nodeIP,
+			NodeIP:       nodeIPForDelete,
 			LastReadTime: 0,
 			LastReadId:   0,
 		}
 		byteJSON, _ := json.Marshal(lptr)
 		file.WriteString(string(byteJSON))
 		file.Close()
-		exec.Command("touch", "-t", "202401011200.00", path.Join(testPointerDir, serialForDelete)).Run()
+		// Set timestamps for past dates
+		pastTime := time.Now().UTC().AddDate(0, -6, 0).Format("200601021504.05")
+		exec.Command("touch", "-t", pastTime, path.Join(testPointerDir, serialForDelete)).Run()
 	})
 
 	Context("normal JSON file", func() {
 		It("read ptr file", func() {
-			ptr, err = readLastPointer(serial, nodeIP, testPointerDir)
+			ptr, err = readLastPointer(serialNormal, nodeIPNormal, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.Serial).To(Equal(serial))
-			Expect(ptr.NodeIP).To(Equal(nodeIP))
+			Expect(ptr.Serial).To(Equal(serialNormal))
+			Expect(ptr.NodeIP).To(Equal(nodeIPNormal))
 			Expect(ptr.LastReadTime).To(Equal(int64(0)))
 			Expect(ptr.LastReadId).To(Equal(0))
 			GinkgoWriter.Println(ptr)
@@ -49,6 +55,24 @@ var _ = Describe("Get Machines List", Ordered, func() {
 			ptr.LastReadId = 1
 			err := updateLastPointer(ptr, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
+		})
+	})
+
+	Context("Get machine list from pointer files", func() {
+		It("get machine list", func() {
+			m, err := getMachineListWhichEverAccessed(testPointerDir)
+			Expect(err).NotTo(HaveOccurred())
+			fmt.Println("machine list =", m)
+			for k, v := range m {
+				switch k {
+				case "ABCDEF":
+					Expect(v.Serial).To(Equal("ABCDEF"))
+					Expect(v.NodeIP).To(Equal("10.0.0.1"))
+				case "WITHDRAWED":
+					Expect(v.Serial).To(Equal(serialForDelete))
+					Expect(v.NodeIP).To(Equal(nodeIPForDelete))
+				}
+			}
 		})
 	})
 
