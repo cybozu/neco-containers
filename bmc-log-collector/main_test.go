@@ -68,13 +68,12 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		bm3.startMock()
 		// Wait starting stub servers
 		time.Sleep(10 * time.Second)
-
 	})
 
 	Context("stub of main equivalent", func() {
 		It("main loop test", func() {
 			lcConfig := selCollector{
-				machinesListDir: "testdata/configmap/serverlist2.json",
+				machinesListDir: "testdata/configmap/serverlist2.json", // これを途中で差し替える必要がある
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 				ptrDir:          testPointerDir,
 				username:        "user",

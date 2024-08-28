@@ -68,7 +68,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 	if statusCode != 200 || err != nil {
 		// increment the metrics counter
-		counterRequestFailed.WithLabelValues(m.Serial, m.BmcIP).Inc()
+		counterRequestFailed.WithLabelValues(m.Serial, m.NodeIP).Inc()
 		if lastPtr.LastError != err {
 			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath, "httpStatusCode", statusCode)
 		}
@@ -81,7 +81,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	// increment the metrics counter
-	counterRequestSuccess.WithLabelValues(m.Serial, m.BmcIP).Inc()
+	counterRequestSuccess.WithLabelValues(m.Serial, m.NodeIP).Inc()
 
 	var members RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &members); err != nil {

@@ -41,7 +41,7 @@ const (
 	bmcProxyConfigMapName = "bmc-reverse-proxy"
 
 	// BMC Log Collector ConfigMap
-	bmcLogCollectorConfigMapName = "bmc-log-collector"	
+	bmcLogCollectorConfigMapName = "bmc-log-collector"
 )
 
 const graphQLQuery = `
@@ -306,6 +306,7 @@ func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine)
 	return err
 }
 
+/*
 func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []Machine) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
@@ -325,7 +326,7 @@ func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []M
 			continue
 		}
 		m.Serial = machine.Spec.Serial
-		m.BmcIP  = machine.Spec.BMC.IPv4
+		m.BmcIP = machine.Spec.BMC.IPv4
 		m.NodeIP = machine.Spec.IPv4[0]
 		ml = append(ml, m)
 	}
@@ -356,6 +357,7 @@ func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []M
 	}
 	return err
 }
+*/
 
 func (c client) GetMembers() ([]member, error) {
 	serfMembers, err := c.serf.Members()
@@ -474,11 +476,25 @@ func main() {
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////
 	if *flgBMCLogCollectorConfigMap {
-		// create BMC & Server list configmap on all servers
-		err = client.updateBMCLogCollectorConfigMap(ctx, machines)
-		if err != nil {
-			log.ErrorExit(err)
-		}
+		fmt.Println("bmcLogCollectorConfigMapName", bmcLogCollectorConfigMapName)
+		/*
+			machineIPs := make([]net.IP, 0, len(machines)+len(bootservers))
+			for _, machine := range machines {
+				if len(machine.Spec.IPv4) == 0 {
+					continue
+				}
+				machineIP := net.ParseIP(machine.Spec.IPv4[0])
+				machineIPs = append(machineIPs, machineIP)
+			}
+
+			// create BMC & Server list configmap on all servers
+			// このままではNGだ。
+			err = client.updateBMCLogCollectorConfigMap(ctx, machines)
+			if err != nil {
+				log.ErrorExit(err)
+			}
+		*/
 	}
 }
