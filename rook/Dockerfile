@@ -1,9 +1,9 @@
 # Rook container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.20-focal AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
-ARG ROOK_VERSION=1.13.8
+ARG ROOK_VERSION=1.14.10
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -13,12 +13,6 @@ RUN git clone https://github.com/rook/rook.git ${ROOK_DIR}
 
 WORKDIR ${ROOK_DIR}
 
-# Install kubectl binary as required for generating csv
-# ref: https://github.com/rook/rook/commit/972202db0d3a57863d2a1ebac2047f99d169d0a9
-RUN curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl" \
-    && chmod +x ./kubectl \
-    && mv ./kubectl /usr/local/bin/kubectl
-
 RUN mkdir -p ${ROOK_DIR}/.cache/tools/linux_amd64
 # Make a symbolic link of helm to allow the build script to use `helm` command without specifying the version.
 RUN HELM_VERSION=$(grep "^HELM_VERSION"  ${ROOK_DIR}/build/makelib/helm.mk | cut -d " " -f 3) && \
@@ -26,14 +20,12 @@ RUN HELM_VERSION=$(grep "^HELM_VERSION"  ${ROOK_DIR}/build/makelib/helm.mk | cut
 
 RUN git checkout v${ROOK_VERSION}
 RUN mkdir -p /tmp/rook
-# Don't delete temporary directory to save output artifacts
-RUN sed -i -e '/@rm -fr $(TEMP)/d' images/ceph/Makefile
-RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false TEMP=/tmp/rook
+RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/rook SAVE_BUILD_CONTEXT_DIR=true
 # Copy output artifacts to root directory to minimize differences between Stage2 and upstream Dockerfile.
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ceph:18.2.1.2
+FROM ghcr.io/cybozu/ceph:18.2.4.1
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
@@ -45,7 +37,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends iproute2
 COPY --from=build rook toolbox.sh set-ceph-debug-level /usr/local/bin/
 COPY --from=build ceph-monitoring /etc/ceph-monitoring
 COPY --from=build rook-external /etc/rook-external/
-COPY --from=build ceph-csv-templates /etc/ceph-csv-templates
 
 # create or modify owner and permissions to make a watch-active container of a MGR work properly
 RUN groupadd rook -g 2016 && \
