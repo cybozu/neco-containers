@@ -334,9 +334,12 @@ This section applies to the following containers. These containers are maintaine
    - [csi-provisioner](https://github.com/kubernetes-csi/external-provisioner/blob/master/Dockerfile)
    - [csi-resizer](https://github.com/kubernetes-csi/external-resizer/blob/master/Dockerfile)
    - [csi-snapshotter](https://github.com/kubernetes-csi/external-snapshotter/blob/master/cmd/csi-snapshotter/Dockerfile)
-4. Update `BRANCH` and `TAG` files.
+4. update image tag in `Dockerfile` if necessary.
+5. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** These softwares are sensitive to the Go version. When you run the CI, warnings about the Go version may occur in `Build images` job. In that case, consider about changing the base container in Dockerfile.
+***NOTE:*** You can choose the latest stable Ubuntu image for runtime. upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
+
+***NOTE:*** You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
 
 ## dex
 
