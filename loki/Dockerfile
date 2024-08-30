@@ -5,7 +5,10 @@ WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-RUN make -C /work/loki BUILD_IN_CONTAINER=false loki logcli loki-canary
+COPY log-per-chunk-flush.patch /work
+WORKDIR /work/loki
+RUN patch -p1 < ../log-per-chunk-flush.patch
+RUN make BUILD_IN_CONTAINER=false loki logcli loki-canary
 
 FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

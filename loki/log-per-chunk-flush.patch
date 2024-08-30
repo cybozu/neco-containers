@@ -1,0 +1,18 @@
+diff --git a/pkg/ingester/flush.go b/pkg/ingester/flush.go
+index bffe1d2d3..541bd29c0 100644
+--- a/pkg/ingester/flush.go
++++ b/pkg/ingester/flush.go
+@@ -185,6 +185,13 @@ func (i *Ingester) flushUserSeries(ctx context.Context, userID string, fp model.
+ 	lbs := labels.String()
+ 	level.Info(util_log.Logger).Log("msg", "flushing stream", "user", userID, "fp", fp, "immediate", immediate, "num_chunks", len(chunks), "labels", lbs)
+ 
++	for _, c := range chunks {
++		level.Info(util_log.Logger).Log(
++			"msg", "flushing chunk", "user", userID, "fp", fp, "immediate", immediate,
++			"reason", c.reason, "comp", c.chunk.CompressedSize(), "uncomp", c.chunk.UncompressedSize(),
++			"labels", lbs)
++	}
++
+ 	ctx = user.InjectOrgID(ctx, userID)
+ 	ctx, cancelFunc := context.WithTimeout(ctx, i.cfg.FlushOpTimeout)
+ 	defer cancelFunc()
