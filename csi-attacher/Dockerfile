@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.21-focal AS build
+FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
-ARG VERSION=4.5.0
+ARG VERSION=4.5.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -13,7 +13,7 @@ WORKDIR ${SRC_DIR}
 RUN make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:20.04
+FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
