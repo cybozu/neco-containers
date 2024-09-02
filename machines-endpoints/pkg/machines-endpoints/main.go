@@ -425,36 +425,29 @@ func main() {
 
 	if *flgBMCLogCollectorConfigMap {
 		// create bmc-log-collector configmap of all servers that include boot servers
-		machineIPs := make([]net.IP, 0, len(machines)+len(bootservers))
-		for _, machine := range machines {
-			if len(machine.Spec.IPv4) == 0 {
-				continue
-			}
-			machineIP := net.ParseIP(machine.Spec.IPv4[0])
-			machineIPs = append(machineIPs, machineIP)
+		addersses, err := client.bmcListJson(machines)
+		if err != nil {
+			log.ErrorExit(err)
 		}
-
-		// create BMC & Server list configmap on all servers
-		err = client.updateBMCLogCollectorConfigMap(ctx, machines)
+		err = client.writeConfigMap(ctx, addersses)
 		if err != nil {
 			log.ErrorExit(err)
 		}
 	}
 }
 
-func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []Machine) error {
-
-	type Machine struct {
+func (c client) bmcListJson(machines []Machine) (map[string]string, error) {
+	type MachineConfigMap struct {
 		Serial string `json:"serial"`
 		BmcIP  string `json:"bmc_ip"`
 		NodeIP string `json:"ipv4"`
 		Role   string `json:"role"`
 		State  string `json:"state"`
 	}
+	var ml []MachineConfigMap
 
-	var ml []Machine
-	var m Machine
 	for _, machine := range machines {
+		var m MachineConfigMap
 		if machine.Spec.BMC.IPv4 == "" {
 			continue
 		}
@@ -468,13 +461,11 @@ func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []M
 
 	byteJSON, err := json.Marshal(ml)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	addresses := make(map[string]string)
 	addresses["serverlist.json"] = string(byteJSON)
-
-	return c.writeConfigMap(ctx, addresses)
-
+	return addresses, nil
 }
 
 func (c client) writeConfigMap(ctx context.Context, addresses map[string]string) error {
