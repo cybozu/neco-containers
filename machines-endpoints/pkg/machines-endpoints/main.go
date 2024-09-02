@@ -306,59 +306,6 @@ func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine)
 	return err
 }
 
-/*
-func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []Machine) error {
-	ns, _, err := c.kubeConfig.Namespace()
-	if err != nil {
-		return err
-	}
-
-	type Machine struct {
-		Serial string `json:"serial"`
-		BmcIP  string `json:"bmc_ip"`
-		NodeIP string `json:"ipv4"`
-	}
-
-	var ml []Machine
-	var m Machine
-	for _, machine := range machines {
-		if machine.Spec.BMC.IPv4 == "" {
-			continue
-		}
-		m.Serial = machine.Spec.Serial
-		m.BmcIP = machine.Spec.BMC.IPv4
-		m.NodeIP = machine.Spec.IPv4[0]
-		ml = append(ml, m)
-	}
-
-	byteJSON, err := json.Marshal(ml)
-	if err != nil {
-		return err
-	}
-	addresses := make(map[string]string)
-	addresses["serverlist.json"] = string(byteJSON)
-
-	configMap := corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bmcLogCollectorConfigMapName,
-		},
-		Data: addresses,
-	}
-
-	cms := c.k8s.CoreV1().ConfigMaps(ns)
-	_, err = cms.Get(ctx, bmcLogCollectorConfigMapName, metav1.GetOptions{})
-	switch {
-	case err == nil:
-		_, err := cms.Update(ctx, &configMap, metav1.UpdateOptions{})
-		return err
-	case k8serrors.IsNotFound(err):
-		_, err := cms.Create(ctx, &configMap, metav1.CreateOptions{})
-		return err
-	}
-	return err
-}
-*/
-
 func (c client) GetMembers() ([]member, error) {
 	serfMembers, err := c.serf.Members()
 	if err != nil {
@@ -476,25 +423,82 @@ func main() {
 		}
 	}
 
-	////////////////////////////////////////////////////////////////////////////////////
 	if *flgBMCLogCollectorConfigMap {
-		fmt.Println("bmcLogCollectorConfigMapName", bmcLogCollectorConfigMapName)
-		/*
-			machineIPs := make([]net.IP, 0, len(machines)+len(bootservers))
-			for _, machine := range machines {
-				if len(machine.Spec.IPv4) == 0 {
-					continue
-				}
-				machineIP := net.ParseIP(machine.Spec.IPv4[0])
-				machineIPs = append(machineIPs, machineIP)
+		// create bmc-log-collector configmap of all servers that include boot servers
+		machineIPs := make([]net.IP, 0, len(machines)+len(bootservers))
+		for _, machine := range machines {
+			if len(machine.Spec.IPv4) == 0 {
+				continue
 			}
+			machineIP := net.ParseIP(machine.Spec.IPv4[0])
+			machineIPs = append(machineIPs, machineIP)
+		}
 
-			// create BMC & Server list configmap on all servers
-			// このままではNGだ。
-			err = client.updateBMCLogCollectorConfigMap(ctx, machines)
-			if err != nil {
-				log.ErrorExit(err)
-			}
-		*/
+		// create BMC & Server list configmap on all servers
+		err = client.updateBMCLogCollectorConfigMap(ctx, machines)
+		if err != nil {
+			log.ErrorExit(err)
+		}
 	}
+}
+
+func (c client) updateBMCLogCollectorConfigMap(ctx context.Context, machines []Machine) error {
+
+	type Machine struct {
+		Serial string `json:"serial"`
+		BmcIP  string `json:"bmc_ip"`
+		NodeIP string `json:"ipv4"`
+		Role   string `json:"role"`
+		State  string `json:"state"`
+	}
+
+	var ml []Machine
+	var m Machine
+	for _, machine := range machines {
+		if machine.Spec.BMC.IPv4 == "" {
+			continue
+		}
+		m.Serial = machine.Spec.Serial
+		m.BmcIP = machine.Spec.BMC.IPv4
+		m.NodeIP = machine.Spec.IPv4[0]
+		m.Role = machine.Spec.Role
+		m.State = machine.Status.State
+		ml = append(ml, m)
+	}
+
+	byteJSON, err := json.Marshal(ml)
+	if err != nil {
+		return err
+	}
+	addresses := make(map[string]string)
+	addresses["serverlist.json"] = string(byteJSON)
+
+	return c.writeConfigMap(ctx, addresses)
+
+}
+
+func (c client) writeConfigMap(ctx context.Context, addresses map[string]string) error {
+	ns, _, err := c.kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+
+	configMap := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bmcLogCollectorConfigMapName,
+		},
+		Data: addresses,
+	}
+
+	cms := c.k8s.CoreV1().ConfigMaps(ns)
+	_, err = cms.Get(ctx, bmcLogCollectorConfigMapName, metav1.GetOptions{})
+	switch {
+	case err == nil:
+		_, err := cms.Update(ctx, &configMap, metav1.UpdateOptions{})
+		return err
+	case k8serrors.IsNotFound(err):
+		_, err := cms.Create(ctx, &configMap, metav1.CreateOptions{})
+		return err
+	}
+	return err
 }
