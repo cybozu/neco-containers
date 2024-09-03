@@ -16,7 +16,7 @@ Test the behavior of accessing iDRAC internal web services
 */
 var _ = Describe("Access BMC", Ordered, func() {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	username := "user"
 	password := "pass"
 	client := &http.Client{

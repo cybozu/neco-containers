@@ -3,10 +3,10 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path"
-	"time"
 )
 
 type LastPointer struct {
@@ -72,40 +72,37 @@ func updateLastPointer(lptr LastPointer, ptrDir string) error {
 }
 
 // Delete pointer files that have not been updated
-func deleteUnUpdatedFiles(ptrDir string) error {
+func deleteUnUpdatedFiles(ptrDir string, machinesList []Machine) error {
+
+	machines := make(map[string]Machine, len(machinesList))
+	for _, m := range machinesList {
+		machines[m.Serial] = m
+	}
 
 	files, err := os.ReadDir(ptrDir)
 	if err != nil {
 		return err
 	}
+
 	for _, file := range files {
 		if file.IsDir() {
 			continue
 		}
-		filePath := path.Join(ptrDir, file.Name())
-		file, err := os.Open(filePath)
-		if err != nil {
-			return err
-		}
-		defer file.Close()
-		st, err := file.Stat()
-		if err != nil {
-			return err
-		}
+		fmt.Println("================", file.Name())
 
-		// Remove a file that no update for 6 months
-		if (time.Now().UTC().Unix() - st.ModTime().UTC().Unix()) >= 3600*24*30*6 {
-			os.Remove(file.Name())
+		_, isExist := machines[file.Name()]
+		fmt.Println("check", isExist)
+		if !isExist {
+			filePath := path.Join(ptrDir, file.Name())
+			os.Remove(filePath)
 		}
 	}
+
 	return nil
 }
 
-// func getMachineListWhichEverAccessed(ptrDir string) ([]LastPointer, error) {
+/*
 func getMachineListWhichEverAccessed(ptrDir string) (map[string]LastPointer, error) {
-	//var machines []LastPointer
-	//machineList := make(map[string]LastPointer)
-
 	files, err := os.ReadDir(ptrDir)
 	if err != nil {
 		return nil, err
@@ -137,9 +134,9 @@ func getMachineListWhichEverAccessed(ptrDir string) (map[string]LastPointer, err
 		if json.Unmarshal(byteJSON, &machine) != nil {
 			return nil, err
 		}
-		//machines = append(machines, machine)
 		machineList[machine.Serial] = machine
 	}
 
 	return machineList, nil
 }
+*/

@@ -144,8 +144,14 @@ func (l logTest) write(byteJson string, serial string) error {
 }
 
 func searchMetricsComment(lines []string, keyword string) bool {
+	pattern := "^" + keyword
+	re, err := regexp.Compile(pattern)
+	if err != nil {
+		return false
+	}
 	for _, line := range lines {
-		if line == keyword {
+		matches := re.FindAllString(line, -1)
+		if len(matches) > 0 {
 			return true
 		}
 	}
@@ -154,8 +160,7 @@ func searchMetricsComment(lines []string, keyword string) bool {
 
 func findMetrics(lines []string, keyword string) (string, error) {
 
-	pattern := `^` + keyword + `{+`
-	re, err := regexp.Compile(pattern)
+	re, err := regexp.Compile(keyword)
 	if err != nil {
 		return "", err
 	}
@@ -166,5 +171,6 @@ func findMetrics(lines []string, keyword string) (string, error) {
 			return line + "\n", nil
 		}
 	}
-	return "", nil
+
+	return "", fmt.Errorf("not Found %v", keyword)
 }

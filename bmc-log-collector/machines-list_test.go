@@ -11,7 +11,7 @@ Tests machineListReader(), which reads a CSV file with a specified path and sets
 var _ = Describe("Get Machines List", Ordered, func() {
 	Context("Normal", func() {
 		It("Read JSON file", func() {
-			ml, err := readMachineList("testdata/configmap/machinelist-test.json")
+			ml, err := readMachineList("testdata/configmap/machines-list-test.json")
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ml[0].Serial).To(Equal("server1"))
 			Expect(ml[0].BmcIP).To(Equal("192.168.0.1"))

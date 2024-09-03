@@ -26,6 +26,6 @@ test:
 	#$(GINKGO) -v --race --focus-file log-pointer_test.go
 	#$(GINKGO) -v --race --focus-file log-collector_test.go
 	#$(GINKGO) -v --race --focus-file main_test.go
-	$(GINKGO) -v --race --focus-file main_metrics_test.go
+	#$(GINKGO) -v --race --focus-file metrics2_test.go
 	#$(GINKGO) -v --race -procs=1 .
-	#$(GINKGO) -v --race -p .
+	$(GINKGO) -v --race -p .

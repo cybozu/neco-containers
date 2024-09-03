@@ -10,6 +10,8 @@ type Machine struct {
 	Serial string `json:"serial"`
 	BmcIP  string `json:"bmc_ip"`
 	NodeIP string `json:"ipv4"`
+	Role   string `json:"role"`
+	State  string `json:"state"`
 }
 
 // get BMC list from JSON file

@@ -4,9 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path"
-	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -20,11 +18,14 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var nodeIPNormal = "10.0.0.1"
 	var serialForDelete = "WITHDRAWED"
 	var nodeIPForDelete = "10.0.0.2"
+	var ml []Machine
 
 	BeforeAll(func() {
 		os.Mkdir(testPointerDir, 0766)
 		os.Remove(path.Join(testPointerDir, serialNormal))
 		os.Remove(path.Join(testPointerDir, serialForDelete))
+
+		// create pointer file for delete test
 		file, _ := os.Create(path.Join(testPointerDir, serialForDelete))
 		lptr := LastPointer{
 			Serial:       serialForDelete,
@@ -36,8 +37,19 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		file.WriteString(string(byteJSON))
 		file.Close()
 		// Set timestamps for past dates
-		pastTime := time.Now().UTC().AddDate(0, -6, 0).Format("200601021504.05")
-		exec.Command("touch", "-t", pastTime, path.Join(testPointerDir, serialForDelete)).Run()
+		//pastTime := time.Now().UTC().AddDate(0, -6, 0).Format("200601021504.05")
+		//exec.Command("touch", "-t", pastTime, path.Join(testPointerDir, serialForDelete)).Run()
+
+		// create machines list for delete test
+		m0 := Machine{
+			Serial: "ABCDEF",
+			BmcIP:  "10.0.0.1",
+			NodeIP: "10.1.0.1",
+			Role:   "cs",
+			State:  "HEALTHY",
+		}
+		ml = append(ml, m0)
+
 	})
 
 	Context("normal JSON file", func() {
@@ -58,27 +70,30 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		})
 	})
 
-	Context("Get machine list from pointer files", func() {
-		It("get machine list", func() {
-			m, err := getMachineListWhichEverAccessed(testPointerDir)
-			Expect(err).NotTo(HaveOccurred())
-			fmt.Println("machine list =", m)
-			for k, v := range m {
-				switch k {
-				case "ABCDEF":
-					Expect(v.Serial).To(Equal("ABCDEF"))
-					Expect(v.NodeIP).To(Equal("10.0.0.1"))
-				case "WITHDRAWED":
-					Expect(v.Serial).To(Equal(serialForDelete))
-					Expect(v.NodeIP).To(Equal(nodeIPForDelete))
+	/*
+		Context("Get machine list from pointer files", func() {
+			It("get machine list", func() {
+				m, err := getMachineListWhichEverAccessed(testPointerDir)
+				Expect(err).NotTo(HaveOccurred())
+				fmt.Println("machine list =", m)
+				for k, v := range m {
+					switch k {
+					case "ABCDEF":
+						Expect(v.Serial).To(Equal("ABCDEF"))
+						Expect(v.NodeIP).To(Equal("10.0.0.1"))
+					case "WITHDRAWED":
+						Expect(v.Serial).To(Equal(serialForDelete))
+						Expect(v.NodeIP).To(Equal(nodeIPForDelete))
+					}
 				}
-			}
+			})
 		})
-	})
+	*/
 
 	Context("delete retired server ptr file", func() {
 		It("do delete", func() {
-			err := deleteUnUpdatedFiles(testPointerDir)
+			fmt.Println("ML=", ml)
+			err := deleteUnUpdatedFiles(testPointerDir, ml)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("check that file has been deleted", func() {

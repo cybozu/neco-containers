@@ -161,12 +161,13 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			}
 			GinkgoWriter.Println(metricsLines)
 		})
-		It("after delete,  verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP failed_counter The failed count for Redfish of BMC accessing")).NotTo(Equal(true))
+
+		It("after delete,  verify deleted line in metrics", func() {
+			Expect(searchMetricsComment(metricsLines, "ABC123X")).NotTo(Equal(true))
 		})
 
-		It("after delete, verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP success_counter The success count for Redfish of BMC accessing")).NotTo(Equal(true))
+		It("after delete,  verify deleted line in metrics", func() {
+			Expect(searchMetricsComment(metricsLines, "172.16.0.1")).NotTo(Equal(true))
 		})
 
 	})

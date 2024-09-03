@@ -1,1 +1,1 @@
-[{"serial":"683FPQ3","bmc_ip":"127.0.0.1:7180","ipv4":"10.69.0.6"},{"serial":"HN3CLP3","bmc_ip":"127.0.0.1:7280","ipv4":"10.69.0.7"},{"serial":"J7N6MW3","bmc_ip":"127.0.0.1:7380","ipv4":"10.69.0.8"}]
+[{"serial":"683FPQ3","bmc_ip":"127.0.0.1:7180","ipv4":"10.69.0.6","role":"cs","state":"HEALTHY"},{"serial":"HN3CLP3","bmc_ip":"127.0.0.1:7280","ipv4":"10.69.0.7","role":"cs","state":"HEALTHY"},{"serial":"J7N6MW3","bmc_ip":"127.0.0.1:7380","ipv4":"10.69.0.8","role":"cs","state":"HEALTHY"}]
