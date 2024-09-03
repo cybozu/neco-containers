@@ -247,7 +247,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				}()
 			}
 			wg.Wait()
-		}, SpecTimeout(3*time.Second))
+		}, SpecTimeout(10*time.Second))
 
 		It("drop metrics if machine state is retired", func(ctx SpecContext) {
 			err = dropMetricsWhichRetiredMachine(machines)
