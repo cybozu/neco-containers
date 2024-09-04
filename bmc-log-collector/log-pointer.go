@@ -70,9 +70,8 @@ func updateLastPointer(lptr LastPointer, ptrDir string) error {
 	return nil
 }
 
-// Delete pointer files that have not been updated
+// Delete pointer files when disappear machines list which from ConfigMap
 func deleteUnUpdatedFiles(ptrDir string, machinesList []Machine) error {
-
 	machines := make(map[string]Machine, len(machinesList))
 	for _, m := range machinesList {
 		machines[m.Serial] = m

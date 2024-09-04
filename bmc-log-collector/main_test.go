@@ -72,13 +72,17 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 	Context("stub of main equivalent", func() {
 		It("main loop test", func() {
+
+			intervalTimeString := "10s"
+			intervalTime, _ := time.ParseDuration(intervalTimeString)
+
 			lcConfig := selCollector{
 				machinesListDir: "testdata/configmap/serverlist2.json",
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 				ptrDir:          testPointerDir,
 				username:        "user",
 				password:        "pass",
-				intervalTime:    10, // sec
+				intervalTime:    intervalTime,
 			}
 
 			// setup logWriter for test

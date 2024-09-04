@@ -43,7 +43,7 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	}()
 
 	// set interval timer
-	ticker := time.NewTicker(config.intervalTime * time.Second)
+	ticker := time.NewTicker(config.intervalTime)
 	defer ticker.Stop()
 
 	// expose metrics via HTTP
@@ -83,11 +83,6 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				slog.Error("failed remove pointer file which did not update for 6 month.", "err", err, "path", config.ptrDir)
 			}
 		}
-		//// remove ptr files that no update for 6 months
-		//err := deleteUnUpdatedFiles(config.ptrDir)
-		//if err != nil {
-		//	slog.Error("failed remove pointer file which did not update for 6 month.", "err", err, "path", config.ptrDir)
-		//}
 	}
 }
 
@@ -155,7 +150,6 @@ func main() {
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
-	logger.Error("test", "err", 100)
 
 	// setup log scraping loop
 	configLc := selCollector{
@@ -172,6 +166,6 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
 
-	slog.Info("bmc-log-collector started")
+	slog.Info("bmc-log-collector started", "interval time", intervalTime)
 	doLogScrapingLoop(configLc, logWriter)
 }

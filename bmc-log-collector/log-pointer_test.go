@@ -36,9 +36,6 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		byteJSON, _ := json.Marshal(lptr)
 		file.WriteString(string(byteJSON))
 		file.Close()
-		// Set timestamps for past dates
-		//pastTime := time.Now().UTC().AddDate(0, -6, 0).Format("200601021504.05")
-		//exec.Command("touch", "-t", pastTime, path.Join(testPointerDir, serialForDelete)).Run()
 
 		// create machines list for delete test
 		m0 := Machine{
@@ -69,26 +66,6 @@ var _ = Describe("Get Machines List", Ordered, func() {
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
-
-	/*
-		Context("Get machine list from pointer files", func() {
-			It("get machine list", func() {
-				m, err := getMachineListWhichEverAccessed(testPointerDir)
-				Expect(err).NotTo(HaveOccurred())
-				fmt.Println("machine list =", m)
-				for k, v := range m {
-					switch k {
-					case "ABCDEF":
-						Expect(v.Serial).To(Equal("ABCDEF"))
-						Expect(v.NodeIP).To(Equal("10.0.0.1"))
-					case "WITHDRAWED":
-						Expect(v.Serial).To(Equal(serialForDelete))
-						Expect(v.NodeIP).To(Equal(nodeIPForDelete))
-					}
-				}
-			})
-		})
-	*/
 
 	Context("delete retired server ptr file", func() {
 		It("do delete", func() {

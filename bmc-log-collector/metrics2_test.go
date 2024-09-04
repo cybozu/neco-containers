@@ -136,7 +136,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		// メトリックスの取得
 		It("get metrics", func() {
 			var metricsLines []string
 
@@ -166,8 +165,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		var metricsLines []string
 
 		It("get machine list", func() {
-			// ２回目では、サーバーリストを差し替える
-			//  リタイアになったサーバーが発生する。この時メトリックスを削除する
 			lcConfig.machinesListDir = "testdata/configmap/serverlist-2.json"
 			machines, err = readMachineList(lcConfig.machinesListDir)
 			Expect(err).ToNot(HaveOccurred())
@@ -194,7 +191,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		// メトリックスの取得
 		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
@@ -226,8 +222,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		var metricsLines []string
 
 		It("get machine list", func() {
-			// ２回目では、サーバーリストを差し替える
-			//  リタイアになったサーバーが発生する。この時メトリックスを削除する
 			lcConfig.machinesListDir = "testdata/configmap/serverlist-3.json"
 			machines, err = readMachineList(lcConfig.machinesListDir)
 			Expect(err).ToNot(HaveOccurred())
@@ -254,7 +248,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		// メトリックスの取得
 		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
@@ -307,5 +300,4 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			}
 		})
 	})
-
 })
