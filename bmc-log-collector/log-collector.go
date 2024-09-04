@@ -67,6 +67,9 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 	if statusCode != 200 || err != nil {
+		if statusCode != 200 {
+			slog.Error("failed access to iDRAC.", "url", c.rfSelPath, "httpStatusCode", statusCode)
+		}
 		// increment the metrics counter
 		counterRequestFailed.WithLabelValues(m.Serial, m.NodeIP).Inc()
 		if lastPtr.LastError != err {

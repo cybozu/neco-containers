@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path"
@@ -88,10 +87,7 @@ func deleteUnUpdatedFiles(ptrDir string, machinesList []Machine) error {
 		if file.IsDir() {
 			continue
 		}
-		fmt.Println("================", file.Name())
-
 		_, isExist := machines[file.Name()]
-		fmt.Println("check", isExist)
 		if !isExist {
 			filePath := path.Join(ptrDir, file.Name())
 			os.Remove(filePath)
@@ -100,43 +96,3 @@ func deleteUnUpdatedFiles(ptrDir string, machinesList []Machine) error {
 
 	return nil
 }
-
-/*
-func getMachineListWhichEverAccessed(ptrDir string) (map[string]LastPointer, error) {
-	files, err := os.ReadDir(ptrDir)
-	if err != nil {
-		return nil, err
-	}
-	machineList := make(map[string]LastPointer, len(files))
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		filePath := path.Join(ptrDir, file.Name())
-		file, err := os.Open(filePath)
-		if err != nil {
-			return nil, err
-		}
-		defer file.Close()
-
-		f, err := os.Open(file.Name())
-		if err != nil {
-			return nil, err
-		}
-		defer f.Close()
-
-		byteJSON, err := io.ReadAll(f)
-		if err != nil {
-			return nil, err
-		}
-		var machine LastPointer
-		if json.Unmarshal(byteJSON, &machine) != nil {
-			return nil, err
-		}
-		machineList[machine.Serial] = machine
-	}
-
-	return machineList, nil
-}
-*/

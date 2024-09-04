@@ -29,3 +29,10 @@ test:
 	#$(GINKGO) -v --race --focus-file metrics2_test.go
 	#$(GINKGO) -v --race -procs=1 .
 	$(GINKGO) -v --race -p .
+
+.PHONY: clean
+clean:
+	rm -f testdata/output_main_test/*
+	rm -fr testdata/pointers_get_machines
+	rm -fr testdata/pointers_log_collector
+	rm -fr testdata/pointers_main_test

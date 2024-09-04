@@ -137,12 +137,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	intervalTimeString := os.Getenv("BMC_INTERVAL_TIME")
+	if len(intervalTimeString) == 0 {
+		slog.Error("The environment variable BMC_INTERVAL_TIME should be set")
+		os.Exit(1)
+	}
+
+	intervalTime, err := time.ParseDuration(intervalTimeString + "s")
+	if err != nil {
+		slog.Error("Can not convert string to time.Duration. please check second value")
+		os.Exit(1)
+	}
+
 	// setup slog
 	opts := &slog.HandlerOptions{
 		AddSource: true,
 	}
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
+	logger.Error("test", "err", 100)
 
 	// setup log scraping loop
 	configLc := selCollector{
@@ -151,7 +164,7 @@ func main() {
 		ptrDir:          "/data/pointers",
 		username:        username,
 		password:        password,
-		intervalTime:    1800,
+		intervalTime:    intervalTime,
 	}
 
 	// set BMC log writer
@@ -159,5 +172,6 @@ func main() {
 	log.SetOutput(os.Stdout)
 	log.SetFlags(0)
 
+	slog.Info("bmc-log-collector started")
 	doLogScrapingLoop(configLc, logWriter)
 }
