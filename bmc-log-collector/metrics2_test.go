@@ -47,8 +47,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		machinesListDir: "testdata/configmap/serverlist-1.json", // これを途中で差し替える必要がある
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:          testPointerDir,
-		username:        "user",
-		password:        "pass",
+		username:        "support",
+		password:        "000000",
 		httpClient:      cl,
 	}
 

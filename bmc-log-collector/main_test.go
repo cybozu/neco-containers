@@ -77,13 +77,17 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			intervalTime, _ := time.ParseDuration(intervalTimeString)
 
 			lcConfig := selCollector{
+				userFile:        "testdata/etc/bmc-user.json",
 				machinesListDir: "testdata/configmap/serverlist2.json",
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 				ptrDir:          testPointerDir,
-				username:        "user",
-				password:        "pass",
-				intervalTime:    intervalTime,
+				username:        "support",
+				//password:        "pass",
+				intervalTime: intervalTime,
 			}
+			user, err := LoadConfig(lcConfig.userFile)
+			Expect(err).ToNot(HaveOccurred())
+			lcConfig.password = user.Support.Password.Raw
 
 			// setup logWriter for test
 			logWriter := logTest{

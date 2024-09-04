@@ -120,17 +120,19 @@ func dropMetricsWhichRetiredMachine(machinesList []Machine) error {
 func main() {
 
 	// check parameter
-	username := os.Getenv("BMC_USERNAME")
-	if len(username) == 0 {
-		slog.Error("The environment variable BMC_USERNAME should be set")
-		os.Exit(1)
-	}
+	/*
+		username := os.Getenv("BMC_USERNAME")
+		if len(username) == 0 {
+			slog.Error("The environment variable BMC_USERNAME should be set")
+			os.Exit(1)
+		}
 
-	password := os.Getenv("BMC_PASSWORD")
-	if len(password) == 0 {
-		slog.Error("The environment variable BMC_PASSWORD should be set")
-		os.Exit(1)
-	}
+		password := os.Getenv("BMC_PASSWORD")
+		if len(password) == 0 {
+			slog.Error("The environment variable BMC_PASSWORD should be set")
+			os.Exit(1)
+		}
+	*/
 
 	intervalTimeString := os.Getenv("BMC_INTERVAL_TIME")
 	if len(intervalTimeString) == 0 {
@@ -153,12 +155,19 @@ func main() {
 
 	// setup log scraping loop
 	configLc := selCollector{
+		userFile:        "/etc/neco/bmc-user.json",
 		machinesListDir: "/config/serverlist.json",
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:          "/data/pointers",
-		username:        username,
-		password:        password,
-		intervalTime:    intervalTime,
+		username:        "support",
+		//password:        password,
+		intervalTime: intervalTime,
+	}
+	user, err := LoadConfig(configLc.userFile)
+	configLc.password = user.Support.Password.Raw
+	if err != nil {
+		slog.Error("Can't read the user-list on BMC")
+		os.Exit(1)
 	}
 
 	// set BMC log writer

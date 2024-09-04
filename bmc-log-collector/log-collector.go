@@ -44,6 +44,7 @@ type RedfishJsonSchema struct {
 
 // SEL(System Event Log) Collector
 type selCollector struct {
+	userFile        string        // iDRAC user file in cluster node
 	machinesListDir string        // Directory of the machines list
 	rfSelPath       string        // SEL path of Redfish API address
 	ptrDir          string        // Pointer store
