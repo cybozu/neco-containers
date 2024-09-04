@@ -8,7 +8,6 @@ RUN CGO_ENABLED=0 go install -ldflags="-w -s"
 
 # Stage2: setup runtime container
 #FROM scratch
-#FROM ghcr.io/cybozu/golang:1.22-jammy
 FROM ghcr.io/takara9/my-ubuntu:0.3
 
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
