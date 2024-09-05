@@ -7,8 +7,7 @@ WORKDIR /work
 RUN CGO_ENABLED=0 go install -ldflags="-w -s" 
 
 # Stage2: setup runtime container
-#FROM scratch
-FROM ghcr.io/takara9/my-ubuntu:0.3
+FROM scratch
 
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
@@ -16,4 +15,4 @@ COPY --from=build /go/bin /
 
 USER 10000:10000
 
-#ENTRYPOINT ["/log-collector"]
+ENTRYPOINT ["/log-collector"]
