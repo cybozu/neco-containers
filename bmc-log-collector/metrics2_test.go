@@ -1,9 +1,5 @@
 package main
 
-/*
-  Read the machine list and access iDRAC mock.
-  Verify anti-duplicate filter.
-*/
 import (
 	"context"
 	"crypto/tls"
@@ -48,7 +44,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:          testPointerDir,
 		username:        "support",
-		password:        "000000",
+		password:        basicAuthPassword,
 		httpClient:      cl,
 	}
 

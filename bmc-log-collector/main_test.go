@@ -82,8 +82,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 				ptrDir:          testPointerDir,
 				username:        "support",
-				//password:        "pass",
-				intervalTime: intervalTime,
+				intervalTime:    intervalTime,
 			}
 			user, err := LoadConfig(lcConfig.userFile)
 			Expect(err).ToNot(HaveOccurred())

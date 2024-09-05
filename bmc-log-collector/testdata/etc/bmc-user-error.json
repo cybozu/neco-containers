@@ -15,10 +15,5 @@
       "password": {
         "raw": "789"
       }
-    },
-    "support": {
-      "password": {
-        "raw": "raw password for support user"
-      }
     }
 }

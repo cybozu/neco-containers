@@ -18,7 +18,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	username := "support"
-	password := "000000"
+	password := basicAuthPassword
 	client := &http.Client{
 		Timeout: time.Duration(30) * time.Second,
 		Transport: &http.Transport{

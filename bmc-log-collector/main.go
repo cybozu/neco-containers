@@ -120,20 +120,6 @@ func dropMetricsWhichRetiredMachine(machinesList []Machine) error {
 func main() {
 
 	// check parameter
-	/*
-		username := os.Getenv("BMC_USERNAME")
-		if len(username) == 0 {
-			slog.Error("The environment variable BMC_USERNAME should be set")
-			os.Exit(1)
-		}
-
-		password := os.Getenv("BMC_PASSWORD")
-		if len(password) == 0 {
-			slog.Error("The environment variable BMC_PASSWORD should be set")
-			os.Exit(1)
-		}
-	*/
-
 	intervalTimeString := os.Getenv("BMC_INTERVAL_TIME")
 	if len(intervalTimeString) == 0 {
 		slog.Error("The environment variable BMC_INTERVAL_TIME should be set")
@@ -160,8 +146,7 @@ func main() {
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 		ptrDir:          "/data/pointers",
 		username:        "support",
-		//password:        password,
-		intervalTime: intervalTime,
+		intervalTime:    intervalTime,
 	}
 	user, err := LoadConfig(configLc.userFile)
 	configLc.password = user.Support.Password.Raw

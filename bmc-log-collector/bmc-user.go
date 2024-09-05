@@ -5,10 +5,6 @@ import (
 	"os"
 )
 
-//const (
-//	UserFile = "bmc-user.json"
-//)
-
 // BMCPassword represents password for a BMC user.
 type BMCPassword struct {
 	Raw  string `json:"raw"`

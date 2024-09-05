@@ -18,7 +18,7 @@ var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/
 // id & password for basic authentication
 const (
 	basicAuthUser     = "support"
-	basicAuthPassword = "000000"
+	basicAuthPassword = "raw password for support user"
 )
 
 type bmcMock struct {

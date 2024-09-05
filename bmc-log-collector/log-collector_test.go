@@ -17,10 +17,9 @@ import (
 )
 
 /*
-  Read the machine list and access iDRAC mock.
-  Verify anti-duplicate filter.
+Read the machine list and access iDRAC mock.
+Verify anti-duplicate filter.
 */
-
 var _ = Describe("gathering up logs", Ordered, func() {
 	var lc selCollector
 	var cl *http.Client
@@ -77,7 +76,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:          testPointerDir,
 			username:        "support",
-			password:        "000000",
+			password:        basicAuthPassword,
 			httpClient:      cl,
 		}
 
