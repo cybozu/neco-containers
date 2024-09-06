@@ -350,9 +350,6 @@ workflows:
   main:
     jobs:
       - build:
-          name: build-argocd
-          container-image: argocd
-      - build:
           name: build-blackbox_exporter
           container-image: blackbox_exporter
       - build-ceph:
@@ -385,9 +382,6 @@ workflows:
       - build:
           name: build-csi-snapshotter
           container-image: csi-snapshotter
-      - build:
-          name: build-dex
-          container-image: dex
       - buildx:
           name: build-golang-1.20-focal
           container-image: golang
@@ -421,9 +415,6 @@ workflows:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
       - build:
-          name: build-meows-dctest-runner
-          container-image: meows-dctest-runner
-      - build:
           name: build-meows-neco-runner
           container-image: meows-neco-runner
       - build:
@@ -439,9 +430,6 @@ workflows:
           name: build-prometheus-adapter
           container-image: prometheus-adapter
       - build:
-          name: build-pushgateway
-          container-image: pushgateway
-      - build:
           name: build-redis
           container-image: redis
       - build:
@@ -453,9 +441,3 @@ workflows:
       - build:
           name: build-testhttpd
           container-image: testhttpd
-      - build:
-          name: build-unbound
-          container-image: unbound
-      - build:
-          name: build-vault
-          container-image: vault
