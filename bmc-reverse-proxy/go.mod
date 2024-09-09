@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/bmc-reverse-proxy
 
-go 1.22.5
+go 1.22.2
 
 // cf. https://github.com/darccio/mergo/blob/master/README.md#100
 replace github.com/imdario/mergo => github.com/imdario/mergo v0.3.6
