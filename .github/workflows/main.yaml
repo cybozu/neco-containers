@@ -74,23 +74,11 @@ jobs:
             container-image: "external-dns"
           - dir: "./fluent-bit"
             container-image: "fluent-bit"
-          - dir: "./golang-all/golang-1.20-focal"
-            container-image: "golang"
-            enable_arm64: true
-            request-scan: "true"
-          - dir: "./golang-all/golang-1.20-jammy"
-            container-image: "golang"
-            enable_arm64: true
-            request-scan: "true"
-          - dir: "./golang-all/golang-1.21-focal"
-            container-image: "golang"
-            enable_arm64: true
-            request-scan: "true"
-          - dir: "./golang-all/golang-1.21-jammy"
-            container-image: "golang"
-            enable_arm64: true
-            request-scan: "true"
           - dir: "./golang-all/golang-1.22-jammy"
+            container-image: "golang"
+            enable_arm64: true
+            request-scan: "true"
+          - dir: "./golang-all/golang-1.23-jammy"
             container-image: "golang"
             enable_arm64: true
             request-scan: "true"

@@ -382,22 +382,6 @@ workflows:
       - build:
           name: build-csi-snapshotter
           container-image: csi-snapshotter
-      - buildx:
-          name: build-golang-1.20-focal
-          container-image: golang
-          dir: golang-all/golang-1.20-focal
-      - buildx:
-          name: build-golang-1.20-jammy
-          container-image: golang
-          dir: golang-all/golang-1.20-jammy
-      - buildx:
-          name: build-golang-1.21-focal
-          container-image: golang
-          dir: golang-all/golang-1.21-focal
-      - buildx:
-          name: build-golang-1.21-jammy
-          container-image: golang
-          dir: golang-all/golang-1.21-jammy
       - build:
           name: build-gorush
           container-image: gorush
