@@ -1,10 +1,10 @@
 # Go container
 
 FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:22.04
-LABEL org.opencontainers.image.source "https://github.com/cybozu/neco-containers"
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG TARGETARCH
-ARG GO_VERSION=1.22.6
+ARG GO_VERSION=1.22.7
 
 ENV GOARCH=${TARGETARCH}
 ENV GOPATH=/go
