@@ -386,15 +386,9 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build:
-          name: build-go-ipfs
-          container-image: go-ipfs
-      - build:
           name: build-heartbeat
           container-image: heartbeat
           scan: true
-      - build:
-          name: build-ipfs-cluster
-          container-image: ipfs-cluster
       - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
@@ -404,9 +398,6 @@ workflows:
       - build:
           name: build-moco-switchover-downtime-monitor
           container-image: moco-switchover-downtime-monitor
-      - build:
-          name: build-nerdctl
-          container-image: nerdctl
       - build:
           name: build-opentelemetry-collector
           container-image: opentelemetry-collector

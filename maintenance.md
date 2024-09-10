@@ -410,13 +410,6 @@ This section applies to the following containers. These containers are maintaine
 
 Ignore!!!
 
-## go-ipfs
-
-![No Need Update](./no_need_update.svg)
-
-1. Check the [releases](https://github.com/ipfs/go-ipfs/releases/) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
-
 ## grafana
 
 ![Regular Update](./regular_update.svg)
@@ -513,14 +506,6 @@ Update nginx that hubble-ui depends on as follows.
 # Check diff between v1.23.1 and v1.23.2
 $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d9686523da0 -- mainline/debian/Dockerfile
 ```
-
-## ipfs-cluster
-
-![No Need Update](./no_need_update.svg)
-
-1. Check the [releases](https://github.com/ipfs/ipfs-cluster/releases) page for changes.
-2. Update `IPFS_CLUSTER_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files accordingly.
 
 ## kube-metrics-adapter
 
@@ -656,14 +641,6 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `TAG` file.
-
-## nerdctl
-
-![No Need Update](./no_need_update.svg)
-
-1. Check the [release page](https://github.com/containerd/nerdctl/releases).
-2. Update `NERDCTL_VERSION` in `Dockerfile`.
-3. Update the `BRANCH` and `TAG` files.
 
 ## opentelemetry-collector
 
