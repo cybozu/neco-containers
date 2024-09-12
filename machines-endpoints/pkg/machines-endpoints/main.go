@@ -425,7 +425,7 @@ func main() {
 
 	if *flgBMCLogCollectorConfigMap {
 		// create bmc-log-collector configmap of all servers that include boot servers
-		addersses, err := client.bmcListJson(machines)
+		addersses, err := bmcListJson(machines)
 		if err != nil {
 			log.ErrorExit(err)
 		}
@@ -436,7 +436,7 @@ func main() {
 	}
 }
 
-func (c client) bmcListJson(machines []Machine) (map[string]string, error) {
+func bmcListJson(machines []Machine) (map[string]string, error) {
 	type MachineConfigMap struct {
 		Serial string `json:"serial"`
 		BmcIP  string `json:"bmc_ip"`

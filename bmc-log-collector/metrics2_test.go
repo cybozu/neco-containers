@@ -148,13 +148,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		}, SpecTimeout(3*time.Second))
 
-		It("drop metrics of machine that is retired", func(ctx SpecContext) {
-			err = dropMetricsWhichRetiredMachine(machines)
-			Expect(err).ToNot(HaveOccurred())
-		})
-
-		It("get metrics", func(ctx SpecContext) {
-			var metricsLines []string
+		It("drop metrics of machine that is retired and verify", func(ctx SpecContext) {
+			dropMetricsWhichRetiredMachine(machines)
 
 			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
@@ -162,13 +157,13 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			client := &http.Client{Timeout: time.Duration(10) * time.Second}
 			resp, err := client.Do(req)
-
 			Expect(err).NotTo(HaveOccurred())
 			defer resp.Body.Close()
 
 			buf, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
-			metricsLines = strings.Split(string(buf), "\n")
+
+			metricsLines := strings.Split(string(buf), "\n")
 			for i, v := range metricsLines {
 				GinkgoWriter.Println(i, v)
 			}
@@ -203,12 +198,9 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		}, SpecTimeout(3*time.Second))
 
-		It("drop metrics if machine state is retired", func(ctx SpecContext) {
-			err = dropMetricsWhichRetiredMachine(machines)
-			Expect(err).ToNot(HaveOccurred())
-		})
+		It("drop metrics of machine that is retired and verify", func(ctx SpecContext) {
+			dropMetricsWhichRetiredMachine(machines)
 
-		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
 			Expect(err).NotTo(HaveOccurred())
@@ -220,6 +212,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			buf, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
+
 			metricsLines = strings.Split(string(buf), "\n")
 			for i, v := range metricsLines {
 				GinkgoWriter.Println(i, v)
@@ -260,12 +253,9 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			wg.Wait()
 		}, SpecTimeout(3*time.Second))
 
-		It("drop metrics if machine state is retired", func(ctx SpecContext) {
-			err = dropMetricsWhichRetiredMachine(machines)
-			Expect(err).ToNot(HaveOccurred())
-		})
+		It("drop metrics of machine that is retired and verify", func(ctx SpecContext) {
+			dropMetricsWhichRetiredMachine(machines)
 
-		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
 			req, err := http.NewRequest("GET", url, nil)
 			Expect(err).NotTo(HaveOccurred())
@@ -277,6 +267,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			buf, err := io.ReadAll(resp.Body)
 			Expect(err).NotTo(HaveOccurred())
+
 			metricsLines = strings.Split(string(buf), "\n")
 			for i, v := range metricsLines {
 				GinkgoWriter.Println(i, v)

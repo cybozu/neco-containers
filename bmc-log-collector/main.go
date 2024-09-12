@@ -72,10 +72,7 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 			wg.Wait()
 
 			// drop metrics which retired machine
-			err = dropMetricsWhichRetiredMachine(machinesList)
-			if err != nil {
-				slog.Error("failed to drop metrics", "err", err, "pointer directory", config.ptrDir)
-			}
+			dropMetricsWhichRetiredMachine(machinesList)
 
 			// remove ptr files that disappeared the serial in machineList
 			err = deletePtrFileDisappearedSerial(config.ptrDir, machinesList)
@@ -95,7 +92,7 @@ func (l logProd) write(stringJson string, serial string) error {
 	return nil
 }
 
-func dropMetricsWhichRetiredMachine(machinesList []Machine) error {
+func dropMetricsWhichRetiredMachine(machinesList []Machine) {
 	type retiredMachine struct {
 		serial string
 		nodeIP string
@@ -114,7 +111,6 @@ func dropMetricsWhichRetiredMachine(machinesList []Machine) error {
 	for _, v := range dropList {
 		deleteMetrics(v.serial, v.nodeIP)
 	}
-	return nil
 }
 
 func main() {

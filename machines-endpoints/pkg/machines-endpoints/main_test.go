@@ -26,8 +26,7 @@ func TestUpdateBMCLogCollectorConfigMap(t *testing.T) {
 	m1.Status.State = "HEALTHY"
 	ml = append(ml, m1)
 
-	c := client{}
-	byteJSON, err := c.bmcListJson(ml)
+	byteJSON, err := bmcListJson(ml)
 	if err != nil {
 		t.Fatalf("failed create JSON data %#v", err)
 	}
