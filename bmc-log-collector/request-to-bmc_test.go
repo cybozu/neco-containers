@@ -31,7 +31,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 		},
 	}
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("*** Start iDRAC Stub")
 		bm1 := bmcMock{
 			host:          "127.0.0.1:19082",
@@ -43,9 +43,17 @@ var _ = Describe("Access BMC", Ordered, func() {
 			isInitmap:     true,
 		}
 		bm1.startMock()
+
 		// Wait for starting mock web server
-		time.Sleep(10 * time.Second)
-	})
+		By("Test stub web access" + bm1.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm1.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+	}, NodeTimeout(10*time.Second))
+
 	AfterAll(func() {
 		time.Sleep(3 * time.Second)
 		cancel()

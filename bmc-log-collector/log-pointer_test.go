@@ -15,9 +15,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	var err error
 	var testPointerDir = "testdata/pointers_get_machines"
 	var serialNormal = "ABCDEF"
-	var nodeIPNormal = "10.0.0.1"
 	var serialForDelete = "WITHDRAWED"
-	var nodeIPForDelete = "10.0.0.2"
 	var ml []Machine
 
 	BeforeAll(func() {
@@ -28,8 +26,6 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		// create pointer file for delete test
 		file, _ := os.Create(path.Join(testPointerDir, serialForDelete))
 		lptr := LastPointer{
-			Serial:       serialForDelete,
-			NodeIP:       nodeIPForDelete,
 			LastReadTime: 0,
 			LastReadId:   0,
 		}
@@ -51,10 +47,8 @@ var _ = Describe("Get Machines List", Ordered, func() {
 
 	Context("normal JSON file", func() {
 		It("read ptr file", func() {
-			ptr, err = readLastPointer(serialNormal, nodeIPNormal, testPointerDir)
+			ptr, err = readLastPointer(serialNormal, testPointerDir)
 			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.Serial).To(Equal(serialNormal))
-			Expect(ptr.NodeIP).To(Equal(nodeIPNormal))
 			Expect(ptr.LastReadTime).To(Equal(int64(0)))
 			Expect(ptr.LastReadId).To(Equal(0))
 			GinkgoWriter.Println(ptr)
@@ -62,7 +56,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 		It("update ptr", func() {
 			ptr.LastReadTime = 1
 			ptr.LastReadId = 1
-			err := updateLastPointer(ptr, testPointerDir)
+			err := updateLastPointer(ptr, testPointerDir, serialNormal)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})
@@ -70,7 +64,7 @@ var _ = Describe("Get Machines List", Ordered, func() {
 	Context("delete retired server ptr file", func() {
 		It("do delete", func() {
 			fmt.Println("ML=", ml)
-			err := deleteUnUpdatedFiles(testPointerDir, ml)
+			err := deletePtrFileDisappearedSerial(testPointerDir, ml)
 			Expect(err).NotTo(HaveOccurred())
 		})
 		It("check that file has been deleted", func() {
@@ -79,5 +73,4 @@ var _ = Describe("Get Machines List", Ordered, func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
-
 })

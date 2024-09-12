@@ -48,7 +48,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		httpClient:      cl,
 	}
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("start BMC stub servers")
 		os.Remove(path.Join(testOutputDir, serial1))
 		os.Remove(path.Join(testPointerDir, serial1))
@@ -97,9 +97,30 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		go metrics(metricsPath, metricsPort)
 
 		// Wait starting stub servers
-		time.Sleep(10 * time.Second)
+		By("Test stub web access" + bm1.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm1.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
 
-	})
+		By("Test stub web access" + bm2.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm2.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+
+		By("Test stub web access" + bm3.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm3.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+	}, NodeTimeout(10*time.Second))
 
 	Context("1st cycle", func() {
 		var machines []Machine
@@ -125,14 +146,14 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				}()
 			}
 			wg.Wait()
-		}, SpecTimeout(30*time.Second))
+		}, SpecTimeout(3*time.Second))
 
 		It("drop metrics of machine that is retired", func(ctx SpecContext) {
 			err = dropMetricsWhichRetiredMachine(machines)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
-		It("get metrics", func() {
+		It("get metrics", func(ctx SpecContext) {
 			var metricsLines []string
 
 			url := "http://localhost" + metricsPort + metricsPath
@@ -141,6 +162,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 
 			client := &http.Client{Timeout: time.Duration(10) * time.Second}
 			resp, err := client.Do(req)
+
 			Expect(err).NotTo(HaveOccurred())
 			defer resp.Body.Close()
 
@@ -151,7 +173,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				GinkgoWriter.Println(i, v)
 			}
 			GinkgoWriter.Println(metricsLines)
-		})
+		}, SpecTimeout(3*time.Second))
 	})
 
 	Context("2nd cycle", func() {
@@ -236,7 +258,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				}()
 			}
 			wg.Wait()
-		}, SpecTimeout(10*time.Second))
+		}, SpecTimeout(3*time.Second))
 
 		It("drop metrics if machine state is retired", func(ctx SpecContext) {
 			err = dropMetricsWhichRetiredMachine(machines)

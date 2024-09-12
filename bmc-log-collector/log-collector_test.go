@@ -30,13 +30,13 @@ var _ = Describe("gathering up logs", Ordered, func() {
 	var metricsPort = ":29000"
 
 	// Start iDRAC Stub
-	BeforeAll(func() {
+	BeforeAll(func(ctx SpecContext) {
 		os.Remove(path.Join(testOutputDir, serial))
 		os.Remove(path.Join(testPointerDir, serial))
 		os.MkdirAll(testOutputDir, 0755)
 		os.MkdirAll(testPointerDir, 0755)
 		GinkgoWriter.Println("Start iDRAC Stub")
-		bm := bmcMock{
+		bm1 := bmcMock{
 			host:          "127.0.0.1:8180",
 			resDir:        "testdata/redfish_response",
 			files:         []string{"683FPQ3-1.json", "683FPQ3-2.json", "683FPQ3-3.json"},
@@ -45,14 +45,22 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			responseDir:   make(map[string]string),
 			isInitmap:     true,
 		}
-		bm.startMock()
-		time.Sleep(10 * time.Second)
+		bm1.startMock()
+
+		// Wait starting stub servers
+		By("Test stub web access" + bm1.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm1.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
 
 		// must start metrics exporter, if not it get SIGSEGV
 		go func() {
 			metrics(metricsPath, metricsPort)
 		}()
-	})
+	}, NodeTimeout(10*time.Second))
 
 	Context("SEL collector test", func() {
 		var machinesList []Machine
@@ -189,7 +197,6 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial))
 			Expect(result.Id).To(Equal("3"))
-
 			file.Close()
 		}, SpecTimeout(10*time.Second))
 

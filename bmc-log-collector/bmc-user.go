@@ -26,7 +26,7 @@ type UserConfig struct {
 }
 
 // LoadConfig loads UserConfig.
-func LoadConfig(userFile string) (*UserConfig, error) {
+func LoadBMCUserConfig(userFile string) (*UserConfig, error) {
 	g, err := os.Open(userFile)
 	if err != nil {
 		return nil, err

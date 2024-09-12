@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-
 	"time"
 )
 
@@ -55,11 +54,11 @@ type selCollector struct {
 }
 
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	layout := "2006-01-02T15:04:05Z07:00"
+	const layout = "2006-01-02T15:04:05Z07:00"
 	var createUnixtime int64
 	var lastId int
 
-	lastPtr, err := readLastPointer(m.Serial, m.NodeIP, c.ptrDir)
+	lastPtr, err := readLastPointer(m.Serial, c.ptrDir)
 	if err != nil {
 		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		return
@@ -77,7 +76,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 			slog.Error("failed access to iDRAC.", "err", err, "url", c.rfSelPath, "httpStatusCode", statusCode)
 		}
 		lastPtr.LastError = err
-		err = updateLastPointer(lastPtr, c.ptrDir)
+		err = updateLastPointer(lastPtr, c.ptrDir, m.Serial)
 		if err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		}
@@ -103,7 +102,10 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 		if lastPtr.LastReadId < lastId {
 			// normal case
-			bmcByteJsonLog, _ := json.Marshal(members.Sel[i])
+			bmcByteJsonLog, err := json.Marshal(members.Sel[i])
+			if err != nil {
+				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+			}
 			logWriter.write(string(bmcByteJsonLog), m.Serial)
 			lastPtr.LastReadId = lastId
 			lastPtr.LastReadTime = createUnixtime
@@ -121,12 +123,10 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	err = updateLastPointer(LastPointer{
-		Serial:       m.Serial,
-		NodeIP:       m.NodeIP,
 		LastReadTime: createUnixtime,
 		LastReadId:   lastId,
 		LastError:    nil,
-	}, c.ptrDir)
+	}, c.ptrDir, m.Serial)
 	if err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
 		return

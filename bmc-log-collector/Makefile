@@ -20,15 +20,6 @@ test:
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	#$(GINKGO) -v --race --focus-file bmc-user_test.go
-	#$(GINKGO) -v --race --focus-file metrics_test.go
-	#$(GINKGO) -v --race --focus-file machines-list_test.go
-	#$(GINKGO) -v --race --focus-file request-to-bmc_test.go
-	#$(GINKGO) -v --race --focus-file log-pointer_test.go
-	#$(GINKGO) -v --race --focus-file log-collector_test.go
-	#$(GINKGO) -v --race --focus-file main_test.go
-	#$(GINKGO) -v --race --focus-file metrics2_test.go
-	#$(GINKGO) -v --race -procs=1 .
 	$(GINKGO) -v --race -p .
 
 .PHONY: clean

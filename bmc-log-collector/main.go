@@ -20,9 +20,8 @@ type bmcLogWriter interface {
 }
 
 func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
-	var wg sync.WaitGroup
 	config.httpClient = &http.Client{
-		Timeout: time.Duration(10) * time.Second,
+		Timeout: 10 * time.Second,
 		Transport: &http.Transport{
 			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 			DisableKeepAlives:   true,
@@ -50,6 +49,7 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	go metrics("/metrics", ":8080")
 
 	// scraping loop
+	var wg sync.WaitGroup
 	for {
 		select {
 		case <-ctx.Done():
@@ -77,10 +77,10 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				slog.Error("failed to drop metrics", "err", err, "pointer directory", config.ptrDir)
 			}
 
-			// remove ptr files that no update for 6 months
-			err = deleteUnUpdatedFiles(config.ptrDir, machinesList)
+			// remove ptr files that disappeared the serial in machineList
+			err = deletePtrFileDisappearedSerial(config.ptrDir, machinesList)
 			if err != nil {
-				slog.Error("failed remove pointer file which did not update for 6 month.", "err", err, "path", config.ptrDir)
+				slog.Error("failed remove the pointer file", "err", err, "path", config.ptrDir)
 			}
 		}
 	}
@@ -118,6 +118,12 @@ func dropMetricsWhichRetiredMachine(machinesList []Machine) error {
 }
 
 func main() {
+	// setup slog
+	opts := &slog.HandlerOptions{
+		AddSource: true,
+	}
+	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
+	slog.SetDefault(logger)
 
 	// check parameter
 	intervalTimeString := os.Getenv("BMC_INTERVAL_TIME")
@@ -125,19 +131,11 @@ func main() {
 		slog.Error("The environment variable BMC_INTERVAL_TIME should be set")
 		os.Exit(1)
 	}
-
 	intervalTime, err := time.ParseDuration(intervalTimeString + "s")
 	if err != nil {
 		slog.Error("Can not convert string to time.Duration. please check second value")
 		os.Exit(1)
 	}
-
-	// setup slog
-	opts := &slog.HandlerOptions{
-		AddSource: true,
-	}
-	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
-	slog.SetDefault(logger)
 
 	// setup log scraping loop
 	configLc := selCollector{
@@ -148,7 +146,7 @@ func main() {
 		username:        "support",
 		intervalTime:    intervalTime,
 	}
-	user, err := LoadConfig(configLc.userFile)
+	user, err := LoadBMCUserConfig(configLc.userFile)
 	configLc.password = user.Support.Password.Raw
 	if err != nil {
 		slog.Error("Can't read the user-list on BMC")

@@ -7,6 +7,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"net/http"
 	"os"
 	"path"
 	"time"
@@ -22,7 +23,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	var serial2 = "HN3CLP3"
 	var serial3 = "J7N6MW3"
 
-	BeforeAll(func() {
+	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("start BMC stub servers")
 		os.Remove(path.Join(testOutputDir, serial1))
 		os.Remove(path.Join(testPointerDir, serial1))
@@ -66,9 +67,32 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			isInitmap:     true,
 		}
 		bm3.startMock()
+
 		// Wait starting stub servers
-		time.Sleep(10 * time.Second)
-	})
+		By("Test stub web access" + bm1.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm1.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+
+		By("Test stub web access" + bm2.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm2.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+
+		By("Test stub web access" + bm3.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm3.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+	}, NodeTimeout(10*time.Second))
 
 	Context("stub of main equivalent", func() {
 		It("main loop test", func() {
@@ -84,7 +108,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				username:        "support",
 				intervalTime:    intervalTime,
 			}
-			user, err := LoadConfig(lcConfig.userFile)
+			user, err := LoadBMCUserConfig(lcConfig.userFile)
 			Expect(err).ToNot(HaveOccurred())
 			lcConfig.password = user.Support.Password.Raw
 

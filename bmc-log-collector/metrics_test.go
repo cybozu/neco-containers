@@ -137,6 +137,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			}
 		})
 	})
+
 	Context("Delete case", func() {
 		var metricsLines []string
 		It("delete iDRAC ABC123X 172.16.0.1 success", func() {
