@@ -1,0 +1,44 @@
+diff --git a/controllers/dashboard_controller.go b/controllers/dashboard_controller.go
+index 1bd4b466..39a6781f 100644
+--- a/controllers/dashboard_controller.go
++++ b/controllers/dashboard_controller.go
+@@ -398,6 +398,11 @@ func (r *GrafanaDashboardReconciler) onDashboardCreated(ctx context.Context, gra
+ 	}
+ 
+ 	if exists && cr.Unchanged(hash) && !cr.ResyncPeriodHasElapsed() {
++		if found, _ := grafana.Status.Dashboards.Find(cr.Namespace, cr.Name); !found {
++			r.Log.Info("fixing inconsistent Grafana.status.dashboards filed", "grafana", map[string]string{"name": grafana.Name, "namespace": grafana.Namespace})
++			grafana.Status.Dashboards = grafana.Status.Dashboards.Add(cr.Namespace, cr.Name, uid)
++			return r.Client.Status().Update(ctx, grafana)
++		}
+ 		return nil
+ 	}
+ 
+@@ -407,6 +412,11 @@ func (r *GrafanaDashboardReconciler) onDashboardCreated(ctx context.Context, gra
+ 	}
+ 
+ 	if !remoteChanged {
++		if found, _ := grafana.Status.Dashboards.Find(cr.Namespace, cr.Name); !found {
++			r.Log.Info("fixing inconsistent Grafana.status.dashboards filed", "grafana", map[string]string{"name": grafana.Name, "namespace": grafana.Namespace})
++			grafana.Status.Dashboards = grafana.Status.Dashboards.Add(cr.Namespace, cr.Name, uid)
++			return r.Client.Status().Update(ctx, grafana)
++		}
+ 		return nil
+ 	}
+ 
+diff --git a/controllers/datasource_controller.go b/controllers/datasource_controller.go
+index cdf4e7ce..4f5753a7 100644
+--- a/controllers/datasource_controller.go
++++ b/controllers/datasource_controller.go
+@@ -335,6 +335,11 @@ func (r *GrafanaDatasourceReconciler) onDatasourceCreated(ctx context.Context, g
+ 	}
+ 
+ 	if exists && cr.Unchanged(hash) && !cr.ResyncPeriodHasElapsed() {
++		if found, _ := grafana.Status.Datasources.Find(cr.Namespace, cr.Name); !found {
++			r.Log.Info("fixing inconsistent Grafana.status.datasources filed", "grafana", map[string]string{"name": grafana.Name, "namespace": grafana.Namespace})
++			grafana.Status.Datasources = grafana.Status.Datasources.Add(cr.Namespace, cr.Name, datasource.UID)
++			return r.Client.Status().Update(ctx, grafana)
++		}
+ 		return nil
+ 	}
+ 
