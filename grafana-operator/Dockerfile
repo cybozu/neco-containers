@@ -4,6 +4,10 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 ARG VERSION=5.10.0
 
+# After https://github.com/grafana/grafana-operator/issues/1678 is resolved,
+# this patch will not be needed.
+COPY grafana-status-fix.patch /work
+
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -13,6 +17,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # https://github.com/grafana-operator/grafana-operator/blob/master/.gitmodules
 RUN git clone --depth 1 --single-branch -b v${VERSION} https://github.com/grafana/grafana-operator.git .
 RUN git submodule update --init --recursive --recommend-shallow --depth 1
+RUN patch -p1 < ../grafana-status-fix.patch
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # Stage2: setup runtime container
