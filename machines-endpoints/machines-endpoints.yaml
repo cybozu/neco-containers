@@ -97,11 +97,12 @@ spec:
         spec:
           containers:
             - name: machines-endpoints
-              image: ghcr.io/cybozu/machines-endpoints:0.9.4
+              image: ghcr.io/cybozu/machines-endpoints:0.9.5
               imagePullPolicy: IfNotPresent
               args:
                 - --monitoring-endpoints
                 - --bmc-reverse-proxy-configmap
+                - --bmc-log-collector-configmap
           hostNetwork: true
           restartPolicy: OnFailure
           serviceAccountName: machines-endpoints
