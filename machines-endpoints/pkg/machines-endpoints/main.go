@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 	"strings"
 	"time"
 
@@ -39,6 +40,9 @@ const (
 
 	// BMC Proxy ConfigMap
 	bmcProxyConfigMapName = "bmc-reverse-proxy"
+
+	// BMC Log Collector ConfigMap
+	bmcLogCollectorConfigMapName = "bmc-log-collector"
 )
 
 const graphQLQuery = `
@@ -64,6 +68,7 @@ query search {
 var (
 	flgMonitoringEndpoints      = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
 	flgBMCReverseProxyConfigMap = pflag.Bool("bmc-reverse-proxy-configmap", false, "generate ConfigMap for BMC reverse proxy")
+	flgBMCLogCollectorConfigMap = pflag.Bool("bmc-log-collector-configmap", false, "generate ConfigMap for BMC log collector")
 	flgNodeExporterPort         = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
 	flgEtcdMetricsPort          = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
 )
@@ -96,6 +101,12 @@ type client struct {
 	k8s        *kubernetes.Clientset
 	kubeConfig clientcmd.ClientConfig
 	serf       *serfclient.RPCClient
+}
+
+type machineSerialandIP struct {
+	Serial string `json:"serial"`
+	BmcIP  string `json:"bmc_ipv4"`
+	NodeIP string `json:"node_ipv4"`
 }
 
 func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
@@ -346,6 +357,59 @@ func localHTTPClient() *http.Client {
 	}
 }
 
+func createMachinesList(machines []Machine) (string, error) {
+	var ml []machineSerialandIP
+
+	for _, machine := range machines {
+		var m machineSerialandIP
+		if machine.Spec.BMC.IPv4 == "" {
+			continue
+		}
+		m.Serial = machine.Spec.Serial
+		m.BmcIP = machine.Spec.BMC.IPv4
+		m.NodeIP = machine.Spec.IPv4[0]
+		ml = append(ml, m)
+	}
+
+	byteJSON, err := json.Marshal(ml)
+	if err != nil {
+		return "", err
+	}
+	return string(byteJSON), nil
+}
+
+func (c client) updateBmcLogCollectorConfigMap(ctx context.Context, machinesList string) error {
+	data := make(map[string]string)
+	data["machineslist.json"] = machinesList
+
+	ns, _, err := c.kubeConfig.Namespace()
+	if err != nil {
+		return err
+	}
+
+	nextConfigMap := corev1.ConfigMap{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: bmcLogCollectorConfigMapName,
+		},
+		Data: data,
+	}
+
+	cms := c.k8s.CoreV1().ConfigMaps(ns)
+	currentConfigMap, err := cms.Get(ctx, bmcLogCollectorConfigMapName, metav1.GetOptions{})
+	switch {
+	case err == nil:
+		if reflect.DeepEqual(nextConfigMap.Data, currentConfigMap.Data) {
+			return nil
+		}
+		_, err := cms.Update(ctx, &nextConfigMap, metav1.UpdateOptions{})
+		return err
+	case k8serrors.IsNotFound(err):
+		_, err := cms.Create(ctx, &nextConfigMap, metav1.CreateOptions{})
+		return err
+	}
+	return err
+}
+
 func main() {
 	pflag.Parse()
 
@@ -414,6 +478,18 @@ func main() {
 	if *flgBMCReverseProxyConfigMap {
 		// create bmc-reverse-proxy configmap on all servers
 		err = client.updateBMCProxyConfigMap(ctx, machines)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+	}
+
+	if *flgBMCLogCollectorConfigMap {
+		// create bmc-log-collector configmap of all servers
+		machinesList, err := createMachinesList(machines)
+		if err != nil {
+			log.ErrorExit(err)
+		}
+		err = client.updateBmcLogCollectorConfigMap(ctx, machinesList)
 		if err != nil {
 			log.ErrorExit(err)
 		}

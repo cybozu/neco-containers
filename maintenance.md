@@ -583,15 +583,13 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 ![Kubernetes Update](./kubernetes_update.svg)
 
-1. Update version variables in `Makefile`.
-2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-3. Confirm test is green.
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Confirm test is green.
    ```bash
    $ make test
    ```
-4. Update image tag in `machines-endpoints.yaml`.
-5. Update `TAG` file.
-
+3. Update image tag in `machines-endpoints.yaml`.
+4. Update `TAG` file.
 
 ## memcached
 
