@@ -691,8 +691,9 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the release page.
+1. Check the release page and upgrade guide.
    - https://github.com/pomerium/pomerium/releases
+   - https://www.pomerium.com/docs/core/upgrading
 2. Update version variables in `Dockerfile`.
 3. Update `TAG` file.
 
