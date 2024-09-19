@@ -1,12 +1,12 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy as build
-ARG POMERIUM_VERSION=0.25.2
+FROM ghcr.io/cybozu/golang:1.23-jammy as build
+ARG POMERIUM_VERSION=0.27.0
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/pomerium/pomerium/archive/v${POMERIUM_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/pomerium
 
-RUN curl -sSLf https://deb.nodesource.com/setup_16.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_20.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
