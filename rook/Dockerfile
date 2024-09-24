@@ -33,7 +33,7 @@ COPY --from=build ${ROOK_DIR}/LICENSE /usr/local/rook/LICENSE
 
 # Followings are based on upstream Dockerfile
 # Note: s5cmd is not installed because teleport node image has s3cmd.
-RUN apt-get update && apt-get install -y --no-install-recommends iproute2
+RUN apt-get update && apt-get install -y --no-install-recommends iproute2 && rm -rf /var/lib/apt/lists/*
 COPY --from=build rook toolbox.sh set-ceph-debug-level /usr/local/bin/
 COPY --from=build ceph-monitoring /etc/ceph-monitoring
 COPY --from=build rook-external /etc/rook-external/
