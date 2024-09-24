@@ -1,0 +1,51 @@
+name: Update Go Versions
+
+on:
+  schedule:
+    - cron: '0 22 * * 0-4' # 毎日7:00 JST
+
+jobs:
+  update-go-versions:
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Get latest stable Go versions
+        id: get-go-versions
+        run: |
+          stable_golang_versions=($(curl -sSL https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][1] | .version | sub("^go"; "")'))
+          echo "STABLE_GOLANG_VERSIONS=${stable_golang_versions[@]}" >> $GITHUB_ENV
+
+      - name: Check if update is needed
+        id: check-update
+        run: |
+          current_version=$(grep 'ARG GO_VERSION=' golang-all/golang-1.22-jammy/Dockerfile | cut -d= -f2)
+          stable_version=${STABLE_GOLANG_VERSIONS[0]}
+          if [ "$current_version" != "$stable_version" ]; then
+            echo "NEED_UPDATE=true" >> $GITHUB_ENV
+          else
+            echo "NEED_UPDATE=false" >> $GITHUB_ENV
+          fi
+      - name: Update files based on new versions
+        if: env.NEED_UPDATE == 'true'
+        run: |
+          stable_version=${STABLE_GOLANG_VERSIONS[0]}
+          major_minor=$(echo $stable_version | cut -d. -f1,2)
+          major_minor_patch=$(echo $stable_version | cut -d. -f1,2,3)
+
+          # Update golang-all/golang-1.22-jammy/Dockerfile
+          sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${stable_version}/" golang-all/golang-1.22-jammy/Dockerfile
+          # Update golang-all/golang-1.22-jammy/TAG
+          sed -i "s/[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+_jammy/${major_minor_patch}.1_jammy/" golang-all/golang-1.22-jammy/TAG
+          git config --global user.email "neco@cybozu.com"
+          git config --global user.name "cybozu-neco"
+          TODAY=$(TZ="Asia/Tokyo" date "+%Y%m%d")
+          BRANCH=update-$TODAY
+          git checkout -b $BRANCH
+          git add -u
+          git commit -m "Update images ($TODAY)"
+          git push origin $BRANCH
+          gh pr create --title "Update images ($TODAY)" --body-file ./BODY
