@@ -1,6 +1,6 @@
-ARG MEOWS_VERSION=0.15.0
+ARG MEOWS_VERSION=0.16.0
 
-FROM ghcr.io/cybozu/golang:1.22-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.8.9
@@ -15,12 +15,14 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 USER root
 
 # Install debug tools.
-# https://github.com/cybozu/ubuntu-base/blob/main/20.04/ubuntu-debug/Dockerfile
+# https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile
 RUN apt-get update && apt-get install -y --no-install-recommends \
+        apache2-utils \
         awscli \
         bash-completion \
         bind9-dnsutils \
         binutils \
+        bsdmainutils \
         expect \
         file \
         gdb \
@@ -28,11 +30,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         iputils-ping \
         jq \
         less \
+        lsb-release \
         lv \
         mysql-client \
         net-tools \
         openssh-client \
+        perl-modules \
+        rclone \
+        rsync \
         s3cmd \
+        smartmontools \
+        socat \
         sqlite3 \
         strace \
         sysstat \
@@ -40,8 +48,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         telnet \
         traceroute \
         vim \
-        apache2-utils \
-        lsb-release \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
 
