@@ -1,12 +1,12 @@
-ARG MEOWS_VERSION=0.15.0
+ARG MEOWS_VERSION=0.16.0
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_VERSION}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 
-ENV GO_VERSION=1.22.4
-ENV PLACEMAT_VERSION=2.4.5
+ENV GO_VERSION=1.23.1
+ENV PLACEMAT_VERSION=2.4.6
 
 ENV HOME=/home/actions
 ENV GOPATH=${HOME}/go
@@ -21,39 +21,39 @@ COPY include-bird /etc/dpkg/dpkg.cfg.d/
 
 RUN apt-get update \
     && apt-get -y install --no-install-recommends \
-            git \
+            bash-completion \
+            bird2 \
             build-essential \
+            cloud-utils \
+            dbus \
+            dnsmasq \
+            fakeroot \
+            freeipmi-tools \
+            git \
+            iproute2 \
+            iptables \
+            jq \
+            kmod \
             less \
-            wget \
-            systemd-container \
+            libgpgme11 \
             lldpd \
+            lsb-release \
+            openssh-client \
+            picocom \
             qemu \
             qemu-kvm \
             socat \
-            picocom \
-            swtpm \
-            cloud-utils \
-            bird2 \
             squid \
-            dnsmasq \
-            xauth \
-            bash-completion \
-            dbus \
-            jq \
-            libgpgme11 \
-            freeipmi-tools \
-            unzip \
-            fakeroot \
-            time \
-            kmod \
-            iptables \
-            iproute2 \
-            openssh-client \
             sudo \
-            lsb-release \
+            swtpm \
+            systemd-container \
+            time \
+            unzip \
+            wget \
+            xauth \
     && rm -rf /var/lib/apt/lists/* \
     && curl -sSLf https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
-    && curl -sfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
+    && curl -sSfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && dpkg -i ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && rm ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
     && echo "actions ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
