@@ -1,0 +1,1 @@
+[{"serial":"server1","bmc_ipv4":"192.168.0.1","node_ipv4":"172.16.0.1"},{"serial":"server2","bmc_ipv4":"192.168.0.2","node_ipv4":"172.16.0.2"},{"serial":"server3","bmc_ipv4":"192.168.0.3","node_ipv4":"172.16.0.3"},{"serial":"server4","bmc_ipv4":"192.168.0.4","node_ipv4":"172.16.0.4"},{"serial":"server5","bmc_ipv4":"192.168.0.5","node_ipv4":"172.16.0.5"}]
