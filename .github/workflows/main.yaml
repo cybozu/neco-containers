@@ -197,6 +197,7 @@ jobs:
             container-image: "trust-manager"
           - dir: "./trust-packages"
             container-image: "trust-packages"
+            make-targets: "download-certificates"
           - dir: "./ttypdb"
             container-image: "ttypdb-controller"
             target: "controller"

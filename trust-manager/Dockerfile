@@ -10,7 +10,10 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && curl -fsSL https://github.com/cert-manager/trust-manager/archive/v${VERSION}.tar.gz | \
     tar --strip-components=1 -xzf -
 
-RUN make build
+# Parameters retrieved from:
+# $ make ko-config-manager
+# $ cat _bin/scratch/image/oci-layout-manager.v0.12.0.ko_config.yaml
+RUN CGO_ENABLED=0 GO_EXPERIMENT= go build -ldflags '-w -s' -o bin/trust-manager ./cmd/trust-manager 
 
 # Stage2: setup runtime container
 FROM scratch
