@@ -18,9 +18,10 @@ import (
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	var testOutputDir = "testdata/output_main_test"
 	var testPointerDir = "testdata/pointers_main_test"
-	var serial1 = "683FPQ3"
-	var serial2 = "HN3CLP3"
-	var serial3 = "J7N6MW3"
+	var serial1 = "683FPQ3" // basic test case1
+	var serial2 = "HN3CLP3" // basic test case2
+	var serial3 = "J7N6MW3" // the log reset test case
+	var serial4 = "483FPQ3" // the "OEM software events" with random timestamp test case
 
 	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("start BMC stub servers")
@@ -30,6 +31,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		os.Remove(path.Join(testPointerDir, serial2))
 		os.Remove(path.Join(testOutputDir, serial3))
 		os.Remove(path.Join(testPointerDir, serial3))
+		os.Remove(path.Join(testOutputDir, serial4))
+		os.Remove(path.Join(testPointerDir, serial4))
 		err := os.MkdirAll(testPointerDir, 0750)
 		Expect(err).ToNot(HaveOccurred())
 		err = os.MkdirAll(testOutputDir, 0750)
@@ -68,6 +71,17 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		}
 		bm3.startMock()
 
+		bm4 := bmcMock{
+			host:          "127.0.0.1:7480",
+			resDir:        "testdata/redfish_response",
+			files:         []string{"483FPQ3-1.json", "483FPQ3-2.json", "483FPQ3-3.json", "483FPQ3-4.json", "483FPQ3-5.json"},
+			accessCounter: make(map[string]int),
+			responseFiles: make(map[string][]string),
+			responseDir:   make(map[string]string),
+			isInitmap:     true,
+		}
+		bm4.startMock()
+
 		// Wait starting stub servers
 		By("Test stub web access" + bm1.host)
 		Eventually(func(ctx SpecContext) error {
@@ -88,6 +102,14 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		By("Test stub web access" + bm3.host)
 		Eventually(func(ctx SpecContext) error {
 			req, _ := http.NewRequest("GET", "http://"+bm3.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+
+		By("Test stub web access" + bm4.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm4.host+"/", nil)
 			client := &http.Client{Timeout: time.Duration(3) * time.Second}
 			_, err := client.Do(req)
 			return err
@@ -130,7 +152,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("1st reply", func(ctx SpecContext) {
 			file, err = OpenTestResultLog(path.Join(testOutputDir, serial))
 			Expect(err).ToNot(HaveOccurred())
-
 			reader = bufio.NewReaderSize(file, 4096)
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).ToNot(HaveOccurred())
@@ -316,6 +337,84 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			GinkgoWriter.Println("------ ", string(rslt.Id))
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("3"))
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("verify 483FPQ3", func() {
+		var serial string = "483FPQ3"
+		var file *os.File
+		var reader *bufio.Reader
+		var err error
+
+		It("check 1st log record", func(ctx SpecContext) {
+			file, err = OpenTestResultLog(path.Join(testOutputDir, serial))
+			Expect(err).ToNot(HaveOccurred())
+			reader = bufio.NewReaderSize(file, 4096)
+
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			var rslt SystemEventLog
+			err = json.Unmarshal([]byte(stringJSON), &rslt)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("------ ", string(rslt.Serial))
+			GinkgoWriter.Println("------ ", string(rslt.Id))
+			Expect(rslt.Serial).To(Equal(serial))
+			Expect(rslt.Id).To(Equal("1"))
+		}, SpecTimeout(30*time.Second))
+
+		It("check 2nd log record", func(ctx SpecContext) {
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			var rslt SystemEventLog
+			err = json.Unmarshal([]byte(stringJSON), &rslt)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("------ ", string(rslt.Serial))
+			GinkgoWriter.Println("------ ", string(rslt.Id))
+			Expect(rslt.Serial).To(Equal(serial))
+			Expect(rslt.Id).To(Equal("2"))
+		}, SpecTimeout(30*time.Second))
+
+		It("check 3rd log record with OEM software event", func(ctx SpecContext) {
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			var rslt SystemEventLog
+			err = json.Unmarshal([]byte(stringJSON), &rslt)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("------ ", string(rslt.Serial))
+			GinkgoWriter.Println("------ ", string(rslt.Id))
+			Expect(rslt.Serial).To(Equal(serial))
+			Expect(rslt.Id).To(Equal("3"))
+		}, SpecTimeout(30*time.Second))
+
+		It("check 4th log record with OEM software event", func(ctx SpecContext) {
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			var rslt SystemEventLog
+			err = json.Unmarshal([]byte(stringJSON), &rslt)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("------ ", string(rslt.Serial))
+			GinkgoWriter.Println("------ ", string(rslt.Id))
+			Expect(rslt.Serial).To(Equal(serial))
+			Expect(rslt.Id).To(Equal("4"))
+		}, SpecTimeout(30*time.Second))
+
+		It("check 5th log record that is null", func(ctx SpecContext) {
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).To(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+			Expect(len(stringJSON)).To(Equal(0))
 		}, SpecTimeout(30*time.Second))
 	})
 })
