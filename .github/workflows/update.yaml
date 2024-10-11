@@ -2,38 +2,91 @@ name: Update Go Versions
 
 on:
   schedule:
-    - cron: '0 22 * * 0-4' # 毎日7:00 JST
+    - cron: '0 22 * * 0-4' # 7:00 JST weekdays
+  workflow_dispatch:
 
 jobs:
-  generate-matrix:
-    runs-on: ubuntu-22.04
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Get latest stable Go versions
-        id: get-go-versions
-        run: |
-          stable_golang_versions=($(curl -sSL https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")'))
-          if [ -z "$stable_golang_versions" ]; then
-            echo "No stable Go version found"
-            exit 1
-          fi
-          list=$(echo "[\"${stable_golang_versions[0]}\",\"${stable_golang_versions[1]}\"]" | jq -c)
-          echo "::set-output name=matrix::${list}"
-      - name: Set matrix output
-        id: set-matrix
-        run: echo "matrix=${{ steps.get-go-versions.outputs.matrix }}"
-
   update-go-versions:
-    needs: generate-matrix
     runs-on: ubuntu-22.04
-    strategy:
-      fail-fast: false
-      matrix:
-        go_version: ${{ needs.generate-matrix.outputs.matrix }}
     env:
       GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
-      UBUNTU_CODENAME: jammy
+      UBUNTU_VERSIONS: "22.04 24.04"
+      GO_MAJOR_VERSIONS: "1.22 1.23"
+    
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Check for Go version updates
+        id: check-updates
+        run: |
+          NEED_UPDATE=0
+          echo "" > ./update-body.txt
+
+          # Get latest stable Go versions
+          STABLE_VERSIONS=$(curl -sSL https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
+          if [ -z "$STABLE_VERSIONS" ]; then
+            echo "Failed to fetch stable Go versions"
+            exit 1
+          fi
+
+          # assignment of codename
+          for ubuntu_version in ${{ env.UBUNTU_VERSIONS }}; do
+            if [ "${ubuntu_version}" = "22.04" ]; then
+              CODENAME=jammy
+            elif [ "${ubuntu_version}" = "24.04" ]; then
+              CODENAME=noble
+            else
+              echo "Unknown Ubuntu version: ${ubuntu_version}"
+              continue
+            fi
+
+            for go_major in ${{ env.GO_MAJOR_VERSIONS }}; do
+              # Find matching version from stable versions
+              LATEST_VERSION=$(echo "$STABLE_VERSIONS" | grep "^$go_major" | head -n1)
+              if [ -z "$LATEST_VERSION" ]; then
+                echo "No matching stable version found for Go $go_major"
+                continue
+              fi
+
+              DOCKERFILE_PATH="golang-all/golang-$go_major-$CODENAME/Dockerfile"
+              TAG_PATH="golang-all/golang-$go_major-$CODENAME/TAG"
+              
+              if [ ! -f "$DOCKERFILE_PATH" ] || [ ! -f "$TAG_PATH" ]; then
+                echo "Files not found for Go $go_major on Ubuntu $CODENAME"
+                continue
+              fi
+
+              CURRENT_VERSION=$(grep 'ARG GO_VERSION=' "$DOCKERFILE_PATH" | cut -d= -f2)
+              CURRENT_TAG=$(cat "$TAG_PATH" | cut -d_ -f1)
+
+              if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
+                NEED_UPDATE=1
+                # Update Dockerfile
+                sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=$LATEST_VERSION/" "$DOCKERFILE_PATH"
+                # Update TAG file
+                echo "${LATEST_VERSION}_${CODENAME}" > "$TAG_PATH"
+                
+                echo "- Update Go $go_major for Ubuntu $ubuntu_version ($CODENAME) from $CURRENT_VERSION to $LATEST_VERSION" >> ./update-body.txt
+              fi
+            done
+          done
+
+          echo "NEED_UPDATE=$NEED_UPDATE" >> $GITHUB_ENV
+          
+      - name: Create PR
+        if: env.NEED_UPDATE == '1'
+        run: |
+          # Get version numbers for branch name and PR title
+          VERSIONS=$(cat ./update-body.txt | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -u | tr '\n' '-' | sed 's/-$//')
+          
+          git config --global user.email "neco@cybozu.com"
+          git config --global user.name "cybozu-neco"
+
+          BRANCH=update-go-$VERSIONS
+          git checkout -b $BRANCH
+          git add -u
+          git commit -m "Update Go versions to $VERSIONS"
+          git push origin $BRANCH
+          
+          PR_TITLE="Update Go versions to $VERSIONS"
+          gh pr create --title "$PR_TITLE" --body-file ./update-body.txt
