@@ -15,13 +15,13 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Check for Go version updates
         id: check-updates
         run: |
           NEED_UPDATE=0
           echo "" > ./update-body.txt
-
+          
           # Get latest stable Go versions
           STABLE_VERSIONS=$(curl -sSL https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
           if [ -z "$STABLE_VERSIONS" ]; then
@@ -29,6 +29,17 @@ jobs:
             exit 1
           fi
 
+          # Check if there are newer major versions available
+          HIGHEST_MAJOR_VERSION=$(echo "$STABLE_VERSIONS" | cut -d. -f1-2 | sort -V | tail -n1)
+          echo "HIGHEST_MAJOR_VERSION="$HIGHEST_MAJOR_VERSION
+          HIGHEST_CONFIGURED_VERSION=$(echo "${{ env.GO_MAJOR_VERSIONS }}" | tr ' ' '\n' | sort -V | tail -n1)
+          echo "HIGHEST_CONFIGURED_VERSION="$HIGHEST_CONFIGURED_VERSION
+          if [ "$(echo -e "$HIGHEST_MAJOR_VERSION\n$HIGHEST_CONFIGURED_VERSION" | sort -V | tail -n1)" = "$HIGHEST_MAJOR_VERSION" ] && [ "$HIGHEST_MAJOR_VERSION" != "$HIGHEST_CONFIGURED_VERSION" ]; then
+            echo "⚠️ **Major Version Update Required**" >> ./update-body.txt
+            echo "A new major version of Go ($HIGHEST_MAJOR_VERSION) is available. Please consider updating GO_MAJOR_VERSIONS in the workflow configuration." >> ./update-body.txt
+            echo "" >> ./update-body.txt
+          fi
+          
           # assignment of codename
           for ubuntu_version in ${{ env.UBUNTU_VERSIONS }}; do
             if [ "${ubuntu_version}" = "22.04" ]; then
@@ -39,7 +50,7 @@ jobs:
               echo "Unknown Ubuntu version: ${ubuntu_version}"
               continue
             fi
-
+            
             for go_major in ${{ env.GO_MAJOR_VERSIONS }}; do
               # Find matching version from stable versions
               LATEST_VERSION=$(echo "$STABLE_VERSIONS" | grep "^$go_major" | head -n1)
@@ -47,7 +58,7 @@ jobs:
                 echo "No matching stable version found for Go $go_major"
                 continue
               fi
-
+              
               DOCKERFILE_PATH="golang-all/golang-$go_major-$CODENAME/Dockerfile"
               TAG_PATH="golang-all/golang-$go_major-$CODENAME/TAG"
               
@@ -55,10 +66,10 @@ jobs:
                 echo "Files not found for Go $go_major on Ubuntu $CODENAME"
                 continue
               fi
-
+              
               CURRENT_VERSION=$(grep 'ARG GO_VERSION=' "$DOCKERFILE_PATH" | cut -d= -f2)
               CURRENT_TAG=$(cat "$TAG_PATH" | cut -d_ -f1)
-
+              
               if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
                 NEED_UPDATE=1
                 # Update Dockerfile
@@ -70,7 +81,7 @@ jobs:
               fi
             done
           done
-
+          
           echo "NEED_UPDATE=$NEED_UPDATE" >> $GITHUB_ENV
           
       - name: Create PR
@@ -81,7 +92,7 @@ jobs:
           
           git config --global user.email "neco@cybozu.com"
           git config --global user.name "cybozu-neco"
-
+          
           BRANCH=update-go-$VERSIONS
           git checkout -b $BRANCH
           git add -u
