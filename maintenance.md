@@ -1,4 +1,4 @@
-# How to maintain neco-containers
+# How to maintain neco-containers <!-- omit in toc -->
 
 This document describes the procedure for updating each container image.
 
@@ -8,13 +8,92 @@ The target container of these operations have the following badges, so check bef
 In case of components whose Go source code are in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
 
 1. Kubernetes Update (![Kubernetes Update](./kubernetes_update.svg))
-   - Upgrade of Kubernetes. Besides the related components of Kubernetes,  update the containers managed by [CKE](https://github.com/cybozu-go/cke/) and some go modules.
+   - Upgrade of Kubernetes. Besides the related components of Kubernetes, update the containers managed by [CKE](https://github.com/cybozu-go/cke/) and some go modules.
 2. Regular Update (![Regular Update](./regular_update.svg))
    - Update in every quarter. Keeping up with the upstream version and updating the ubuntu base image.
 3. CSA Update  (![CSA Update](./csa_update.svg))
    - Update by CSA team.
 4. No Need Update (![No Need Update](./no_need_update.svg))
    - Used as a PoC, so regular updates are not required.
+
+---
+
+- [admission (neco-admission)](#admission-neco-admission)
+- [alertmanager](#alertmanager)
+- [argocd](#argocd)
+- [argocd-image-updater](#argocd-image-updater)
+- [bird](#bird)
+- [blackbox\_exporter](#blackbox_exporter)
+- [bmc-reverse-proxy](#bmc-reverse-proxy)
+- [cadvisor](#cadvisor)
+- [cep-checker](#cep-checker)
+- [ceph](#ceph)
+  - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
+- [cephcsi](#cephcsi)
+- [ceph-extra-exporter](#ceph-extra-exporter)
+- [cert-manager](#cert-manager)
+- [chrony](#chrony)
+- [cilium](#cilium)
+- [cilium-operator-generic](#cilium-operator-generic)
+- [cilium-certgen](#cilium-certgen)
+- [configmap-reload](#configmap-reload)
+- [contour](#contour)
+- [coredns](#coredns)
+- [csi sidecars](#csi-sidecars)
+- [dex](#dex)
+- [envoy](#envoy)
+- [etcd](#etcd)
+- [external-dns](#external-dns)
+- [fluent-bit](#fluent-bit)
+- [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
+- [gorush](#gorush)
+- [grafana](#grafana)
+- [grafana-operator](#grafana-operator)
+- [haproxy](#haproxy)
+- [heartbeat](#heartbeat)
+- [hubble](#hubble)
+- [hubble-relay](#hubble-relay)
+- [hubble-ui](#hubble-ui)
+- [kube-metrics-adapter](#kube-metrics-adapter)
+- [kube-state-metrics](#kube-state-metrics)
+- [kube-storage-version-migrator](#kube-storage-version-migrator)
+- [kubernetes](#kubernetes)
+- [local-pv-provisioner](#local-pv-provisioner)
+- [loki](#loki)
+- [machines-endpoints](#machines-endpoints)
+- [memcached](#memcached)
+- [memcached\_exporter](#memcached_exporter)
+- [meows-dctest-runner](#meows-dctest-runner)
+- [meows-neco-runner](#meows-neco-runner)
+- [moco-switchover-downtime-monitor](#moco-switchover-downtime-monitor)
+- [opentelemetry-collector](#opentelemetry-collector)
+- [pause](#pause)
+- [pod-delete-rate-limiter](#pod-delete-rate-limiter)
+- [pomerium](#pomerium)
+- [prometheus-adapter](#prometheus-adapter)
+- [prometheus-config-reloader](#prometheus-config-reloader)
+- [promtail](#promtail)
+- [pushgateway](#pushgateway)
+- [redis](#redis)
+- [registry](#registry)
+- [rook](#rook)
+- [s3gw](#s3gw)
+- [sealed-secrets](#sealed-secrets)
+- [serf](#serf)
+- [squid](#squid)
+- [squid-exporter](#squid-exporter)
+- [stakater/Reloader](#stakaterreloader)
+- [teleport-node](#teleport-node)
+- [tempo](#tempo)
+- [testhttpd](#testhttpd)
+- [trust-manager](#trust-manager)
+- [trust-packages](#trust-packages)
+- [ttypdb](#ttypdb)
+- [unbound](#unbound)
+- [unbound\_exporter](#unbound_exporter)
+- [vault](#vault)
+- [victoriametrics](#victoriametrics)
+- [victoriametrics-operator](#victoriametrics-operator)
 
 ---
 
