@@ -25,17 +25,18 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [bird](#bird)
 - [blackbox\_exporter](#blackbox_exporter)
 - [bmc-reverse-proxy](#bmc-reverse-proxy)
+- [bpf-map-pressure-exporter](#bpf-map-pressure-exporter)
 - [cadvisor](#cadvisor)
 - [cep-checker](#cep-checker)
 - [ceph](#ceph)
   - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
-- [cephcsi](#cephcsi)
 - [ceph-extra-exporter](#ceph-extra-exporter)
+- [cephcsi](#cephcsi)
 - [cert-manager](#cert-manager)
 - [chrony](#chrony)
 - [cilium](#cilium)
-- [cilium-operator-generic](#cilium-operator-generic)
 - [cilium-certgen](#cilium-certgen)
+- [cilium-operator-generic](#cilium-operator-generic)
 - [configmap-reload](#configmap-reload)
 - [contour](#contour)
 - [coredns](#coredns)
@@ -73,6 +74,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [promtail](#promtail)
+- [promtail-debug](#promtail-debug)
 - [pushgateway](#pushgateway)
 - [redis](#redis)
 - [registry](#registry)
@@ -83,6 +85,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [squid](#squid)
 - [squid-exporter](#squid-exporter)
 - [stakater/Reloader](#stakaterreloader)
+- [tcp-keepalive](#tcp-keepalive)
 - [teleport-node](#teleport-node)
 - [tempo](#tempo)
 - [testhttpd](#testhttpd)
@@ -234,6 +237,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update image tag in `bmc-reverse-proxy.yaml`.
 4. Update `TAG` file.
 
+## bpf-map-pressure-exporter
+
+TBD
+
 ## cadvisor
 
 ![Regular Update](./regular_update.svg)
@@ -279,6 +286,14 @@ follow these steps.
    - If the branch already exists, you can skip this step.
 2. Create a PR to the branch `ceph-vX.Y.Z`, and merge it.
 
+## ceph-extra-exporter
+
+![CSA Update](./csa_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Upgrade base images in `Dockerfile`.
+3. Update the `TAG` files accordingly.
+
 ## cephcsi
 
 ![CSA Update](./csa_update.svg)
@@ -293,14 +308,6 @@ follow these steps.
 
 > [!Note]
 > Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
-
-## ceph-extra-exporter
-
-![CSA Update](./csa_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Upgrade base images in `Dockerfile`.
-3. Update the `TAG` files accordingly.
 
 ## cert-manager
 
@@ -349,6 +356,15 @@ follow these steps.
 > [!Note]
 > The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
 
+## cilium-certgen
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile`
+3. Update the `BRANCH` and `TAG` files accordingly.
+
 ## cilium-operator-generic
 
 ![Regular Update](./regular_update.svg)
@@ -360,15 +376,6 @@ follow these steps.
 
 > [!Note]
 > The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
-
-## cilium-certgen
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile`
-3. Update the `BRANCH` and `TAG` files accordingly.
 
 ## configmap-reload
 
@@ -732,8 +739,8 @@ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
 3. Update `MEOWS_VERSION` in `Dockerfile`.
 4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
-   1. `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
-   2. `PLACEMAT_VERSION`: <https://github.com/cybozu-go/placemat/releases/latest>
+   - `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
+   - `PLACEMAT_VERSION`: <https://github.com/cybozu-go/placemat/releases/latest>
 5. Update `BRANCH` and `TAG` files.
 
 ## meows-neco-runner
@@ -857,6 +864,10 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 3. Update `TAG` file.
+
+## promtail-debug
+
+TBD
 
 ## pushgateway
 
@@ -988,6 +999,10 @@ Only the base image and module dependency should be updated.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile`
 3. Update `BRANCH` and `TAG` files.
+
+## tcp-keepalive
+
+TBD
 
 ## teleport-node
 
