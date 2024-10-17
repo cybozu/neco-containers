@@ -1,4 +1,5 @@
 [![CircleCI](https://circleci.com/gh/cybozu/neco-containers.svg?style=svg)](https://circleci.com/gh/cybozu/neco-containers)
+[![main](https://github.com/cybozu/neco-containers/actions/workflows/main.yaml/badge.svg)](https://github.com/cybozu/neco-containers/actions/workflows/main.yaml)
 
 # Neco Containers
 
