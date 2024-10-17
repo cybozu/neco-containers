@@ -10,10 +10,10 @@ import (
 )
 
 type LastPointer struct {
-	LastReadTime       int64
 	LastReadId         int
 	LastError          error
 	LastHttpStatusCode int
+	FirstCreateTime    int64
 }
 
 func checkAndCreatePointerFile(filePath string) error {

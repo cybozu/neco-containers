@@ -54,9 +54,6 @@ type selCollector struct {
 }
 
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	const layout = "2006-01-02T15:04:05Z07:00"
-	var createUnixtime int64
-	var lastId int
 	filePath := path.Join(c.ptrDir, m.Serial)
 
 	err := checkAndCreatePointerFile(filePath)
@@ -90,7 +87,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 		err = updateLastPointer(lastPtr, filePath)
 		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		}
 		return
 	}
@@ -98,58 +95,65 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	// Increment the success counter
 	counterRequestSuccess.WithLabelValues(m.Serial).Inc()
 
-	var members RedfishJsonSchema
-	if err := json.Unmarshal(byteJSON, &members); err != nil {
+	var response RedfishJsonSchema
+	if err := json.Unmarshal(byteJSON, &response); err != nil {
 		slog.Error("failed to translate JSON to go struct.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
 		return
 	}
 
-	for i := len(members.Sel) - 1; i >= 0; i-- {
-		t, _ := time.Parse(layout, members.Sel[i].Create)
-		createUnixtime = t.Unix()
-		lastId, _ = strconv.Atoi(members.Sel[i].Id)
-		members.Sel[i].Serial = m.Serial
-		members.Sel[i].BmcIP = m.BmcIP
-		members.Sel[i].NodeIP = m.NodeIP
+	createTime, err := time.Parse(time.RFC3339, response.Sel[len(response.Sel)-1].Create)
+	if err != nil {
+		slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
+		return
+	}
+	firstCreateTime := createTime.Unix()
 
-		if lastPtr.LastReadId < lastId {
-			// Normal case without iDRAC log reset.
-			bmcByteJsonLog, err := json.Marshal(members.Sel[i])
+	for i := len(response.Sel) - 1; i >= 0; i-- {
+		currentId, err := strconv.Atoi(response.Sel[i].Id)
+		if err != nil {
+			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId, "ptrDir", c.ptrDir)
+			continue
+		}
+		// Add the information to identify of the node
+		response.Sel[i].Serial = m.Serial
+		response.Sel[i].BmcIP = m.BmcIP
+		response.Sel[i].NodeIP = m.NodeIP
+
+		if lastPtr.LastReadId < currentId {
+			bmcByteJsonLog, err := json.Marshal(response.Sel[i])
 			if err != nil {
-				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
 			}
+
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 			if err != nil {
-				slog.Error("failed to output log", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
 			}
-			lastPtr.LastReadId = lastId
-			lastPtr.LastReadTime = createUnixtime
+
+			lastPtr.LastReadId = currentId
+			lastPtr.LastError = nil
 		} else {
 			// If the log is reset in iDRAC, the ID starts from 1.
-			// In that case, determine if the log has already been
-			// issued based on the time it was generated.
-			if lastPtr.LastReadTime < createUnixtime {
-				bmcByteJsonLog, err := json.Marshal(members.Sel[i])
+			// In that case, determine if generated time been changed to identify log reseted.
+			if lastPtr.FirstCreateTime != firstCreateTime {
+				bmcByteJsonLog, err := json.Marshal(response.Sel[i])
 				if err != nil {
-					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", response.Sel[i], "currentLastReadId", currentId)
 				}
+
 				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 				if err != nil {
-					slog.Error("failed to output log", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
 				}
-				lastPtr.LastReadId = lastId
-				lastPtr.LastReadTime = createUnixtime
+				lastPtr.LastReadId = currentId
+				lastPtr.LastError = nil
 			}
 		}
 	}
-
-	err = updateLastPointer(LastPointer{
-		LastReadTime: createUnixtime,
-		LastReadId:   lastId,
-		LastError:    nil,
-	}, filePath)
+	lastPtr.FirstCreateTime = firstCreateTime
+	err = updateLastPointer(lastPtr, filePath)
 	if err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "createUnixtime", createUnixtime, "LastReadId", lastId, "ptrDir", c.ptrDir)
+		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "firstCreateTime", firstCreateTime, "filePath", filePath)
 		return
 	}
 }

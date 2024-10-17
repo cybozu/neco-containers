@@ -113,7 +113,7 @@ func OpenTestResultLog(fn string) (*os.File, error) {
 func ReadingTestResultLogNext(b *bufio.Reader) (string, error) {
 	var stringJSON string
 	var err error
-	for {
+	for i := 0; i < 20; i++ {
 		stringJSON, err = b.ReadString('\n')
 		if err == io.EOF {
 			time.Sleep(1 * time.Second)
