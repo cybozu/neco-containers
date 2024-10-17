@@ -1,5 +1,4 @@
-How to maintain neco-containers
-===============================
+# How to maintain neco-containers
 
 This document describes the procedure for updating each container image.
 
@@ -8,16 +7,13 @@ The target container of these operations have the following badges, so check bef
 
 In case of components whose Go source code are in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
 
-1 Kubernetes Update (![Kubernetes Update](./kubernetes_update.svg))
+1. Kubernetes Update (![Kubernetes Update](./kubernetes_update.svg))
    - Upgrade of Kubernetes. Besides the related components of Kubernetes,  update the containers managed by [CKE](https://github.com/cybozu-go/cke/) and some go modules.
-
-2 Regular Update (![Regular Update](./regular_update.svg))
+2. Regular Update (![Regular Update](./regular_update.svg))
    - Update in every quarter. Keeping up with the upstream version and updating the ubuntu base image.
-
-3 CSA Update  (![CSA Update](./csa_update.svg))
+3. CSA Update  (![CSA Update](./csa_update.svg))
    - Update by CSA team.
-
-4 No Need Update (![No Need Update](./no_need_update.svg))
+4. No Need Update (![No Need Update](./no_need_update.svg))
    - Used as a PoC, so regular updates are not required.
 
 ---
@@ -34,15 +30,19 @@ In Kubernetes update:
    - `ENVTEST_K8S_VERSION`
 2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
+
    ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   $ make generate manifests
+   cd $GOPATH/src/github.com/cybozu/neco-containers/admission
+   make generate manifests
    # Commit, if there are any updated files.
    ```
+
 4. Confirm build and test are green.
+
    ```bash
-   $ make build test
+   make build test
    ```
+
 5. Update `TAG` file.
 
 ![Regular Update](./regular_update.svg)
@@ -57,26 +57,30 @@ In Regular update, do the following as part of the update of each CRD-providing 
    - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
    - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
 3. Generate code and manifests.
+
    ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   $ make clean
-   $ make generate manifests
+   cd $GOPATH/src/github.com/cybozu/neco-containers/admission
+   make clean
+   make generate manifests
    # Commit, if there are any updated files.
    ```
-3. Confirm build and test are green.
+
+4. Confirm build and test are green.
+
    ```bash
-   $ make build test
+   make build test
    ```
-4. Update `TAG` file.
+
+5. Update `TAG` file.
 
 ## alertmanager
 
 ![Regular Update](./regular_update.svg)
 
 1. Check the release page.
-   - https://github.com/prometheus/alertmanager/releases
+   - <https://github.com/prometheus/alertmanager/releases>
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
-   - https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile`
 3. Update version variables in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -86,23 +90,28 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
 2. Check `hack/tool-versions.sh` for the tools versions.
-    - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh
+    - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh`
 3. Update tool versions in `Dockerfile`.
     - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
     - [Helm](https://github.com/helm/helm/releases)
 4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-    - https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile
+    - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile`
 5. Update version variables in `Dockerfile`.
     - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
-***NOTE:*** ArgoCD depends on dex,Redis,HAProxy. So browse the following manifests and update [dex](#dex),[redis](#redis),[haproxy](#haproxy) images next.
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml
+> [!Note]
+> ArgoCD depends on dex,Redis,HAProxy.
+> So browse the following manifests and update [dex](#dex),[redis](#redis),[haproxy](#haproxy) images next.
 
-***NOTE:*** ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).  If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml`
+- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml`
+- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
+
+> [!Note]
+> ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).
+> If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## argocd-image-updater
 
@@ -110,7 +119,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check [releases](https://github.com/argoproj-labs/argocd-image-updater/releases) for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-    - https://github.com/argoproj-labs/argocd-image-updater/blob/vX.Y.Z/Dockerfile
+    - `https://github.com/argoproj-labs/argocd-image-updater/blob/vX.Y.Z/Dockerfile`
 3. Update version variables in `Dockerfile`.
     - Update `ARGOCD_IMAGE_UPDATER_VERSION`.
 4. Update `TAG` file.
@@ -138,9 +147,11 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test are green.
+
    ```bash
-   $ make test
+   make test
    ```
+
 3. Update image tag in `bmc-reverse-proxy.yaml`.
 4. Update `TAG` file.
 
@@ -150,10 +161,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check the [release page](https://github.com/google/cadvisor/releases).
 2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
-   - https://github.com/google/cadvisor/blob/vX.Y.Z/Makefile
-   - https://github.com/google/cadvisor/blob/vX.Y.Z/build/release.sh
-   - https://github.com/google/cadvisor/blob/vX.Y.Z/build/build.sh
-   - https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile
+   - `https://github.com/google/cadvisor/blob/vX.Y.Z/Makefile`
+   - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/release.sh`
+   - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/build.sh`
+   - `https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile`
 3. Update `CADVISOR_VERSION` in `Dockerfile`
 4. Update `TAG` file.
 
@@ -176,7 +187,8 @@ In Regular update, do the following as part of the update of each CRD-providing 
 3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow and the `build_ceph` job in the Github Actions `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
+> [!Note]
+> The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
 
 ### Create a patched image from the specific version
 
@@ -200,7 +212,8 @@ follow these steps.
 4. See [the upstream Dockerfile](https://github.com/ceph/ceph-csi/blob/devel/deploy/cephcsi/image/Dockerfile) of the appropriate tag, and update our Dockerfile if necessary.
 5. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
+> [!Note]
+> Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
 
 ## ceph-extra-exporter
 
@@ -216,7 +229,7 @@ follow these steps.
 
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
 2. Check whether manually applied patches have been included in the new release and remove them accordingly.
-   1. If patches are still needed, synchronize the forked repository (https://github.com/cybozu-go/cert-manager).
+   1. If patches are still needed, synchronize the forked repository (<https://github.com/cybozu-go/cert-manager>).
    2. Create and checkout a new branch named `vX.Y.Z-neco` from the tag named `vX.Y.Z`.
    3. Cherry-pick the commit included patches and create a new tag named `vX.Y.Z-neco-longtimeout.1`.
    4. Push it.
@@ -243,18 +256,19 @@ follow these steps.
    2. Check the upstream Dockerfile and update the `.github/actions/build_cilium-envoy/action.yaml` as needed.
       - [Dockerfile.builder](https://github.com/cilium/proxy/blob/master/Dockerfile.builder) that includes installation of dependencies and Bazel.
       - [Dockerfile](https://github.com/cilium/proxy/blob/master/Dockerfile) that builds and installs cilium-envoy.
-   3. For `image-tools_version `, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
+   3. For `image-tools_version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
    4. Check the upstream Dockerfile and update the `.github/actions/build_cilium-image-tools/action.yaml` as needed.
       - [compilers/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile) that includes installation of dependencies.
       - [bpftool/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile)
       - [llvm/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile)
       - [iproute2/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/iproute2/Dockerfile)
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/cilium/Dockerfile
+   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/cilium/Dockerfile`
 4. Check whether manually applied patches have been included in the new release and remove them accordingly.
 5. Update the `BRANCH` and `TAG` files accordingly.
 
-***NOTE:*** The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
+> [!Note]
+> The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
 
 ## cilium-operator-generic
 
@@ -262,10 +276,11 @@ follow these steps.
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/operator/Dockerfile
+   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/operator/Dockerfile`
 3. Update the `BRANCH` and `TAG` files accordingly.
 
-***NOTE:*** The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
+> [!Note]
+> The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
 
 ## cilium-certgen
 
@@ -273,7 +288,7 @@ follow these steps.
 
 1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile`
 3. Update the `BRANCH` and `TAG` files accordingly.
 
 ## configmap-reload
@@ -282,7 +297,7 @@ follow these steps.
 
 1. Check the [tags page](https://github.com/jimmidyson/configmap-reload/tags).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile`
 3. Update `CONFIGMAP_RELOAD_VERSION` in `Dockerfile`
 4. Update `BRANCH` and `TAG` files.
 
@@ -290,18 +305,22 @@ follow these steps.
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** Contour uses Envoy as a "data plane." Keep version correspondence between the contour and [envoy](#envoy) images. Check the compatibility matrix below.
-- [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
+> [!Note]
+> Contour uses Envoy as a "data plane." Keep version correspondence between the contour and [envoy](#envoy) images. Check the compatibility matrix below.
+>
+> - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/projectcontour/contour/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile`
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
-***NOTE:*** Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).  If HTTPProxy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+> [!Note]
+> Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).
+> If HTTPProxy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## coredns
 
@@ -309,7 +328,7 @@ follow these steps.
 
 1. Check the [release page](https://github.com/coredns/coredns/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile`
 3. Update `COREDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
@@ -337,20 +356,27 @@ This section applies to the following containers. These containers are maintaine
 4. update image tag in `Dockerfile` if necessary.
 5. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** You can choose the latest stable Ubuntu image for runtime. upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
+> [!Note]
+> You can choose the latest stable Ubuntu image for runtime. upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
 
-***NOTE:*** You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
+<br>
+
+> [!Note]
+> You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
 
 ## dex
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml
+> [!Note]
+> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
+> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
+>
+> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml`
 
 1. Check the [release page](https://github.com/dexidp/dex/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/dexidp/dex/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/dexidp/dex/blob/vX.Y.Z/Dockerfile`
 3. Update `DEX_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
@@ -359,8 +385,10 @@ This section applies to the following containers. These containers are maintaine
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** Envoy is managed by [Contour](#contour) so update to the supported version. See the below.
-- [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
+> [!Note]
+> Envoy is managed by [Contour](#contour) so update to the supported version. See the below.
+>
+> - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
 2. Update `clang_archive_path` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml) if you want to update the clang version.
@@ -374,7 +402,7 @@ This section applies to the following containers. These containers are maintaine
 
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile-release.amd64
+   - `https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile-release.amd64`
 3. Update `ETCD_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
@@ -385,7 +413,7 @@ This section applies to the following containers. These containers are maintaine
 
 1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
 2. Check the upstream `.ko.yaml`. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/.ko.yaml
+   - `https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/.ko.yaml`
 3. Update `EXTERNALDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `TAG` file.
@@ -416,7 +444,7 @@ Ignore!!!
 
 1. Check the [release page](https://github.com/grafana/grafana/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile`
    - Check `JS_IMAGE` in the Dockerfile
 3. Update `GRAFANA_VERSION` in `Dockerfile`.
 4. Update installation of Node.js in `Dockerfile` according to `JS_IMAGE` if necessary.
@@ -429,26 +457,30 @@ Ignore!!!
 1. Check the [release page](https://github.com/grafana/grafana-operator/releases).
 2. Check the upstream build procedure (Makefile, Dockerfile, .ko.yaml, etc). At the point of v5.4.1, grafana-operator is built by [ko](https://github.com/ko-build/ko) with its default configuration.
    If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana/grafana-operator/tree/vX.Y.Z
+   - `https://github.com/grafana/grafana-operator/tree/vX.Y.Z`
 3. Update `VERSION` in `Dockerfile`.
 4. Update `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
 6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
 
-***NOTE:*** Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).  If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+> [!Note]
+> Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).
+> If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
 
 ## haproxy
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml
+> [!Note]
+> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
+> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
+>
+> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
 
 1. Check the release notes in the [official site](https://www.haproxy.org/).
-   - v2.6.x: https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile
-2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in http://www.haproxy.org/download
+   - v2.6.x: <https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile>
+2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in <http://www.haproxy.org/download>
 3. Update `BRANCH` and `TAG` files.
-
 
 ## heartbeat
 
@@ -459,16 +491,14 @@ Only the base image and module dependency should be updated.
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
-
 ## hubble
 
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/hubble/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/cilium/hubble/blob/vX.Y.Z/Dockerfile`
 3. Update the `BRANCH` and `TAG` files accordingly.
-
 
 ## hubble-relay
 
@@ -476,11 +506,11 @@ Only the base image and module dependency should be updated.
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile
+   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile`
 3. Update the `BRANCH` and `TAG` files accordingly.
 
-***NOTE:*** The hubble-relay image should be updated at the same time as the cilium image for consistency.
-
+> [!Note]
+> The hubble-relay image should be updated at the same time as the cilium image for consistency.
 
 ## hubble-ui
 
@@ -489,7 +519,7 @@ Only the base image and module dependency should be updated.
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile
+   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile`
 4. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
    1. `NGINX_VERSION`
    2. `NJS_VERSION`
@@ -497,14 +527,14 @@ Only the base image and module dependency should be updated.
 
 Update nginx that hubble-ui depends on as follows.
 
-1. Pick a commit hash from https://github.com/nginxinc/docker-nginx-unprivileged/commits/main/mainline/debian/Dockerfile
-  - If `NGINX_VERSION` is 1.23.2, the commit hash is 85f846c6c5d121b2b750d71c31429d9686523da0 referencing the commit "Update mainline NGINX to 1.23.2"
-  - You can find the corresponding `NJS_VERSION` value in the same commit
+1. Pick a commit hash from <https://github.com/nginxinc/docker-nginx-unprivileged/commits/main/mainline/debian/Dockerfile>
+   - If `NGINX_VERSION` is 1.23.2, the commit hash is 85f846c6c5d121b2b750d71c31429d9686523da0 referencing the commit "Update mainline NGINX to 1.23.2"
+   - You can find the corresponding `NJS_VERSION` value in the same commit
 2. Check the upstream [Dockerfile](https://github.com/nginxinc/docker-nginx-unprivileged/blob/main/mainline/debian/Dockerfile). If there are any updates, update our `Dockerfile`.
 
 ```bash
 # Check diff between v1.23.1 and v1.23.2
-$ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d9686523da0 -- mainline/debian/Dockerfile
+git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d9686523da0 -- mainline/debian/Dockerfile
 ```
 
 ## kube-metrics-adapter
@@ -521,7 +551,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/kubernetes/kube-state-metrics/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile`
 3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `TAG` files.
@@ -532,10 +562,10 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/kubernetes-sigs/kube-storage-version-migrator/releases).
 2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/Makefile
-   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/initializer/Dockerfile
-   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/migrator/Dockerfile
-   - https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/trigger/Dockerfile
+   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/Makefile`
+   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/initializer/Dockerfile`
+   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/migrator/Dockerfile`
+   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/trigger/Dockerfile`
 3. Update `MIGRATOR_VERSION` in `Dockerfile`
 4. Update `TAG` file.
 
@@ -555,15 +585,19 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 1. Update version variables in `Makefile`.
 2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
+
    ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
-   $ make generate manifests
+   cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
+   make generate manifests
    # Commit, if there are any updated files.
    ```
+
 4. Confirm build and test are green.
+
    ```bash
-   $ make build test
+   make build test
    ```
+
 5. Update image tag in `local-pv-provisioner.yaml`.
 6. Update `TAG` file.
 
@@ -573,11 +607,12 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/grafana/loki/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/grafana/loki/blob/vX.Y.Z/cmd/loki/Dockerfile
+   - `https://github.com/grafana/loki/blob/vX.Y.Z/cmd/loki/Dockerfile`
 3. Update `LOKI_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
 
-***NOTE:*** Keep the version of [promtail](#promtail) the same as that of loki.
+> [!Note]
+> Keep the version of [promtail](#promtail) the same as that of loki.
 
 ## machines-endpoints
 
@@ -585,9 +620,11 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test is green.
+
    ```bash
-   $ make test
+   make test
    ```
+
 3. Update image tag in `machines-endpoints.yaml`.
 4. Update `TAG` file.
 
@@ -613,7 +650,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/cybozu-go/meows/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - <https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile>
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
 3. Update `MEOWS_VERSION` in `Dockerfile`.
 4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
    1. `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
@@ -626,7 +663,7 @@ $ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c3142
 
 1. Check the [release page](https://github.com/cybozu-go/meows/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - <https://github.com/cybozu-go/meows/blob/vx.y.z/Dockerfile>
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
 3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
    - Also update `GRPCURL_VERSION`, if there are any changes.
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L5>
@@ -648,8 +685,8 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 
 1. Check the release pages [main](https://github.com/open-telemetry/opentelemetry-collector/releases) [contrib](https://github.com/open-telemetry/opentelemetry-collector-contrib/releases) [release](https://github.com/open-telemetry/opentelemetry-collector-releases/releases).
 2. Check the upstream Dockerfile and builder manifest. If there are any updates, update our `Dockerfile`.
-   - https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/Dockerfile
-   - https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/manifest.yaml
+   - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/Dockerfile`
+   - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/manifest.yaml`
 3. Update `OTELCOL_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -658,9 +695,9 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the changelog.
-   - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md
+   - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md`
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile
+   - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile`
 3. Update `K8S_VERSION` and `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -674,15 +711,19 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - `ENVTEST_K8S_VERSION`
 2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
+
    ```bash
-   $ cd $GOPATH/src/github.com/cybozu/neco-containers/pod-delete-rate-limiter
-   $ make generate manifests
+   cd $GOPATH/src/github.com/cybozu/neco-containers/pod-delete-rate-limiter
+   make generate manifests
    # Commit, if there are any updated files.
    ```
+
 4. Confirm build and test are green.
+
    ```bash
-   $ make build test
+   make build test
    ```
+
 5. Update `TAG` file.
 
 ## pomerium
@@ -690,14 +731,16 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 ![Regular Update](./regular_update.svg)
 
 1. Check the release page and upgrade guide.
-   - https://github.com/pomerium/pomerium/releases
-   - https://www.pomerium.com/docs/core/upgrading
+   - <https://github.com/pomerium/pomerium/releases>
+   - <https://www.pomerium.com/docs/core/upgrading>
 2. Check the diff of the Dockerfile.
-   ```text
-   $ cd /path/to/pomerium
-   $ git switch --detach v${NewVersion}
-   $ git diff v${CurrentVersion} Dockerfile
+
+   ```bash
+   cd /path/to/pomerium
+   git switch --detach v${NewVersion}
+   git diff v${CurrentVersion} Dockerfile
    ```
+
 3. Update `Dockerfile`.
    - Pomeruim version
    - Golang version
@@ -709,7 +752,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 ![Regular Update](./regular_update.svg)
 
 1. Check the release page.
-   - https://github.com/kubernetes-sigs/prometheus-adapter/releases
+   - <https://github.com/kubernetes-sigs/prometheus-adapter/releases>
 2. Update version variables in `Dockerfile`.
 3. Update `TAG` file.
 
@@ -741,9 +784,9 @@ The libsystemd version should be the same with the one running on [the stable Fl
 ![Regular Update](./regular_update.svg)
 
 1. Check the release page.
-   - https://github.com/prometheus/pushgateway/releases
+   - <https://github.com/prometheus/pushgateway/releases>
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/prometheus/pushgateway/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/prometheus/pushgateway/blob/vX.Y.Z/Dockerfile`
 3. Update version variables in `Dockerfile`.
 4. Update `TAG` file.
 
@@ -751,12 +794,15 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![Regular Update](./regular_update.svg)
 
-***NOTE:*** This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version. If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
-- https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml
+> [!Note]
+> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
+> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
+>
+> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml`
 
 1. Check the release notes in the [official site](https://redis.io/).
 2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
-   - v7.0.x: https://github.com/docker-library/redis/blob/master/7.0/Dockerfile
+   - v7.0.x: <https://github.com/docker-library/redis/blob/master/7.0/Dockerfile>
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -766,7 +812,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/docker/distribution/blob/master/Dockerfile
+   - <https://github.com/docker/distribution/blob/master/Dockerfile>
 3. Update `REGISTRY_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -774,9 +820,13 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![CSA Update](./csa_update.svg)
 
-***NOTE:*** If we update both Rook and Ceph, update Ceph image first, and then update Rook image.
+> [!Note]
+> If we update both Rook and Ceph, update Ceph image first, and then update Rook image.
 
-***NOTE:*** A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
+<br>
+
+> [!Note]
+> A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
 
 - cephcsi
 - csi-attacher
@@ -787,13 +837,16 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile
+   - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile`
 3. update build image tag in `Dockerfile` if necessary.
 4. Update `ROOK_VERSION` in `Dockerfile`.
 5. Update ceph image tag in `Dockerfile`.
 6. Update `BRANCH` and `TAG` files.
 
-***NOTE:*** You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod.
+> [!Note]
+> You may choose the latest docker image for the build, regardless of the upstream go version.
+> The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file.
+> There is no need to use an older version of the image to match go.mod.
 
 ## s3gw
 
@@ -810,8 +863,8 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/bitnami-labs/sealed-secrets/releases).
 2. Check the upstream Dockerfile and compare with ours especially on the runtime stage. If there are any updates, update our `Dockerfile`.
-    - https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/controller.Dockerfile
-    - https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/kubeseal.Dockerfile
+    - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/controller.Dockerfile`
+    - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/kubeseal.Dockerfile`
 3. Update `SEALED_SECRETS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -821,7 +874,7 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/hashicorp/serf/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile
+   - `https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile`
 3. Update `SERF_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
@@ -830,9 +883,9 @@ Only the base image and module dependency should be updated.
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the latest **stable** version at http://www.squid-cache.org/Versions/
+1. Check the latest **stable** version at <http://www.squid-cache.org/Versions/>
 2. Check release notes if a new version is released.
-    - e.g., http://www.squid-cache.org/Versions/vX/squid-X.Y-RELEASENOTES.html
+    - e.g., `http://www.squid-cache.org/Versions/vX/squid-X.Y-RELEASENOTES.html`
 3. Update `SQUID_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
@@ -845,7 +898,8 @@ Only the base image and module dependency should be updated.
 2. Update squid version in `Makefile` and `e2e/pod.yaml` if there are any updates.
 3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
-***NOTE:*** The squid images should be updated at the same time as the squid-exporter image for consistency.
+> [!Note]
+> The squid images should be updated at the same time as the squid-exporter image for consistency.
 
 ## stakater/Reloader
 
@@ -853,7 +907,7 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/stakater/Reloader/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile
+   - `https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile`
 3. Update `BRANCH` and `TAG` files.
 
 ## teleport-node
@@ -873,8 +927,8 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/grafana/tempo/releases).
 2. Check the upstream `Makefile` and `cmd/tempo//Dockerfile`. If they have been updated significantly, update our `Dockerfile`.
-   - https://github.com/grafana/tempo/blob/vX.Y.Z/Makefile
-   - https://github.com/grafana/tempo/blob/vX.Y.Z/cmd/tempo/Dockerfile
+   - `https://github.com/grafana/tempo/blob/vX.Y.Z/Makefile`
+   - `https://github.com/grafana/tempo/blob/vX.Y.Z/cmd/tempo/Dockerfile`
 3. Update `TEMPO_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
 
@@ -932,8 +986,8 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/hashicorp/vault/releases) and these notes:
-    - https://www.vaultproject.io/docs/upgrading
-    - https://www.vaultproject.io/docs/release-notes
+    - <https://www.vaultproject.io/docs/upgrading>
+    - <https://www.vaultproject.io/docs/release-notes>
 2. Update `VAULT_VERSION` in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
@@ -944,12 +998,12 @@ Only the base image and module dependency should be updated.
 
 1. Check the [release page](https://github.com/VictoriaMetrics/VictoriaMetrics/releases).
 2. Check upstream `Makefile` and `Dockerfile`, and update our `Dockerfile` if needed.
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/Makefile
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/Makefile
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/\*/deployment/Dockerfile
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/Makefile
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/Makefile
-   - https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/\*/deployment/Dockerfile
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/Makefile`
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/*/Makefile`
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/app/*/deployment/Dockerfile`
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/Makefile`
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/*/Makefile`
+   - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/*/deployment/Dockerfile`
 3. Update `VICTORIAMETRICS_SINGLE_VERSION` and `VICTORIAMETRICS_CLUSTER_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
 
