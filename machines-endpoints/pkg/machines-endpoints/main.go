@@ -473,6 +473,8 @@ func main() {
 		if err != nil {
 			log.ErrorExit(err)
 		}
+
+		fmt.Println("machines list = ", machineIPs)
 	}
 
 	if *flgBMCReverseProxyConfigMap {
