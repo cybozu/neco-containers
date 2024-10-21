@@ -4,7 +4,7 @@ go 1.22.5
 
 require (
 	github.com/VictoriaMetrics/metrics v1.35.1
-	github.com/cilium/cilium v1.14.14
+	github.com/cilium/cilium v1.14.16
 	github.com/onsi/ginkgo/v2 v2.17.1
 	github.com/onsi/gomega v1.32.0
 	github.com/spf13/cobra v1.8.1
