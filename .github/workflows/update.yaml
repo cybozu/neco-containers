@@ -91,17 +91,17 @@ jobs:
       - name: Create PR
         if: env.NEED_UPDATE == '1'
         run: |
-          # Get version numbers for branch name and PR title
-          VERSIONS=$(cat ./update-body.txt | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -u | tr '\n' '-' | sed 's/-$//')
+          # Get latest version numbers for branch name and PR title
+          LATEST_VERSIONS=$(cat ./update-body.txt | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | sort -V | tail -n1)
           
           git config --global user.email "neco@cybozu.com"
           git config --global user.name "cybozu-neco"
           
-          BRANCH=update-go-$VERSIONS
+          BRANCH=update-go-$LATEST_VERSIONS
           git checkout -b $BRANCH
           git add -u
-          git commit -m "Update Go versions to $VERSIONS"
+          git commit -m "Update Go versions to $LATEST_VERSIONS"
           git push origin $BRANCH
           
-          PR_TITLE="Update Go versions to $VERSIONS"
+          PR_TITLE="Update Go versions to $LATEST_VERSIONS"
           gh pr create --title "$PR_TITLE" --body-file ./update-body.txt
