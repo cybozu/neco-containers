@@ -70,21 +70,30 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
-	if statusCode != 200 || err != nil {
+	if err != nil {
 		// Increment the failed counter
 		counterRequestFailed.WithLabelValues(m.Serial).Inc()
-
-		// Prevent log output by the same error code or httpStatus
-		if statusCode != 200 && statusCode != lastPtr.LastHttpStatusCode {
+		// Prevent log output by the same error code
+		if lastPtr.LastError != err.Error() {
+			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error())
+		}
+		lastPtr.LastHttpStatusCode = 0
+		lastPtr.LastError = err.Error()
+		err = updateLastPointer(lastPtr, filePath)
+		if err != nil {
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		}
+		return
+	}
+	if statusCode != 200 {
+		// Increment the failed counter
+		counterRequestFailed.WithLabelValues(m.Serial).Inc()
+		// Prevent log output by the same httpStatus
+		if statusCode != lastPtr.LastHttpStatusCode {
 			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode)
 		}
 		lastPtr.LastHttpStatusCode = statusCode
-
-		if err != nil && lastPtr.LastError != err {
-			slog.Error("failed access to iDRAC at TCP/IP level.", "err", err, "BMC IP", m.BmcIP)
-		}
-		lastPtr.LastError = err
-
+		lastPtr.LastError = ""
 		err = updateLastPointer(lastPtr, filePath)
 		if err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
@@ -131,7 +140,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 			}
 
 			lastPtr.LastReadId = currentId
-			lastPtr.LastError = nil
+			lastPtr.LastError = ""
 		} else {
 			// If the log is reset in iDRAC, the ID starts from 1.
 			// In that case, determine if generated time been changed to identify log reseted.
@@ -146,7 +155,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
 				}
 				lastPtr.LastReadId = currentId
-				lastPtr.LastError = nil
+				lastPtr.LastError = ""
 			}
 		}
 	}

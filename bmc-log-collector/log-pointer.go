@@ -11,7 +11,7 @@ import (
 
 type LastPointer struct {
 	LastReadId         int
-	LastError          error
+	LastError          string
 	LastHttpStatusCode int
 	FirstCreateTime    int64
 }
