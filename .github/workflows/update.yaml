@@ -27,7 +27,7 @@ jobs:
           echo "" > ./update-body.txt
           
           # Get latest stable Go versions
-          STABLE_VERSIONS=$(curl -sSL https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
+          STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
           if [ -z "$STABLE_VERSIONS" ]; then
             echo "Failed to fetch stable Go versions"
             exit 1
