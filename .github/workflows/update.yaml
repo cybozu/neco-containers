@@ -72,7 +72,6 @@ jobs:
               fi
               
               CURRENT_VERSION=$(grep 'ARG GO_VERSION=' "$DOCKERFILE_PATH" | cut -d= -f2)
-              CURRENT_TAG=$(cat "$TAG_PATH" | cut -d_ -f1)
               
               if [ "$CURRENT_VERSION" != "$LATEST_VERSION" ]; then
                 NEED_UPDATE=1
