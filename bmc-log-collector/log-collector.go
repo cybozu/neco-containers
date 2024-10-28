@@ -58,13 +58,13 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	err := checkAndCreatePointerFile(filePath)
 	if err != nil {
-		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
 
 	lastPtr, err := readLastPointer(filePath)
 	if err != nil {
-		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
 
@@ -75,13 +75,13 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		counterRequestFailed.WithLabelValues(m.Serial).Inc()
 		// Prevent log output by the same error code
 		if lastPtr.LastError != err.Error() {
-			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error())
+			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error(), "serial", m.Serial)
 		}
 		lastPtr.LastHttpStatusCode = 0
 		lastPtr.LastError = err.Error()
 		err = updateLastPointer(lastPtr, filePath)
 		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
 		return
 	}
@@ -90,13 +90,13 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		counterRequestFailed.WithLabelValues(m.Serial).Inc()
 		// Prevent log output by the same httpStatus
 		if statusCode != lastPtr.LastHttpStatusCode {
-			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode)
+			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode, "serial", m.Serial)
 		}
 		lastPtr.LastHttpStatusCode = statusCode
 		lastPtr.LastError = ""
 		err = updateLastPointer(lastPtr, filePath)
 		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
 		return
 	}
