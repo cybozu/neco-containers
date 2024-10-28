@@ -24,7 +24,7 @@ jobs:
         id: check-updates
         run: |
           NEED_UPDATE=0
-          echo "" > ./update-body.txt
+          touch ./update-body.txt
           
           # Get latest stable Go versions
           STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
