@@ -27,25 +27,49 @@ jobs:
           touch ./update-body.txt
           
           # Get latest stable Go versions
-          STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true)][0,1] | .version | sub("^go"; "")')
-          if [ -z "${STABLE_VERSIONS}" ]; then
+          GO_STABLE_MAJOR_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "") | split(".")[:2] | join(".")] | unique | .[]')
+          if [ -z "${GO_STABLE_MAJOR_VERSIONS}" ]; then
             echo "Failed to fetch stable Go versions"
             exit 1
           fi
 
-          # Check if there are newer major versions available
-          HIGHEST_MAJOR_VERSION=$(echo "${STABLE_VERSIONS}" | cut -d. -f1-2 | sort -V | tail -n1)
-          echo "HIGHEST_MAJOR_VERSION=${HIGHEST_MAJOR_VERSION}"
-          HIGHEST_CONFIGURED_VERSION=$(echo "${{ env.GO_MAJOR_VERSIONS }}" | tr ' ' '\n' | sort -V | tail -n1)
-          echo "HIGHEST_CONFIGURED_VERSION=${HIGHEST_CONFIGURED_VERSION}"
-          if [ "$(echo -e "${HIGHEST_MAJOR_VERSION}\n${HIGHEST_CONFIGURED_VERSION}" | sort -V | tail -n1)" = "${HIGHEST_MAJOR_VERSION}" ] && [ "${HIGHEST_MAJOR_VERSION}" != "${HIGHEST_CONFIGURED_VERSION}" ]; then
+          # Check for differences between GO_MAJOR_VERSIONS and GO_STABLE_MAJOR_VERSIONS
+          DIFF=$(diff <(printf "%s\n" ${GO_MAJOR_VERSIONS}) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS}))
+          if [ -n "${DIFF}" ]; then
             echo "⚠️ **Major Version Update Required**" >> ./update-body.txt
-            echo "A new major version of Go (${HIGHEST_MAJOR_VERSION}) is available. Please consider updating GO_MAJOR_VERSIONS in the workflow configuration." >> ./update-body.txt
+            echo "Differences detected between specified and stable Go versions:" >> ./update-body.txt
+            echo "${DIFF}" >> ./update-body.txt
             echo "" >> ./update-body.txt
           fi
           
+          # Function to update Dockerfile and TAG file
+          update_files() {
+            local go_major=$1
+            local codename=$2
+            local latest_version=$3
+            local dockerfile_path="golang-all/golang-${go_major}-${codename}/Dockerfile"
+            local tag_path="golang-all/golang-${go_major}-${codename}/TAG"
+
+            if [ ! -f "${dockerfile_path}" ] || [ ! -f "${tag_path}" ]; then
+              echo "Files not found for Go ${go_major} on Ubuntu ${codename}"
+              return
+            fi
+
+            local current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
+
+            if [ "${current_version}" != "${latest_version}" ]; then
+              NEED_UPDATE=1
+              # Update Dockerfile
+              sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
+              # Update TAG file
+              echo "${latest_version}_${codename}" > "${tag_path}"
+              
+              echo "- Update Go ${go_major} for Ubuntu ${ubuntu_version} (${codename}) from ${current_version} to ${latest_version}" >> ./update-body.txt
+            fi
+          }
+
           # assignment of codename
-          for ubuntu_version in ${{ env.UBUNTU_VERSIONS }}; do
+          for ubuntu_version in ${UBUNTU_VERSIONS}; do
             if [ "${ubuntu_version}" = "22.04" ]; then
               CODENAME=jammy
             elif [ "${ubuntu_version}" = "24.04" ]; then
@@ -55,33 +79,15 @@ jobs:
               continue
             fi
             
-            for go_major in ${{ env.GO_MAJOR_VERSIONS }}; do
+            for go_major in ${GO_MAJOR_VERSIONS}; do
               # Find matching version from stable versions
-              LATEST_VERSION=$(echo "${STABLE_VERSIONS}" | grep "^${go_major}" | head -n1)
+              LATEST_VERSION=$(echo "${GO_STABLE_MAJOR_VERSIONS}" | grep "^${go_major}" | head -n1)
               if [ -z "${LATEST_VERSION}" ]; then
                 echo "No matching stable version found for Go ${go_major}"
                 continue
               fi
               
-              DOCKERFILE_PATH="golang-all/golang-${go_major}-${CODENAME}/Dockerfile"
-              TAG_PATH="golang-all/golang-${go_major}-${CODENAME}/TAG"
-              
-              if [ ! -f "${DOCKERFILE_PATH}" ] || [ ! -f "${TAG_PATH}" ]; then
-                echo "Files not found for Go ${go_major} on Ubuntu ${CODENAME}"
-                continue
-              fi
-              
-              CURRENT_VERSION=$(grep 'ARG GO_VERSION=' "${DOCKERFILE_PATH}" | cut -d= -f2)
-              
-              if [ "${CURRENT_VERSION}" != "${LATEST_VERSION}" ]; then
-                NEED_UPDATE=1
-                # Update Dockerfile
-                sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${LATEST_VERSION}/" "${DOCKERFILE_PATH}"
-                # Update TAG file
-                echo "${LATEST_VERSION}_${CODENAME}" > "${TAG_PATH}"
-                
-                echo "- Update Go ${go_major} for Ubuntu ${ubuntu_version} (${CODENAME}) from ${CURRENT_VERSION} to ${LATEST_VERSION}" >> ./update-body.txt
-              fi
+              update_files "${go_major}" "${CODENAME}" "${LATEST_VERSION}"
             done
           done
           
