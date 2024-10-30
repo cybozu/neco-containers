@@ -1,0 +1,33 @@
+From 80edcd40e8092d9fb3b45c1a6c7f9b7f4f37b69e Mon Sep 17 00:00:00 2001
+From: Thomas Lamprecht <t.lamprecht@proxmox.com>
+Date: Wed, 31 Jul 2024 09:48:08 +0200
+Subject: [PATCH] debian pkg: record python3-packaging dependency for
+ ceph-volume
+
+Since commit 0985e201342 ("ceph-volume: use 'no workqueue' options
+with dmcrypt") the python "packaging" module is used to parse the
+cryptsetup version output, but the debian packaging was not updated to
+record that new dependency.
+
+So simply record this in the d/control file, adding a <pkg>.requires
+file seemed to not really winning us anything here.
+
+Fixes: https://tracker.ceph.com/issues/67290
+Fixes: 0985e201342fa53c014a811156aed661b4b8f994
+Signed-off-by: Thomas Lamprecht <t.lamprecht@proxmox.com>
+---
+ debian/control | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/debian/control b/debian/control
+index b1910b624d77d..37b940ac633c6 100644
+--- a/debian/control
++++ b/debian/control
+@@ -456,6 +456,7 @@ Depends: ceph-osd (= ${binary:Version}),
+          e2fsprogs,
+          lvm2,
+          parted,
++         python3-packaging,
+          xfsprogs,
+          ${misc:Depends},
+          ${python3:Depends}
