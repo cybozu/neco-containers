@@ -134,13 +134,16 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
 			}
 
-			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
-			if err != nil {
-				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+			// Suppress duplicate log
+			if response.Sel[i].MessageId != lastPtr.LastEventId {
+				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
+				if err != nil {
+					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				}
 			}
 
 			lastPtr.LastReadId = currentId
-			lastPtr.LastError = ""
+			lastPtr.LastEventId = response.Sel[i].MessageId
 		} else {
 			// If the log is reset in iDRAC, the ID starts from 1.
 			// In that case, determine if generated time been changed to identify log reseted.
@@ -150,15 +153,18 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", response.Sel[i], "currentLastReadId", currentId)
 				}
 
+				// Output duplicate log, after log reset in iDRAC
 				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 				if err != nil {
 					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
 				}
+
 				lastPtr.LastReadId = currentId
-				lastPtr.LastError = ""
+				lastPtr.LastEventId = response.Sel[i].MessageId
 			}
 		}
 	}
+
 	lastPtr.FirstCreateTime = firstCreateTime
 	err = updateLastPointer(lastPtr, filePath)
 	if err != nil {
