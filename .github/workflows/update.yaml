@@ -34,7 +34,7 @@ jobs:
           fi
 
           # Check for differences between GO_MAJOR_VERSIONS and GO_STABLE_MAJOR_VERSIONS
-          DIFF=$(diff <(printf "%s\n" ${GO_MAJOR_VERSIONS}) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS}))
+          DIFF=$(diff <(printf "%s\n" ${GO_MAJOR_VERSIONS} | sort -V) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS} | sort -V))
           if [ -n "${DIFF}" ]; then
             echo "⚠️ **Major Version Update Required**" >> ./update-body.txt
             echo "Differences detected between specified and stable Go versions:" >> ./update-body.txt
