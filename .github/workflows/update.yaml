@@ -27,12 +27,15 @@ jobs:
           touch ./update-body.txt
           
           # Get latest stable Go versions
-          GO_STABLE_MAJOR_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "") | split(".")[:2] | join(".")] | unique | .[]')
-          if [ -z "${GO_STABLE_MAJOR_VERSIONS}" ]; then
+          GO_STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "")] | unique | .[]')
+          if [ -z "${GO_STABLE_VERSIONS}" ]; then
             echo "Failed to fetch stable Go versions"
             exit 1
           fi
 
+          # Extract major and minor versions for comparison
+          GO_STABLE_MAJOR_VERSIONS=$(echo "${GO_STABLE_VERSIONS}" | cut -d. -f1,2 | sort -u)
+          
           # Check for differences between GO_MAJOR_VERSIONS and GO_STABLE_MAJOR_VERSIONS
           DIFF=$(diff <(printf "%s\n" ${GO_MAJOR_VERSIONS} | sort -V) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS} | sort -V))
           if [ -n "${DIFF}" ]; then
@@ -49,14 +52,11 @@ jobs:
             local latest_version=$3
             local dockerfile_path="golang-all/golang-${go_major}-${codename}/Dockerfile"
             local tag_path="golang-all/golang-${go_major}-${codename}/TAG"
-
             if [ ! -f "${dockerfile_path}" ] || [ ! -f "${tag_path}" ]; then
               echo "Files not found for Go ${go_major} on Ubuntu ${codename}"
               return
             fi
-
             local current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
-
             if [ "${current_version}" != "${latest_version}" ]; then
               NEED_UPDATE=1
               # Update Dockerfile
@@ -81,7 +81,7 @@ jobs:
             
             for go_major in ${GO_MAJOR_VERSIONS}; do
               # Find matching version from stable versions
-              LATEST_VERSION=$(echo "${GO_STABLE_MAJOR_VERSIONS}" | grep "^${go_major}" | head -n1)
+              LATEST_VERSION=$(echo "${GO_STABLE_VERSIONS}" | grep "^${go_major}" | head -n1)
               if [ -z "${LATEST_VERSION}" ]; then
                 echo "No matching stable version found for Go ${go_major}"
                 continue
@@ -110,4 +110,3 @@ jobs:
           
           PR_TITLE="Update Go versions to ${LATEST_VERSIONS}"
           gh pr create --title "${PR_TITLE}" --body-file ./update-body.txt
-          
