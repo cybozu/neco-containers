@@ -25,7 +25,7 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ceph:18.2.4.1
+FROM ghcr.io/cybozu/ceph:18.2.4.2
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
