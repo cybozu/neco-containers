@@ -7,7 +7,7 @@ The first case of collecting is DELL.
 “BMC Log Collector” has the following features
 1. Retrieve the IP address and ID of the BMC to be collected from a JSON file
 2. Access the IP address of the BMC and retrieve a hardware error logs from the Redfish REST service
-3. Output the collected logs that eliminated duplication to STDOUT
+3. ~~Output the collected logs that eliminated duplication to STDOUT~~
 
 Redfish is a standard for server management and provides information as REST API service. 
 We can get the event of hardware in Server.
@@ -35,8 +35,8 @@ flowchart TB
 3. Use `/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries` as the path to RedFish.
 4. Convert the received JSON data into a Go language structure and inspect for duplicates.
 5. Compare the ID of the log received last time with the ID of the log received this time. If the ID of the log received this time is larger, it is considered the latest event.
-6. If the ID is smaller than the previous one, the timestamp is compared, and if it is larger than the previous timestamp, it is considered as the latest log.
-7. Write ID, type stamp, and identification string in the file. The file name is the identification string, and a separate file is created for each BMC.
+6. If the ID is smaller than the previous one, the timestamp is compare with pointer file, and if it is not qual the first timestamp, it is considered as the latest log.
+7. Write ID, time stamp, and identification string in the file. The file name is the identification string, and a separate file is created for each BMC.
 8. The latest events in the event log are output in JSON format to standard output.
 9. Perform tasks 1 through 8 above, at intervals of a few minutes.
 10. Continue this cycle while the “BMC Log Collector” is running.

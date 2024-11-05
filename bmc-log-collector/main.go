@@ -23,13 +23,13 @@ type bmcLogWriter interface {
 
 func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 	config.httpClient = &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: 120 * time.Second,
 		Transport: &http.Transport{
 			TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
 			DisableKeepAlives:   true,
-			TLSHandshakeTimeout: 20 * time.Second,
+			TLSHandshakeTimeout: 60 * time.Second,
 			DialContext: (&net.Dialer{
-				Timeout: 15 * time.Second,
+				Timeout: 60 * time.Second,
 			}).DialContext,
 		},
 	}

@@ -585,9 +585,22 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(rslt.Id).To(Equal("16"))
 		}, SpecTimeout(30*time.Second))
 
-		It("check suppressing log", func(ctx SpecContext) {
-			_, err := ReadingTestResultLogNext(reader)
-			Expect(err).To(HaveOccurred())
+		It("check 9th log record", func(ctx SpecContext) {
+			stringJSON, err := ReadingTestResultLogNext(reader)
+			Expect(err).ToNot(HaveOccurred())
+			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+
+			var rslt SystemEventLog
+			err = json.Unmarshal([]byte(stringJSON), &rslt)
+			Expect(err).ToNot(HaveOccurred())
+
+			GinkgoWriter.Println("------ ", string(rslt.Serial))
+			GinkgoWriter.Println("------ ", string(rslt.Id))
+			GinkgoWriter.Println("------ ", string(rslt.Message))
+			Expect(rslt.Message).To(Equal("The system inlet temperature is greater than the upper warning threshold."))
+			Expect(rslt.Serial).To(Equal(serial))
+			Expect(rslt.Id).To(Equal("17"))
 		}, SpecTimeout(30*time.Second))
+
 	})
 })
