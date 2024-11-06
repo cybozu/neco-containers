@@ -62,7 +62,7 @@ jobs:
               # Update Dockerfile
               sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
               # Update TAG file
-              echo "${latest_version}_${codename}" > "${tag_path}"
+              echo "${latest_version}.1_${codename}" > "${tag_path}"
               
               echo "- Update Go ${go_major} for Ubuntu ${ubuntu_version} (${codename}) from ${current_version} to ${latest_version}" >> ./update-body.txt
             fi
