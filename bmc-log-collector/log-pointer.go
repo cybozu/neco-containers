@@ -13,7 +13,6 @@ type LastPointer struct {
 	LastReadId         int    // BMC SEL Id
 	LastError          string // for TCP Error
 	LastHttpStatusCode int    // for HTTP Error
-	LastEventId        string // for BMC EventID
 	FirstCreateTime    int64
 }
 
