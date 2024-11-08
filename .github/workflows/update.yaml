@@ -13,10 +13,12 @@ jobs:
   update-go-versions:
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UBUNTU_VERSIONS: "22.04 24.04"
       GO_MAJOR_VERSIONS: "1.22 1.23"
-    
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       
@@ -62,9 +64,9 @@ jobs:
               # Update Dockerfile
               sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
               # Update TAG file
-              echo "${latest_version}.1_${codename}" > "${tag_path}"
+              echo "${latest_version}_${codename}" > "${tag_path}"
               
-              echo "- Update Go ${go_major} for Ubuntu ${ubuntu_version} (${codename}) from ${current_version} to ${latest_version}" >> ./update-body.txt
+              echo "- Update Go ${go_major} for Ubuntu ${codename} from ${current_version} to ${latest_version}" >> ./update-body.txt
             fi
           }
 
@@ -95,8 +97,6 @@ jobs:
           
       - name: Create PR
         if: env.NEED_UPDATE == '1'
-        env:
-          GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
         run: |
           # Get latest version numbers for branch name and PR title
           LATEST_VERSIONS=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' ./update-body.txt | sort -V | tail -n1)
