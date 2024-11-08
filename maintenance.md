@@ -859,7 +859,7 @@ This is used by victoria-metrics operator too.
 
 Promtail contains two versions, one for promtail and the other for libsystemd.
 The promtail version should be the same with [loki](#loki).
-The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://kinvolk.io/flatcar-container-linux/releases/).
+The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://www.flatcar.org/releases).
 
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
