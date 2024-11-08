@@ -13,13 +13,14 @@ jobs:
   update-go-versions:
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       UBUNTU_VERSIONS: "22.04 24.04"
       GO_MAJOR_VERSIONS: "1.22 1.23"
-    
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
-      
       - name: Check for Go version updates
         id: check-updates
         run: |
