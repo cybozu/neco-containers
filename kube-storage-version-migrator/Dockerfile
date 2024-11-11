@@ -6,7 +6,7 @@
 # Each target is prefixed with "storage-version-migrate-" to construct its repository name.
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
 ARG MIGRATOR_VERSION=0.0.5
 
