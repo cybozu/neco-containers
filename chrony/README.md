@@ -6,7 +6,7 @@ Build Docker container image for [Chrony][] NTP server/client.
 Features
 --------
 
-- Chrony 4.5 based on Ubuntu 22.04.
+- Chrony 4.6 based on Ubuntu 22.04.
 - Multi-stage build to minimize the container size.
 
 Usage
@@ -25,7 +25,7 @@ Usage
     --cap-drop ALL \
     --cap-add SYS_TIME \
     --cap-add NET_BIND_SERVICE \
-    ghcr.io/cybozu/chrony:4.5
+    ghcr.io/cybozu/chrony:4.6
     ```
 
 ### Use `chronyc`

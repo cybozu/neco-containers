@@ -2,11 +2,11 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
-ARG CHRONY_VERSION=4.5
+ARG CHRONY_VERSION=4.6.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
-    && curl -sSLf https://download.tuxfamily.org/chrony/chrony-${CHRONY_VERSION}.tar.gz | \
+    && curl -sSLf https://chrony-project.org/releases/chrony-${CHRONY_VERSION}.tar.gz | \
     tar zxf - -C /work/ \
     && apt-get update \
     && apt-get install -y --no-install-recommends libedit-dev \
