@@ -1,28 +1,31 @@
 module github.com/cybozu/neco-containers/bpf-map-pressure-exporter
 
-go 1.21
+go 1.22.0
+
+toolchain go1.23.3
 
 require (
-	github.com/cilium/ebpf v0.12.3
+	github.com/cilium/ebpf v0.16.0
 	github.com/cybozu-go/log v1.7.0
 	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.17.0
-	github.com/stretchr/testify v1.8.4
-	golang.org/x/sync v0.3.0
+	github.com/prometheus/client_golang v1.20.5
+	github.com/stretchr/testify v1.9.0
+	golang.org/x/sync v0.9.0
 )
 
 require (
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.2.0 // indirect
+	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/klauspost/compress v1.17.11 // indirect
+	github.com/kylelemons/godebug v1.1.0 // indirect
+	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/prometheus/client_model v0.4.1-0.20230718164431-9a2bf3000d16 // indirect
-	github.com/prometheus/common v0.44.0 // indirect
-	github.com/prometheus/procfs v0.11.1 // indirect
-	golang.org/x/exp v0.0.0-20230224173230-c95f2b4c22f2 // indirect
-	golang.org/x/sys v0.14.1-0.20231108175955-e4099bfacb8c // indirect
-	google.golang.org/protobuf v1.33.0 // indirect
+	github.com/prometheus/client_model v0.6.1 // indirect
+	github.com/prometheus/common v0.60.1 // indirect
+	github.com/prometheus/procfs v0.15.1 // indirect
+	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
+	golang.org/x/sys v0.27.0 // indirect
+	google.golang.org/protobuf v1.35.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
