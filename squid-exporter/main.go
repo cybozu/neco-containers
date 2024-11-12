@@ -12,22 +12,22 @@ import (
 func requestHandler(logger *slog.Logger, squidClient SquidClient) {
 	counters, err := squidClient.GetCounters()
 	if err != nil {
-		logger.Error("error getting squid counters", err)
+		logger.Error("error getting squid counters", "err", err)
 		return
 	}
 	err = ConvertSquidCounter(logger, counters)
 	if err != nil {
-		logger.Error("failed to convert squid counters", err)
+		logger.Error("failed to convert squid counters", "err", err)
 		return
 	}
 	serviceTimes, err := squidClient.GetServiceTimes()
 	if err != nil {
-		logger.Error("error getting squid service_times", err)
+		logger.Error("error getting squid service_times", "err", err)
 		return
 	}
 	err = ConvertSquidServiceTimes(logger, serviceTimes)
 	if err != nil {
-		logger.Error("failed to convert squid service_time", err)
+		logger.Error("failed to convert squid service_time", "err", err)
 	}
 	logger.Info("successfully converted squid metrics")
 }
