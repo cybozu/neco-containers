@@ -1,7 +1,7 @@
 # prometheus-adapter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
 ARG PROMETHEUS_ADAPTER_VERSION=0.12.0
 
