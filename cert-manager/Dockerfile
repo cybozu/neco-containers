@@ -1,7 +1,7 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 # https://github.com/cert-manager/cert-manager
 ENV CERT_MANAGER_REPOSITORY=https://github.com/cybozu-go/cert-manager
-ENV CERT_MANAGER_VERSION=1.15.3-neco-longtimeout.1
+ENV CERT_MANAGER_VERSION=1.16.1-neco-longtimeout.1
 RUN git clone --depth 1 --branch v${CERT_MANAGER_VERSION} ${CERT_MANAGER_REPOSITORY}
 RUN apt update && apt-get install -y rsync
 RUN cd cert-manager \
