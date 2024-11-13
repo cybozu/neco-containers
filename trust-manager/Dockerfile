@@ -1,7 +1,7 @@
 # trust-manager container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
 COPY TAG /
 WORKDIR /workspace
@@ -12,7 +12,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
 
 # Parameters retrieved from:
 # $ make ko-config-manager
-# $ cat _bin/scratch/image/oci-layout-manager.v0.12.0.ko_config.yaml
+# $ cat _bin/scratch/image/oci-layout-manager.v0.13.0.ko_config.yaml
 RUN CGO_ENABLED=0 GO_EXPERIMENT= go build -ldflags '-w -s' -o bin/trust-manager ./cmd/trust-manager 
 
 # Stage2: setup runtime container
