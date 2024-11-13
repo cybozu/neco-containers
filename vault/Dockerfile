@@ -1,9 +1,9 @@
 # vault container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
-ARG VAULT_VERSION=1.17.5
+ARG VAULT_VERSION=1.18.1
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
@@ -14,7 +14,7 @@ RUN make bootstrap && \
     make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/vault/bin /usr/local/vault/bin
