@@ -1,14 +1,11 @@
 name: Update Go Versions
-
 on:
   schedule:
     - cron: '0 22 * * 0-4' # 7:00 JST weekdays
   workflow_dispatch:
-
 defaults:
   run:
     shell: bash
-
 jobs:
   update-go-versions:
     runs-on: ubuntu-24.04
