@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG VERSION=5.10.0
+ARG VERSION=5.15.1
 
 # After https://github.com/grafana/grafana-operator/issues/1678 is resolved,
 # this patch will not be needed.
