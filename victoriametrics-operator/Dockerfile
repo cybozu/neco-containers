@@ -1,10 +1,10 @@
 # victoriametrics-operator container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
 ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.46.4
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.49.1
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root

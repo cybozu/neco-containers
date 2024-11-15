@@ -6,7 +6,6 @@ dist:
   description: OpenTelemetry Collector
   version: ${OTELCOL_VERSION}
   output_path: ./_build
-  otelcol_version: ${OTELCOL_VERSION}
 
 receivers:
   - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v${OTELCOL_VERSION}
@@ -19,14 +18,12 @@ receivers:
 
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/debugexporter v${OTELCOL_VERSION}
-  - gomod: go.opentelemetry.io/collector/exporter/loggingexporter v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/loadbalancingexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v${OTELCOL_VERSION}
 
 extensions:
-  - gomod: go.opentelemetry.io/collector/extension/ballastextension v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v${OTELCOL_VERSION}
 

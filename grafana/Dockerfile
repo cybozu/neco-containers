@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG GRAFANA_VERSION=11.2.1
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+ARG GRAFANA_VERSION=11.3.0+security-01
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -65,6 +65,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
 COPY --from=build /work/grafana/bin/grafana* /work/grafana/bin/*/grafana* ./bin/
 COPY --from=build /work/grafana/public ./public
 COPY --from=build /work/grafana/LICENSE ./LICENSE
+COPY --from=build /work/grafana/conf/defaults.ini ./conf/defaults.ini
 
 EXPOSE 3000
 
