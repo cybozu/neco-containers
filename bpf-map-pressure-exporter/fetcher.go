@@ -91,19 +91,14 @@ func calcMapPressure(id ebpf.MapID, m *ebpf.Map, minfo *ebpf.MapInfo) bpfMapPres
 	const chunkSize uint32 = 4096
 
 	mx := minfo.MaxEntries
-	chunks := int(mx / chunkSize)
-	if chunks == 0 {
-		chunks = 1
-	}
-	keyType, kout := createBuffer(int(minfo.KeySize), int(chunkSize))
+	_, kout := createBuffer(int(minfo.KeySize), int(chunkSize))
 	_, vout := createBuffer(int(minfo.ValueSize), int(chunkSize))
 
-	cursor := reflect.New(keyType).Interface()
-	next := reflect.New(keyType).Interface()
+	var cursor ebpf.MapBatchCursor
 
 	cnt := 0
-	for i := 0; i < chunks; i++ {
-		c, err := m.BatchLookup(cursor, next, kout, vout, nil)
+	for {
+		c, err := m.BatchLookup(&cursor, kout, vout, nil)
 		cnt += c
 		if err != nil {
 			if errors.Is(err, ebpf.ErrKeyNotExist) {
@@ -113,9 +108,6 @@ func calcMapPressure(id ebpf.MapID, m *ebpf.Map, minfo *ebpf.MapInfo) bpfMapPres
 				"id":        id,
 				log.FnError: err,
 			})
-		} else {
-			cursor = next
-			next = reflect.New(keyType).Interface()
 		}
 	}
 
