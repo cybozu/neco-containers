@@ -1,7 +1,7 @@
 # serf container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-noble AS build
 
 ARG SERF_VERSION=0.10.1
 
@@ -15,7 +15,7 @@ WORKDIR /go/src/github.com/hashicorp/serf
 RUN go install -ldflags="-w -s" ./...
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
