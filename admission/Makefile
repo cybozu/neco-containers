@@ -21,7 +21,7 @@ crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
-	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana-operator/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/kustomize/base/crds.yaml
+	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/kustomize/base/crds.yaml
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
