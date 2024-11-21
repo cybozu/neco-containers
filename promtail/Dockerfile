@@ -60,6 +60,8 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
     meson install -C /work/systemd/build/
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
+COPY force-flush-partial-line.patch /work/
+RUN cd loki && patch -p1 < ../force-flush-partial-line.patch
 RUN make -C /work/loki BUILD_IN_CONTAINER=false PROMTAIL_JOURNAL_ENABLED=true promtail
 
 FROM ghcr.io/cybozu/ubuntu:22.04
