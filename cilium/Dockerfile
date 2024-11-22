@@ -95,4 +95,4 @@ RUN apt-get update \
 WORKDIR /home/cilium
 
 ENV INITSYSTEM="SYSTEMD"
-ENTRYPOINT ["/usr/bin/cilium"]
+ENTRYPOINT ["/usr/bin/cilium-dbg"]

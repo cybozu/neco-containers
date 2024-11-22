@@ -31,11 +31,9 @@ runs:
           wget \
           zip \
           software-properties-common
-        wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+        wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc > /dev/null
         sudo apt-add-repository -y "deb http://apt.llvm.org/jammy/ llvm-toolchain-jammy-17 main"
         sudo apt-get update
-        sudo apt-get install -y --no-install-recommends \
-          clang-17 clang-tools-17 llvm-17-dev lldb-17 lld-17 clang-format-17 libc++-17-dev libc++abi-17-dev
 
     - name: Download cilium/proxy
       shell: bash
@@ -43,6 +41,12 @@ runs:
         mkdir -p cilium/src/workspace/usr/bin cilium/src/cilium-proxy
         curl -sSLf https://github.com/cilium/proxy/archive/${{ inputs.cilium-proxy_version }}.tar.gz | \
           tar zxf - --strip-components 1 -C cilium/src/cilium-proxy
+
+    - name: Setup Clang
+      shell: bash
+      working-directory: cilium/src/cilium-proxy
+      run: |
+        make clang.bazelrc
 
     - name: Build libcilium.so
       shell: bash
@@ -54,7 +58,8 @@ runs:
     - name: Build cilium-envoy
       shell: bash
       env:
-        BAZEL_BUILD_OPTS: "--remote_upload_local_results=false --disk_cache=/tmp/bazel-cache --verbose_failures"
+        # https://github.com/envoyproxy/envoy/issues/34368
+        BAZEL_BUILD_OPTS: "--remote_upload_local_results=false --disk_cache=/tmp/bazel-cache --verbose_failures --copt=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/11"
         PKG_BUILD: 1
         DESTDIR: /tmp/install
       run: |
@@ -68,4 +73,3 @@ runs:
         make install
         sudo mv /tmp/install/usr/bin/cilium-envoy ../workspace/usr/bin/
         sudo mv /tmp/install/usr/bin/cilium-envoy-starter ../workspace/usr/bin/
-

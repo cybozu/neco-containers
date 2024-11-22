@@ -336,7 +336,7 @@ follow these steps.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. If necessary, update `cilium-proxy_version` and `image-tools_version` parameters in the `.github/workflows/cilium.yaml`.
+2. If necessary, update `cilium-proxy_version` and `image-tools_version` parameters in the `.github/workflows/main.yaml`.
    1. The `version` for envoy is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
    2. Check the upstream Dockerfile and update the `.github/actions/build_cilium-envoy/action.yaml` as needed.
       - [Dockerfile.builder](https://github.com/cilium/proxy/blob/master/Dockerfile.builder) that includes installation of dependencies and Bazel.
@@ -346,7 +346,6 @@ follow these steps.
       - [compilers/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile) that includes installation of dependencies.
       - [bpftool/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile)
       - [llvm/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile)
-      - [iproute2/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/iproute2/Dockerfile)
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/cilium/Dockerfile`
 4. Check whether manually applied patches have been included in the new release and remove them accordingly.
