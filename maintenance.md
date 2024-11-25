@@ -91,7 +91,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [testhttpd](#testhttpd)
 - [trust-manager](#trust-manager)
 - [trust-packages](#trust-packages)
-- [ttypdb](#ttypdb)
 - [unbound](#unbound)
 - [unbound\_exporter](#unbound_exporter)
 - [vault](#vault)
@@ -1050,15 +1049,6 @@ TBD
 1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
 2. Update `TRUST_MANAGER_VERSION` in `Dockerfile`.
 3. Update `TAG` file.
-
-## ttypdb
-
-![Regular Update](./regular_update.svg)
-
-Only the base image and module dependency should be updated.
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## unbound
 
