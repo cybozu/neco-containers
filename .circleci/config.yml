@@ -349,9 +349,6 @@ jobs:
 workflows:
   main:
     jobs:
-      - build:
-          name: build-blackbox_exporter
-          container-image: blackbox_exporter
       - build-ceph:
           version: 18.2.4
       - build:
@@ -386,33 +383,11 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build:
-          name: build-heartbeat
-          container-image: heartbeat
-          scan: true
-      - build:
           name: build-local-pv-provisioner
           container-image: local-pv-provisioner
-      - build:
-          name: build-meows-neco-runner
-          container-image: meows-neco-runner
-      - build:
-          name: build-moco-switchover-downtime-monitor
-          container-image: moco-switchover-downtime-monitor
-      - build:
-          name: build-opentelemetry-collector
-          container-image: opentelemetry-collector
-      - build:
-          name: build-prometheus-adapter
-          container-image: prometheus-adapter
       - build:
           name: build-redis
           container-image: redis
       - build:
           name: build-rook
           container-image: rook
-      - build:
-          name: build-s3gw
-          container-image: s3gw
-      - build:
-          name: build-testhttpd
-          container-image: testhttpd
