@@ -1,0 +1,26 @@
+#!/bin/bash -e
+
+# https://github.com/tj-actions/changed-files?tab=readme-ov-file#outputs-
+cat .github/outputs/all_changed_and_modified_files.txt | tr ',' '\n' | xargs realpath > .github/outputs/__diff.txt
+
+echo "Changed Files:"
+cat .github/outputs/__diff.txt | jq -n --raw-input '[inputs]' | yq -P
+
+JSON_MATRIX="$(echo "${INPUT_MATRIX}" | yq -ojson)"
+OUTPUT_MATRIX='[]'
+for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do
+    ENTRY=$(echo "${JSON_MATRIX}" | jq ".[$i - 1]")
+    CONTAINER_DIR=$(echo "${ENTRY}" | jq -r '.dir')
+    CONTAINER_NAME=$(echo "${ENTRY}" | jq -r '."container-image"')
+    echo "Checking ${CONTAINER_NAME}..."
+    if grep -F $(realpath "${CONTAINER_DIR}") .github/outputs/__diff.txt > /dev/null; then
+        OUTPUT_MATRIX="$(jq -nc '[inputs] | flatten' <(echo "${OUTPUT_MATRIX}") <(echo "[${ENTRY}]"))"
+        echo '  OK'
+    fi
+done
+
+echo "Result:"
+echo "${OUTPUT_MATRIX}" | yq -P
+
+# Render matrix
+echo "${OUTPUT_MATRIX}" | jq -c > .github/outputs/__matrix.json
