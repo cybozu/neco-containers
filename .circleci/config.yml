@@ -314,80 +314,13 @@ jobs:
               -t quay.io/cybozu/$image:$TAG \
               ${BRANCH_TAG_OPTION} \
               ${dir}
-  build-ceph:
-    parameters:
-      version:
-        type: string
-    docker:
-      - image: quay.io/cybozu/ubuntu-dev:22.04
-    resource_class: 2xlarge+
-    steps:
-      - checkout
-      - run:
-          name: Check TAG file
-          command: |
-            ceph_tag_exists="$(./tag_exists ceph)"
-            if [ "$ceph_tag_exists" = ng ]; then
-                echo ceph > BUILDS
-            fi
-      - run:
-          name: Build Ceph packages
-          command: |
-            mkdir -p src/workspace
-            if [ ! -f BUILDS ]; then
-              # fake for the next step
-              cd src/workspace
-              touch COPYING
-              exit 0
-            fi
-            ceph/build.sh << parameters.version >>
-      - persist_to_workspace:
-          root: src/workspace
-          paths:
-            - "*"
 
 workflows:
   main:
     jobs:
-      - build-ceph:
-          version: 18.2.4
-      - build:
-          name: build-ceph-container
-          container-image: ceph
-          attach: true
-          dir: ceph
-          requires:
-            - build-ceph
-      - build:
-          name: build-ceph-extra-exporter
-          container-image: ceph-extra-exporter
-      - build:
-          name: build-cephcsi
-          container-image: cephcsi
-      - build:
-          name: build-csi-attacher
-          container-image: csi-attacher
-      - build:
-          name: build-csi-node-driver-registrar
-          container-image: csi-node-driver-registrar
-      - build:
-          name: build-csi-provisioner
-          container-image: csi-provisioner
-      - build:
-          name: build-csi-resizer
-          container-image: csi-resizer
-      - build:
-          name: build-csi-snapshotter
-          container-image: csi-snapshotter
       - build:
           name: build-gorush
           container-image: gorush
       - build:
-          name: build-local-pv-provisioner
-          container-image: local-pv-provisioner
-      - build:
           name: build-redis
           container-image: redis
-      - build:
-          name: build-rook
-          container-image: rook
