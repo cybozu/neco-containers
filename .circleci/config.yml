@@ -1,5 +1,24 @@
 version: 2.1
 jobs:
+  test:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      directory:
+        type: string
+      go-image-tag:
+        type: string
+        default: "1.21-jammy"
+    description: "test at << parameters.directory >>"
+    docker:
+      - image: quay.io/cybozu/golang:<<parameters.go-image-tag>>
+      - image: quay.io/cybozu/etcd:3.5.7.1
+    working_directory: /work
+    steps:
+      - checkout
+      - run: apt-get update
+      - run: make -C << parameters.directory >> check-generate SUDO=
+      - run: make -C << parameters.directory >> test SUDO=
   build:
     # This is a parameterized job
     # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
@@ -152,6 +171,149 @@ jobs:
                       echo "scanning $image:$TAG ..."
                       YAMORY_IMAGE_IDENTIFIER="quay.io/cybozu/$image" YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
                   done
+  buildx:
+    # This is a parameterized job
+    # https://circleci.com/docs/2.0/reusing-config/#authoring-parameterized-jobs
+    parameters:
+      container-image:
+        type: string
+      dir:
+        type: string
+        default: ""
+      attach:
+        type: boolean
+        default: false
+      resource-class:
+        type: string
+        default: medium
+    description: "build << parameters.container-image >>"
+    docker:
+      - image: cimg/base:current-20.04
+    resource_class: << parameters.resource-class >>
+    steps:
+      - run:
+          name: Install tools
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y curl jq git
+            CONTAINER_TAG_EXISTS_VERSION=1.0.3
+            curl -fsSL -o container-tag-exists.tar.gz \
+              https://github.com/Hsn723/container-tag-exists/releases/download/v${CONTAINER_TAG_EXISTS_VERSION}/container-tag-exists_${CONTAINER_TAG_EXISTS_VERSION}_linux_amd64.tar.gz
+            sudo tar -xzf container-tag-exists.tar.gz -C /usr/local/bin
+            rm -f container-tag-exists.tar.gz
+            curl -LO https://storage.googleapis.com/container-structure-test/v1.14.0/container-structure-test-linux-amd64 \
+              && chmod +x container-structure-test-linux-amd64 \
+              && sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
+      - checkout
+      - when:
+          condition: << parameters.attach >>
+          steps:
+            - attach_workspace:
+                at: ./<< parameters.dir >>/workspace
+      - setup_remote_docker:
+          version: docker24
+      # The binfmt container image is not an official image, so we use a pinned version(qemu-v6.2.0).
+      - run: docker run --rm --privileged tonistiigi/binfmt@sha256:5bf63a53ad6222538112b5ced0f1afb8509132773ea6dd3991a197464962854e --install linux/amd64,linux/arm64/v8
+      - run:
+          name: Check TAG files
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            image=<< parameters.container-image >>
+            tag=$(cat ${dir}/TAG)
+            c=$(container-tag-exists quay.io/cybozu/$image $tag 2>&1)
+            # The stderr should be either "" or "found".
+            # If the stderr was an error message other than "found", this step must have stopped due to the shell option "-e".
+            if [ "$c" = "" ]; then
+                echo quay.io/cybozu/$image >> BUILDS
+            fi
+      - run:
+          name: Validate consistency between BRANCH and TAG
+          command: |
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
+            ./tag_branch_consistency $dir
+      - run:
+          name: Test container structure
+          command: |
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            if [ ! -e "$dir/container-structure-test.yaml" ]; then exit 0; fi
+            echo "testing container structure: << parameters.container-image >> ..."
+            TAG=$(cat $dir/TAG)
+            for platform in linux/amd64 linux/arm64/v8; do
+              docker context create structure
+              docker buildx create structure --use
+              docker buildx build \
+                --progress plain \
+                --load \
+                --platform $platform \
+                -t quay.io/cybozu/$image:$TAG \
+                ${dir}
+              container-structure-test test \
+                --image quay.io/cybozu/$image:$TAG \
+                --config ${dir}/container-structure-test.yaml
+              docker buildx rm
+              docker context rm structure
+            done
+      - run:
+          name: Build test
+          command: |
+            if [ "${CIRCLE_BRANCH}" = "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            echo "building test: << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --progress plain \
+              --platform linux/amd64,linux/arm64/v8 \
+              -o type=tar,dest=$image.tar \
+              ${dir}
+      - run:
+          name: Build and Push
+          command: |
+            if [ "${CIRCLE_BRANCH}" != "main" ]; then
+                exit 0
+            fi
+            if [ ! -f BUILDS ]; then
+                exit 0
+            fi
+            docker login -u $QUAY_USER -p $QUAY_PASSWORD quay.io
+            echo
+            echo "building and pushing << parameters.container-image >> ..."
+            image=<< parameters.container-image >>
+            dir=<< parameters.dir >>
+            if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            TAG=$(cat $dir/TAG)
+            if [ -f $dir/BRANCH ]; then
+              if echo $TAG | grep -q -e - ; then
+                echo ===== Skip pushing branch tags for pre-release $TAG =====
+              else
+                BRANCH=$(cat $dir/BRANCH)
+                BRANCH_TAG_OPTION="-t quay.io/cybozu/$image:$BRANCH"
+              fi
+            fi
+            docker context create buildx
+            docker buildx create buildx --use
+            docker buildx build \
+              --progress plain \
+              --push \
+              --platform linux/amd64,linux/arm64/v8 \
+              -t quay.io/cybozu/$image:$TAG \
+              ${BRANCH_TAG_OPTION} \
+              ${dir}
 
 workflows:
   main:
@@ -160,9 +322,5 @@ workflows:
           name: build-gorush
           container-image: gorush
       - build:
-          name: build-local-pv-provisioner
-          container-image: local-pv-provisioner
-      - build:
           name: build-redis
           container-image: redis
-      - build:
