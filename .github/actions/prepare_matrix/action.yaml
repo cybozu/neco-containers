@@ -1,0 +1,30 @@
+name: "Prepare build matrix"
+description: "Prepare build matrix"
+inputs:
+  matrix:
+    description: "Candidate build jobs"
+    required: true
+    default: ""
+outputs:
+  jobs:
+    description: "matrix"
+    value: ${{ steps.prepare-matrix.outputs.jobs }}
+
+runs:
+  using: composite
+  steps:
+    - name: Check and output changed files
+      id: changed-files
+      uses: tj-actions/changed-files@4edd678ac3f81e2dc578756871e4d00c19191daf # v45.0.4
+      with:
+        files_ignore: |
+          **/*.md
+        separator: ','
+        write_output_files: 'true'
+    - id: prepare-matrix
+      shell: bash
+      env:
+        INPUT_MATRIX: ${{ inputs.matrix }}
+      run: |
+        ./generate_matrix
+        echo "jobs=$(cat .github/outputs/__matrix.json)" >> $GITHUB_OUTPUT
