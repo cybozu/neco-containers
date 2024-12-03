@@ -11,16 +11,16 @@ import (
 
 var counterRequestFailed = promauto.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "failed_counter",
-		Help: "The failed count for Redfish of BMC accessing",
+		Name: "bmc_log_requests_failed_total",
+		Help: "Failed count of accessing BMC to get the system event log",
 	},
 	[]string{"serial"},
 )
 
 var counterRequestSuccess = promauto.NewCounterVec(
 	prometheus.CounterOpts{
-		Name: "success_counter",
-		Help: "The success count for Redfish of BMC accessing",
+		Name: "bmc_log_requests_success_total",
+		Help: "Succeeded count of accessing BMC to get the system event log",
 	},
 	[]string{"serial"},
 )
