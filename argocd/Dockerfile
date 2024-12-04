@@ -30,7 +30,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install Node.js 20.x and yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sSLf https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -sSLf https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
@@ -54,7 +54,7 @@ RUN make argocd-all
 
 
 # Final image
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \
