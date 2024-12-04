@@ -49,14 +49,14 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP failed_counter The failed count for Redfish of BMC accessing")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_failed_total Failed count of accessing BMC to get the system event log")).To(Equal(true))
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# TYPE failed_counter counter")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_failed_total counter")).To(Equal(true))
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 failed", func() {
-			metricsLine, err := findMetrics(metricsLines, "failed_counter")
+			metricsLine, err := findMetrics(metricsLines, "bmc_log_requests_failed_total")
 			Expect(err).NotTo(HaveOccurred())
 
 			p := expfmt.TextParser{}
@@ -93,14 +93,14 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP success_counter The success count for Redfish of BMC accessing")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_success_total Succeeded count of accessing BMC to get the system event log")).To(Equal(true))
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# TYPE success_counter counter")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_success_total counter")).To(Equal(true))
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 success", func() {
-			metricsLine, err := findMetrics(metricsLines, "success_counter")
+			metricsLine, err := findMetrics(metricsLines, "bmc_log_requests_success_total")
 			Expect(err).NotTo(HaveOccurred())
 			p := expfmt.TextParser{}
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
