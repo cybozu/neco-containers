@@ -307,5 +307,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
-        cilium-proxy_version: 39a2a56bbd5b3a591f69dbca51d3e30ef97e0e51
-        image-tools_version: ff22ba3bff1010f4a2dd76ede789663c3beaf8d2
+        cilium-proxy_version: 97edc2815e2c6a174d3d12e71731d54f5d32ea16
+        image-tools_version: de666b61919632fb1e91fcf6259531f6bee467ee
