@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.22-jammy
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.23-jammy
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
