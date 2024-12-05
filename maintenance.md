@@ -337,20 +337,25 @@ follow these steps.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. If necessary, update `cilium-proxy_version` and `image-tools_version` parameters in the `.github/workflows/main.yaml`.
-   1. The `version` for envoy is referenced in the Dockerfile for `cilium` in the source repository and is a commit hash from [cilium/proxy](https://github.com/cilium/proxy)
-   2. Check the upstream Dockerfile and update the `.github/actions/build_cilium-envoy/action.yaml` as needed.
-      - [Dockerfile.builder](https://github.com/cilium/proxy/blob/master/Dockerfile.builder) that includes installation of dependencies and Bazel.
-      - [Dockerfile](https://github.com/cilium/proxy/blob/master/Dockerfile) that builds and installs cilium-envoy.
-   3. For `image-tools_version`, use the latest commit hash from [cilium/image-tools](https://github.com/cilium/image-tools)
-   4. Check the upstream Dockerfile and update the `.github/actions/build_cilium-image-tools/action.yaml` as needed.
-      - [compilers/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile) that includes installation of dependencies.
-      - [bpftool/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile)
-      - [llvm/Dockerfile](https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile)
-3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/cilium/Dockerfile`
-4. Check whether manually applied patches have been included in the new release and remove them accordingly.
-5. Update the `BRANCH` and `TAG` files accordingly.
+2. Update `CILIUM_IMAGE_TOOLS_TARGET` and `CILIUM_PROXY_TARGET` in `neco-containers/cilium/Makefile`.
+   1. `CILIUM_IMAGE_TOOLS_TARGET` is a commit SHA of https://github.com/cilium/image-tools .
+      Update to the latest one and go backward to find an appropriate SHA.
+   2. `CILIUM_PROXY_TARGET` is a commit SHA of https://github.com/cilium/proxy . To find the appropriate one, do:
+      1. Update `BRANCH` and `TAG` files.
+      2. Run `make clean checkout-cilium`. It checks out `cilium/cilium` at `neco-containers/cilium/src/cilium`.
+      3. Run `cat src/cilium/images/cilium/Dockerfile | grep cilium-envoy:`.
+3. Checkout `cilium/cilium`, `cilium/image-tools`, and `cilium/proxy` at the relevant SHA.
+   1. Run `make checkout` and download them under `neco-containers/cilium/src`.
+4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
+   1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
+   2. All the build specification is written in `neco-containers/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
+5. Build `ghcr.io/cybozu/cilium` and see the result.
+   1. Run `make build` to build.
+   2. Run `make test` to make sanity check.
+   3. Run `make test-e2e` to run the standard connectivity test.
+      1. Remove `--test=!check-log-errors` in `e2e/Makefile` to confirm no important error is ignored.
+      2. Restore the flag until we catch up with the upstream that solves the LLVM-17-related issue.
+   4. If any problem found, `dive ghcr.io/cybozu/cilium:$(cat TAG)` will help.
 
 > [!Note]
 > The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
