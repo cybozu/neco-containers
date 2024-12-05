@@ -1,77 +1,65 @@
-FROM ghcr.io/cybozu/ubuntu:20.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
 
-ENV HAPROXY_BRANCH 2.6
-ENV HAPROXY_MINOR 2.6.17
-ENV HAPROXY_SHA256 be48ee8ff9127c402b4c6cf1445cef7052f2c540ed1eff2dd04af677b8cd9dd0
-ENV HAPROXY_SRC_URL http://www.haproxy.org/download
-ENV DEBIAN_FRONTEND noninteractive
-
-# if you use ubuntu:22.04, you must use "libssl3=3.0.2-0ubuntu1.9". but HA-Proxy 2.6 does NOT adapt it.
-# We choose "ubuntu:20.04" and "libssl1.1" to get a stable operation.
+ENV HAPROXY_BRANCH=2.6
+ENV HAPROXY_MINOR=2.6.17
+ENV HAPROXY_SRC_URL="https://www.haproxy.org/download/${HAPROXY_BRANCH}/src/haproxy-${HAPROXY_MINOR}.tar.gz"
+ENV HAPROXY_SHA256=be48ee8ff9127c402b4c6cf1445cef7052f2c540ed1eff2dd04af677b8cd9dd0
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    procps \
-    zlib1g \
-    libssl1.1 \
-    "libpcre2-*" \
-    liblua5.3-0 \
-    libatomic1 \
-    tar \
-    curl \
-    socat \
-    gcc \
-    make \
-    libc6-dev \
-    libssl-dev \
-    libpcre3-dev \
-    zlib1g-dev \
-    liblua5.3-dev && \
-    curl -sfSL "${HAPROXY_SRC_URL}/${HAPROXY_BRANCH}/src/haproxy-${HAPROXY_MINOR}.tar.gz" -o haproxy.tar.gz && \
-    echo "$HAPROXY_SHA256 *haproxy.tar.gz" | sha256sum -c - && \
+        liblua5.3-dev \
+        libpcre2-dev \
+        wget && \
+    rm -rf /var/lib/apt/lists/* && \
+    wget -O haproxy.tar.gz "$HAPROXY_SRC_URL" && \
+    echo "$HAPROXY_SHA256 *haproxy.tar.gz" | sha256sum -c && \
     mkdir -p /tmp/haproxy && \
     tar -xzf haproxy.tar.gz -C /tmp/haproxy --strip-components=1 && \
     rm -f haproxy.tar.gz && \
-    make -C /tmp/haproxy -j"$(nproc)" TARGET=linux-glibc CPU=generic USE_PCRE2=1 USE_PCRE2_JIT=1 USE_OPENSSL=1 \
-                            USE_TFO=1 USE_LINUX_TPROXY=1 USE_LUA=1 USE_GETADDRINFO=1 \
-                            USE_PROMEX=1 USE_SLZ=1 \
-                            all && \
-    make -C /tmp/haproxy TARGET=linux-glibc install-bin install-man
+    makeOpts=' \
+        TARGET=linux-glibc \
+        USE_GETADDRINFO=1 \
+        USE_LUA=1 LUA_INC=/usr/include/lua5.3 \
+        USE_OPENSSL=1 \
+        USE_PCRE2=1 USE_PCRE2_JIT=1 \
+        USE_PROMEX=1 \
+        ' && \
+    make -C /tmp/haproxy -j "$(nproc)" all $makeOpts && \
+    make -C /tmp/haproxy install-bin $makeOpts
 
 
-FROM ghcr.io/cybozu/ubuntu:20.04
-LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers/haproxy"
-
-ENV HAPROXY_UID haproxy
-ENV HAPROXY_GID haproxy
-ENV DEBIAN_FRONTEND noninteractive
-
-RUN mkdir -p /var/lib/haproxy && \
-    mkdir -p /usr/local/haproxy && \
-    mkdir -p /usr/local/bin
-
-COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
-COPY --from=build /tmp/haproxy/examples/errorfiles /usr/etc/haproxy/errors
-COPY --from=build /tmp/haproxy/LICENSE /usr/local/haproxy/LICENSE
-COPY docker-entrypoint.sh /
+FROM ghcr.io/cybozu/ubuntu:22.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    procps \
-    zlib1g \
-    libssl1.1 \
-    "libpcre2-*" \
-    liblua5.3-0 \
-    libatomic1 && \
-    groupadd "$HAPROXY_GID" && \
-    useradd -g "$HAPROXY_GID" "$HAPROXY_UID" && \
-    chown "$HAPROXY_UID:$HAPROXY_GID" /var/lib/haproxy && \
+        liblua5.3-dev && \
+    rm -rf /var/lib/apt/lists/* && \
+    groupadd --gid 99 --system haproxy && \
+    useradd \
+        --gid haproxy \
+        --home-dir /var/lib/haproxy \
+        --no-create-home \
+        --system \
+        --uid 99 \
+        haproxy && \
+    mkdir -p /usr/local/haproxy && \
     mkdir -p /usr/local/etc/haproxy && \
-    ln -s /usr/local/etc/haproxy /etc/haproxy && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    mkdir -p /var/lib/haproxy && \
+    chown haproxy:haproxy /var/lib/haproxy
+
+COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
+COPY --from=build /tmp/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors
+COPY --from=build /tmp/haproxy/LICENSE /usr/local/haproxy/LICENSE
+COPY docker-entrypoint.sh /usr/local/bin/
+
+# smoke test
+RUN haproxy -v
 
 STOPSIGNAL SIGUSR1
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+USER haproxy
+
 CMD ["haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
