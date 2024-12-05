@@ -1,9 +1,9 @@
 # dex container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
-ARG DEX_VERSION=2.38.0
+ARG DEX_VERSION=2.41.1
 
 WORKDIR /work/dex/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -23,6 +23,6 @@ COPY --from=build /work/dex/web /web
 USER 10000:10000
 
 # the lines below follow the old upstream Dockerfile: https://github.com/dexidp/dex/blob/2dccdc2a1a4f5cb6562b54225a8615280e5ac109/Dockerfile
-# if you want to use this outside of Neco, please edit ENTRYPOINT and COMMAND apporpriately
+# if you want to use this outside of Neco, please edit ENTRYPOINT and COMMAND appropriately
 ENTRYPOINT ["dex"]
 CMD ["version"]
