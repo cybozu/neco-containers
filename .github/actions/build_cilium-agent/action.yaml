@@ -30,13 +30,6 @@ runs:
         github_token: ${{ inputs.github_token }}
         request-scan: "true"
 
-    - name: Build Cilium Envoy
-      if: ${{ steps.prepare.outputs.build }}
-      uses: ./.github/actions/build_cilium-envoy
-      with:
-        github_token: ${{ inputs.github_token }}
-        cilium-proxy_version: ${{ inputs.cilium-proxy_version }}
-
     - name: Build Cilium image tools
       if: ${{ steps.prepare.outputs.build }}
       uses: ./.github/actions/build_cilium-image-tools
@@ -44,17 +37,34 @@ runs:
         github_token: ${{ inputs.github_token }}
         image-tools_version: ${{ inputs.image-tools_version }}
 
+    - name: Build Cilium Envoy
+      if: ${{ steps.prepare.outputs.build }}
+      uses: ./.github/actions/build_cilium-envoy
+      with:
+        github_token: ${{ inputs.github_token }}
+        cilium-proxy_version: ${{ inputs.cilium-proxy_version }}
+
     - name: Build cilium-agent image and push
       if: ${{ steps.prepare.outputs.build }}
       uses: docker/build-push-action@v5
       with:
         context: cilium
+        load: true
         platforms: "linux/amd64"
         provenance: false
         push: ${{ steps.prepare.outputs.docker_push }}
         tags: |
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
+
+    - name: Test images
+      if: ${{ steps.prepare.outputs.build }}
+      shell: bash
+      run: |
+        docker run --rm --entrypoint bash ${{ steps.prepare.outputs.tag }} -c 'bpftool version'
+        docker run --rm --entrypoint bash ${{ steps.prepare.outputs.tag }} -c 'clang --version'
+        docker run --rm --entrypoint bash ${{ steps.prepare.outputs.tag }} -c 'ip -V'
+        docker run --rm --entrypoint bash ${{ steps.prepare.outputs.tag }} -c 'ss -V'
 
     - name: Scan images
       if: ${{ steps.prepare.outputs.scan }}
