@@ -110,6 +110,12 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
+	// some iDRAC version can't retrieve SEL
+	if len(response.Sel) == 0 {
+		slog.Error("can not retrieve system event log", "SEL entry", 0, "serial", m.Serial)
+		return
+	}
+
 	createTime, err := time.Parse(time.RFC3339, response.Sel[len(response.Sel)-1].Create)
 	if err != nil {
 		slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
