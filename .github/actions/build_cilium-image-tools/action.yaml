@@ -12,31 +12,11 @@ runs:
     env:
       DEBIAN_FRONTEND: noninteractive
     run: |
-      sudo apt-get update
+      sudo apt-get -q update
       sudo ln -fs /usr/share/zoneinfo/UTC /etc/localtime
-      sudo apt-get install -y --no-install-recommends \
-        automake \
-        binutils \
-        bison \
-        build-essential \
-        ca-certificates \
-        cmake \
-        curl \
-        flex \
-        g++ \
-        gcc-9 \
-        git \
-        libelf-dev \
-        libmnl-dev \
-        libtool \
-        make \
-        ninja-build \
-        pkg-config \
+      sudo apt-get -q install -y --no-install-recommends \
         python2 \
-        python3 \
-        python3-pip \
-        llvm \
-        unzip
+        llvm
       sudo update-alternatives --install /usr/bin/python python /usr/bin/python2 1
       sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 2
 
@@ -46,6 +26,21 @@ runs:
       mkdir -p cilium/src/workspace/bin cilium/src/workspace/usr/local/bin cilium/src/workspace/usr/lib cilium/src/image-tools
       curl -sSLf https://github.com/cilium/image-tools/archive/${{ inputs.image-tools_version }}.tar.gz | \
         tar zxf - --strip-components 1 -C cilium/src/image-tools
+
+  - name: Install dependencies
+    shell: bash
+    working-directory: cilium/src/image-tools/images/compilers
+    run: |
+      # https://github.com/cilium/image-tools/blob/master/images/compilers/install-deps.sh
+      PACKAGES_FROM=$(grep -n packages= install-deps.sh | cut -d: -f1 | jq '. + 1')
+      PACKAGES_TO=$(grep -n ')' install-deps.sh | cut -d: -f1 | jq -n "[inputs | select(. >= ${PACKAGES_FROM})] | min - 1")
+      PACKAGES=$(cat install-deps.sh | sed -n ${PACKAGES_FROM},${PACKAGES_TO}p | awk '{ print $1 }' | grep -v arm64 | tr '\n' ' ')
+      sudo apt-get -q install -y --no-install-recommends ${PACKAGES}
+
+      PACKAGES_FROM=$(grep -n packages_amd64= install-deps.sh | cut -d: -f1 | jq '. + 1')
+      PACKAGES_TO=$(grep -n ')' install-deps.sh | cut -d: -f1 | jq -n "[inputs | select(. >= ${PACKAGES_FROM})] | min - 1")
+      PACKAGES=$(cat install-deps.sh | sed -n ${PACKAGES_FROM},${PACKAGES_TO}p | awk '{ print $1 }' | grep -v arm64 | tr '\n' ' ')
+      sudo apt-get -q install -y --no-install-recommends ${PACKAGES}
 
   - name: Build llvm
     shell: bash
@@ -77,7 +72,18 @@ runs:
   - name: Build bpftool
     shell: bash
     run: |
+      # https://github.com/libbpf/bpftool/tree/main?tab=readme-ov-file#build-bpftool
+      WORKSPACE=$(pwd)/cilium/src/workspace
       cd cilium/src/image-tools
       sudo images/bpftool/checkout-linux.sh
-      sudo images/bpftool/build-bpftool-native.sh
+      sudo bash -c 'echo ${PATH}'
+      sudo which clang
+      sudo clang --version
+      ldconfig -v 2>/dev/null || true
+      sudo bash -c "echo ${WORKSPACE}"
+      sudo bash -c "echo ${PATH}"
+      sudo bash -c "PATH=${WORKSPACE}/bin:${PATH} sudo which clang"
+      sudo bash -c "PATH=${WORKSPACE}/bin:${PATH} sudo clang --version"
+      sudo bash -c "PATH=${WORKSPACE}/bin:${PATH} EXTRA_CFLAGS=-v images/bpftool/build-bpftool-native.sh"
+      ldd /out/linux/amd64/bin/bpftool
       sudo mv /out/linux/amd64/bin/bpftool ../workspace/usr/local/bin/
