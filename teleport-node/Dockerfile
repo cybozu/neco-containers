@@ -33,8 +33,8 @@ COPY --from=build /work/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /work/teleport/LICENSE /usr/local/teleport/
 COPY update-necocli.sh /etc/profile.d/
 COPY loki-env.sh /etc/profile.d/
+COPY hubble-env.sh /etc/profile.d/
 
-RUN adduser --disabled-password --gecos "" --uid 10000 cybozu
 USER cybozu
 
 ENV PATH=$PATH:/usr/local/teleport/bin
