@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 # https://github.com/tj-actions/changed-files?tab=readme-ov-file#outputs-
-cat .github/outputs/all_changed_and_modified_files.txt | tr ',' '\n' | xargs realpath > .github/outputs/__diff.txt
+cat .github/outputs/all_changed_and_modified_files.txt | tr ',' '\n' | xargs -n1 printf "$(pwd)/%s\n" | sort > .github/outputs/__diff.txt
 
 echo "Changed Files:"
 cat .github/outputs/__diff.txt | jq -n --raw-input '[inputs]' | yq -P
