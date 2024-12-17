@@ -65,6 +65,8 @@ jobs:
               container-image: "contour"
             - dir: "./coredns"
               container-image: "coredns"
+            - dir: "csi-addons-controller"
+              container-image: "csi-addons-controller"
             - dir: "csi-attacher"
               container-image: "csi-attacher"
             - dir: "csi-node-driver-registrar"
