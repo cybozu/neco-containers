@@ -1,0 +1,5 @@
+image:
+  pullPolicy: IfNotPresent
+  useDigest: false
+ipam:
+  mode: kubernetes
