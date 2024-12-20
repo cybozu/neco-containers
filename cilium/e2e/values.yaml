@@ -1,0 +1,16 @@
+autoDirectNodeRoutes: true
+devices: eth+
+enableIPv6Masquerade: false
+image:
+  pullPolicy: Never
+  useDigest: false
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+ipv6:
+  enabled: false
+kubeProxyReplacement: true
+loadBalancer:
+  acceleration: disabled
+  dsrDispatch: geneve
+  mode: dsr
+routingMode: native
+tunnelProtocol: geneve

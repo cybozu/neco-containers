@@ -1,4 +1,7 @@
 *
 !TAG
+!src/cilium
+!src/image-tools
+!src/proxy
 !src/workspace
 !*.patch
