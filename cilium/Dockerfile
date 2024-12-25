@@ -80,9 +80,12 @@ RUN CODENAME=$(echo ${GOLANG_IMAGE} | cut -d- -f2); \
     apt-get update && \
     apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
+      ca-certificates \
+      # Multi-arch cross-compilation packages
       gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross binutils-aarch64-linux-gnu \
       gcc-x86-64-linux-gnu g++-x86-64-linux-gnu libc6-dev-amd64-cross binutils-x86-64-linux-gnu \
       libc6-dev \
+      # Envoy Build dependencies
       autoconf automake cmake coreutils curl git libtool make ninja-build patch patchelf \
       python3 python-is-python3 unzip virtualenv wget zip \
       # Cilium-envoy build dependencies
@@ -169,12 +172,14 @@ RUN apt-get update && \
     apt-get install -y libmnl0 libnetfilter-conntrack3 libnfnetlink0 libnftnl11 && \
     rm -rf /var/lib/apt/lists/*
 
+WORKDIR /go/src/github.com/cilium/cilium/images/runtime
+RUN --mount=type=bind,readwrite,source=src/cilium/images/runtime,target=/go/src/github.com/cilium/cilium/images/runtime \
+    ./install-runtime-deps.sh
+
 COPY --from=cilium-iptables /iptables /iptables
 RUN dpkg -i /iptables/*\.deb && rm -rf /iptables
 
-WORKDIR /go/src/github.com/cilium/cilium/images/runtime
 RUN --mount=type=bind,readwrite,source=src/cilium/images/runtime,target=/go/src/github.com/cilium/cilium/images/runtime \
-    ./install-runtime-deps.sh && \
     ./iptables-wrapper-installer.sh --no-sanity-check
 
 COPY --from=cilium-llvm /usr/local/bin/clang /usr/local/bin/llc /usr/local/bin/
