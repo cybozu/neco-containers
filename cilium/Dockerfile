@@ -2,7 +2,7 @@
 #   cilium-compiler:            docker.io/cilium/image-compilers
 #   cilium-llvm:                docker.io/cilium/cilium-llvm
 #   cilium-bpftool              docker.io/cilium/cilium-bpftool
-#   cilium-iptables             intermediate (https://github.com/cilium/image-tools/blob/main/images/iptables/Dockerfile)
+#   cilium-iptables             intermediate (https://github.com/cilium/image-tools/blob/master/images/iptables/Dockerfile)
 #   cilium-envoy-builder        quay.io/cilium/cilium-envoy-builder
 #   cilium-proxylib             intermediate (https://github.com/cilium/proxy/blob/main/Dockerfile)
 #   cilium-envoy-builder-fresh  intermediate (https://github.com/cilium/proxy/blob/main/Dockerfile)
@@ -169,7 +169,6 @@ FROM ${UBUNTU_IMAGE} AS cilium-runtime
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y jq && \
-    apt-get install -y libmnl0 libnetfilter-conntrack3 libnfnetlink0 libnftnl11 && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /go/src/github.com/cilium/cilium/images/runtime
