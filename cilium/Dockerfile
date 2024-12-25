@@ -165,7 +165,6 @@ RUN ./download-cni.sh
 # This is the base of the final image, do not leave anything unrelated to the final output.
 FROM ${UBUNTU_IMAGE} AS cilium-runtime
 
-## Need investigation
 RUN apt-get update && \
     apt-get upgrade -y && \
     apt-get install -y jq && \
