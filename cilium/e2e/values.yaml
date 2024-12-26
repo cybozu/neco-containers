@@ -1,6 +1,12 @@
 autoDirectNodeRoutes: true
 devices: eth+
 enableIPv6Masquerade: false
+hubble:
+  enabled: true
+  relay:
+    enabled: true
+    image:
+      useDigest: false
 image:
   pullPolicy: Never
   useDigest: false
