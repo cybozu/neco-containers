@@ -151,6 +151,7 @@ jobs:
               container-image: "hubble"
             - dir: "./hubble-relay"
               container-image: "hubble-relay"
+              make-post-targets: "cilium-checkout cilium-test-e2e-setup cilium-test-e2e-upgrade-inotify test-e2e"
               request-scan: "false"
             - dir: "./hubble-ui"
               container-image: "hubble-ui-frontend"
