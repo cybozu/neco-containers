@@ -1,6 +1,6 @@
-FROM quay.io/cybozu/golang:1.21-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
-ENV ARGOCD_IMAGE_UPDATER_VERSION=0.12.2
+ENV ARGOCD_IMAGE_UPDATER_VERSION=0.15.1
 
 WORKDIR /work
 
@@ -10,7 +10,7 @@ WORKDIR /work/argocd-image-updater
 RUN mkdir -p dist && \
     make controller
 
-FROM quay.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \
@@ -18,7 +18,7 @@ RUN groupadd -g 10000 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git openssh-client python3 python3-pip && \
+    apt-get install -y --no-install-recommends git openssh-client python3 python3-pip tini gpg gpg-agent && \
     pip3 install --upgrade pip && \
     pip3 install awscli && \
     apt-get clean && \
@@ -30,4 +30,4 @@ COPY --from=builder /work/argocd-image-updater/LICENSE /usr/local/argocd-image-u
 
 USER argocd
 
-ENTRYPOINT ["/usr/local/bin/argocd-image-updater"]
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/argocd-image-updater"]
