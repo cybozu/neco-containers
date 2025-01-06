@@ -18,11 +18,19 @@ RUN groupadd -g 10000 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git openssh-client python3 python3-pip tini gpg gpg-agent && \
-    pip3 install --upgrade pip && \
-    pip3 install awscli && \
-    apt-get clean && \
+    apt-get install -y --no-install-recommends \
+        git \
+        gpg \
+        gpg-agent \
+        openssh-client \
+        tini \
+        unzip && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip ./aws
 
 COPY --from=builder /work/argocd-image-updater/dist/argocd-image-updater /usr/local/bin
 COPY --from=builder /work/argocd-image-updater/hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
