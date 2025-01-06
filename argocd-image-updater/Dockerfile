@@ -36,6 +36,6 @@ COPY --from=builder /work/argocd-image-updater/dist/argocd-image-updater /usr/lo
 COPY --from=builder /work/argocd-image-updater/hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
 COPY --from=builder /work/argocd-image-updater/LICENSE /usr/local/argocd-image-updater/LICENSE
 
-USER argocd
+USER 10000:10000
 
 ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/argocd-image-updater"]
