@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
-ENV ARGOCD_IMAGE_UPDATER_VERSION=0.15.1
+ENV ARGOCD_IMAGE_UPDATER_VERSION=0.15.2
 
 WORKDIR /work
 
@@ -38,4 +38,4 @@ COPY --from=builder /work/argocd-image-updater/LICENSE /usr/local/argocd-image-u
 
 USER 10000:10000
 
-ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/argocd-image-updater"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/argocd-image-updater"]
