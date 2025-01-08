@@ -38,4 +38,4 @@ COPY --from=builder /work/argocd-image-updater/LICENSE /usr/local/argocd-image-u
 
 USER 10000:10000
 
-ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/argocd-image-updater"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/argocd-image-updater"]
