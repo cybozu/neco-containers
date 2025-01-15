@@ -1,9 +1,9 @@
-ARG MEOWS_VERSION=0.16.0
+ARG MEOWS_VERSION=0.17.0
 
 FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
-ARG GRPCURL_VERSION=1.8.9
+ARG GRPCURL_VERSION=1.9.2
 RUN curl -fsSL -o grpcurl.tar.gz "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && rm -f grpcurl.tar.gz \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         bind9-dnsutils \
         binutils \
         bsdmainutils \
+        conntrack \
         expect \
         file \
         gdb \
