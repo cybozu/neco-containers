@@ -41,6 +41,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [contour](#contour)
 - [coredns](#coredns)
 - [csi addons controller](#csi-addons-controller)
+- [csi addons sidecar](#csi-addons-sidecar)
 - [csi sidecars](#csi-sidecars)
 - [dex](#dex)
 - [envoy](#envoy)
@@ -429,6 +430,15 @@ follow these steps.
 
 1. Update `VERSION` in Dockerfile.
 2. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is [here](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/Dockerfile).
+3. update image tag in `Dockerfile` if necessary.
+4. Update `BRANCH` and `TAG` files.
+
+## csi addons sidecar
+
+![CSA Update](./csa_update.svg)
+
+1. Update `VERSION` in Dockerfile.
+2. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is [here](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/build/Containerfile.sidecar). Although the name of the file is `Containerfile.sidecar`, it can be used as a Dockerfile.
 3. update image tag in `Dockerfile` if necessary.
 4. Update `BRANCH` and `TAG` files.
 
