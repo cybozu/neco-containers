@@ -9,6 +9,11 @@ GO_TEST_OPTS=-v -race
 GO_FMT=gofmt
 GO_FMT_OPTS=-s -l
 
+CGO=CGO_ENABLED=0
+
+DOCKER=docker
+DOCKER_TAG=ghcr.io/cybozu/lbip-manager:dev
+
 # Test tools
 CUSTOM_CHECKER = $(BIN_DIR)/custom-checker
 STATIC_CHECK = $(BIN_DIR)/staticcheck
@@ -44,7 +49,11 @@ test: vet check-diff $(STATIC_CHECK) $(CUSTOM_CHECKER)
 
 .PHONY: build
 build: $(CMDS)
-	$(GO) build $(GO_BUILD_OPT) -o ./bin/lbip-manager
+	$(CGO) $(GO) build $(GO_BUILD_OPT) -o $/lbip-manager
+
+.PHONY: docker
+docker:
+	$(DOCKER) build -t $(DOCKER_TAG) .
 
 .PHONY: clean
 clean:
@@ -52,6 +61,6 @@ clean:
 	-rm $(RM_OPTS) $(BIN_DIR)
 
 .PHONY: all
-all: test build
+all: test build docker
 
 .DEFAULT_GOAL=all

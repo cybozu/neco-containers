@@ -3,8 +3,11 @@ package cmd
 import (
 	"os"
 
+	"github.com/cybozu/neco-containers/lbip-manager/pkg/logger"
 	"github.com/spf13/cobra"
 )
+
+var log = logger.GetLogger()
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
