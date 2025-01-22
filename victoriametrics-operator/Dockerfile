@@ -16,12 +16,25 @@ RUN curl -fsSL -o victoriametrics-operator.tar.gz "https://github.com/${VICTORIA
     && rm -f victoriametrics-operator.tar.gz
 RUN go mod download
 RUN CGO_ENABLED=0 go build -a -o app ./cmd
+RUN CGO_ENABLED=0 go build -a -o config-reloader ./cmd/config-reloader
+
 
 # Stage2: setup runtime container
-FROM scratch
+FROM scratch AS operator
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/src/github.com/VictoriaMetrics/operator/app /
+COPY --from=build /go/src/github.com/VictoriaMetrics/operator/LICENSE /
+
+USER 10000:10000
+
+ENTRYPOINT ["/app"]
+
+
+FROM scratch AS config-reloader
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
+COPY --from=build /go/src/github.com/VictoriaMetrics/operator/config-reloader /app
 COPY --from=build /go/src/github.com/VictoriaMetrics/operator/LICENSE /
 
 USER 10000:10000

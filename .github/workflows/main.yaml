@@ -254,6 +254,10 @@ jobs:
               target: "vmstorage"
             - dir: "./victoriametrics-operator"
               container-image: "victoriametrics-operator"
+              target: "operator"
+            - dir: "./victoriametrics-operator"
+              container-image: "victoriametrics-config-reloader"
+              target: "config-reloader"
   build_container:
     needs: prepare_matrix
     strategy:
