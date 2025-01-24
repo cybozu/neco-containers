@@ -8,10 +8,10 @@ FROM ${GOLANG_IMAGE} as build
 COPY TAG /
 
 # LICENSE.all
-WORKDIR /go/src/github.com/cilium/
+WORKDIR /go/src/github.com/cybozu-go/
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && BRANCH=v${VERSION} \
-    && git clone --depth 1 --branch ${BRANCH} https://github.com/cilium/cilium \
+    && BRANCH=v${VERSION}-lbsvc-patch \
+    && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
     && cd cilium \
     && make licenses-all \
     && apt-get update \
@@ -20,7 +20,7 @@ RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
     && mkdir -p /etc/gops
 
 # operator-generic
-WORKDIR /go/src/github.com/cilium/cilium/operator
+WORKDIR /go/src/github.com/cybozu-go/cilium/operator
 RUN make cilium-operator-generic
 
 # Stage2: runtime
@@ -30,8 +30,8 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /out/linux/amd64/bin/gops /bin/gops
 COPY --from=build --chown=10000:10000 /etc/gops /etc/gops
-COPY --from=build /go/src/github.com/cilium/cilium/LICENSE.all /LICENSE
-COPY --from=build /go/src/github.com/cilium/cilium/operator/cilium-operator-generic /usr/bin/cilium-operator-generic
+COPY --from=build /go/src/github.com/cybozu-go/cilium/LICENSE.all /LICENSE
+COPY --from=build /go/src/github.com/cybozu-go/cilium/operator/cilium-operator-generic /usr/bin/cilium-operator-generic
 
 USER 10000:10000
 
