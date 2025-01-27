@@ -274,9 +274,6 @@ TBD
 3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow and the `build_ceph` job in the Github Actions `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
-> [!Note]
-> The rook image is based on the ceph image. So upgrade the [rook](#rook) image next.
-
 ### Create a patched image from the specific version
 
 When you want to create a new image with patches to the specific version of Ceph,
@@ -304,6 +301,8 @@ follow these steps.
 3. Update `BASE_IMAGE` in Dockerfile if necessary.
    - If `BASE_IMAGE` is too old, the build may fail.
    - You should also check `BASE_IMAGE` in [the upstream build.env](https://github.com/ceph/ceph-csi/blob/devel/build.env) file of the appropriate tag.
+   - If you are going to update Rook later, you should also check `CEPH_VERSION` in [the Rook's upstream Makefile](https://github.com/rook/rook/blob/master/images/ceph/Makefile) file of the appropriate tag.
+   - If the desired version of ceph image does not exist in our container repository, build the ceph image first.
 4. See [the upstream Dockerfile](https://github.com/ceph/ceph-csi/blob/devel/deploy/cephcsi/image/Dockerfile) of the appropriate tag, and update our Dockerfile if necessary.
 5. Update `BRANCH` and `TAG` files.
 
@@ -937,11 +936,6 @@ TBD
 ![CSA Update](./csa_update.svg)
 
 > [!Note]
-> If we update both Rook and Ceph, update Ceph image first, and then update Rook image.
-
-<br>
-
-> [!Note]
 > A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
 
 - cephcsi
@@ -952,12 +946,15 @@ TBD
 - csi-snapshotter
 
 1. Check the [release page](https://github.com/rook/rook/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+2. Check the `CEPH_VERSION` of the upstream Makefile. If the version is changed, update the base image version in our `Dockerfile`.
+   - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Makefile`
+   - If the desired version of ceph image does not exist in our container repository, build the ceph image first.
+3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile`
-3. update build image tag in `Dockerfile` if necessary.
-4. Update `ROOK_VERSION` in `Dockerfile`.
-5. Update ceph image tag in `Dockerfile`.
-6. Update `BRANCH` and `TAG` files.
+4. Update build image tag in Dockerfile if necessary.
+5. Update `ROOK_VERSION` in `Dockerfile`.
+6. Update ceph image tag in `Dockerfile`.
+7. Update `BRANCH` and `TAG` files.
 
 > [!Note]
 > You may choose the latest docker image for the build, regardless of the upstream go version.
