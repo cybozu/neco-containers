@@ -777,7 +777,7 @@ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
 3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
    - Also update `GRPCURL_VERSION`, if there are any changes.
-   - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L5>
+   - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6>
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
 
