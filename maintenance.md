@@ -40,9 +40,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [configmap-reload](#configmap-reload)
 - [contour](#contour)
 - [coredns](#coredns)
-- [csi addons controller](#csi-addons-controller)
-- [csi addons sidecar](#csi-addons-sidecar)
-- [csi sidecars](#csi-sidecars)
+- [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
 - [dex](#dex)
 - [envoy](#envoy)
 - [etcd](#etcd)
@@ -423,39 +421,25 @@ follow these steps.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## csi addons controller
-
-![CSA Update](./csa_update.svg)
-
-1. Update `VERSION` in Dockerfile.
-2. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is [here](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/Dockerfile).
-3. update image tag in `Dockerfile` if necessary.
-4. Update `BRANCH` and `TAG` files.
-
-## csi addons sidecar
-
-![CSA Update](./csa_update.svg)
-
-1. Update `VERSION` in Dockerfile.
-2. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is [here](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/build/Containerfile.sidecar). Although the name of the file is `Containerfile.sidecar`, it can be used as a Dockerfile.
-3. update image tag in `Dockerfile` if necessary.
-4. Update `BRANCH` and `TAG` files.
-
-## csi sidecars
+## csi sidecars/csi-addons-controller
 
 ![CSA Update](./csa_update.svg)
 
 This section applies to the following containers. These containers are maintained similarly.
 
+- csi-addons-controller
+- csi-addons-sidecar
 - csi-attacher
 - csi-node-driver-registrar
 - csi-provisioner
 - csi-resizer
 - csi-snapshotter
 
-1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of csi sidecars.
+1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of csi sidecars. The csi-addons-controller version should be the same as the csi-addons-sidecar version.
 2. Update `VERSION` in Dockerfile with the value which you checked in the previous step.
 3. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is listed below.
+   - [csi-addons-controller](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/Dockerfile)
+   - [csi-addons-sidecar](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/build/Containerfile.sidecar)
    - [csi-attacher](https://github.com/kubernetes-csi/external-attacher/blob/master/Dockerfile)
    - [csi-node-driver-registrar](https://github.com/kubernetes-csi/node-driver-registrar/blob/master/Dockerfile)
    - [csi-provisioner](https://github.com/kubernetes-csi/external-provisioner/blob/master/Dockerfile)
@@ -465,7 +449,8 @@ This section applies to the following containers. These containers are maintaine
 5. Update `BRANCH` and `TAG` files.
 
 > [!Note]
-> You can choose the latest stable Ubuntu image for runtime. upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
+> You can choose the latest stable Ubuntu image for runtime. The upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
+> We have not decided to use Ubuntu for csi-addons-controller and csi-addons-sidecar yet, therefore, they use distroless as the base image.
 
 <br>
 
