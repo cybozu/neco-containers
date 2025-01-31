@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.18.0
+ARG MEOWS_VERSION=0.18.1
 
 FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
