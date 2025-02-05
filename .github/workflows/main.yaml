@@ -93,19 +93,23 @@ jobs:
               container-image: "fluent-bit"
             - dir: "./golang-all/golang-1.22-jammy"
               container-image: "golang"
-              enable_arm64: true
+              platforms: "linux/amd64,linux/arm64"
+              load: "false"
               request-scan: "true"
             - dir: "./golang-all/golang-1.23-jammy"
               container-image: "golang"
-              enable_arm64: true
+              platforms: "linux/amd64,linux/arm64"
+              load: "false"
               request-scan: "true"
             - dir: "./golang-all/golang-1.22-noble"
               container-image: "golang"
-              enable_arm64: true
+              platforms: "linux/amd64,linux/arm64"
+              load: "false"
               request-scan: "true"
             - dir: "./golang-all/golang-1.23-noble"
               container-image: "golang"
-              enable_arm64: true
+              platforms: "linux/amd64,linux/arm64"
+              load: "false"
               request-scan: "true"
             - dir: "./grafana"
               container-image: "grafana"
@@ -284,7 +288,8 @@ jobs:
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
           dir: ${{ matrix.job.dir }}
           container-image: ${{ matrix.job.container-image }}
-          enable_arm64: ${{ matrix.job.enable_arm64 }}
+          platforms: ${{ matrix.job.platforms }}
+          load: ${{ matrix.job.load }}
           make-targets: ${{ matrix.job.make-targets }}
           make-post-targets: ${{ matrix.job.make-post-targets }}
           request-scan: ${{ matrix.job.request-scan }}

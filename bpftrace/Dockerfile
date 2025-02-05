@@ -2,6 +2,8 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
 
 # https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu
+# Needed to add libcurl4-openssl-dev and libedit-dev
+# (possibly because of the difference in base image)
 RUN apt-get update && apt-get install -y \
     asciidoctor \
     binutils-dev \
@@ -51,6 +53,8 @@ RUN cmake -B build \
 
 # ==================== bpftrace image ====================
 FROM ghcr.io/cybozu/ubuntu-debug:24.04
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
 ENV PATH=/opt/bin:"$PATH"
 
 # Minimum requirements found by hand

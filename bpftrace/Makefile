@@ -1,7 +1,10 @@
 LIBBPF_REPO ?= https://github.com/libbpf/libbpf.git
 LIBBPF_TARGET ?= v1.5.0
 BPFTRACE_REPO ?= https://github.com/bpftrace/bpftrace.git
-BPFTRACE_TARGET ?= v0.22.1
+BPFTRACE_TARGET ?= v$(shell cat TAG | cut -d. -f1-3)
+
+BUILDER_IMAGE_TAG ?= bpftrace-builder:dev
+IMAGE_TAG ?= ghcr.io/cybozu/bpftrace:$(shell cat TAG)
 
 .PHONY: checkout-repo
 checkout-repo:
@@ -42,23 +45,21 @@ clean:
 
 .PHONY: build
 build:
-	docker build . --progress=plain --target builder -t bpftrace-builder:latest
-	docker build . --progress=plain -t bpftrace:latest
+	docker build . --progress=plain --target builder -t $(BUILDER_IMAGE_TAG)
+	docker build . --progress=plain -t $(IMAGE_TAG)
 
 .PHONY: test
 test:
-	docker run --rm bpftrace:latest bpftrace --help
+	docker run --rm $(IMAGE_TAG) bpftrace --version
 
 .PHONY: try
 try:
 	docker run --rm --privileged --pid=host --net=host \
-		-v /usr/src:/usr/src:ro \
 		-v /lib/modules/:/lib/modules:ro \
 		-v /sys/kernel/debug/:/sys/kernel/debug:rw \
-		bpftrace:latest bpftrace -l | grep do_nanosleep
+		$(IMAGE_TAG) bpftrace -l | grep do_nanosleep
 	@echo
 	docker run --rm --privileged --pid=host --net=host \
-		-v /usr/src:/usr/src:ro \
 		-v /lib/modules/:/lib/modules:ro \
 		-v /sys/kernel/debug/:/sys/kernel/debug:rw \
-		bpftrace:latest bpftrace -e 'kprobe:do_nanosleep { printf("%d, %s\n", pid, comm); if (++@x >= 10) { exit(); } }'
+		$(IMAGE_TAG) bpftrace -e 'kprobe:do_nanosleep { printf("%d, %s\n", pid, comm); if (++@x >= 10) { exit(); } }'

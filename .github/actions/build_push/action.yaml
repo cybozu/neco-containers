@@ -15,10 +15,14 @@ inputs:
   yamory_token:
     description: "Yamory Access Token"
     required: true
-  enable_arm64:
-    description: "Add arm64 to container image platform"
+  platforms:
+    description: "Target platforms"
     required: false
-    default: "false"
+    default: ""
+  load:
+    description: "Load built image to local docker daemon"
+    required: false
+    default: ""
   make-targets:
     description: "make targets before building docker image"
     required: false
@@ -47,21 +51,11 @@ runs:
       with:
         dir: ${{ inputs.dir }}
         container-image: ${{ inputs.container-image }}
+        platforms: ${{ inputs.platforms }}
+        load: ${{ inputs.load }}
         target: ${{ inputs.target }}
         request-scan: ${{ inputs.request-scan }}
         github_token: ${{ inputs.github_token }}
-    - name: Set container build platform
-      if: ${{ steps.prepare.outputs.build }}
-      shell: bash
-      run: |
-        enable_arm64=${{ inputs.enable_arm64 }}
-        if [ "$enable_arm64" = "true" ]; then
-          echo "PLATFORM=linux/amd64,linux/arm64" >> $GITHUB_ENV
-          echo "DOCKER_LOAD=false" >> $GITHUB_ENV
-        else
-          echo "PLATFORM=linux/amd64" >> $GITHUB_ENV
-          echo "DOCKER_LOAD=true" >> $GITHUB_ENV
-        fi
     - name: Make pre-targets
       if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build }}
       shell: bash
@@ -75,8 +69,8 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.dir }}
-        load: ${{ env.DOCKER_LOAD }}
-        platforms: ${{ env.PLATFORM }}
+        platforms: ${{ steps.prepare.outputs.platforms }}
+        load: ${{ steps.prepare.outputs.load }}
         provenance: false
         push: false
         tags: |
@@ -98,7 +92,7 @@ runs:
       uses: docker/build-push-action@v5
       with:
         context: ${{ inputs.dir }}
-        platforms: ${{ env.PLATFORM }}
+        platforms: ${{ steps.prepare.outputs.platforms }}
         provenance: false
         push: ${{ steps.prepare.outputs.docker_push }}
         tags: |
