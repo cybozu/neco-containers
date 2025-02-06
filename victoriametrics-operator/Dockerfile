@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
 ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.49.1
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.53.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
