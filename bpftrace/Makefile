@@ -1,3 +1,5 @@
+BCC_REPO ?= https://github.com/iovisor/bcc.git
+BCC_TARGET ?= v0.33.0
 LIBBPF_REPO ?= https://github.com/libbpf/libbpf.git
 LIBBPF_TARGET ?= v1.5.0
 BPFTRACE_REPO ?= https://github.com/bpftrace/bpftrace.git
@@ -33,6 +35,9 @@ checkout-repo:
 
 .PHONY: checkout
 checkout:
+	@CHECKOUT_DIR=src/bcc CHECKOUT_REPO=$(BCC_REPO) CHECKOUT_TARGET=$(BCC_TARGET) \
+	$(MAKE) --no-print-directory checkout-repo
+
 	@CHECKOUT_DIR=src/libbpf CHECKOUT_REPO=$(LIBBPF_REPO) CHECKOUT_TARGET=$(LIBBPF_TARGET) \
 	$(MAKE) --no-print-directory checkout-repo
 
@@ -62,4 +67,4 @@ try:
 	docker run --rm --privileged --pid=host --net=host \
 		-v /lib/modules/:/lib/modules:ro \
 		-v /sys/kernel/debug/:/sys/kernel/debug:rw \
-		$(IMAGE_TAG) bpftrace -e 'kprobe:do_nanosleep { printf("%d, %s\n", pid, comm); if (++@x >= 10) { exit(); } }'
+		$(IMAGE_TAG) bpftrace -e 'kfunc:vmlinux:do_nanosleep { printf("%d, %s\n", pid, comm); if (++@x >= 10) { exit(); } }'
