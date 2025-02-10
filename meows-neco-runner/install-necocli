@@ -7,9 +7,9 @@ TMP_DIR=/runner/_work/tmp
 mkdir -p ${BIN_DIR} ${TMP_DIR}
 
 curl -o ${TMP_DIR}/latest.json -L -H "Authorization: token ${GITHUB_TOKEN}" "https://api.github.com/repos/cybozu-go/neco/releases/latest"
-DOWNLOAD_URL=$(cat ${TMP_DIR}/latest.json | jq -r '.assets[]|select(.name|test("neco-operation-cli-linux_.*"))|.browser_download_url')
+DOWNLOAD_URL=$(cat ${TMP_DIR}/latest.json | jq -r '.assets[]|select(.name|test("neco-operation-cli-linux_.*"))|.url')
 
-curl -o ${TMP_DIR}/necocli.deb -L -H "Authorization: token ${GITHUB_TOKEN}" ${DOWNLOAD_URL}
+curl -o ${TMP_DIR}/necocli.deb -L -H "Authorization: token ${GITHUB_TOKEN}" -H "Accept: application/octet-stream" ${DOWNLOAD_URL}
 dpkg -x ${TMP_DIR}/necocli.deb ${TMP_DIR}
 mv ${TMP_DIR}/usr/bin/* ${BIN_DIR}
 
