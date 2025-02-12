@@ -10,7 +10,7 @@ COPY TAG /
 # LICENSE.all
 WORKDIR /go/src/github.com/cybozu-go/
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && BRANCH=v${VERSION}-lbsvc-patch \
+    && BRANCH=v${VERSION}-cybozu \
     && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
     && cd cilium \
     && make licenses-all \

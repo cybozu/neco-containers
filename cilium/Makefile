@@ -1,5 +1,5 @@
-CILIUM_REPO ?= https://github.com/cilium/cilium.git
-CILIUM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
+CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
+CILIUM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= ff8fb49706288a4b2346abc274e7a2f84d7dc02c
 CILIUM_PROXY_REPO ?= https://github.com/cilium/proxy.git
