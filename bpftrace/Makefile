@@ -53,6 +53,10 @@ build:
 	docker build . --progress=plain --target builder -t $(BUILDER_IMAGE_TAG)
 	docker build . --progress=plain -t $(IMAGE_TAG)
 
+.PHONY: bcc-version
+bcc-version:
+	@echo $(BCC_TARGET) | cut -c2-
+
 .PHONY: test
 test:
 	docker run --rm $(IMAGE_TAG) bpftrace --version

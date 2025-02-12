@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y \
     libedit-dev
 
 WORKDIR /build
+COPY Makefile .
 COPY src/bcc ./bcc
 COPY src/bpftrace ./bpftrace
 COPY src/libbpf ./libbpf
@@ -69,7 +70,7 @@ RUN apt-get install -y --no-install-recommends \
 # Missing -DREVISION causes an error, although it is not documented
 # ref. https://github.com/iovisor/bcc/blob/master/cmake/version.cmake
 RUN mkdir build && \
-    cmake -B build -DREVISION=0.33.0 && \
+    cmake -B build -DREVISION="$(make --no-print-directory -C '..' bcc-version)" && \
     make -C build -j$(nproc) && \
     make -C build install
 
