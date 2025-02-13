@@ -269,7 +269,7 @@ TBD
 2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
    1. If other instructions are needed for `ceph/build.sh`, add the instructions.
    2. If there are ceph runtime packages or required tool changes, update Dockerfile.
-3. Update the `version` argument on the `build-ceph` job in the CircleCI `main` workflow and the `build_ceph` job in the Github Actions `main` workflow.
+3. Update the `version` argument on the `build-ceph` job in the `build_ceph` job in the Github Actions `main` workflow.
 4. Update `BRANCH` and `TAG` files.
 
 ### Create a patched image from the specific version
