@@ -314,7 +314,7 @@ jobs:
       uses: ./.github/actions/build_ceph
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        version: 18.2.4
+        version: 19.2.1
 
   build_cilium:
     runs-on: neco-containers-ubuntu-22.04
