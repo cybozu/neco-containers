@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-noble AS build
 
-ARG COREDNS_VERSION=1.11.3
+ARG COREDNS_VERSION=1.12.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
@@ -11,7 +11,7 @@ RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.ta
 WORKDIR /go/src/github.com/coredns/coredns/
 RUN make
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/src/github.com/coredns/coredns/LICENSE /usr/local/coredns/LICENSE

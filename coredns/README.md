@@ -6,7 +6,7 @@
 
 To launch server with specific config file.
 
-    $ docker run ghcr.io/cybozu/coredns:1.11 -v Corefile:/etc/coredns/Corefile -- \
+    $ docker run ghcr.io/cybozu/coredns:1.12 -v Corefile:/etc/coredns/Corefile -- \
         -conf /etc/coredns/Corefile
  
 ## Docker images
