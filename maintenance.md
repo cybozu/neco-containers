@@ -26,6 +26,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [blackbox\_exporter](#blackbox_exporter)
 - [bmc-reverse-proxy](#bmc-reverse-proxy)
 - [bpf-map-pressure-exporter](#bpf-map-pressure-exporter)
+- [bpftrace](#bpftrace)
 - [cadvisor](#cadvisor)
 - [cep-checker](#cep-checker)
 - [ceph](#ceph)
@@ -239,6 +240,16 @@ In Regular update, do the following as part of the update of each CRD-providing 
 ## bpf-map-pressure-exporter
 
 TBD
+
+## bpftrace
+
+![Regular Update](./regular_update.svg)
+
+1. Check the bpftrace [release page](https://github.com/bpftrace/bpftrace/releases).
+2. Check the bpftrace [Dockerfile](https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu) of the latest release version.
+3. Check the bcc [release page](https://github.com/iovisor/bcc/releases) and update `BCC_TARGET` in the `Makefile` to its latest version.
+4. Check the libbpf [release page](https://github.com/libbpf/libbpf/releases) and update `LIBBPF_TARGET` in the `Makefile` to its latest version.
+5. Update `TAG` file.
 
 ## cadvisor
 
