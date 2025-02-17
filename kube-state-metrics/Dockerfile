@@ -1,9 +1,9 @@
 # kube-state-metrics container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.23-noble AS build
 
-ARG KUBE_STATE_METRICS_VERSION=2.13.0
+ARG KUBE_STATE_METRICS_VERSION=2.15.0
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/kubernetes/kube-state-metrics/archive/v${KUBE_STATE_METRICS_VERSION}.tar.gz | \
     tar --strip-components=1 -xzf -

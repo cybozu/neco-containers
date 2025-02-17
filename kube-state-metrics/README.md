@@ -8,7 +8,7 @@ Usage
 
 ```console
 $ docker run -p 8080:8080 -p 8081:8081 \
-    ghcr.io/cybozu/kube-state-metrics:2.12.0.1 \
+    ghcr.io/cybozu/kube-state-metrics:2.15.0.1 \
     --kubeconfig=<KUBE-CONFIG>\
 ```
 
