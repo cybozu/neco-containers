@@ -97,7 +97,7 @@ spec:
         spec:
           containers:
             - name: machines-endpoints
-              image: ghcr.io/cybozu/machines-endpoints:0.9.5
+              image: ghcr.io/cybozu/machines-endpoints:0.9.6
               imagePullPolicy: IfNotPresent
               args:
                 - --monitoring-endpoints
