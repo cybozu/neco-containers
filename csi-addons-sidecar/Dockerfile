@@ -3,7 +3,7 @@ ARG SRC_DIR=/work/go/src/github.com/csi-addons/kubernetes-csi-addons
 FROM ghcr.io/cybozu/golang:1.22-jammy AS builder
 
 ARG SRC_DIR
-ARG VERSION=0.9.1
+ARG VERSION=0.11.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
