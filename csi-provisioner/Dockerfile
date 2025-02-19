@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
-ARG VERSION=5.0.1
+ARG VERSION=5.1.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

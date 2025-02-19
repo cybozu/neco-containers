@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
-ARG VERSION=4.6.1
+ARG VERSION=4.8.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

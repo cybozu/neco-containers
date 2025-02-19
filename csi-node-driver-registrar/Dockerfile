@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/node-driver-registrar
-ARG VERSION=2.11.1
+ARG VERSION=2.13.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

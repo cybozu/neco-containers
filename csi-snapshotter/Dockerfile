@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.22-jammy AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-snapshotter
-ARG VERSION=8.0.1
+ARG VERSION=8.2.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
