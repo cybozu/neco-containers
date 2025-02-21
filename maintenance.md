@@ -949,8 +949,7 @@ TBD
    - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile`
 4. Update build image tag in Dockerfile if necessary.
 5. Update `ROOK_VERSION` in `Dockerfile`.
-6. Update ceph image tag in `Dockerfile`.
-7. Update `BRANCH` and `TAG` files.
+6. Update `BRANCH` and `TAG` files.
 
 > [!Note]
 > You may choose the latest docker image for the build, regardless of the upstream go version.
