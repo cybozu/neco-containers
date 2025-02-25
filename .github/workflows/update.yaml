@@ -27,22 +27,20 @@ jobs:
           # Get latest stable Go versions
           GO_STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "")] | unique | .[]')
           if [ -z "${GO_STABLE_VERSIONS}" ]; then
-            echo "Failed to fetch stable Go versions"
+            echo "::error::Failed to fetch stable Go versions"
             exit 1
           fi
 
           # Extract major and minor versions for comparison
           GO_STABLE_MAJOR_VERSIONS=$(echo "${GO_STABLE_VERSIONS}" | cut -d. -f1,2 | sort -u)
-          
+
           # Check for differences between GO_MAJOR_VERSIONS and GO_STABLE_MAJOR_VERSIONS
-          DIFF=$(diff <(printf "%s\n" ${GO_MAJOR_VERSIONS} | sort -V) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS} | sort -V))
+          DIFF=$(comm -13 <(printf "%s\n" ${GO_MAJOR_VERSIONS} | sort -V) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS} | sort -V))
+
           if [ -n "${DIFF}" ]; then
-            echo "⚠️ **Major Version Update Required**" >> ./update-body.txt
-            echo "Differences detected between specified and stable Go versions:" >> ./update-body.txt
-            echo "${DIFF}" >> ./update-body.txt
-            echo "" >> ./update-body.txt
+            echo "::warning:: Differences detected in major Go versions: ${DIFF}"
           fi
-          
+
           # Function to update Dockerfile and TAG file
           update_files() {
             local go_major=$1
@@ -51,7 +49,7 @@ jobs:
             local dockerfile_path="golang-all/golang-${go_major}-${codename}/Dockerfile"
             local tag_path="golang-all/golang-${go_major}-${codename}/TAG"
             if [ ! -f "${dockerfile_path}" ] || [ ! -f "${tag_path}" ]; then
-              echo "Files not found for Go ${go_major} on Ubuntu ${codename}"
+              echo "::warning::Files not found for Go ${go_major} on Ubuntu ${codename}"
               return
             fi
             local current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
@@ -66,14 +64,14 @@ jobs:
             fi
           }
 
-          # assignment of codename
+          # Assignment of codename
           for ubuntu_version in ${UBUNTU_VERSIONS}; do
             if [ "${ubuntu_version}" = "22.04" ]; then
               CODENAME=jammy
             elif [ "${ubuntu_version}" = "24.04" ]; then
               CODENAME=noble
             else
-              echo "Unknown Ubuntu version: ${ubuntu_version}"
+              echo "::error::Unknown Ubuntu version: ${ubuntu_version}"
               continue
             fi
             
@@ -81,7 +79,7 @@ jobs:
               # Find matching version from stable versions
               LATEST_VERSION=$(echo "${GO_STABLE_VERSIONS}" | grep "^${go_major}" | head -n1)
               if [ -z "${LATEST_VERSION}" ]; then
-                echo "No matching stable version found for Go ${go_major}"
+                echo "::warning::No matching stable version found for Go ${go_major}"
                 continue
               fi
               
@@ -90,7 +88,6 @@ jobs:
           done
           
           echo "NEED_UPDATE=${NEED_UPDATE}" >> $GITHUB_ENV
-          
       - name: Create PR
         if: env.NEED_UPDATE == '1'
         run: |
