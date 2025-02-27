@@ -153,8 +153,6 @@ jobs:
             - dir: "./meows-neco-runner"
               container-image: "meows-neco-runner"
               request-scan: "true"
-            - dir: "./moco-switchover-downtime-monitor"
-              container-image: "moco-switchover-downtime-monitor"
             - dir: "./opentelemetry-collector"
               container-image: "opentelemetry-collector"
             - dir: "./hubble"
