@@ -67,7 +67,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [memcached\_exporter](#memcached_exporter)
 - [meows-dctest-runner](#meows-dctest-runner)
 - [meows-neco-runner](#meows-neco-runner)
-- [moco-switchover-downtime-monitor](#moco-switchover-downtime-monitor)
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
 - [pod-delete-rate-limiter](#pod-delete-rate-limiter)
@@ -776,13 +775,6 @@ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6>
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
-
-## moco-switchover-downtime-monitor
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update `TAG` file.
 
 ## opentelemetry-collector
 
