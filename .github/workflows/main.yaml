@@ -21,6 +21,8 @@ jobs:
               make-targets: "check-generate test"
             - dir: "./alertmanager"
               container-image: "alertmanager"
+            - dir: "./alloy"
+              container-image: "alloy"
             - dir: "./argocd"
               container-image: "argocd"
             - dir: "./argocd-image-updater"

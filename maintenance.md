@@ -20,6 +20,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 
 - [admission (neco-admission)](#admission-neco-admission)
 - [alertmanager](#alertmanager)
+- [alloy](#alloy)
 - [argocd](#argocd)
 - [argocd-image-updater](#argocd-image-updater)
 - [bird](#bird)
@@ -164,6 +165,22 @@ In Regular update, do the following as part of the update of each CRD-providing 
    - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile`
 3. Update version variables in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
+
+## alloy
+
+![Regular Update](./regular_update.svg)
+
+Alloy contains two versions, one for alloy and the other for libsystemd.
+The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://www.flatcar.org/releases).
+
+1. Check the release page.
+   - https://github.com/grafana/alloy/releases
+2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockefile`.
+   - `https://github.com/grafana/alloy/blob/vX.Y.Z/Dockerfile`
+   - `https://github.com/grafana/alloy/blob/vX.Y.Z/Makefile`
+3. Update `ALLOY_VERSION` in `Dockerfile`.
+4. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
+5. Update `TAG` file.
 
 ## argocd
 

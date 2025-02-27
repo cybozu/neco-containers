@@ -1,0 +1,128 @@
+diff --git a/internal/component/loki/process/stages/extensions.go b/internal/component/loki/process/stages/extensions.go
+index 3c7a4262b..0b19655ab 100644
+--- a/internal/component/loki/process/stages/extensions.go
++++ b/internal/component/loki/process/stages/extensions.go
+@@ -3,6 +3,7 @@ package stages
+ import (
+ 	"fmt"
+ 	"strings"
++	"time"
+ 
+ 	"github.com/go-kit/log"
+ 	"github.com/grafana/alloy/internal/featuregate"
+@@ -23,9 +24,10 @@ type DockerConfig struct{}
+ // CRIConfig is an empty struct that is used to enable a pre-defined pipeline
+ // for decoding entries that are using the CRI logging format.
+ type CRIConfig struct {
+-	MaxPartialLines            int    `alloy:"max_partial_lines,attr,optional"`
+-	MaxPartialLineSize         uint64 `alloy:"max_partial_line_size,attr,optional"`
+-	MaxPartialLineSizeTruncate bool   `alloy:"max_partial_line_size_truncate,attr,optional"`
++	MaxPartialLines            int           `alloy:"max_partial_lines,attr,optional"`
++	MaxPartialLineSize         uint64        `alloy:"max_partial_line_size,attr,optional"`
++	MaxPartialLineSizeTruncate bool          `alloy:"max_partial_line_size_truncate,attr,optional"`
++	MaxPartialLineAge          time.Duration `alloy:"max_partial_line_age,attr,optional"`
+ }
+ 
+ var (
+@@ -38,6 +40,7 @@ var DefaultCRIConfig = CRIConfig{
+ 	MaxPartialLines:            100,
+ 	MaxPartialLineSize:         0,
+ 	MaxPartialLineSizeTruncate: false,
++	MaxPartialLineAge:          time.Minute,
+ }
+ 
+ // SetToDefault implements syntax.Defaulter.
+@@ -50,6 +53,9 @@ func (args *CRIConfig) Validate() error {
+ 	if args.MaxPartialLines <= 0 {
+ 		return fmt.Errorf("max_partial_lines must be greater than 0")
+ 	}
++	if args.MaxPartialLineAge <= time.Duration(0) {
++		return fmt.Errorf("max_partial_line_age must be greater than 0")
++	}
+ 
+ 	return nil
+ }
+@@ -110,7 +116,7 @@ func (*cri) Cleanup() {
+ func (c *cri) Run(entry chan Entry) chan Entry {
+ 	entry = c.base.Run(entry)
+ 
+-	in := RunWithSkipOrSendMany(entry, func(e Entry) ([]Entry, bool) {
++	in := RunWithSkipOrSendManyWithTick(entry, func(e Entry) ([]Entry, bool) {
+ 		fingerprint := e.Labels.Fingerprint()
+ 
+ 		// We received partial-line (tag: "P")
+@@ -157,6 +163,23 @@ func (c *cri) Run(entry chan Entry) chan Entry {
+ 			delete(c.partialLines, fingerprint)
+ 		}
+ 		return []Entry{e}, false
++	}, 10*time.Second, func() []Entry {
++		// Send partial lines which are left unsent for a while.
++		threshold := time.Now().Add(-c.cfg.MaxPartialLineAge)
++
++		entries := make([]Entry, 0)
++		fingerprints := make([]model.Fingerprint, 0)
++		for k, v := range c.partialLines {
++			if v.Timestamp.Before(threshold) {
++				level.Warn(c.base.logger).Log("msg", "cri stage: flushing partial line due to max age", "labels", v.Labels)
++				entries = append(entries, v)
++				fingerprints = append(fingerprints, k)
++			}
++		}
++		for _, fp := range fingerprints {
++			delete(c.partialLines, fp)
++		}
++		return entries
+ 	})
+ 
+ 	return in
+diff --git a/internal/component/loki/process/stages/pipeline.go b/internal/component/loki/process/stages/pipeline.go
+index f4404941c..88ec9d600 100644
+--- a/internal/component/loki/process/stages/pipeline.go
++++ b/internal/component/loki/process/stages/pipeline.go
+@@ -4,6 +4,7 @@ import (
+ 	"context"
+ 	"fmt"
+ 	"sync"
++	"time"
+ 
+ 	"github.com/go-kit/log"
+ 	"github.com/prometheus/client_golang/prometheus"
+@@ -108,6 +109,38 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
+ 	return out
+ }
+ 
++// RunWithSkipOrSendManyWithTick same as RunWithSkipOrSendMany, except it can run `tick` function periodically.
++func RunWithSkipOrSendManyWithTick(input chan Entry, process func(e Entry) ([]Entry, bool), interval time.Duration, tick func() []Entry) chan Entry {
++	out := make(chan Entry)
++	go func() {
++		defer close(out)
++		ticker := time.NewTicker(interval)
++		defer ticker.Stop()
++		for {
++			select {
++			case e, ok := <-input:
++				if !ok {
++					return
++				}
++				results, skip := process(e)
++				if skip {
++					continue
++				}
++				for _, result := range results {
++					out <- result
++				}
++			case <-ticker.C:
++				results := tick()
++				for _, result := range results {
++					out <- result
++				}
++			}
++		}
++	}()
++
++	return out
++}
++
+ // Run implements Stage
+ func (p *Pipeline) Run(in chan Entry) chan Entry {
+ 	in = RunWith(in, func(e Entry) Entry {
