@@ -50,6 +50,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	dec := admission.NewDecoder(scheme)
 	wh := mgr.GetWebhookServer()
 	wh.Register("/mutate-pod", hooks.NewPodMutator(mgr.GetClient(), dec, config.ephemeralStoragePermissive))
+	wh.Register("/mutate-pod-cpu-request-reduce", hooks.NewPodCPURequestReducer(mgr.GetClient(), dec, ctrl.Log.WithName("reducer"), config.cpuRequestReducerEnabled))
 	wh.Register("/validate-pod", hooks.NewPodValidator(mgr.GetClient(), dec, config.validImagePrefixes, config.imagePermissive))
 	wh.Register("/mutate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyMutator(mgr.GetClient(), dec, config.httpProxyDefaultClass, &conf.HTTPProxyMutatorConfig))
 	wh.Register("/validate-projectcontour-io-httpproxy", hooks.NewContourHTTPProxyValidator(mgr.GetClient(), dec))

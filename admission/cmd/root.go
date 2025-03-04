@@ -25,6 +25,7 @@ var config struct {
 	imagePermissive            bool
 	repositoryPermissive       bool
 	ephemeralStoragePermissive bool
+	cpuRequestReducerEnabled   bool
 	zapOpts                    zap.Options
 }
 
@@ -83,6 +84,7 @@ func init() {
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
 	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE") == "true"
 	config.ephemeralStoragePermissive = os.Getenv("VPOD_EPHEMERAL_STORAGE_PERMISSIVE") == "true"
+	config.cpuRequestReducerEnabled = os.Getenv("VPOD_CPU_REQUEST_REDUCE_ENABLE") == "true"
 
 	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
 	klog.InitFlags(goflags)
