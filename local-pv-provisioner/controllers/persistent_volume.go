@@ -73,9 +73,7 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	if err != nil {
 		return err
 	}
-	src := source.Channel{
-		Source: ch,
-	}
+	src := source.Channel(ch, &handler.EnqueueRequestForObject{})
 
 	pred := predicate.Funcs{
 		CreateFunc:  func(event.CreateEvent) bool { return true },
@@ -87,7 +85,7 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.PersistentVolume{}).
 		WithEventFilter(pred).
-		WatchesRawSource(&src, &handler.EnqueueRequestForObject{}).
+		WatchesRawSource(src).
 		Complete(r)
 }
 
