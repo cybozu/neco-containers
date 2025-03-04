@@ -38,7 +38,10 @@ func reducedRequest(q resource.Quantity) resource.Quantity {
 }
 
 func (m *podCPURequestReducer) Handle(ctx context.Context, req admission.Request) admission.Response {
-	log := m.logger.WithValues("pod", req.Namespace+"/"+req.Name)
+	log := m.logger.WithValues("namespace", req.Namespace)
+	if req.Name != "" {
+		log = log.WithValues("podName", req.Name)
+	}
 
 	if !m.enabled {
 		log.Info("allowed", "reason", "disabled")
@@ -50,6 +53,10 @@ func (m *podCPURequestReducer) Handle(ctx context.Context, req admission.Request
 	if err != nil {
 		log.Error(err, "unable to decode request")
 		return admission.Errored(http.StatusBadRequest, err)
+	}
+
+	if req.Name == "" {
+		log = log.WithValues("podNamePrefix", po.GenerateName)
 	}
 
 	for _, owner := range po.GetOwnerReferences() {
