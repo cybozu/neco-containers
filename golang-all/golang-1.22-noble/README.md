@@ -7,6 +7,7 @@ tools:
 
 * [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
 * [golint](https://github.com/golang/lint)
+* [staticcheck](https://staticcheck.io/)
 * [ineffassign](https://github.com/gordonklaus/ineffassign)
 * [ghr](https://github.com/tcnksm/ghr)
 * [golang custom analyzer](https://github.com/cybozu-go/golang-custom-analyzer)
