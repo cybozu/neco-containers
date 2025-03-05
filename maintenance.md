@@ -721,8 +721,7 @@ git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d
    make build test
    ```
 
-5. Update image tag in `local-pv-provisioner.yaml`.
-6. Update `TAG` file.
+5. Update `TAG` file.
 
 ## loki
 
