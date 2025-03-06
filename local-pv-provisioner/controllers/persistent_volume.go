@@ -62,7 +62,7 @@ func (r *PersistentVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Req
 
 // SetupWithManager sets up the controller with the Manager.
 func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName string) error {
-	ch := make(chan event.GenericEvent)
+	ch := make(chan event.TypedGenericEvent[*corev1.PersistentVolume])
 	watcher := &persistentVolumeWatcher{
 		client:   mgr.GetClient(),
 		ch:       ch,
@@ -73,9 +73,7 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	if err != nil {
 		return err
 	}
-	src := source.Channel{
-		Source: ch,
-	}
+	src := source.Channel(ch, &handler.TypedEnqueueRequestForObject[*corev1.PersistentVolume]{})
 
 	pred := predicate.Funcs{
 		CreateFunc:  func(event.CreateEvent) bool { return true },
@@ -87,13 +85,13 @@ func (r *PersistentVolumeReconciler) SetupWithManager(mgr ctrl.Manager, nodeName
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&corev1.PersistentVolume{}).
 		WithEventFilter(pred).
-		WatchesRawSource(&src, &handler.EnqueueRequestForObject{}).
+		WatchesRawSource(src).
 		Complete(r)
 }
 
 type persistentVolumeWatcher struct {
 	client   client.Client
-	ch       chan<- event.GenericEvent
+	ch       chan<- event.TypedGenericEvent[*corev1.PersistentVolume]
 	nodeName string
 	tick     time.Duration
 }
@@ -128,7 +126,7 @@ func (w *persistentVolumeWatcher) fireEvent(ctx context.Context) error {
 		if pv.Status.Phase != corev1.VolumeReleased {
 			continue
 		}
-		w.ch <- event.GenericEvent{
+		w.ch <- event.TypedGenericEvent[*corev1.PersistentVolume]{
 			Object: pv.DeepCopy(),
 		}
 	}

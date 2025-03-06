@@ -2,6 +2,7 @@
 
 set -o pipefail
 
+sudo apt-get update
 sudo apt-get install qemu-kvm libvirt-daemon-system libvirt-clients bridge-utils
 kvm-ok
 sudo adduser `id -un` libvirt
