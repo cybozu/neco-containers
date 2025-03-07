@@ -179,7 +179,7 @@ spec:
     spec:
       containers:
         - name: ubuntu
-          image: ghcr.io/cybozu/ubuntu:20.04
+          image: ghcr.io/cybozu/ubuntu:24.04
           command: ["/usr/local/bin/pause"]
           volumeMounts:
             - name: sample-volume
