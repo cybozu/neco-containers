@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
 ARG VERSION=4.8.0
