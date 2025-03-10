@@ -1,6 +1,6 @@
 ARG SRC_DIR=/work/go/src/github.com/csi-addons/kubernetes-csi-addons
 # Build the manager binary
-FROM ghcr.io/cybozu/golang:1.22-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.24-noble AS builder
 
 ARG SRC_DIR
 ARG VERSION=0.11.0
