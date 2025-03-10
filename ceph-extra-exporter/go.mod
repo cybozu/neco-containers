@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/ceph-extra-exporter
 
-go 1.22
+go 1.24.1
 
 require (
 	github.com/prometheus/client_golang v1.20.2

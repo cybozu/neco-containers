@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy as builder
+FROM ghcr.io/cybozu/golang:1.24-noble as builder
 
 WORKDIR /work
 
