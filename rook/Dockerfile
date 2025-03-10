@@ -1,7 +1,7 @@
 # Rook container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG ROOK_VERSION=1.16.4
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
