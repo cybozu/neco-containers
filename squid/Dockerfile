@@ -1,12 +1,12 @@
 # squid container
 
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 as build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG SQUID_VERSION=6.12
+ARG SQUID_VERSION=6.13
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
-RUN curl -sfLO http://www.squid-cache.org/Versions/v6/squid-${SQUID_VERSION}.tar.xz \
+RUN curl -sfLO https://github.com/squid-cache/squid/releases/download/SQUID_$(echo ${SQUID_VERSION} | sed 's/[.]/_/g')/squid-${SQUID_VERSION}.tar.xz \
     && tar --strip-components=1 -xf /work/squid-${SQUID_VERSION}.tar.xz \
     && CFLAGS="-mavx2" CXXFLAGS="-mavx2" ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
@@ -16,7 +16,7 @@ RUN curl -sfLO http://www.squid-cache.org/Versions/v6/squid-${SQUID_VERSION}.tar
     && make install
 
 # stage2: production image
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/squid /usr/local/squid
