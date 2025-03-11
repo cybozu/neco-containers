@@ -24,7 +24,7 @@ To launch vault server by `docker run`:
        --ulimit memlock=-1 \
        -v /your/config.hcl:/vault/config/config.hcl:ro \
        -p 8200:8200 -p 8201:8201 \
-       ghcr.io/cybozu/vault:1.18 \
+       ghcr.io/cybozu/vault:1.19 \
          server -config=/vault/config/config.hcl
 
 To use vault cli, first install it in a host OS directory `DIR`:
@@ -32,7 +32,7 @@ To use vault cli, first install it in a host OS directory `DIR`:
     $ docker run --rm -u root:root \
       --entrypoint /usr/local/vault/install-tools \
       -v DIR:/host \
-      ghcr.io/cybozu/vault:1.18
+      ghcr.io/cybozu/vault:1.19
 
 Then run `vault` as follows:
 
