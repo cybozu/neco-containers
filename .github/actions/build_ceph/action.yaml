@@ -29,7 +29,7 @@ runs:
       working-directory: ceph
     - name: Build and push
       if: ${{ steps.prepare.outputs.build }}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: ceph
         platforms: "linux/amd64"
