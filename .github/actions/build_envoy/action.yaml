@@ -87,7 +87,7 @@ runs:
         mv src/envoy/ci/docker-entrypoint.sh workspace/
     - name: Build and push
       if: ${{ steps.prepare.outputs.build }}
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v6
       with:
         context: envoy
         platforms: "linux/amd64"
