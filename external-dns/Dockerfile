@@ -1,9 +1,9 @@
 # ExternalDNS container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG EXTERNALDNS_VERSION=0.15.0
+ARG EXTERNALDNS_VERSION=0.15.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-sigs/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
@@ -15,7 +15,7 @@ WORKDIR /work/external-dns/
 RUN make build
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/external-dns/build/external-dns /usr/local/external-dns/bin/external-dns
