@@ -13,7 +13,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=external-dns \
-    ghcr.io/cybozu/external-dns:0.15.0.2 \
+    ghcr.io/cybozu/external-dns:0.15.1.1 \
     --registry=txt --txt-owner-id ... --provider ...
 ```
 
