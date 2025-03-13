@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         less \
         lsb-release \
         lv \
+        moreutils \
         mysql-client \
         net-tools \
         openssh-client \
