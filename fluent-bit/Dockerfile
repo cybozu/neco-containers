@@ -1,9 +1,9 @@
 # Fluent Bit container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS builder
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
 
-ARG FLUENT_BIT_VERSION=3.1.10
+ARG FLUENT_BIT_VERSION=3.2.8
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -64,7 +64,7 @@ RUN cmake -DFLB_RELEASE=On \
     && cp LICENSE /fluent-bit/
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /fluent-bit /fluent-bit
