@@ -1,11 +1,11 @@
-ARG MEOWS_VERSION=0.19.0
+ARG MEOWS_VERSION=0.20.0
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_VERSION}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 
-ENV GO_VERSION=1.23.6
+ENV GO_VERSION=1.24.1
 ENV PLACEMAT_VERSION=2.4.7
 
 ENV HOME=/home/actions

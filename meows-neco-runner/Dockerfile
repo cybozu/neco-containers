@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.19.0
+ARG MEOWS_VERSION=0.20.0
 
 FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
@@ -33,6 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         less \
         lsb-release \
         lv \
+        moreutils \
         mysql-client \
         net-tools \
         openssh-client \
