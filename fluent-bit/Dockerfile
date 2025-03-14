@@ -23,6 +23,7 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     tar \
     libssl-dev \
     libsasl2-dev \
+    libyaml-dev \
     pkg-config \
     zlib1g-dev \
     libpq-dev \
@@ -44,7 +45,7 @@ RUN cmake -DFLB_RELEASE=On \
           -DFLB_HTTP_SERVER=On \
           -DFLB_IN_SYSTEMD=Off \
           -DFLB_OUT_KAFKA=On \
-          -DFLB_CONFIG_YAML=No \
+          -DFLB_CONFIG_YAML=On \
           .. \
     && make -j $(getconf _NPROCESSORS_ONLN) \
     && strip bin/fluent-bit \
@@ -66,6 +67,12 @@ RUN cmake -DFLB_RELEASE=On \
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update && apt-get -y install --no-install-recommends \
+    libyaml-0-2 \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /fluent-bit /fluent-bit
 
