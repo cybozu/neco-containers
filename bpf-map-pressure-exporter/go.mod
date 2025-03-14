@@ -1,16 +1,16 @@
 module github.com/cybozu/neco-containers/bpf-map-pressure-exporter
 
-go 1.22.0
+go 1.23.0
 
-toolchain go1.23.3
+toolchain go1.24.1
 
 require (
-	github.com/cilium/ebpf v0.16.0
+	github.com/cilium/ebpf v0.17.3
 	github.com/cybozu-go/log v1.7.0
-	github.com/go-yaml/yaml v2.1.0+incompatible
-	github.com/prometheus/client_golang v1.20.5
-	github.com/stretchr/testify v1.9.0
-	golang.org/x/sync v0.9.0
+	github.com/prometheus/client_golang v1.21.1
+	github.com/stretchr/testify v1.10.0
+	golang.org/x/sync v0.12.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -22,10 +22,8 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.60.1 // indirect
+	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	golang.org/x/exp v0.0.0-20241108190413-2d47ceb2692f // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	google.golang.org/protobuf v1.35.1 // indirect
-	gopkg.in/yaml.v3 v3.0.1 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	google.golang.org/protobuf v1.36.1 // indirect
 )

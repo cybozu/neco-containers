@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/go-yaml/yaml"
+	"gopkg.in/yaml.v3"
 )
 
 const defaultFetchInterval = 30 * time.Second
