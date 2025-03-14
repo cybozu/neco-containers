@@ -29,11 +29,13 @@ func (c *bpfMapPressureCollector) Describe(ch chan<- *prometheus.Desc) {
 
 func (c *bpfMapPressureCollector) Collect(ch chan<- prometheus.Metric) {
 	for _, val := range c.fetcher.GetMetrics() {
+		mapId := strconv.FormatUint(uint64(val.mapId), 10)
 		ch <- prometheus.MustNewConstMetric(
 			c.describe,
 			prometheus.GaugeValue,
 			val.mapPressure,
-			strconv.FormatUint(uint64(val.mapId), 10), val.mapName,
+			mapId,
+			val.mapName,
 		)
 	}
 }
