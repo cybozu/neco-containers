@@ -1,7 +1,7 @@
 # Registry container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-noble AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG REGISTRY_VERSION=2.8.3
 

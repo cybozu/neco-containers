@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.23-noble AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 COPY . /work
 RUN CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
 
