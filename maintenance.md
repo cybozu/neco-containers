@@ -804,7 +804,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 2. Check the upstream Dockerfile and builder manifest. If there are any updates, update our `Dockerfile`.
    - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/Dockerfile`
    - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/manifest.yaml`
-3. Update `OTELCOL_VERSION` in `Dockerfile`.
+3. Update `OTELCOL_VERSION` and/or `OTELCOL_CONTRIB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## pause
