@@ -1,7 +1,7 @@
 # configmap-reload container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG CONFIGMAP_RELOAD_VERSION=0.14.0
 
