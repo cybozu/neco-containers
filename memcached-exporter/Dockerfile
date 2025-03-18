@@ -1,7 +1,7 @@
 # memcached_exporter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG MEMCACHED_EXPORTER_VERSION=0.15.0
 
