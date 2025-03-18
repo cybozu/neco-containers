@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG LOKI_VERSION=3.2.1
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ARG LOKI_VERSION=3.4.2
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -10,7 +10,7 @@ WORKDIR /work/loki
 RUN patch -p1 < ../log-per-chunk-flush.patch
 RUN make BUILD_IN_CONTAINER=false loki logcli loki-canary
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/loki/cmd/loki/loki /usr/local/loki/bin/loki

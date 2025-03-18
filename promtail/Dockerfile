@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG LOKI_VERSION=3.2.1
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ARG LOKI_VERSION=3.4.2
 ARG SYSTEMD_VERSION=255
 
 WORKDIR /work
@@ -64,7 +64,7 @@ COPY force-flush-partial-line.patch /work/
 RUN cd loki && patch -p1 < ../force-flush-partial-line.patch
 RUN make -C /work/loki BUILD_IN_CONTAINER=false PROMTAIL_JOURNAL_ENABLED=true promtail
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 # tzdata required for the timestamp stage to work
