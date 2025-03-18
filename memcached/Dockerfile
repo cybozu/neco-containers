@@ -1,9 +1,9 @@
 # memcached container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG MEMCACHED_VERSION=1.6.32
+ARG MEMCACHED_VERSION=1.6.37
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -22,7 +22,7 @@ RUN ./autogen.sh \
     && make install
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
