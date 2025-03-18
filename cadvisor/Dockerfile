@@ -1,9 +1,9 @@
 # cadvisor container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG CADVISOR_VERSION=0.49.1
+ARG CADVISOR_VERSION=0.52.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
