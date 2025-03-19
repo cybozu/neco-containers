@@ -13,7 +13,7 @@ Run the container
 
 ```console
 $ docker run -d --read-only --name=cert-manager-controller \
-    ghcr.io/cybozu/cert-manager:1.16 controller
+    ghcr.io/cybozu/cert-manager:1.17 controller
 ```
 
 License
