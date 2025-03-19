@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
-ARG GRAFANA_VERSION=11.3.0+security-01
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ARG GRAFANA_VERSION=11.5.2
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -11,9 +11,9 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana
 
-# Install Node.js 20.x & yarn
+# Install Node.js 22.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions
-RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
     && npm install --global yarn
@@ -27,7 +27,7 @@ RUN make build-go
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana/grafana/blob/v10.1.5/Dockerfile#L76-L165
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG GF_UID="10000"

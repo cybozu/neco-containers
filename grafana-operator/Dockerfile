@@ -1,8 +1,8 @@
 # Grafana Operator container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG VERSION=5.15.1
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ARG VERSION=5.17.0
 
 # After https://github.com/grafana/grafana-operator/issues/1678 is resolved,
 # this patch will not be needed.
@@ -22,7 +22,7 @@ RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator mai
 
 # Stage2: setup runtime container
 # refer to : https://github.com/grafana-operator/grafana-operator/blob/master/build/Dockerfile
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER 10000:10000

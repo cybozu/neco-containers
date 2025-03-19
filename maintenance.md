@@ -161,8 +161,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check the release page.
    - <https://github.com/prometheus/alertmanager/releases>
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Makefile and Dockerfile. If there are any updates, update our `Dockefile`.
+   - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Makefile`
    - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile`
+   - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/ui/Dockerfile` (check Node.js version)
 3. Update version variables in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -802,7 +804,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 2. Check the upstream Dockerfile and builder manifest. If there are any updates, update our `Dockerfile`.
    - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/Dockerfile`
    - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/manifest.yaml`
-3. Update `OTELCOL_VERSION` in `Dockerfile`.
+3. Update `OTELCOL_VERSION` and/or `OTELCOL_CONTRIB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## pause

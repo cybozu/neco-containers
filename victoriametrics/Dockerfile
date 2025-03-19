@@ -1,11 +1,11 @@
 # victoriametrics-xxx container
 
 ARG VICTORIAMETRICS_SRCREPO=VictoriaMetrics/VictoriaMetrics
-ARG VICTORIAMETRICS_SINGLE_VERSION=1.111.0
-ARG VICTORIAMETRICS_CLUSTER_VERSION=1.111.0-cluster
+ARG VICTORIAMETRICS_SINGLE_VERSION=1.113.0
+ARG VICTORIAMETRICS_CLUSTER_VERSION=1.113.0-cluster
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build-single
+FROM ghcr.io/cybozu/golang:1.24-noble AS build-single
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_SINGLE_VERSION
@@ -15,7 +15,7 @@ WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
 RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert vmbackup vmrestore vmctl
 
 #
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build-cluster
+FROM ghcr.io/cybozu/golang:1.24-noble AS build-cluster
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_CLUSTER_VERSION
@@ -26,7 +26,7 @@ RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_CLUSTER_VERSION} /download_and_bui
 
 
 # Stage2: setup runtime containers
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmsingle
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmsingle
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/victoria-metrics /
@@ -38,7 +38,7 @@ EXPOSE 8428
 ENTRYPOINT ["/victoria-metrics"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmagent
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmagent
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmagent /
@@ -50,7 +50,7 @@ EXPOSE 8429
 ENTRYPOINT ["/vmagent"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmalert
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmalert
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmalert /
@@ -62,7 +62,7 @@ EXPOSE 8880
 ENTRYPOINT ["/vmalert"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmbackup
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmbackup
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmbackup /
@@ -73,7 +73,7 @@ USER 10000:10000
 ENTRYPOINT ["/vmbackup"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmrestore
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmrestore
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmrestore /
@@ -84,7 +84,7 @@ USER 10000:10000
 ENTRYPOINT ["/vmrestore"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmctl
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmctl
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-single /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmctl /
@@ -95,7 +95,7 @@ USER 10000:10000
 ENTRYPOINT ["/vmctl"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vminsert
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vminsert
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vminsert /
@@ -107,7 +107,7 @@ EXPOSE 8480
 ENTRYPOINT ["/vminsert"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmselect
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmselect
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmselect /
@@ -119,7 +119,7 @@ EXPOSE 8481
 ENTRYPOINT ["/vmselect"]
 
 #
-FROM ghcr.io/cybozu/ubuntu:22.04 AS vmstorage
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vmstorage
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-cluster /go/src/github.com/VictoriaMetrics/VictoriaMetrics/bin/vmstorage /
