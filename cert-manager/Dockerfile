@@ -1,7 +1,7 @@
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 # https://github.com/cert-manager/cert-manager
 ENV CERT_MANAGER_REPOSITORY=https://github.com/cybozu-go/cert-manager
-ENV CERT_MANAGER_VERSION=1.16.1-neco-longtimeout.1
+ENV CERT_MANAGER_VERSION=1.17.1-neco-longtimeout.1
 RUN git clone --depth 1 --branch v${CERT_MANAGER_VERSION} ${CERT_MANAGER_REPOSITORY}
 RUN apt update && apt-get install -y rsync
 RUN cd cert-manager \
@@ -13,7 +13,7 @@ RUN cd cert-manager \
     && mv _bin/server/cainjector-linux-amd64 /work/cainjector \
     && mv LICENSE /work
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/webhook /usr/local/bin/webhook
