@@ -1,4 +1,4 @@
-# trust-manager container
+# stakater/Reloader container
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.23-jammy AS build
