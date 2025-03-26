@@ -20,6 +20,7 @@ COPY --from=build /work/teleport/LICENSE /usr/local/teleport/
 COPY update-necocli.sh /etc/profile.d/
 COPY loki-env.sh /etc/profile.d/
 COPY hubble-env.sh /etc/profile.d/
+COPY bash-env.sh /etc/profile.d/
 
 USER cybozu
 
