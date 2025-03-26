@@ -1,7 +1,7 @@
 # serf container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-noble AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG SERF_VERSION=0.10.2
 
