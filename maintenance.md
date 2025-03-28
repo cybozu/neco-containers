@@ -25,6 +25,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [argocd-image-updater](#argocd-image-updater)
 - [bird](#bird)
 - [blackbox\_exporter](#blackbox_exporter)
+- [bmc-log-collector](#bmc-log-collector)
 - [bmc-reverse-proxy](#bmc-reverse-proxy)
 - [bpf-map-pressure-exporter](#bpf-map-pressure-exporter)
 - [bpftrace](#bpftrace)
@@ -239,6 +240,20 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 1. Check the [release page](https://github.com/prometheus/blackbox_exporter/releases).
 2. Update `BLACKBOX_EXPORTER_VERSION` in `Dockerfile`.
+3. Update `BRANCH` and `TAG` files.
+
+## bmc-log-collector
+
+![Regular Update](./regular_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Confirm test are pass.
+
+   ```bash
+   make setup
+   make test
+   ```
+
 3. Update `BRANCH` and `TAG` files.
 
 ## bmc-reverse-proxy
