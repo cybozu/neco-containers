@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -12,10 +11,14 @@ import (
 )
 
 func testFillDeleter() {
+	var Ki int64 = 1024
+	var Mi int64 = 1024 * Ki
+	var Gi int64 = 1024 * Mi
+
 	It("should fill first specified bytes with zero", func() {
 		tmpFile, _ := os.CreateTemp("", "deleter")
 		defer os.Remove(tmpFile.Name())
-		err := exec.Command("dd", `if=/dev/urandom`, "of="+tmpFile.Name(), fmt.Sprintf("bs=%d", 1024), "count=11").Run()
+		err := exec.Command("dd", `if=/dev/urandom`, "of="+tmpFile.Name(), "bs=1M", "count=1025").Run()
 		Expect(err).ShouldNot(HaveOccurred())
 
 		deleter := &FillDeleter{
@@ -26,10 +29,13 @@ func testFillDeleter() {
 
 		zeroBlock := make([]byte, deleter.FillBlockSize)
 		buffer := make([]byte, deleter.FillBlockSize)
-		for i := uint(0); i < deleter.FillCount; i++ {
-			_, err := tmpFile.Read(buffer)
-			Expect(err).ShouldNot(HaveOccurred())
-			Expect(cmp.Equal(buffer, zeroBlock)).Should(BeTrue())
+		for _, position := range []int64{0, 1 * Gi} {
+			tmpFile.Seek(position, 0)
+			for i := uint(0); i < deleter.FillCount; i++ {
+				_, err := tmpFile.Read(buffer)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(cmp.Equal(buffer, zeroBlock)).Should(BeTrue())
+			}
 		}
 
 		_, err = tmpFile.Read(buffer)
@@ -37,9 +43,6 @@ func testFillDeleter() {
 		Expect(cmp.Equal(buffer, zeroBlock)).Should(BeFalse())
 	})
 
-	var Ki int64 = 1024
-	var Mi int64 = 1024 * Ki
-	var Gi int64 = 1024 * Mi
 	fillBlockSize := uint(1024)
 	fillCount := uint(10)
 	DescribeTable(
