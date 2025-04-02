@@ -306,7 +306,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 ![Regular Update](./regular_update.svg)
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update cilium and cilium-cli version in `Makefile` and `go.mod` to the version used by neco.
+2. Update cilium and cilium-cli version in `e2e/Makefile` and `go.mod` to the version used by neco.
 3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## ceph

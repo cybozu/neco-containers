@@ -1,10 +1,10 @@
 ARCH ?= amd64
 OS ?= linux
 
-E2ETEST_K8S_VERSION  := 1.28.7
-KIND_VERSION := 0.23.0
-CILIUM_VERSION := 1.14.13
-CILIUM_CLI_VERSION := 0.15.22
+E2ETEST_K8S_VERSION  := 1.31.6
+KIND_VERSION := 0.27.0
+CILIUM_VERSION := 1.15.13
+CILIUM_CLI_VERSION := 0.16.24
 
 PROJECT_DIR := $(CURDIR)/../
 BIN_DIR := $(PROJECT_DIR)/bin
@@ -47,7 +47,7 @@ $(KIND): $(BIN_DIR)
 	chmod a+x $(KIND)
 
 $(KUBECTL): $(BIN_DIR)
-	$(CURL) -o $(BIN_DIR)/kubectl https://storage.googleapis.com/kubernetes-release/release/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(ARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
+	$(CURL) -o $(BIN_DIR)/kubectl https://dl.k8s.io/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(ARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
 
 $(CILIUM_CLI): $(BIN_DIR)
 	$(CURL) https://github.com/cilium/cilium-cli/releases/download/v$(CILIUM_CLI_VERSION)/cilium-linux-amd64.tar.gz | tar -xz -C $(BIN_DIR)
