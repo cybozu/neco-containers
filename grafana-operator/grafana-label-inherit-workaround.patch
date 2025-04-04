@@ -1,0 +1,16 @@
+diff --git a/controllers/model/utils.go b/controllers/model/utils.go
+index 67a5f9c4..cac0c5e3 100644
+--- a/controllers/model/utils.go
++++ b/controllers/model/utils.go
+@@ -44,7 +44,10 @@ func SetInheritedLabels(obj metav1.ObjectMetaAccessor, extraLabels map[string]st
+ 	}
+ 	// Inherit labels from the parent grafana instance if any
+ 	for k, v := range extraLabels {
+-		labels[k] = v
++		// Workaround: Do not inherit Argo CD tracking label
++		if k != "argocd.argoproj.io/instance" {
++			labels[k] = v
++		}
+ 	}
+ 	// Ensure default CommonLabels for child resources
+ 	for k, v := range CommonLabels {
