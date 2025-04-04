@@ -83,7 +83,8 @@ spec:
     * If it contains characters other than alphabets, numbers, `-` and `.`, it is replaced with `-`.
 * `spec.storageClassName` is automatically set a value `local-storage`.
 * `spec.capacity.storage` is decided from the max capacity of the device.
-* The device specified `spec.local.path` is cleaned up by filling the first 100MB with zero value.
+* The device specified `spec.local.path` is cleaned up by filling 100MB with zero values from offset 0, 1GB, 10GB, 100GB, and 1000GB.
+   It is to wipe filesystem signatures and Ceph bdev labels.
 
 ## Prometheus metrics
 
@@ -209,7 +210,7 @@ Please use `make -C e2etest clean`.
 
 The cleanup process is:
 1. Watches Update events for Persistent Volume
-2. If `spec.storageClassName: local-storage` and `status.phase: Released`, fill the first 100MB of the corresponding device with zero value.
+2. If `spec.storageClassName: local-storage` and `status.phase: Released`, clean up the block device in the same way as during PV creation.
 3. Delete the Persistent Volume from Kubernetes API server.
   - Note that, this process is executed even if failed to cleanup the device.
 

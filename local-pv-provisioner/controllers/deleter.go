@@ -7,7 +7,6 @@ type Deleter interface {
 	Delete(path string) error
 }
 
-// FillDeleter fills first 100MByte with '\0'
 type FillDeleter struct {
 	FillBlockSize uint
 	FillCount     uint
