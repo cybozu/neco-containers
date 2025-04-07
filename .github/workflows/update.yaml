@@ -10,7 +10,7 @@ jobs:
   update-go-versions:
     runs-on: ubuntu-24.04
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
       UBUNTU_VERSIONS: "22.04 24.04"
       GO_MAJOR_VERSIONS: "1.23 1.24"
     permissions:
