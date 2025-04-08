@@ -8,6 +8,8 @@ ARG VERSION=5.17.0
 # this patch will not be needed.
 COPY grafana-status-fix.patch /work
 
+COPY grafana-label-inherit-workaround.patch /work
+
 WORKDIR /work/grafana-operator
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -18,6 +20,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN git clone --depth 1 --single-branch -b v${VERSION} https://github.com/grafana/grafana-operator.git .
 RUN git submodule update --init --recursive --recommend-shallow --depth 1
 RUN patch -p1 < ../grafana-status-fix.patch
+RUN patch -p1 < ../grafana-label-inherit-workaround.patch
 RUN CGO_ENABLED=0 GO111MODULE=on go build -o /usr/local/bin/grafana-operator main.go
 
 # Stage2: setup runtime container
