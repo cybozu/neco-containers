@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"errors"
+	"io"
 	"os"
 	"os/exec"
 
@@ -130,15 +131,22 @@ func (file *testFillDeleterFSFile) Write(p []byte) (n int, err error) {
 }
 
 func (file *testFillDeleterFSFile) Seek(offset int64, whence int) (int64, error) {
-	if whence != 0 {
+	switch whence {
+	case io.SeekStart:
+		file.offset = offset
+	case io.SeekEnd:
+		if offset != 0 {
+			return 0, errors.New("not implemented")
+		}
+		file.offset = file.size
+	default:
 		return 0, errors.New("not implemented")
 	}
-	file.offset = offset
-	return offset, nil
+	return file.offset, nil
 }
 
 func (file *testFillDeleterFSFile) Stat() (FileInfo, error) {
-	return &constFileInfo{size: file.size}, nil
+	return nil, errors.New("not implemented")
 }
 
 func (file *testFillDeleterFSFile) Sync() error {

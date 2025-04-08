@@ -1,6 +1,9 @@
 package controllers
 
-import "fmt"
+import (
+	"fmt"
+	"io"
+)
 
 // Deleter clean up the block device
 type Deleter interface {
@@ -29,18 +32,19 @@ func (d *FillDeleter) Delete(path string) error {
 		1000 * 1024 * 1024 * 1024,
 	}
 
-	fstat, err := file.Stat()
+	// Get the size of the device. Note that we can't use file.Stat() here,
+	// because its Size() always returns 0 for a device file.
+	fileSize, err := file.Seek(0, io.SeekEnd)
 	if err != nil {
-		return fmt.Errorf("can't get stat: %w", err)
+		return fmt.Errorf("failed to get device size: %w", err)
 	}
-	fileSize := fstat.Size()
 
 	zeroBlock := make([]byte, d.FillBlockSize)
 	for _, position := range bdevLabelPositions {
 		if position >= fileSize {
 			break
 		}
-		_, err := file.Seek(position, 0 /* relative to the origin of the file */)
+		_, err := file.Seek(position, io.SeekStart)
 		if err != nil {
 			return fmt.Errorf("failed to seek: %d: %w", position, err)
 		}

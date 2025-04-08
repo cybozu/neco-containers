@@ -101,4 +101,5 @@ do-test: $(GINKGO)
 	PATH=${PATH} \
 	E2ETEST=1 \
 	KUBECTL=$(KUBECTL) \
+	MINIKUBE=$(MINIKUBE) \
 	$(GINKGO) --fail-fast -v $(GINKGO_FLAGS) .
