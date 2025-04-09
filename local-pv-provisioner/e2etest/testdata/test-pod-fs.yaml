@@ -1,19 +1,29 @@
 ---
-apiVersion: v1
-kind: Pod
+apiVersion: batch/v1
+kind: Job
 metadata:
-  name: test-pod-fs
+  name: test-job
 spec:
-  containers:
-  - name: pause
-    image: registry.k8s.io/pause
-    volumeMounts:
-      - name: test-vol
-        mountPath: /mnt/test-vol
-  volumes:
-    - name: test-vol
-      persistentVolumeClaim:
-        claimName: test-pvc-fs
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: ubuntu
+        image: ubuntu:22.04
+        command:
+          # Note that we don't have to write any file explicitly to
+          # /mnt/test-vol in this Job to test lpp's zapping, because ext4 puts a
+          # superblock at the start of the disk.
+          # cf. https://www.kernel.org/doc/html/latest/filesystems/ext4/overview.html#layout
+          - sleep
+          - "1s"
+        volumeMounts:
+          - name: test-vol
+            mountPath: /mnt/test-vol
+      volumes:
+        - name: test-vol
+          persistentVolumeClaim:
+            claimName: test-pvc-fs
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

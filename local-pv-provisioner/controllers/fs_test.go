@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"time"
 )
 
 type notImplementedFS struct{}
@@ -26,34 +25,4 @@ func (fs *notImplementedFS) MkdirAll(path string, perm FileMode) error {
 }
 func (fs *notImplementedFS) Remove(name string) error {
 	return errors.New("not implemented")
-}
-
-type constFileInfo struct {
-	name    string
-	size    int64
-	mode    FileMode
-	modTime time.Time
-	isDir   bool
-	sys     any
-}
-
-var _ FileInfo = &constFileInfo{}
-
-func (fi *constFileInfo) Name() string {
-	return fi.name
-}
-func (fi *constFileInfo) Size() int64 {
-	return fi.size
-}
-func (fi *constFileInfo) Mode() FileMode {
-	return fi.mode
-}
-func (fi *constFileInfo) ModTime() time.Time {
-	return fi.modTime
-}
-func (fi *constFileInfo) IsDir() bool {
-	return fi.isDir
-}
-func (fi *constFileInfo) Sys() any {
-	return fi.sys
 }

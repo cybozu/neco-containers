@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"testing"
 	"time"
 
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -16,7 +18,8 @@ import (
 )
 
 var (
-	kubectlPath = os.Getenv("KUBECTL")
+	kubectlPath  = os.Getenv("KUBECTL")
+	minikubePath = os.Getenv("MINIKUBE")
 )
 
 func execAtLocal(cmd string, input []byte, args ...string) ([]byte, []byte, error) {
@@ -63,6 +66,10 @@ func getObject[T any](kind, namespace, name string) (*T, error) {
 
 func getPV(name string) (*corev1.PersistentVolume, error) {
 	return getObject[corev1.PersistentVolume]("persistentvolume", "", name)
+}
+
+func getJob(name string) (*batchv1.Job, error) {
+	return getObject[batchv1.Job]("job", "", name)
 }
 
 func TestMtest(t *testing.T) {
@@ -139,6 +146,20 @@ var _ = Describe("local-pv-provisioner", func() {
 						return errors.New("not bound yet")
 					}).Should(Succeed())
 
+					By("waiting until the Job completes")
+					Eventually(func() error {
+						job, err := getJob("test-job")
+						if err != nil {
+							return err
+						}
+						for _, cond := range job.Status.Conditions {
+							if cond.Type == batchv1.JobComplete && cond.Status == corev1.ConditionTrue {
+								return nil
+							}
+						}
+						return errors.New("not completed yet")
+					}).Should(Succeed())
+
 					By("deleting the Pod")
 					_, _, err = kubectl("delete", "-f", testPodManifestPath)
 					Expect(err).NotTo(HaveOccurred())
@@ -154,6 +175,17 @@ var _ = Describe("local-pv-provisioner", func() {
 						}
 						return errors.New("not available yet")
 					}).Should(Succeed())
+
+					By("checking that the Available PV is zapped", func() {
+						imageName := "loop0.img"
+						if pvBound.GetName() == "local-minikube-worker-loop1" {
+							imageName = "loop1.img"
+						}
+						stdout, _, err := execAtLocal(minikubePath, nil,
+							"ssh", "--", "dd", fmt.Sprintf("if=%s", imageName), "bs=1024", "count=5", "status=none")
+						Expect(err).NotTo(HaveOccurred())
+						Expect(stdout).To(Equal(make([]byte, 1024*5)))
+					})
 				},
 				Entry("Block", "pv-spec-cm-block", corev1.PersistentVolumeBlock, "testdata/test-pod-block.yaml"),
 				Entry("Filesystem", "pv-spec-cm-fs", corev1.PersistentVolumeFilesystem, "testdata/test-pod-fs.yaml"),
