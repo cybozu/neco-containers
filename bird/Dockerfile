@@ -15,7 +15,7 @@ RUN apt-get update \
        libssh-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -s -O ftp://bird.network.cz/pub/bird/bird-${BIRD_VERSION}.tar.gz && \
+RUN curl -sSLf -O https://bird.network.cz/download/bird-${BIRD_VERSION}.tar.gz && \
     tar xzf bird-${BIRD_VERSION}.tar.gz
 
 WORKDIR /work/bird-${BIRD_VERSION}
