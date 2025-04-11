@@ -13,18 +13,16 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Check and output changed files
-      id: changed-files
-      uses: tj-actions/changed-files@dcc7a0cba800f454d79fff4b993e8c3555bcc0a8 # v45.0.7
-      with:
-        files_ignore: |
-          **/*.md
-        separator: ','
-        write_output_files: 'true'
     - id: prepare-matrix
       shell: bash
       env:
+        GH_TOKEN: ${{ github.token }}
         INPUT_MATRIX: ${{ inputs.matrix }}
       run: |
+        if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+          export PR=$(cat "${GITHUB_EVENT_PATH}" | jq -r '.pull_request.number')
+        else
+          export PR=$(gh pr list --state merged --json number,mergeCommit | jq ".[] | select(.mergeCommit != null and .mergeCommit.oid == \"${GITHUB_SHA}\") | .number")
+        fi
         ./generate_matrix
         echo "jobs=$(cat .github/outputs/__matrix.json)" >> $GITHUB_OUTPUT
