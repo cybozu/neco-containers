@@ -1,9 +1,9 @@
 # BIRD container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG BIRD_VERSION=2.15.1
+ARG BIRD_VERSION=2.17
 WORKDIR /work
 
 RUN apt-get update \
@@ -15,7 +15,7 @@ RUN apt-get update \
        libssh-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -s -O ftp://bird.network.cz/pub/bird/bird-${BIRD_VERSION}.tar.gz && \
+RUN curl -sSLf -O https://bird.network.cz/download/bird-${BIRD_VERSION}.tar.gz && \
     tar xzf bird-${BIRD_VERSION}.tar.gz
 
 WORKDIR /work/bird-${BIRD_VERSION}
@@ -32,7 +32,7 @@ COPY bird-copyright /usr/local/bird/copyright
 
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \

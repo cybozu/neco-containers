@@ -229,7 +229,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [releases page](https://bird.network.cz/?download) in the official website.
+1. Check the [mailing list archive](https://bird.network.cz/?m_list) in the official website.
 2. Update `BIRD_VERSION` variable in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
