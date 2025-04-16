@@ -236,12 +236,13 @@ func getPods(ctx context.Context, client client.Client) (map[string]bool, error)
 		if pod.Spec.HostNetwork {
 			continue
 		}
-		if pod.Status.Phase == "Succeeded" {
+		if pod.Status.Phase != "Running" {
 			continue
 		}
-		if pod.Status.Phase != "Running" && pod.Status.PodIP == "" {
+		if pod.Status.PodIP == "" {
 			continue
 		}
+
 		key := fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())
 		// Check the pod is owned by Job
 		ownedByJob := false
