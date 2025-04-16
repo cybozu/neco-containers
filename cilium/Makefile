@@ -3,7 +3,7 @@ CILIUM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= ff8fb49706288a4b2346abc274e7a2f84d7dc02c
 CILIUM_PROXY_REPO ?= https://github.com/cilium/proxy.git
-CILIUM_PROXY_TARGET ?= 97edc2815e2c6a174d3d12e71731d54f5d32ea16
+CILIUM_PROXY_TARGET ?= 6db0e437ba7ed2169f032ceec25922dd06e0b12b
 
 IMAGE_TAG ?= ghcr.io/cybozu/cilium:$(shell cat TAG)
 
