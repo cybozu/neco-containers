@@ -1,0 +1,14 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: test
+  namespace: test
+spec:
+  template:
+    spec:
+      containers:
+      - name: ubuntu
+        image: ghcr.io/cybozu/ubuntu:22.04
+        command: ["/bin/sleep", "10m"]
+      restartPolicy: Never
+  backoffLimit: 4
