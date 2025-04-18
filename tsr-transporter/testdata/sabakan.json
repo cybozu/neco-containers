@@ -1,0 +1,4 @@
+{
+    "service": "127.0.0.1:7180",
+	"api_path": "/api/v1/machines"
+}

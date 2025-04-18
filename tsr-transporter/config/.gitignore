@@ -1,0 +1,2 @@
+# Ignore file which includes token, userid and password
+*.json
