@@ -78,6 +78,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [promtail](#promtail)
 - [promtail-debug](#promtail-debug)
 - [pushgateway](#pushgateway)
+- [pyroscope](#pyroscope)
 - [redis](#redis)
 - [registry](#registry)
 - [rook](#rook)
@@ -929,6 +930,14 @@ TBD
    - `https://github.com/prometheus/pushgateway/blob/vX.Y.Z/Dockerfile`
 3. Update version variables in `Dockerfile`.
 4. Update `TAG` file.
+
+## pyroscope
+
+![Regular Update](./regular_update.svg)
+
+1. Check the pyroscope [release page](https://github.com/grafana/pyroscope/releases).
+2. Check the pyroscope [Dockerfile](https://github.com/grafana/pyroscope/blob/main/cmd/pyroscope/Dockerfile) of the latest release version.
+3. Update `TAG` file.
 
 ## redis
 
