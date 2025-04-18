@@ -27,6 +27,11 @@ FROM ${GOLANG_IMAGE} AS cybozu-golang
 FROM ${UBUNTU_IMAGE} AS cilium-compiler
 COPY src/image-tools/images/compilers/install-deps.sh /tmp/install-deps.sh
 
+# Workaround
+RUN mv /tmp/install-deps.sh /tmp/install-deps-original.sh \
+    && cat /tmp/install-deps-original.sh | grep -v libelf-dev:arm64 > /tmp/install-deps.sh \
+    && chmod +x /tmp/install-deps.sh
+
 RUN /tmp/install-deps.sh
 
 # -------------------------------------------------------------------------------------
