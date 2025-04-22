@@ -98,6 +98,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [unbound\_exporter](#unbound_exporter)
 - [vault](#vault)
 - [victoriametrics](#victoriametrics)
+- [victoriametrics-datasource](#victoriametrics-datasource)
 - [victoriametrics-operator](#victoriametrics-operator)
 
 ---
@@ -1146,6 +1147,15 @@ TBD
    - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/*/Makefile`
    - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z-cluster/app/*/deployment/Dockerfile`
 3. Update `VICTORIAMETRICS_SINGLE_VERSION` and `VICTORIAMETRICS_CLUSTER_VERSION` in `Dockerfile`.
+4. Update `TAG` file.
+
+## victoriametrics-datasource
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/VictoriaMetrics/victoriametrics-datasource/releases).
+2. Check upstream Makefile and Dockerfile, and update our Dockerfile if needed.
+3. Update `VERSION` in `Dockerfile`.
 4. Update `TAG` file.
 
 ## victoriametrics-operator
