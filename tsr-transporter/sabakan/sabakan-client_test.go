@@ -1,7 +1,6 @@
 package sabakan
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -14,7 +13,7 @@ var _ = Describe("Sabakan Interface Library", func() {
 		saba := sabakanMock{
 			host:   "127.0.0.1:7180",
 			path:   "/api/v1/machines",
-			resDir: "../testdata/sabakan",
+			resDir: "../testdata/sabakan-data",
 		}
 		BeforeAll(func(ctx SpecContext) {
 			saba.startMock()
@@ -27,11 +26,18 @@ var _ = Describe("Sabakan Interface Library", func() {
 			}).WithContext(ctx).Should(Succeed())
 		}, NodeTimeout(10*time.Second))
 
-		Context("Test GetBmcIpv4", func() {
-			It("test", func(ctx SpecContext) {
+		Context("Test Sabakan access library", func() {
+			It("read config of sabakan access pointt", func(ctx SpecContext) {
+				saba, err := ReadAppConfig("../testdata/sabakan.json")
+				Expect(err).ToNot(HaveOccurred())
+				Expect(saba.Service).To(Equal("127.0.0.1:7180"))
+				Expect(saba.Path).To(Equal("/api/v1/machines"))
+				Expect(saba.Ep).To(Equal("http://127.0.0.1:7180/api/v1/machines"))
+			}, SpecTimeout(3*time.Second))
+
+			It("get IPv4 from Serial", func(ctx SpecContext) {
 				ipv4, err := GetBmcIpv4(saba.getEndpoint(), "1PNKVQ3")
 				Expect(err).ToNot(HaveOccurred())
-				fmt.Println("ipv4", ipv4)
 				Expect(ipv4).To(Equal("10.72.17.6"))
 			}, SpecTimeout(3*time.Second))
 

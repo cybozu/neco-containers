@@ -1,7 +1,6 @@
-package main
+package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log/slog"
@@ -62,49 +61,4 @@ func (sm *sabakanMock) reqHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprint(w, string(stringJSON))
-}
-
-type TestConfig struct {
-	Domain  string `json:"domain"`
-	AppId   int    `json:"app_id"`
-	SpaceId int    `json:"space_id"`
-	Guest   bool   `json:"is_guest"`
-	Proxy   string `json:"proxy"`
-	Token   string `json:"token"`
-}
-
-func readKintoneAppParam(configFilename string) (*TestConfig, error) {
-	fd, err := os.Open(configFilename)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	conf := new(TestConfig)
-	err = json.NewDecoder(fd).Decode(conf)
-	if err != nil {
-		return nil, err
-	}
-	return conf, nil
-}
-
-type BmcConfig struct {
-	IpV4 string `json:"idrac_ipv4"`
-	User string `json:"user"`
-	Pass string `json:"pass"`
-}
-
-func setBmcParam(configFilename string) (*BmcConfig, error) {
-	fd, err := os.Open(configFilename)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
-
-	conf := new(BmcConfig)
-	err = json.NewDecoder(fd).Decode(conf)
-	if err != nil {
-		return nil, err
-	}
-	return conf, nil
 }

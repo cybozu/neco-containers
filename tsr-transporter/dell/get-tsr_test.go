@@ -14,22 +14,22 @@ var _ = Describe("Dell iDRAC access Interface Library", func() {
 	Context("basic API test", Ordered, func() {
 		bf, _ := setBmcParam("../local/idrac-test-config.json")
 		ctx := context.Background()
-		var bmc Bmc
+		var b Bmc
 		var err error
 		var job *url.URL
 
 		It("Create new iDRAC Redfish endpoint", func() {
-			bmc, err = NewBmcEp(bf.IpV4, bf.User, bf.Pass)
+			b, err = NewBmcEp(bf.IpV4, bf.User, bf.Pass)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Request iDRAC to create TSR", func() {
-			job, err = bmc.StartCollection(ctx)
+			job, err = b.StartCollection(ctx)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
 		It("Waiting JOB to collect TSR in iDRAC", func() {
-			err = bmc.WaitCollection(ctx, job)
+			err = b.WaitCollection(ctx, job)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -39,7 +39,14 @@ var _ = Describe("Dell iDRAC access Interface Library", func() {
 			f, err := os.Create(filename)
 			Expect(err).NotTo(HaveOccurred())
 			defer f.Close()
-			err = bmc.DownloadSupportAssist(ctx, f)
+			err = b.DownloadSupportAssist(ctx, f)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Remove TSR file", func() {
+			downloadDir, _ := os.Getwd()
+			filename := filepath.Join(downloadDir, "test-tsr.zip")
+			err := os.Remove(filename)
 			Expect(err).NotTo(HaveOccurred())
 		})
 	})

@@ -1,3 +1,5 @@
+SUBDIRS = kintone #sabakan dell bmc 
+
 .PHONY: all
 all: check-generate test
 
@@ -22,5 +24,5 @@ test: clean
 
 .PHONY: clean
 clean:
-	rm -f testdata/output/*
+	rm -f ../testdata/output/*
 	go clean -fuzzcache

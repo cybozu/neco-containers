@@ -18,8 +18,7 @@ test: clean
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	##ginkgo -v --race -p .
-	ginkgo .
+	ginkgo -v --race -p .
 
 .PHONY: clean
 clean:

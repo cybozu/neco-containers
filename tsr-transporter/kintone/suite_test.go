@@ -7,7 +7,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-func TestBmcLogCollector(t *testing.T) {
+func TestTsrTransporter(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "TsrRequester Suite")
+	RunSpecs(t, "TsrTransporter Suite")
 }

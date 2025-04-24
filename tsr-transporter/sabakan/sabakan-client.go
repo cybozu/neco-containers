@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -90,4 +91,26 @@ func GetBmcIpv4(sabakanEndpoint string, serial string) (string, error) {
 		return "", nil
 	}
 	return machines[0].Info.BMC.IPv4.Address, nil
+}
+
+type Config struct {
+	Service string `json:"service"`
+	Path    string `json:"api_path"`
+	Ep      string
+}
+
+func ReadAppConfig(configFilename string) (*Config, error) {
+	fd, err := os.Open(configFilename)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	conf := new(Config)
+	err = json.NewDecoder(fd).Decode(conf)
+	if err != nil {
+		return nil, err
+	}
+	conf.Ep = "http://" + conf.Service + conf.Path
+	return conf, nil
 }

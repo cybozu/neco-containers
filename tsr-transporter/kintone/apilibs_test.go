@@ -21,7 +21,7 @@ var _ = Describe("Kintone Application Interface Library", func() {
 		var rec []byte
 
 		It("Create new Kintone endpoint", func() {
-			ka, _ := setKintoneAppParam("../local/kintone-test-config.json")
+			ka, _ := ReadAppConfig("../local/kintone-test-config.json")
 			KintoneApp, err = NewKintoneEp(
 				ka.Domain,
 				ka.AppId,
@@ -47,6 +47,13 @@ var _ = Describe("Kintone Application Interface Library", func() {
 
 			registerdRecNum, err = strconv.Atoi(retVals.Id)
 			Expect(err).NotTo(HaveOccurred())
+		})
+
+		It("Check arrived TSR request", func() {
+			httpStatus, recs, err := KintoneApp.CheckTsrRequest(ctx)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(httpStatus).NotTo(Equal("200"))
+			Expect(len(recs.Record)).To(Equal(1))
 		})
 
 		It("Get Kintone Record", func() {

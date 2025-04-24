@@ -172,8 +172,9 @@ func (bmc *Bmc) checkJobCondition(ctx context.Context, jobURL *url.URL) (bool, e
 
 func (bmc *Bmc) WaitCollection(ctx context.Context, jobURL *url.URL) error {
 	var wait time.Duration = 15
-	var i int
-	for i = 0; i < jobMaxWaitingCount; i++ {
+	var c int
+	for i := 0; i < jobMaxWaitingCount; i++ {
+		c = i
 		complete, err := bmc.checkJobCondition(ctx, jobURL)
 		if err != nil {
 			return err
@@ -183,7 +184,7 @@ func (bmc *Bmc) WaitCollection(ctx context.Context, jobURL *url.URL) error {
 		}
 		time.Sleep(wait * time.Second)
 	}
-	return fmt.Errorf("timeout %v", int(wait.Seconds())*i)
+	return fmt.Errorf("timeout %v", int(wait.Seconds())*c)
 }
 
 func (bmc *Bmc) DownloadSupportAssist(ctx context.Context, w io.Writer) error {

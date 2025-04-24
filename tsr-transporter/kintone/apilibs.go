@@ -13,6 +13,30 @@ import (
 	"time"
 )
 
+type Config struct {
+	Domain  string `json:"domain"`
+	AppId   int    `json:"app_id"`
+	SpaceId int    `json:"space_id"`
+	Guest   bool   `json:"is_guest"`
+	Proxy   string `json:"proxy"`
+	Token   string `json:"token"`
+}
+
+func ReadAppConfig(configFilename string) (*Config, error) {
+	fd, err := os.Open(configFilename)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	conf := new(Config)
+	err = json.NewDecoder(fd).Decode(conf)
+	if err != nil {
+		return nil, err
+	}
+	return conf, nil
+}
+
 func (app *App) createEndpoint(upload bool, recNum int) string {
 	var urlString string
 
@@ -21,6 +45,7 @@ func (app *App) createEndpoint(upload bool, recNum int) string {
 	} else {
 		urlString = fmt.Sprintf("%s/k/v1", app.Domain)
 	}
+
 	if upload {
 		urlString = fmt.Sprintf("%s/file.json?app=%d", urlString, app.AppId)
 	} else {
@@ -30,6 +55,7 @@ func (app *App) createEndpoint(upload bool, recNum int) string {
 			urlString = fmt.Sprintf("%s/record.json?app=%d", urlString, app.AppId)
 		}
 	}
+
 	return urlString
 }
 
@@ -40,9 +66,10 @@ func (app *App) createEndpointforRecords(query string) string {
 	} else {
 		urlString = fmt.Sprintf("%s/k/v1", app.Domain)
 	}
+
 	queryString := url.QueryEscape(query)
-	urlString = fmt.Sprintf("%s/records.json?app=%d&query=%s", urlString, app.AppId, queryString)
-	return urlString
+
+	return fmt.Sprintf("%s/records.json?app=%d&query=%s", urlString, app.AppId, queryString)
 }
 
 func (app *App) httpRequest(req *http.Request) (
@@ -66,6 +93,7 @@ func (app *App) httpRequest(req *http.Request) (
 		if r.err != nil {
 			return r.resp.StatusCode, nil, r.err
 		}
+
 		byteJSON, err := io.ReadAll(r.resp.Body)
 		defer r.resp.Body.Close()
 		if err != nil {
@@ -76,6 +104,7 @@ func (app *App) httpRequest(req *http.Request) (
 		type requestCanceler interface {
 			CancelRequest(*http.Request)
 		}
+
 		canceller, ok := app.Client.Transport.(requestCanceler)
 		if ok {
 			canceller.CancelRequest(req)
@@ -103,19 +132,20 @@ func NewKintoneEp(
 	if len(Proxy) > 0 {
 		proxyUrl, err := url.Parse(Proxy)
 		if err != nil {
-			//slog.Error("Error Proxy URL address", "err", err)
 			return nil, err
 		}
 		proxyReq = http.ProxyURL(proxyUrl)
 	} else {
 		proxyReq = nil
 	}
+
 	tr := &http.Transport{
 		MaxIdleConns:       10,
 		IdleConnTimeout:    30 * time.Second,
 		DisableCompression: true,
 		Proxy:              proxyReq,
 	}
+
 	return &App{
 		Domain:       Domain,
 		AppId:        AppId,
@@ -135,7 +165,9 @@ func (app *App) GetRecord(ctx context.Context, recNum int) (int, []byte, error) 
 	if err != nil {
 		return 0, nil, err
 	}
+
 	req.Header.Add("X-Cybozu-API-Token", app.AppToken)
+
 	return app.httpRequest(req)
 }
 
@@ -147,23 +179,27 @@ func (app *App) GetRecords(ctx context.Context, query string) (int, []byte, erro
 	if err != nil {
 		return 0, nil, err
 	}
+
 	req.Header.Add("X-Cybozu-API-Token", app.AppToken)
+
 	return app.httpRequest(req)
 }
 
-func (app *App) CheckReq(ctx context.Context) (int, Records, error) {
-	var returnVals Records
-	//query := `Createdtime = TODAY() and File not like "*.txt"`
+func (app *App) CheckTsrRequest(ctx context.Context) (int, Records, error) {
+	var recs Records
 	query := `Created_datetime = TODAY() and log_archive not like "*.zip"`
-	statusCode, rec, err := app.GetRecords(ctx, query)
+
+	httpStatus, rec, err := app.GetRecords(ctx, query)
 	if err != nil {
-		return statusCode, returnVals, err
+		return httpStatus, recs, err
 	}
-	err = json.Unmarshal(rec, &returnVals)
+
+	err = json.Unmarshal(rec, &recs)
 	if err != nil {
-		return statusCode, returnVals, err
+		return httpStatus, recs, err
 	}
-	return statusCode, returnVals, nil
+
+	return httpStatus, recs, nil
 }
 
 func (app *App) UpdateRecord(ctx context.Context, data interface{}, method string) (int, []byte, error) {
@@ -172,6 +208,7 @@ func (app *App) UpdateRecord(ctx context.Context, data interface{}, method strin
 		return 0, byteJson, err
 	}
 	stringJson := string(byteJson)
+
 	req, err := http.NewRequestWithContext(ctx,
 		method,
 		app.createEndpoint(false, 0),
@@ -179,23 +216,28 @@ func (app *App) UpdateRecord(ctx context.Context, data interface{}, method strin
 	if err != nil {
 		return 0, byteJson, err
 	}
+
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("X-Cybozu-API-Token", app.AppToken)
+
 	return app.httpRequest(req)
 }
 
 func (app *App) UploadFile(ctx context.Context, data RecordWithFile) (int, error) {
-	file, err := os.Open(data.Recode.File.Value[0].Name)
+	fd, err := os.Open(data.Recode.File.Value[0].Name)
 	if err != nil {
 		return 0, err
 	}
+	defer fd.Close()
 	body := &bytes.Buffer{}
 	mw := multipart.NewWriter(body)
+
 	fw, err := mw.CreateFormFile("file", data.Recode.File.Value[0].Name)
 	if err != nil {
 		return 0, err
 	}
-	_, err = io.Copy(fw, file)
+
+	_, err = io.Copy(fw, fd)
 	if err != nil {
 		return 0, err
 	}
@@ -205,6 +247,7 @@ func (app *App) UploadFile(ctx context.Context, data RecordWithFile) (int, error
 	if err != nil {
 		return 0, err
 	}
+
 	req, err := http.NewRequestWithContext(ctx,
 		http.MethodPost,
 		app.createEndpoint(true, 0),
@@ -212,24 +255,25 @@ func (app *App) UploadFile(ctx context.Context, data RecordWithFile) (int, error
 	if err != nil {
 		return 0, err
 	}
+
 	req.Header.Add("X-Cybozu-API-Token", app.AppToken)
 	req.Header.Set("Content-Type", contentType)
 
-	statusCode, byteJSON, err := app.httpRequest(req)
+	httpStatus, byteJSON, err := app.httpRequest(req)
 	if err != nil {
-		return statusCode, err
+		return httpStatus, err
 	}
 
-	//var fa FileAttached
 	var fa AttachedFile
-	if err := json.Unmarshal(byteJSON, &fa); err != nil {
+	err = json.Unmarshal(byteJSON, &fa)
+	if err != nil {
 		return 0, err
 	}
 	data.Recode.File.Value[0].FileKey = fa.FileKey
 
-	statusCode, _, err = app.UpdateRecord(ctx, data, http.MethodPut)
+	httpStatus, _, err = app.UpdateRecord(ctx, data, http.MethodPut)
 	if err != nil {
-		return statusCode, err
+		return httpStatus, err
 	}
-	return statusCode, nil
+	return httpStatus, nil
 }
