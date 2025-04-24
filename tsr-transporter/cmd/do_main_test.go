@@ -36,7 +36,7 @@ var _ = Describe("TSR Transporter", Ordered, func() {
 
 	Context("Config files access test", func() {
 		It("bmc-user file", func() {
-			b, err = bmc.LoadBMCUserConfig("../local/bmc-user.json")
+			b, err = bmc.LoadBMCUserConfig("../config/bmc-user.json")
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("sabakana config file", func() {
@@ -45,7 +45,7 @@ var _ = Describe("TSR Transporter", Ordered, func() {
 			Expect(s.Ep).To(Equal("http://127.0.0.1:7180/api/v1/machines"))
 		})
 		It("kintone config file", func() {
-			k, err = kintone.ReadAppConfig("../local/kintone-test-config.json")
+			k, err = kintone.ReadAppConfig("../config/kintone-test-config.json")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k.Domain).To(Equal("https://6hu5ta9d6e4z.cybozu.com"))
 		})

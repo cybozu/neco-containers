@@ -12,7 +12,7 @@ import (
 
 var _ = Describe("Dell iDRAC access Interface Library", func() {
 	Context("basic API test", Ordered, func() {
-		bf, _ := setBmcParam("../local/idrac-test-config.json")
+		bf, _ := setBmcParam("../config/idrac-test-config.json")
 		ctx := context.Background()
 		var b Bmc
 		var err error

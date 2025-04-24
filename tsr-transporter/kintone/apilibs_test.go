@@ -21,7 +21,7 @@ var _ = Describe("Kintone Application Interface Library", func() {
 		var rec []byte
 
 		It("Create new Kintone endpoint", func() {
-			ka, _ := ReadAppConfig("../local/kintone-test-config.json")
+			ka, _ := ReadAppConfig("../config/kintone-test-config.json")
 			KintoneApp, err = NewKintoneEp(
 				ka.Domain,
 				ka.AppId,

@@ -63,7 +63,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgKintone, "kintone", "", "config file (default is $HOME/kintone.json)")
-	rootCmd.PersistentFlags().StringVar(&cfgBmcUser, "bmc-user", "", "user file (default is /etc/bmc-user.json)")
-	rootCmd.PersistentFlags().StringVar(&cfgSabakan, "sabakan", "", "config file (default is $HOME/sabakan.json)")
+	rootCmd.PersistentFlags().StringVarP(&cfgKintone, "kintone", "k", "config/kintone-test-config.json", "Kintone App config (default is config/kintone-test-config.json)")
+	rootCmd.PersistentFlags().StringVarP(&cfgBmcUser, "bmc-user", "b", "config/bmc-user.json", "BMC user config (default is config/bmc-user.json)")
+	rootCmd.PersistentFlags().StringVarP(&cfgSabakan, "sabakan", "s", "config/sabakan.json", "Sabakan config (default is config/sabakan.json)")
 }
