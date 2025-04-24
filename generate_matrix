@@ -18,7 +18,7 @@ for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do
     CONTAINER_DIR=$(echo "${ENTRY}" | jq -r '.dir')
     CONTAINER_NAME=$(echo "${ENTRY}" | jq -r '."container-image"')
     echo "Checking ${CONTAINER_NAME}..."
-    if grep -F $(realpath "${CONTAINER_DIR}") .github/outputs/__diff.txt > /dev/null; then
+    if grep -F $(realpath "${CONTAINER_DIR}")'/' .github/outputs/__diff.txt > /dev/null; then
         OUTPUT_MATRIX="$(jq -nc '[inputs] | flatten' <(echo "${OUTPUT_MATRIX}") <(echo "[${ENTRY}]"))"
         echo '  OK'
     fi
