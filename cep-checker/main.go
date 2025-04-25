@@ -140,11 +140,7 @@ func checkAll(ctx context.Context, client client.Client) (map[string]string, err
 	missings := make(map[string]string)
 
 	// pod -> cep
-	for key, val := range pods {
-		if cfg.ignoreJobPod && val {
-			// skip job pod
-			continue
-		}
+	for key := range pods {
 		if _, ok := ceps[key]; !ok {
 			// To avoid a miss detection, check again
 			res, err := check(ctx, client, key)
@@ -190,7 +186,11 @@ func check(ctx context.Context, c client.Client, key string) (string, error) {
 			return "", err
 		}
 	} else {
-		podExist = true
+		if isTargetPod(pod) {
+			podExist = true
+		} else {
+			return "", nil
+		}
 	}
 
 	cep := &ciliumv2.CiliumEndpoint{}
@@ -220,12 +220,10 @@ func check(ctx context.Context, c client.Client, key string) (string, error) {
 	return "", nil
 }
 
-// getPods returns map[string]bool.
-// This lists pods that is not in host network and that is running all namespaces.
+// getPods returns map[string]struct{}.
 // The map key is the pair of namespace and name(namespace/name).
-// The map value is the bool value where its pod is owned by the Job resource; it is set to true.
-func getPods(ctx context.Context, client client.Client) (map[string]bool, error) {
-	pods := make(map[string]bool)
+func getPods(ctx context.Context, client client.Client) (map[string]struct{}, error) {
+	pods := make(map[string]struct{})
 
 	podList := &corev1.PodList{}
 	if err := client.List(ctx, podList); err != nil {
@@ -233,28 +231,35 @@ func getPods(ctx context.Context, client client.Client) (map[string]bool, error)
 	}
 
 	for _, pod := range podList.Items {
-		if pod.Spec.HostNetwork {
-			continue
-		}
-		if pod.Status.Phase != "Running" {
-			continue
-		}
-		if pod.Status.PodIP == "" {
+		if !isTargetPod(&pod) {
 			continue
 		}
 
-		key := fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())
-		// Check the pod is owned by Job
-		ownedByJob := false
-		for _, ref := range pod.OwnerReferences {
-			if ref.Kind == "Job" {
-				ownedByJob = true
-			}
-		}
-		pods[key] = ownedByJob
+		pods[fmt.Sprintf("%s/%s", pod.GetNamespace(), pod.GetName())] = struct{}{}
 	}
 
 	return pods, nil
+}
+
+func isTargetPod(pod *corev1.Pod) bool {
+	if pod.Spec.HostNetwork {
+		return false
+	}
+	if pod.Status.Phase != "Running" {
+		return false
+	}
+	if pod.Status.PodIP == "" {
+		return false
+	}
+	if cfg.ignoreJobPod {
+		for _, ref := range pod.OwnerReferences {
+			if ref.Kind == "Job" {
+				return false
+			}
+		}
+	}
+
+	return true
 }
 
 // list all CiliumEndpoints
