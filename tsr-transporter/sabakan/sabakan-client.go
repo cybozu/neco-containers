@@ -2,7 +2,6 @@ package sabakan
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"os"
@@ -70,25 +69,27 @@ type Machine struct {
 }
 
 func GetBmcIpv4(sabakanEndpoint string, serial string) (string, error) {
-	req, _ := http.NewRequest("GET", sabakanEndpoint+"/"+serial, nil)
+	req, err := http.NewRequest("GET", sabakanEndpoint+"/"+serial, nil)
+	if err != nil {
+		return "", err
+	}
 	client := &http.Client{Timeout: time.Duration(3) * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		return "", err
 	}
-	// NotFound の時は？
+	// Server serial is not found at current stage, ignore operation
+	if resp.StatusCode == 404 {
+		return "", nil
+	}
 	byteJSON, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}
-	if len(byteJSON) == 0 {
-		return "", fmt.Errorf("serial is not found in neco/sabakan")
-	}
-
 	var machines []Machine
 	err = json.Unmarshal(byteJSON, &machines)
 	if err != nil {
-		return "", nil
+		return "", err
 	}
 	return machines[0].Info.BMC.IPv4.Address, nil
 }
@@ -99,7 +100,7 @@ type Config struct {
 	Ep      string
 }
 
-func ReadAppConfig(configFilename string) (*Config, error) {
+func ReadConfig(configFilename string) (*Config, error) {
 	fd, err := os.Open(configFilename)
 	if err != nil {
 		return nil, err

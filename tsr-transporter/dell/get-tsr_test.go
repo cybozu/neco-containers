@@ -17,6 +17,8 @@ var _ = Describe("Dell iDRAC access Interface Library", func() {
 		var b Bmc
 		var err error
 		var job *url.URL
+		downloadDir, _ := os.Getwd()
+		filename := filepath.Join(downloadDir, "test-tsr.zip")
 
 		It("Create new iDRAC Redfish endpoint", func() {
 			b, err = NewBmcEp(bf.IpV4, bf.User, bf.Pass)
@@ -34,8 +36,6 @@ var _ = Describe("Dell iDRAC access Interface Library", func() {
 		})
 
 		It("Download TSR from iDRAC", func() {
-			downloadDir, _ := os.Getwd()
-			filename := filepath.Join(downloadDir, "test-tsr.zip")
 			f, err := os.Create(filename)
 			Expect(err).NotTo(HaveOccurred())
 			defer f.Close()
@@ -44,8 +44,6 @@ var _ = Describe("Dell iDRAC access Interface Library", func() {
 		})
 
 		It("Remove TSR file", func() {
-			downloadDir, _ := os.Getwd()
-			filename := filepath.Join(downloadDir, "test-tsr.zip")
 			err := os.Remove(filename)
 			Expect(err).NotTo(HaveOccurred())
 		})

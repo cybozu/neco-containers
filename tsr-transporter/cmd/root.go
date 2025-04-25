@@ -18,22 +18,29 @@ var cfgBmcUser string
 var rootCmd = &cobra.Command{
 	Use:   "tsr-transporter",
 	Short: "Acquire TSR from iDRAC and put it Kintone app",
-	Long: `This command act to get TSR from iDRAC and put in the record onf Kintone:
+	Long: `This command act to get TSR from iDRAC and put in the record of Kintone:
 
 Using the service tag of the server registered in the Kintone app as the key, 
 find the IP address of the server's iDRAC/BMC (Baseboard Management Controller) from Sabakan, 
 request a TSR (Technical Service Report) job, and register the obtained TSR in Kintone.`,
-
+	PreRun: func(cmd *cobra.Command, args []string) {
+		if len(cfgKintone) == 0 && len(cfgSabakan) == 0 && len(cfgBmcUser) == 0 {
+			fmt.Println("Error: Must set flag or sub-command")
+			fmt.Println()
+			cmd.Help()
+			os.Exit(1)
+		}
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		// iDRAC
-		bc, err := bmc.LoadBMCUserConfig(cfgBmcUser)
+		bc, err := bmc.ReadUsers(cfgBmcUser)
 		if err != nil {
 			slog.Error("Can't read the config file of BMC", "err", err)
 			os.Exit(1)
 		}
 
 		// Sabakan
-		sa, _ := sabakan.ReadAppConfig(cfgSabakan)
+		sa, _ := sabakan.ReadConfig(cfgSabakan)
 		if err != nil {
 			slog.Error("Can't read the config file of sabakan", "err", err)
 			os.Exit(1)
@@ -63,7 +70,7 @@ func Execute() {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cfgKintone, "kintone", "k", "config/kintone-test-config.json", "Kintone App config (default is config/kintone-test-config.json)")
-	rootCmd.PersistentFlags().StringVarP(&cfgBmcUser, "bmc-user", "b", "config/bmc-user.json", "BMC user config (default is config/bmc-user.json)")
-	rootCmd.PersistentFlags().StringVarP(&cfgSabakan, "sabakan", "s", "config/sabakan.json", "Sabakan config (default is config/sabakan.json)")
+	rootCmd.PersistentFlags().StringVarP(&cfgKintone, "kintone", "k", "", "Kintone App config")
+	rootCmd.PersistentFlags().StringVarP(&cfgBmcUser, "bmc-user", "b", "", "BMC user config")
+	rootCmd.PersistentFlags().StringVarP(&cfgSabakan, "sabakan", "s", "", "Sabakan config")
 }

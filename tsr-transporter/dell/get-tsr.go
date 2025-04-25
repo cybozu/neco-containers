@@ -86,12 +86,11 @@ func (bmc Bmc) httpRequest(req *http.Request) (int, []byte, *url.URL, error) {
 				}
 			}()
 		}
-		return http.StatusRequestTimeout, nil, nil, fmt.Errorf("timeout")
+		return http.StatusRequestTimeout, nil, nil, fmt.Errorf("timeout occurred while connecting to iDRAC")
 	}
 }
 
 func (bmc *Bmc) StartCollection(ctx context.Context) (*url.URL, error) {
-
 	// https://developer.dell.com/apis/2978/versions/6.xx/openapi.yaml/paths/~1redfish~1v1~1Managers~1%7BManagerId%7D~1Oem~1Dell~1DellLCService~1Actions~1DellLCService.SupportAssistCollection/post
 	u := &url.URL{
 		Scheme: "https",
@@ -108,22 +107,19 @@ func (bmc *Bmc) StartCollection(ctx context.Context) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, u.String(), bytes.NewReader(b))
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Set("Content-Type", "application/json")
 	// Without this header, the response will be 406 Not Acceptable.
 	// https://blog.csdn.net/fwtyyds/article/details/128896633
 	req.Header.Set("Accept", "*/*")
-
-	statusCode, _, jobUrl, err := bmc.httpRequest(req)
+	httpStatus, _, jobUrl, err := bmc.httpRequest(req)
 	if err != nil {
 		return nil, err
 	}
-	if statusCode != http.StatusAccepted {
+	if httpStatus != http.StatusAccepted {
 		return nil, fmt.Errorf("failed to accept TSR Job")
 	}
 	return jobUrl, nil
@@ -137,7 +133,6 @@ func (bmc *Bmc) checkJobCondition(ctx context.Context, jobURL *url.URL) (bool, e
 		Path:   jobURL.Path,
 		User:   bmc.UserInfo,
 	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return false, fmt.Errorf("failed to create request: %w", err)
@@ -145,15 +140,13 @@ func (bmc *Bmc) checkJobCondition(ctx context.Context, jobURL *url.URL) (bool, e
 	// Without this header, the response will be 406 Not Acceptable.
 	// https://blog.csdn.net/fwtyyds/article/details/128896633
 	req.Header.Set("Accept", "*/*")
-
-	statusCode, byteJSON, _, err := bmc.httpRequest(req)
+	httpStatus, byteJSON, _, err := bmc.httpRequest(req)
 	if err != nil {
 		return false, err
 	}
-	if statusCode != http.StatusOK {
-		return false, fmt.Errorf("status code err %v", statusCode)
+	if httpStatus != http.StatusOK {
+		return false, fmt.Errorf("status code err %v", httpStatus)
 	}
-
 	var job struct {
 		JobState string `json:"JobState"`
 		Message  string `json:"Message"`
@@ -196,7 +189,6 @@ func (bmc *Bmc) DownloadSupportAssist(ctx context.Context, w io.Writer) error {
 		Path:   "/redfish/v1/Dell/sacollect.zip",
 		User:   bmc.UserInfo,
 	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, u.String(), nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -204,11 +196,10 @@ func (bmc *Bmc) DownloadSupportAssist(ctx context.Context, w io.Writer) error {
 	// Without this header, the response will be 406 Not Acceptable.
 	// https://blog.csdn.net/fwtyyds/article/details/128896633
 	req.Header.Set("Accept", "*/*")
-
-	statusCode, byteTSR, _, err := bmc.httpRequest(req)
-	if statusCode != http.StatusOK {
-		fmt.Println("status code", statusCode)
-		return fmt.Errorf("HTTP Status code %v", statusCode)
+	httpStatus, byteTSR, _, err := bmc.httpRequest(req)
+	if httpStatus != http.StatusOK {
+		fmt.Println("status code", httpStatus)
+		return fmt.Errorf("HTTP Status code %v", httpStatus)
 	}
 	if err != nil {
 		return err

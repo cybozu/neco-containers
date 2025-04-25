@@ -17,7 +17,6 @@ type ColumnUpdater struct {
 	Type  string `json:"type"`
 	Value Column `json:"value"`
 }
-
 type FileInfo struct {
 	FileKey     string `json:"filekey"`
 	Name        string `json:"name"`
@@ -50,7 +49,6 @@ type RecordForRead struct {
 	Id       string `json:"id"`
 	Revision string `json:"revision"`
 }
-
 // For Attache File
 type AttachedFile struct {
 	FileKey string `json:"fileKey"`
@@ -69,17 +67,16 @@ type RecordWithFile struct {
 	RecNum int           `json:"id"`
 	Recode FieldWithFile `json:"record"`
 }
-
 // For Update Test
 type FieldForUpdate struct {
-	Memo Column `json:"memo"`
+	Memo    Column `json:"memo"`
+	TsrDate Column `json:"datetime"`
 }
 type RecodeForUpdate struct {
 	AppId  string         `json:"app"`
+	RecNum int            `json:"id"`
 	Recode FieldForUpdate `json:"record"`
 }
-
-// Kintoneのドメインと接続先アプリなどを設定する
 type App struct {
 	Domain       string
 	AppId        int
@@ -89,4 +86,5 @@ type App struct {
 	Client       *http.Client  // Specialized client.
 	Timeout      time.Duration // Timeout for API responses.
 	Proxy        http.Transport
+	WkDir        string
 }

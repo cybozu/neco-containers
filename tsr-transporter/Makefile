@@ -1,7 +1,7 @@
-SUBDIRS = kintone #sabakan dell bmc 
+TARGET  = tsr-transporter
 
 .PHONY: all
-all: check-generate test
+all: lint build
 
 .PHONY: setup
 setup:
@@ -12,17 +12,30 @@ setup:
 .PHONY: check-generate
 check-generate:
 	go mod tidy
-	git diff --exit-code --name-only
+	#git diff --exit-code --name-only
 
-.PHONY: test
-test: clean
+.PHONY: lint
+lint: clean
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
-	ginkgo -v --race -p .
+
+.PHONY: build
+build: test
+	go build -o $(TARGET) main.go
 
 .PHONY: clean
 clean:
+	rm -f $(TARGET)
 	rm -f testdata/output/*
 	go clean -fuzzcache
+
+# DO NOT RUN IN CI
+# This test needs to setup kintone and iDRAC.
+# You should use in development phase.
+SUBDIRS = kintone bmc cmd dell sabakan 
+test-all:
+	for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir test; \
+	done

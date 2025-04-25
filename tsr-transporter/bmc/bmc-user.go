@@ -2,6 +2,7 @@ package bmc
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -25,8 +26,9 @@ type UserConfig struct {
 	Support Credentials `json:"support"`
 }
 
-// LoadConfig loads UserConfig.
-func LoadBMCUserConfig(userFile string) (*UserConfig, error) {
+// Read users of BMC
+func ReadUsers(userFile string) (*UserConfig, error) {
+	fmt.Println("DEBUG userfile", userFile)
 	fd, err := os.Open(userFile)
 	if err != nil {
 		return nil, err

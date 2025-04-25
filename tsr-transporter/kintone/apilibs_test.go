@@ -28,7 +28,8 @@ var _ = Describe("Kintone Application Interface Library", func() {
 				ka.SpaceId,
 				ka.Guest,
 				ka.Proxy,
-				ka.Token)
+				ka.Token,
+				ka.WkDir)
 			Expect(err).NotTo(HaveOccurred())
 		})
 
@@ -80,7 +81,6 @@ var _ = Describe("Kintone Application Interface Library", func() {
 		})
 
 		var recWithFile RecordWithFile
-
 		It("Upload TSR", func() {
 			for _, record := range returnVals.Record {
 				recWithFile.AppId = strconv.Itoa(KintoneApp.AppId)

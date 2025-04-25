@@ -36,11 +36,11 @@ var _ = Describe("TSR Transporter", Ordered, func() {
 
 	Context("Config files access test", func() {
 		It("bmc-user file", func() {
-			b, err = bmc.LoadBMCUserConfig("../config/bmc-user.json")
+			b, err = bmc.ReadUsers("../config/bmc-user.json")
 			Expect(err).ToNot(HaveOccurred())
 		})
 		It("sabakana config file", func() {
-			s, err = sabakan.ReadAppConfig("../testdata/sabakan.json")
+			s, err = sabakan.ReadConfig("../testdata/sabakan.json")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(s.Ep).To(Equal("http://127.0.0.1:7180/api/v1/machines"))
 		})

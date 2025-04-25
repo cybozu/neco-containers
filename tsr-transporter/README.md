@@ -14,3 +14,4 @@ $ go run main.go --bmc-user-json testdata/etc/bmc-user.json
 ビルド と　実行
 $ go build -o tsr-trans main.go 
 $ ./tsr-trans --bmc-user-json testdata/etc/bmc-user.json 
+

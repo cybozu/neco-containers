@@ -28,7 +28,7 @@ var _ = Describe("Sabakan Interface Library", func() {
 
 		Context("Test Sabakan access library", func() {
 			It("read config of sabakan access pointt", func(ctx SpecContext) {
-				saba, err := ReadAppConfig("../testdata/sabakan.json")
+				saba, err := ReadConfig("../testdata/sabakan.json")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(saba.Service).To(Equal("127.0.0.1:7180"))
 				Expect(saba.Path).To(Equal("/api/v1/machines"))
