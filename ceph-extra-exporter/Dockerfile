@@ -6,7 +6,7 @@ COPY . .
 
 RUN go build -o ceph-extra-exporter
 
-FROM ghcr.io/cybozu/ceph:19.2.1.1
+FROM ghcr.io/cybozu/ceph:19.2.2.1
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /work/ceph-extra-exporter /
