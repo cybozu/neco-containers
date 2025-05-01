@@ -665,23 +665,26 @@ Only the base image and module dependency should be updated.
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile`
-4. `hubble-ui` depends on nginx. As such, it may be also be necessary to bump the following nginx-related variables in the `Dockerfile`:
-   1. `NGINX_VERSION`
-   2. `NJS_VERSION`
-   3. `NGINX_UNPRIVILEGED_COMMIT_HASH`
+   - https://github.com/cilium/hubble-ui/blob/master/Dockerfile
+   - Update `NODE_VERSION` and `NGINX_VERSION` in `Dockerfile`.
+   - Update `NGINX_COMMIT_HASH` in `Makefile`.
+      - Browse https://github.com/nginx/docker-nginx-unprivileged/commits/main/ .
+      - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
+   - Run `make clean checkout`.
+4. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
+   ```
+   OLD_NGINX_VERSION=
+   NEW_NGINX_VERSION=
 
-Update nginx that hubble-ui depends on as follows.
+   diff --side-by-side -W300 \
+   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${OLD_NGINX_VERSION}/Dockerfile-debian.template) \
+   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
 
-1. Pick a commit hash from <https://github.com/nginxinc/docker-nginx-unprivileged/commits/main/mainline/debian/Dockerfile>
-   - If `NGINX_VERSION` is 1.23.2, the commit hash is 85f846c6c5d121b2b750d71c31429d9686523da0 referencing the commit "Update mainline NGINX to 1.23.2"
-   - You can find the corresponding `NJS_VERSION` value in the same commit
-2. Check the upstream [Dockerfile](https://github.com/nginxinc/docker-nginx-unprivileged/blob/main/mainline/debian/Dockerfile). If there are any updates, update our `Dockerfile`.
-
-```bash
-# Check diff between v1.23.1 and v1.23.2
-git diff 0b794b2bd54217ac3882680265c9426ae2edcbd6 85f846c6c5d121b2b750d71c31429d9686523da0 -- mainline/debian/Dockerfile
-```
+   diff --side-by-side -W300 \
+   <(cat hubble-ui/Dockerfile) \
+   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
+   ```
+5. Update `NJS_VERSION` and `PKG_RELEASE` in `Dockerfile`.
 
 ## kube-metrics-adapter
 
