@@ -18,9 +18,9 @@ participant Pod
 participant sabakan
 participant BMC
 External staff->>Kintone App:TSR requests
-Pod->>Kintone: New request？
+Pod->>Kintone App: New request？
 loop Check every 15 minutes
-Kintone-->>Pod:New TSR requests
+Kintone App-->>Pod:New TSR requests
 end
 Pod->>sabakan: Serial
 sabakan-->>Pod: iDRAC IP address
@@ -32,6 +32,6 @@ BMC-->>Pod: End
 end
 Pod->>BMC: Download TSR
 BMC-->>Pod: TSR gz file
-Pod->>Kintone: Upload TSR
-Kintone-->>External staff: TSR  gz file
+Pod->>Kintone App: Upload TSR
+Kintone App-->>External staff: TSR  gz file
 ```
