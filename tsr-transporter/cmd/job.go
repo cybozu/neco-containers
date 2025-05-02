@@ -100,7 +100,7 @@ func acquireTsrPutKintone(bmc *bmc.UserConfig, sa *sabakan.Config, App *kintone.
 	return nil
 }
 
-func doMain(bmc *bmc.UserConfig, sa *sabakan.Config, ka *kintone.Config) error {
+func jobMain(bmc *bmc.UserConfig, sa *sabakan.Config, ka *kintone.Config) error {
 	// Setup slog
 	opts := &slog.HandlerOptions{
 		AddSource: true,

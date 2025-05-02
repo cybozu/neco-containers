@@ -49,6 +49,7 @@ type RecordForRead struct {
 	Id       string `json:"id"`
 	Revision string `json:"revision"`
 }
+
 // For Attache File
 type AttachedFile struct {
 	FileKey string `json:"fileKey"`
@@ -67,6 +68,7 @@ type RecordWithFile struct {
 	RecNum int           `json:"id"`
 	Recode FieldWithFile `json:"record"`
 }
+
 // For Update Test
 type FieldForUpdate struct {
 	Memo    Column `json:"memo"`

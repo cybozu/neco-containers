@@ -1,4 +1,5 @@
 TARGET  = tsr-transporter
+TAG = `cat TAG`
 
 .PHONY: all
 all: lint build
@@ -22,8 +23,12 @@ lint: clean
 	go vet ./...
 
 .PHONY: build
-build: test
+build: lint
 	go build -o $(TARGET) main.go
+
+.PHONY: image
+image: build 
+	docker build -t $(TARGET):$(TAG) .
 
 .PHONY: clean
 clean:

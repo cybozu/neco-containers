@@ -12,7 +12,7 @@ import (
 )
 
 var _ = Describe("Kintone Application Interface Library", func() {
-	Context("basic API test", Ordered, func() {
+	Context("Basic API test", Ordered, func() {
 		ctx := context.Background()
 		var KintoneApp *App
 		var returnVals Records

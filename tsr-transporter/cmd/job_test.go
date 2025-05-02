@@ -35,22 +35,23 @@ var _ = Describe("TSR Transporter", Ordered, func() {
 	var err error
 
 	Context("Config files access test", func() {
-		It("bmc-user file", func() {
+		It("Read BMC config file", func() {
 			b, err = bmc.ReadUsers("../config/bmc-user.json")
 			Expect(err).ToNot(HaveOccurred())
 		})
-		It("sabakana config file", func() {
+		It("Sabakana config file", func() {
 			s, err = sabakan.ReadConfig("../testdata/sabakan.json")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(s.Ep).To(Equal("http://127.0.0.1:7180/api/v1/machines"))
 		})
-		It("kintone config file", func() {
+		It("Kintone config file", func() {
 			k, err = kintone.ReadAppConfig("../config/kintone-test-config.json")
 			Expect(err).ToNot(HaveOccurred())
 			Expect(k.Domain).To(Equal("https://6hu5ta9d6e4z.cybozu.com"))
 		})
-		It("doMain Test", func() {
-			doMain(b, s, k)
+		It("TSR-transporter Job test", func() {
+			err = jobMain(b, s, k)
+			Expect(err).ToNot(HaveOccurred())
 		})
 	})
 })

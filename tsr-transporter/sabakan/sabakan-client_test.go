@@ -9,7 +9,7 @@ import (
 )
 
 var _ = Describe("Sabakan Interface Library", func() {
-	var _ = Describe("sabakan mock", Ordered, func() {
+	var _ = Describe("Sabakan mock", Ordered, func() {
 		saba := sabakanMock{
 			host:   "127.0.0.1:7180",
 			path:   "/api/v1/machines",
@@ -27,7 +27,7 @@ var _ = Describe("Sabakan Interface Library", func() {
 		}, NodeTimeout(10*time.Second))
 
 		Context("Test Sabakan access library", func() {
-			It("read config of sabakan access pointt", func(ctx SpecContext) {
+			It("Read config of sabakan access pointt", func(ctx SpecContext) {
 				saba, err := ReadConfig("../testdata/sabakan.json")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(saba.Service).To(Equal("127.0.0.1:7180"))
@@ -35,15 +35,15 @@ var _ = Describe("Sabakan Interface Library", func() {
 				Expect(saba.Ep).To(Equal("http://127.0.0.1:7180/api/v1/machines"))
 			}, SpecTimeout(3*time.Second))
 
-			It("get IPv4 from Serial", func(ctx SpecContext) {
+			It("Get IPv4 from Serial", func(ctx SpecContext) {
 				ipv4, err := GetBmcIpv4(saba.getEndpoint(), "1PNKVQ3")
 				Expect(err).ToNot(HaveOccurred())
 				Expect(ipv4).To(Equal("10.72.17.6"))
 			}, SpecTimeout(3*time.Second))
 
-			It("test", func(ctx SpecContext) {
+			It("Confirm behavior when the serial does not exist", func(ctx SpecContext) {
 				ipv4, err := GetBmcIpv4(saba.getEndpoint(), "UNEXIST")
-				Expect(err).To(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 				Expect(ipv4).To(Equal(""))
 			}, SpecTimeout(3*time.Second))
 		})

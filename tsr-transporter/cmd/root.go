@@ -53,9 +53,9 @@ request a TSR (Technical Service Report) job, and register the obtained TSR in K
 			os.Exit(1)
 		}
 
-		err = doMain(bc, sa, ka)
+		err = jobMain(bc, sa, ka)
 		if err != nil {
-			fmt.Println("err=", err)
+			slog.Error("Error occurred in the job", "err", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
