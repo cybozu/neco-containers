@@ -4,7 +4,7 @@ FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG TARGETARCH
-ARG GO_VERSION=1.23.8
+ARG GO_VERSION=1.23.9
 
 ENV GOARCH=${TARGETARCH}
 ENV GOPATH=/go
