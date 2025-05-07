@@ -2,7 +2,7 @@ TARGET  = tsr-transporter
 TAG = `cat TAG`
 
 .PHONY: all
-all: lint build
+all: test build
 
 .PHONY: setup
 setup:
@@ -15,15 +15,15 @@ check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
-.PHONY: lint
-lint: clean
+.PHONY: test
+test: 
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	staticcheck ./...
 	test -z "$$(custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
 	go vet ./...
 
 .PHONY: build
-build: lint
+build: test
 	go build -o $(TARGET) main.go
 
 .PHONY: image
