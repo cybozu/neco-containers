@@ -59,9 +59,9 @@ In the operation phase, set the parameters for the production version of the Kin
 
 ```
 {
-	"domain": "must set domain of Kintone (string)",
+    "domain": "must set domain of Kintone (string)",
     "app_id": must set Application ID (int),
-	"space_id": must set space ID (int),
+    "space_id": must set space ID (int),
     "is_guest": true (bool),
     "proxy": "option (string)",
     "token": "must set token to access kintone app, that must have the read/write permissions",
@@ -75,7 +75,7 @@ for development & test to use sabakan mock
 ```
 {
     "service": "127.0.0.1:7180",
-	"api_path": "/api/v1/machines"
+    "api_path": "/api/v1/machines"
 }
 ```
 
@@ -83,6 +83,6 @@ for stage or production environment. must change namespace
 ```
 {
     "service": "sabakan.replace_your_namespace.svc",
-	"api_path": "/api/v1/machines"
+    "api_path": "/api/v1/machines"
 }
 ```

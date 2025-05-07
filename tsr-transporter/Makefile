@@ -13,7 +13,7 @@ setup:
 .PHONY: check-generate
 check-generate:
 	go mod tidy
-	#git diff --exit-code --name-only
+	git diff --exit-code --name-only
 
 .PHONY: lint
 lint: clean
