@@ -1,0 +1,19 @@
+{
+    "root": {
+      "password": {
+        "hash": "ABC",
+        "salt": "123"
+      }
+    },
+    "repair": {
+      "password": {
+        "hash": "XYZ",
+        "salt": "456"
+      }
+    },
+    "power": {
+      "password": {
+        "raw": "789"
+      }
+    }
+}
