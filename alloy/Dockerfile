@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
-ARG ALLOY_VERSION=1.7.0
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ARG ALLOY_VERSION=1.8.3
 ARG SYSTEMD_VERSION=255
 
 WORKDIR /work
@@ -67,7 +67,7 @@ RUN cd alloy && patch -p1 < ../force-flush-partial-line.patch
 ENV GO_TAGS="netgo promtail_journal_enabled"
 RUN make -C /work/alloy USE_CONTAINER=0 alloy
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
