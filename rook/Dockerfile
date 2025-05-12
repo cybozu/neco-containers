@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.23-noble AS build
 
-ARG ROOK_VERSION=1.16.4
+ARG ROOK_VERSION=1.17.1
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -25,7 +25,7 @@ RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ceph:18.2.4.2
+FROM ghcr.io/cybozu/ceph:19.2.2.1
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
