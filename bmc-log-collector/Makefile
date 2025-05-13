@@ -7,6 +7,7 @@ setup:
 	go install honnef.co/go/tools/cmd/staticcheck@latest
 	go install github.com/onsi/ginkgo/v2/ginkgo
 
+
 .PHONY: check-generate
 check-generate:
 	go mod tidy
