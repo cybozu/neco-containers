@@ -15,7 +15,7 @@ import (
 // +kubebuilder:webhook:path=/mutate-pod,mutating=true,failurePolicy=fail,sideEffects=None,groups="",resources=pods,verbs=create,versions=v1,name=mpod.kb.io,admissionReviewVersions={v1,v1beta1}
 
 var (
-	ephemeralStorageRequest = resource.MustParse("200Mi")
+	ephemeralStorageRequest = resource.MustParse("10Mi")
 	ephemeralStorageLimit   = resource.MustParse("1Gi")
 )
 
