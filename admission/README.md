@@ -82,7 +82,7 @@ However, topolvm-controller can remove PersistentVolumeClaims, even if they are 
 PodMutator
 ----------
 
-PodMutator mutates Pod manifests to specify local ephemeral storage limit to 1GiB and request to 200MiB for each container.
+PodMutator mutates Pod manifests to specify local ephemeral storage limit to 1GiB and request to 10MiB for each container.
 The purpose of this mutator is to prevent Pods from overuse of local ephemeral storage.
 
 If `VPOD_EPHEMERAL_STORAGE_PERMISSIVE=true` envvar is set, local ephemeral storage requests and limits specified in 
