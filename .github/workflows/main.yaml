@@ -23,6 +23,8 @@ jobs:
               container-image: "alertmanager"
             - dir: "./alloy"
               container-image: "alloy"
+            - dir: "./argo-rollouts"
+              container-image: "argo-rollouts"
             - dir: "./argocd"
               container-image: "argocd"
             - dir: "./argocd-image-updater"
