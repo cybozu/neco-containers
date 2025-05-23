@@ -45,7 +45,6 @@ var (
 	preventDeleteValidateWebhookPath               = "/validate-preventdelete"
 	deploymentReplicaCountValidateWebhookPath      = "/validate-deployment-replica-count"
 	deploymentReplicaCountScaleValidateWebhookPath = "/validate-scale-deployment-replica-count"
-	podCPURequestReduceWebhookPath                 = "/mutate-pod-cpu-request-reduce"
 )
 
 var scheme *runtime.Scheme
@@ -63,10 +62,6 @@ func TestAPIs(t *testing.T) {
 
 func isHTTPProxyMutationDisabled() bool {
 	return os.Getenv("NO_HTTPPROXY_MUTATION") == "true"
-}
-
-func isPodCPUReqeustReducerEnabled() bool {
-	return os.Getenv("ENABLE_PODCPUREQUESTREDUCE_MUTATION") == "true"
 }
 
 type nullWebhook struct{}
@@ -136,7 +131,6 @@ var _ = BeforeSuite(func() {
 	wh := mgr.GetWebhookServer()
 	permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 	wh.Register(podMutatingWebhookPath, NewPodMutator(mgr.GetClient(), dec, permissive))
-	wh.Register(podCPURequestReduceWebhookPath, NewPodCPURequestReducer(mgr.GetClient(), dec, logf.Log.WithName("reducer"), isPodCPUReqeustReducerEnabled()))
 	wh.Register(podValidatingWebhookPath, NewPodValidator(mgr.GetClient(), dec, []string{"quay.io/cybozu/"}, permissive))
 	if isHTTPProxyMutationDisabled() {
 		wh.Register(contourMutatingWebhookPath, &webhook.Admission{Handler: &nullWebhook{}})
