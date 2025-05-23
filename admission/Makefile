@@ -28,7 +28,7 @@ crds:
 test: crds simple-test setup-envtest
 	{ \
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
-	ENABLE_PODCPUREQUESTREDUCE_MUTATION=true go test ./... -coverprofile cover.out ; \
+	go test ./... -coverprofile cover.out ; \
 	}
 	# TEST_PERMISSIVE test and NO_HTTPPROXY_MUTATION test can run at the same time
 	# because they do not affect each other.
