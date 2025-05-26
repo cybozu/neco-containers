@@ -21,6 +21,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [admission (neco-admission)](#admission-neco-admission)
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
+- [argo-rollouts](#argo-rollouts)
 - [argocd](#argocd)
 - [argocd-image-updater](#argocd-image-updater)
 - [bird](#bird)
@@ -187,6 +188,17 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update `ALLOY_VERSION` in `Dockerfile`.
 4. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 5. Update `TAG` file.
+
+## argo-rollouts
+
+![Regular Update](./regular_update.svg)
+
+1. Check [releases](https://github.com/argoproj/argo-rollouts/releases) for changes.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+    - `https://github.com/argoproj/argo-rollouts/blob/vX.Y.Z/Dockerfile`
+3. Update version variables in `Dockerfile`.
+    - Update `ARGO_ROLLOUTS_VERSION`.
+4. Update `TAG` file.
 
 ## argocd
 
