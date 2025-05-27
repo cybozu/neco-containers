@@ -7,6 +7,7 @@ IMAGE_TAG_LATEST = ghcr.io/cybozu/local-pv-provisioner:latest
 
 CONTROLLER_TOOLS_VERSION = 0.18.0
 ENVTEST_K8S_VERSION = 1.33.0
+export ENVTEST_K8S_VERSION
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
@@ -21,11 +22,8 @@ all: build
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: manifests generate simple-test setup-envtest
-	{ \
-	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
-	go test -race -v -count 1 ./... ; \
-	}
+test: manifests generate simple-test
+	go test -race -v -count 1 ./...
 
 .PHONY: ci-e2e-test
 ci-e2e-test:
@@ -66,12 +64,6 @@ CONTROLLER_GEN = $(CURDIR)/bin/controller-gen
 .PHONY: controller-gen
 controller-gen:
 	$(call go-install-tool,$(CONTROLLER_GEN),sigs.k8s.io/controller-tools/cmd/controller-gen@v$(CONTROLLER_TOOLS_VERSION))
-
-# Download setup-envtest locally if necessary
-SETUP_ENVTEST = $(CURDIR)/bin/setup-envtest
-.PHONY: setup-envtest
-setup-envtest:
-	$(call go-install-tool,$(SETUP_ENVTEST),sigs.k8s.io/controller-runtime/tools/setup-envtest@$(ENVTEST_BRANCH))
 
 .PHONY: docker
 docker: build
