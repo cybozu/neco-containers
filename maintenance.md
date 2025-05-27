@@ -72,7 +72,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [meows-neco-runner](#meows-neco-runner)
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
-- [pod-delete-rate-limiter](#pod-delete-rate-limiter)
 - [pomerium](#pomerium)
 - [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
@@ -854,31 +853,6 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile`
 3. Update `K8S_VERSION` and `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
-
-## pod-delete-rate-limiter
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Update the following version variables in `Makefile`.
-   - `CONTROLLER_TOOLS_VERSION`
-   - `KUSTOMIZE_VERSION`
-   - `ENVTEST_K8S_VERSION`
-2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-3. Generate code and manifests.
-
-   ```bash
-   cd $GOPATH/src/github.com/cybozu/neco-containers/pod-delete-rate-limiter
-   make generate manifests
-   # Commit, if there are any updated files.
-   ```
-
-4. Confirm build and test are green.
-
-   ```bash
-   make build test
-   ```
-
-5. Update `TAG` file.
 
 ## pomerium
 
