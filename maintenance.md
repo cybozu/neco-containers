@@ -744,7 +744,7 @@ Only the base image and module dependency should be updated.
 
 ![CSA Update](./csa_update.svg)
 
-1. Update version variables in `Makefile`.
+1. Update version variables in `Makefile` and `e2etest/Makefile`.
 2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 3. Generate code and manifests.
 

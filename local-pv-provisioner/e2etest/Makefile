@@ -1,7 +1,6 @@
-# It is set by CI using the environment variable, use conditional assignment.
-KUBERNETES_VERSION := 1.27.10
+KUBERNETES_VERSION := 1.33.1
 # https://github.com/kubernetes/minikube/releases
-MINIKUBE_VERSION := v1.32.0
+MINIKUBE_VERSION := 1.36.0
 
 # Tools versions which are defined in go.mod
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
@@ -50,11 +49,11 @@ $(GINKGO): | $(BINDIR)
 	mv $(BINDIR)/ginkgo $@
 
 $(KUBECTL): | $(BINDIR)
-	$(CURL) -o $@ https://storage.googleapis.com/kubernetes-release/release/v$(KUBERNETES_VERSION)/bin/linux/amd64/kubectl
+	$(CURL) -o $@ https://dl.k8s.io/release/v$(KUBERNETES_VERSION)/bin/linux/amd64/kubectl
 	chmod a+x $@
 
 $(MINIKUBE): | $(BINDIR)
-	$(CURL) -o $@ https://github.com/kubernetes/minikube/releases/download/$(MINIKUBE_VERSION)/minikube-linux-amd64
+	$(CURL) -o $@ https://github.com/kubernetes/minikube/releases/download/v$(MINIKUBE_VERSION)/minikube-linux-amd64
 	chmod a+x $@
 
 .PHONY: launch-cluster

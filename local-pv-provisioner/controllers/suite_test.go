@@ -39,7 +39,11 @@ var _ = BeforeSuite(func() {
 	testCtx, testCancel = context.WithCancel(context.TODO())
 
 	By("bootstrapping test environment")
-	testEnv = &envtest.Environment{}
+	testEnv = &envtest.Environment{
+		DownloadBinaryAssets:        true,
+		DownloadBinaryAssetsVersion: "v" + os.Getenv("ENVTEST_K8S_VERSION"),
+		BinaryAssetsDirectory:       "../bin",
+	}
 
 	cfg, err := testEnv.Start()
 	Expect(err).NotTo(HaveOccurred())
