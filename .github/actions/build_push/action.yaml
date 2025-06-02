@@ -3,7 +3,7 @@ description: "build and push container image"
 
 inputs:
   dir:
-    description: "working direcotry"
+    description: "working directory"
     required: false
     default: ""
   container-image:
@@ -57,53 +57,97 @@ runs:
         request-scan: ${{ inputs.request-scan }}
         github_token: ${{ inputs.github_token }}
     - name: Make pre-targets
-      if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build }}
+      if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build == 'true' }}
       shell: bash
       run: |
         for i in ${{ inputs.make-targets }}; do
           echo "Executing make $i..."
           make -C ${{ inputs.dir }} $i
         done
-    - name: Build
-      if: ${{ steps.prepare.outputs.build }}
+    - id: build_for_scan
+      name: Build for scan
+      if: ${{ steps.prepare.outputs.build == 'true' && steps.prepare.outputs.scan == 'true' }}
       uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.dir }}
         platforms: ${{ steps.prepare.outputs.platforms }}
-        load: ${{ steps.prepare.outputs.load }}
+        load: true
+        push: false
+        tags: ${{ steps.prepare.outputs.tag }}-scan
+        target: ${{ inputs.target }}
+    - id: build_no_scan
+      name: Build (no scan)
+      if: ${{ steps.prepare.outputs.build == 'true' && steps.prepare.outputs.scan != 'true' }}
+      uses: docker/build-push-action@v6
+      with:
+        context: ${{ inputs.dir }}
+        platforms: ${{ steps.prepare.outputs.platforms }}
+        load: ${{ inputs.load }}
         provenance: false
         push: false
         tags: |
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
         target: ${{ inputs.target }}
-    - name: Make post-targets
-      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build }}
+    - name: Make post-targets (scan)
+      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build == 'true' && steps.prepare.outputs.scan == 'true' }}
+      shell: bash
+      env:
+        IMAGE_TAG: ${{ steps.prepare.outputs.tag }}-scan
+      run: |
+        for i in ${{ inputs.make-post-targets }}; do
+          echo "Executing make $i with IMAGE_TAG=${IMAGE_TAG}..."
+          make -C ${{ inputs.dir }} $i
+        done
+    - name: Make post-targets (no scan)
+      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build == 'true' && steps.prepare.outputs.scan != 'true' }}
       shell: bash
       env:
         IMAGE_TAG: ${{ steps.prepare.outputs.tag }}
       run: |
         for i in ${{ inputs.make-post-targets }}; do
-          echo "Executing make $i..."
+          echo "Executing make $i with IMAGE_TAG=${IMAGE_TAG}..."
           make -C ${{ inputs.dir }} $i
         done
-    - name: Push
-      if: ${{ steps.prepare.outputs.push }}
+    - id: scan
+      name: Scan with Trivy and send to Yamory
+      if: ${{ steps.prepare.outputs.scan == 'true' }}
+      shell: bash
+      env:
+        DIR: ${{ inputs.dir }}
+        CONTAINER_IMAGE: ${{ inputs.container-image }}
+        TAG: ${{ steps.prepare.outputs.tag }}-scan
+        YAMORY_TOKEN: ${{ inputs.yamory_token }}
+      run: |
+        set -euo pipefail
+
+        echo "■ Starting vulnerability scan for image (${TAG})..."
+        trivy image --severity HIGH,CRITICAL "${TAG}" --format json > scan-report.json || {
+          echo "❌ Scan failed for image: ${TAG}"
+          exit 1
+        }
+        echo "✅ Scan succeeded for image: ${TAG}"
+
+        echo "■ Sending scan results to Yamory..."
+        ./.github/actions/trivy_scan/entrypoint.sh \
+          --dir "${DIR}" \
+          --container-image "${CONTAINER_IMAGE}" \
+          --tag "${TAG}" \
+          --yamory_token "${YAMORY_TOKEN}" || {
+          echo "⚠️ Failed to send results to Yamory"
+          exit 1
+        }
+        echo "✅ Successfully sent results to Yamory"
+    - name: Push final image
+      if: ${{ steps.prepare.outputs.push == 'true' && ( steps.prepare.outputs.scan != 'true' || steps.scan.conclusion == 'success' ) }}
       uses: docker/build-push-action@v6
       with:
         context: ${{ inputs.dir }}
         platforms: ${{ steps.prepare.outputs.platforms }}
+        push: true
+        load: false
         provenance: false
-        push: ${{ steps.prepare.outputs.docker_push }}
         tags: |
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
         target: ${{ inputs.target }}
-    - name: Scan images
-      if: ${{ steps.prepare.outputs.scan }}
-      uses: ./.github/actions/trivy_scan
-      with:
-        dir: ${{ inputs.dir }}
-        container-image: ${{ inputs.container-image }}
-        tag: ${{ steps.prepare.outputs.tag }}
-        yamory_token: ${{ inputs.yamory_token }}
