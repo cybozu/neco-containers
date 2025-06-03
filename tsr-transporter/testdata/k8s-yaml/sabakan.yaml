@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sabakan
+  namespace: sandbox
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 10080
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: sabakan
+  namespace: sandbox
+subsets:
+- addresses:
+  - ip: 10.71.255.6
+  ports:
+  - port: 10080
+    protocol: TCP
