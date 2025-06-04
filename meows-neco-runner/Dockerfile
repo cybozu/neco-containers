@@ -1,6 +1,6 @@
 ARG MEOWS_VERSION=0.20.2
 
-FROM ghcr.io/cybozu/golang:1.24-noble AS builder
+FROM ghcr.io/cybozu/golang:1.24-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.9.2
@@ -15,9 +15,10 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 USER root
 
 # Install debug tools.
-# https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile
+# https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apache2-utils \
+        awscli \
         bash-completion \
         bind9-dnsutils \
         binutils \
@@ -49,7 +50,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         tcpdump \
         telnet \
         traceroute \
-        unzip \
         vim \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
