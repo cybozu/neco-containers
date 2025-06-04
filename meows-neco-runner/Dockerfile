@@ -1,6 +1,6 @@
-ARG MEOWS_VERSION=0.20.1
+ARG MEOWS_VERSION=0.20.2
 
-FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.24-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.9.2
@@ -27,6 +27,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         expect \
         file \
         gdb \
+        iperf3 \
         iproute2 \
         iputils-ping \
         jq \
