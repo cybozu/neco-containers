@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG LOKI_VERSION=3.4.2
+ARG LOKI_VERSION=3.4.4
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
