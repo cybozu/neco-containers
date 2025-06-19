@@ -1,9 +1,9 @@
-CONTROLLER_TOOLS_VERSION = 0.16.5
+CONTROLLER_TOOLS_VERSION = 0.17.3
 KUSTOMIZE_VERSION = 5.6.0
 CONTOUR_VERSION = 1.30.1
 ARGOCD_VERSION = 2.11.7
 GRAFANA_OPERATOR_VERSION = 5.10.0
-ENVTEST_K8S_VERSION = 1.31.0
+ENVTEST_K8S_VERSION = 1.32.0
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
