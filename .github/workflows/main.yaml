@@ -290,7 +290,7 @@ jobs:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
     runs-on: ubuntu-22.04
     env:
-      go-version: "1.24.1"
+      go-version: "1.24.4"
     steps:
       - uses: actions/checkout@v4
       - name: Setup build environment
