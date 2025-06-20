@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG UNBOUND_VERSION=1.22.0
+ARG UNBOUND_VERSION=1.23.0
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -21,7 +21,7 @@ RUN mkdir -p /usr/local/unbound \
 RUN /usr/local/unbound/sbin/unbound-anchor -v || true
 RUN /usr/local/unbound/sbin/unbound-anchor -v
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
