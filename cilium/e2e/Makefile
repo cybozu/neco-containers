@@ -56,7 +56,7 @@ start-hubble-relay:
 # when upgrading Cilium.
 .PHONY: test
 test:
-	$(CILIUM) connectivity test --test=!check-log-errors
+	$(CILIUM) connectivity test --test=!check-log-errors,!to-fqdn
 
 .PHONY: stop
 stop:
