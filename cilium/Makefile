@@ -1,9 +1,7 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
 CILIUM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
-CILIUM_IMAGE_TOOLS_TARGET ?= ff8fb49706288a4b2346abc274e7a2f84d7dc02c
-CILIUM_PROXY_REPO ?= https://github.com/cilium/proxy.git
-CILIUM_PROXY_TARGET ?= 6db0e437ba7ed2169f032ceec25922dd06e0b12b
+CILIUM_IMAGE_TOOLS_TARGET ?= 3caa2c416a912dce00e641dd89201975be8c9ce8
 
 IMAGE_TAG ?= ghcr.io/cybozu/cilium:$(shell cat TAG)
 
@@ -44,20 +42,14 @@ checkout-image-tools:
 	@CHECKOUT_DIR=src/image-tools CHECKOUT_REPO=$(CILIUM_IMAGE_TOOLS_REPO) CHECKOUT_TARGET=$(CILIUM_IMAGE_TOOLS_TARGET) \
 	$(MAKE) --no-print-directory checkout-repo
 
-.PHONY: checkout-proxy
-checkout-proxy:
-	@CHECKOUT_DIR=src/proxy CHECKOUT_REPO=$(CILIUM_PROXY_REPO) CHECKOUT_TARGET=$(CILIUM_PROXY_TARGET) \
-	$(MAKE) --no-print-directory checkout-repo
-
 .PHONY: checkout
-checkout: checkout-cilium checkout-image-tools checkout-proxy
+checkout: checkout-cilium checkout-image-tools
 
 # The following command displays the HEAD of the locally-checkoued-out upstream repositories.
 .PHONY: status
 status:
 	@echo "cilium:      $$(cd src/cilium;      git log -n1 --decorate --pretty=oneline)"
 	@echo "image-tools: $$(cd src/image-tools; git log -n1 --decorate --pretty=oneline)"
-	@echo "proxy:       $$(cd src/proxy;       git log -n1 --decorate --pretty=oneline)"
 
 .PHONY: clean
 clean:
@@ -118,8 +110,6 @@ urls:
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/llvm/Dockerfile"
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/bpftool/Dockerfile"
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/iptables/Dockerfile"
-	@echo "https://github.com/cilium/proxy/blob/$(CILIUM_PROXY_TARGET)/Dockerfile.builder"
-	@echo "https://github.com/cilium/proxy/blob/$(CILIUM_PROXY_TARGET)/Dockerfile"
 	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/runtime/Dockerfile"
 	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/builder/Dockerfile"
 	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/cilium/Dockerfile"

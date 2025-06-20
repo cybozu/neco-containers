@@ -3,10 +3,6 @@
 #   cilium-llvm:                docker.io/cilium/cilium-llvm
 #   cilium-bpftool              docker.io/cilium/cilium-bpftool
 #   cilium-iptables             intermediate (https://github.com/cilium/image-tools/blob/master/images/iptables/Dockerfile)
-#   cilium-envoy-builder        quay.io/cilium/cilium-envoy-builder
-#   cilium-proxylib             intermediate (https://github.com/cilium/proxy/blob/main/Dockerfile)
-#   cilium-envoy-builder-fresh  intermediate (https://github.com/cilium/proxy/blob/main/Dockerfile)
-#   cilium-envoy                quay.io/cilium/cilium-envoy
 #   gops-cni-builder            intermediate (https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile)
 #   cilium-runtime              quay.io/cilium/cilium-runtime
 #   cilium-builder              quay.io/cilium/cilium-builder
@@ -15,8 +11,8 @@
 #
 # ref: https://docs.cilium.io/en/stable/contributing/development/images/
 
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.23-jammy
-ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:22.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.24-noble
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
 # -----------------------------------
@@ -73,84 +69,6 @@ RUN apt-get update && \
     apt-src -b install iptables=${IPTABLES_VERSION} && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
-
-# ----------------------------------------------------------------------
-# https://github.com/cilium/proxy/blob/main/Dockerfile.builder (AS base)
-FROM ${GOLANG_IMAGE} AS cilium-envoy-builder
-ARG GOLANG_IMAGE
-ENV TZ=Etc/UTC
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-RUN CODENAME=$(echo ${GOLANG_IMAGE} | cut -d- -f2); \
-    apt-get update && \
-    apt-get upgrade -y --no-install-recommends && \
-    apt-get install -y --no-install-recommends \
-      ca-certificates \
-      # Multi-arch cross-compilation packages
-      gcc-aarch64-linux-gnu g++-aarch64-linux-gnu libc6-dev-arm64-cross binutils-aarch64-linux-gnu \
-      gcc-x86-64-linux-gnu g++-x86-64-linux-gnu libc6-dev-amd64-cross binutils-x86-64-linux-gnu \
-      libc6-dev \
-      # Envoy Build dependencies
-      autoconf automake cmake coreutils curl git libtool make ninja-build patch patchelf \
-      python3 python-is-python3 unzip virtualenv wget zip \
-      # Cilium-envoy build dependencies
-      software-properties-common && \
-    wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc && \
-    apt-add-repository -y "deb http://apt.llvm.org/${CODENAME}/ llvm-toolchain-${CODENAME}-17 main" && \
-    apt-get update && \
-    apt-get install -y --no-install-recommends \
-      clang-17 clang-tools-17 llvm-17-dev lldb-17 lld-17 clang-format-17 libc++-17-dev libc++abi-17-dev && \
-    apt-get purge --auto-remove && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
-## https://github.com/bazelbuild/bazelisk?tab=readme-ov-file#installation
-RUN curl -sfL https://github.com/bazelbuild/bazelisk/releases/latest/download/bazelisk-linux-amd64 -o /usr/bin/bazel && \
-    chmod +x /usr/bin/bazel
-
-## Switch to non-root user for builds
-RUN groupadd -f -g 1337 cilium && useradd -m -d /cilium/proxy -g cilium -u 1337 cilium
-USER 1337:1337
-WORKDIR /cilium/proxy
-
-# ------------------------------------------------------------------
-# https://github.com/cilium/proxy/blob/main/Dockerfile (AS proxylib)
-FROM cilium-envoy-builder AS cilium-proxylib
-WORKDIR /cilium/proxy
-COPY --chown=1337:1337 src/proxy ./
-ENV TARGETARCH=amd64
-RUN PATH=${PATH}:/usr/local/go/bin GOARCH=${TARGETARCH} make -C proxylib all && \
-    mv proxylib/libcilium.so /tmp/libcilium.so
-
-# -----------------------------------------------------------------
-# https://github.com/cilium/proxy/blob/main/Dockerfile (AS builder)
-FROM cilium-envoy-builder AS cilium-envoy-builder-fresh
-ARG V
-ARG BAZEL_BUILD_OPTS
-ENV TARGETARCH=amd64
-
-WORKDIR /cilium/proxy
-COPY src/proxy ./
-
-## https://github.com/cilium/proxy/blob/main/.github/workflows/build-envoy-images-release.yaml
-## Without the next line, the program fails with "fatal: detected dubious ownership"
-RUN git config --global --add safe.directory /cilium/proxy
-RUN git rev-parse HEAD > SOURCE_VERSION
-RUN ./bazel/get_workspace_status
-RUN BAZEL_BUILD_OPTS="${BAZEL_BUILD_OPTS}" PKG_BUILD=1 V="$V" DESTDIR=/tmp/install make install
-
-## Copy proxylib after build to allow install as non-root to succeed
-COPY --from=cilium-proxylib /tmp/libcilium.so /tmp/install/usr/lib/libcilium.so
-
-# -----------------------------------------------------------------
-# https://github.com/cilium/proxy/blob/main/Dockerfile (AS default)
-FROM ${UBUNTU_IMAGE} AS cilium-envoy
-RUN apt-get update && apt-get upgrade -y \
-    && apt-get install --no-install-recommends -y ca-certificates \
-    && apt-get autoremove -y && apt-get clean \
-    && rm -rf /tmp/* /var/tmp/* \
-    && rm -rf /var/lib/apt/lists/*
-COPY --from=cilium-envoy-builder-fresh /tmp/install /
 
 # ------------------------------------------------------------------------------------------
 # https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile (AS gops-cni-builder)
@@ -289,8 +207,6 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock
 
 RUN echo ". /etc/profile.d/bash_completion.sh" >> /etc/bash.bashrc
-COPY --from=cilium-envoy /usr/lib/libcilium.so /usr/lib/libcilium.so
-COPY --from=cilium-envoy /usr/bin/cilium-envoy /usr/bin/cilium-envoy-starter /usr/bin/
 COPY --from=cilium-hubble /out/linux/amd64/bin/hubble /usr/bin/hubble
 COPY --from=cilium-hubble /out/linux/bash_completion /etc/bash_completion.d/hubble
 COPY --from=cilium-agent-builder /tmp/install/linux/amd64/ /
