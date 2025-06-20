@@ -1,7 +1,7 @@
 # unbound_exporter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.22-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 #ARG UNBOUND_EXPORTER_REPO=letsencrypt/unbound_exporter
 ARG UNBOUND_EXPORTER_REPO=cybozu-go/unbound_exporter
