@@ -1,9 +1,9 @@
 # kube-metrics-adapter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-noble AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG KMA_VERSION=0.2.3
+ARG KMA_VERSION=0.2.4
 
 RUN curl -fsSL -o kma.tar.gz https://github.com/zalando-incubator/kube-metrics-adapter/archive/v${KMA_VERSION}.tar.gz \
     && tar -x -z --strip-components 1 -f kma.tar.gz \
