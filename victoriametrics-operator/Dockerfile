@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG VICTORIAMETRICS_OPERATOR_SRCREPO=VictoriaMetrics/operator
-ARG VICTORIAMETRICS_OPERATOR_VERSION=0.59.2
+ARG VICTORIAMETRICS_OPERATOR_VERSION=0.60.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
