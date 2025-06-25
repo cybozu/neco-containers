@@ -397,14 +397,10 @@ follow these steps.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update `CILIUM_IMAGE_TOOLS_TARGET` and `CILIUM_PROXY_TARGET` in `neco-containers/cilium/Makefile`.
+2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `neco-containers/cilium/Makefile`.
    1. `CILIUM_IMAGE_TOOLS_TARGET` is a commit SHA of https://github.com/cilium/image-tools .
       Update to the latest one and go backward to find an appropriate SHA.
-   2. `CILIUM_PROXY_TARGET` is a commit SHA of https://github.com/cilium/proxy . To find the appropriate one, do:
-      1. Update `BRANCH` and `TAG` files.
-      2. Run `make clean checkout-cilium`. It checks out `cilium/cilium` at `neco-containers/cilium/src/cilium`.
-      3. Run `cat src/cilium/images/cilium/Dockerfile | grep cilium-envoy: | cut -d'-' -f4 | cut -d'@' -f1`.
-3. Checkout `cilium/cilium`, `cilium/image-tools`, and `cilium/proxy` at the relevant SHA.
+3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
    1. Run `make checkout` and download them under `neco-containers/cilium/src`.
 4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
    1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.

@@ -20,3 +20,4 @@ loadBalancer:
   mode: dsr
 routingMode: native
 tunnelProtocol: geneve
+l7Proxy: false
