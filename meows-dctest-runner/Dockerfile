@@ -1,4 +1,4 @@
-ARG MEOWS_VERSION=0.20.2
+ARG MEOWS_VERSION=0.21.1
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_VERSION}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
