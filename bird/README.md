@@ -7,7 +7,7 @@ that runs up-to-date [BIRD][] internet routing daemon.
 Features
 --------
 
-* BIRD 2.x
+* BIRD 3.x
 * Multi-stage build to minimize the container size.
 * Optimized for BGP.  RIP, OSPF, Babel, and RAdv are not built-in.
 
