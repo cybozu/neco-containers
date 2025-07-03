@@ -1,7 +1,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.23-jammy AS build
 
-ARG TELEPORT_VERSION=16.5.6
+ARG TELEPORT_VERSION=16.5.13
 
 RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravitational/teleport && \
     cd teleport && \
