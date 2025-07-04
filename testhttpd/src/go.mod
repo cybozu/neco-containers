@@ -2,15 +2,13 @@ module github.com/cybozu/neco-containers/testhttpd/src
 
 go 1.24.4
 
-require (
-	github.com/cybozu-go/log v1.7.0
-	github.com/cybozu-go/well v1.11.2
-)
+require github.com/cybozu-go/well v1.11.2
 
 require (
+	github.com/cybozu-go/log v1.7.0 // indirect
 	github.com/cybozu-go/netutil v1.4.9 // indirect
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
-	github.com/go-viper/mapstructure/v2 v2.2.1 // indirect
+	github.com/go-viper/mapstructure/v2 v2.3.0 // indirect
 	github.com/onsi/gomega v1.37.0 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.4 // indirect
 	github.com/sagikazarmark/locafero v0.9.0 // indirect
