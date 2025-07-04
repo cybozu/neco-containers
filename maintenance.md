@@ -243,10 +243,12 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [mailing list archive](https://bird.network.cz/?m_list) in the official website.
-2. Update `BIRD_VERSION` variable in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
+1. Check the latest version on the [download page](https://bird.network.cz/?download) of the official website.
+2. Check the https://gitlab.nic.cz/labs/bird/-/blob/vX.Y.Z/NEWS in the official GitLab repository at the specified version tag for release notes.
+3. Check the release announcement mail from the [mailing list archive](https://bird.network.cz/?m_list) on the official website.
+4. Update `BIRD_VERSION` variable in `Dockerfile`.
+5. Update image tag in `README.md`.
+6. Update `BRANCH` and `TAG` files.
 
 ## blackbox_exporter
 
