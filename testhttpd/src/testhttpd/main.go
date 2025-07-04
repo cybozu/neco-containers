@@ -4,10 +4,11 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
-	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
 )
 
@@ -17,6 +18,8 @@ var (
 
 func main() {
 	flag.Parse()
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
@@ -39,17 +42,17 @@ func main() {
 			Handler: mux,
 		},
 	}
-	log.Info("Start listening", map[string]interface{}{
-		log.FnHTTPHost: *flagListen,
-	})
+	logger.Info("starting server", "http_host", *flagListen)
 
 	err := s.ListenAndServe()
 	if err != nil {
-		log.ErrorExit(err)
+		logger.Error("failed to start server", "error", err)
+		os.Exit(1)
 	}
 
 	err = well.Wait()
 	if err != nil && !well.IsSignaled(err) {
-		log.ErrorExit(err)
+		logger.Error("failed to wait for shutdown", "error", err)
+		os.Exit(1)
 	}
 }
