@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG SRCREPO=VictoriaMetrics/victoriametrics-datasource
-ARG VERSION=0.14.0
+ARG VERSION=0.16.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

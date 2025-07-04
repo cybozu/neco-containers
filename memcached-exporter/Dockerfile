@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG MEMCACHED_EXPORTER_VERSION=0.15.0
+ARG MEMCACHED_EXPORTER_VERSION=0.15.3
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
