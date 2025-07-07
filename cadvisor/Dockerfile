@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG CADVISOR_VERSION=0.52.1
+ARG CADVISOR_VERSION=0.53.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
