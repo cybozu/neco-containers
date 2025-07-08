@@ -1092,6 +1092,7 @@ TBD
 1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
 2. Update `TRUST_MANAGER_VERSION` in `Dockerfile`.
 3. Update `TAG` file.
+4. Verify that the new `trust-packages` version matches the `trust-manager` version.
 
 ## unbound
 

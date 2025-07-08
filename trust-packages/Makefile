@@ -1,4 +1,4 @@
-TRUST_MANAGER_VERSION := $(shell cat ../trust-manager/TAG | cut -d'.' -f1-3)
+TRUST_MANAGER_VERSION := $(shell cat TAG | cut -d'.' -f1-3)
 TRUST_MANAGER_SOURCE := trust-manager-source
 
 .PHONY: clean
@@ -21,7 +21,7 @@ $(TRUST_MANAGER_SOURCE)/validate-trust-package: | $(TRUST_MANAGER_SOURCE)
 $(TRUST_MANAGER_SOURCE)/package.json: | $(TRUST_MANAGER_SOURCE) $(TRUST_MANAGER_SOURCE)/validate-trust-package
 	BIN_VALIDATE_TRUST_PACKAGE=$(TRUST_MANAGER_SOURCE)/validate-trust-package \
 	$(TRUST_MANAGER_SOURCE)/make/debian-trust-package-fetch.sh latest ghcr.io/cybozu/ubuntu:22.04 \
-	$(TRUST_MANAGER_SOURCE)/package.json latest
+	$(TRUST_MANAGER_SOURCE)/package.json latest cert-manager-debian
 
 .PHONY: download-certificates
 download-certificates: | $(TRUST_MANAGER_SOURCE)/package.json
