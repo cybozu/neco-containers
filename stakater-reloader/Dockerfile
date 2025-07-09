@@ -1,7 +1,7 @@
 # stakater/Reloader container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 COPY TAG /
 WORKDIR /workspace
