@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-container/cep-checker
 
-go 1.24.1
+go 1.24.5
 
 require (
 	github.com/VictoriaMetrics/metrics v1.38.0
