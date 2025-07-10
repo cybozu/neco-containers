@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
-ARG CHRONY_VERSION=4.6.1
+ARG CHRONY_VERSION=4.7
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
