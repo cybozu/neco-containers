@@ -90,6 +90,15 @@ Pod manifests will not be overwritten.
 If you want to use more ephemeral storage than the limit, you can use generic ephemeral volume instead of
 local ephemeral storage.
 
+PodCPURequestReducer
+--------------------
+
+PodCPURequestReducer mutates Pod manifests to reduce CPU requests by half for each container.
+This is for deploying Pods in environments with a limited number of available CPUs, such as a test environment, without modifying the workload resources.
+This mutator is enabled only when the `VPOD_CPU_REQUEST_REDUCE_ENABLE=true` envvar is set.
+
+This mutator does not affect Pods created by DaemonSets or Pods with the `admission.cybozu.com/prevent-cpu-request-reduce: "true"` label.
+
 PodValidator
 ------------
 
