@@ -14,7 +14,7 @@ Usage
     $ docker run -d -p 10000:10000 --read-only --name=envoy \
     --mount type=bind,source=/your/envoy.yaml,target=/etc/envoy/envoy.yaml,readonly \
     --mount type=tmpfs,target=/tmp \ 
-    ghcr.io/cybozu/envoy:1.31
+    ghcr.io/cybozu/envoy:1.34
     ```
 
 Probe
