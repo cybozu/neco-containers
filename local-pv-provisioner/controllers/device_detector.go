@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"time"
 
@@ -47,6 +48,8 @@ const (
 
 var (
 	vpNameRegexp = regexp.MustCompile(`[^.0-9A-Za-z]+`)
+
+	supportedFsTypes = []string{"ext4", "xfs", "btrfs"}
 )
 
 func isFilesystem(volumeMode string) bool {
@@ -75,8 +78,8 @@ func parsePVSpecConfigMap(cm *corev1.ConfigMap) (*pvSpec, error) {
 	if !isFilesystem(pvSpecVolumeMode) && pvSpecVolumeMode != "Block" {
 		return nil, errors.New("volumeMode should be either 'Filesystem' or 'Block'")
 	}
-	if isFilesystem(pvSpecVolumeMode) && pvSpecFSType != "ext4" {
-		return nil, errors.New("fsType should be 'ext4' if volumeMode is 'Filesystem'")
+	if isFilesystem(pvSpecVolumeMode) && !slices.Contains(supportedFsTypes, pvSpecFSType) {
+		return nil, fmt.Errorf("fsType should be some of %v if volumeMode is 'Filesystem'", supportedFsTypes)
 	}
 	if !filepath.IsAbs(pvSpecDeviceDir) {
 		return nil, errors.New("deviceDir must be an absolute path")

@@ -22,7 +22,7 @@ the following values:
 - `deviceDir`: The directory where `local-pv-provisioner` searches for devices.
 - `deviceNameFilter`: The regular expression used to filter the devices.
 - `volumeMode`: The mode of the PV created by `local-pv-provisioner`, which should be either "Filesystem" or "Block".
-- `fsType`: The type of the filesystem, which should be set if and only if `volumeMode` is `"Filesystem"`. Currently, `local-pv-provisioner` only supports ext4 for this field.
+- `fsType`: The type of the filesystem, which should be set if and only if `volumeMode` is `"Filesystem"`. Currently, `local-pv-provisioner` supports ext4, xfs and btrfs for this field.
 
 After obtaining these values, `local-pv-provisioner` searches for devices, based on `deviceDir` and `deviceNameFilter`.
 It then creates one PV for each found device, using the
