@@ -44,7 +44,6 @@ func (m *podCPURequestReducer) Handle(ctx context.Context, req admission.Request
 	}
 
 	if !m.enabled {
-		log.Info("allowed", "reason", "disabled")
 		return admission.Allowed("ok")
 	}
 
