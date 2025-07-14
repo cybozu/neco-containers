@@ -1,7 +1,7 @@
 # Build stage
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG SEALED_SECRETS_VERSION=0.29.0
+ARG SEALED_SECRETS_VERSION=0.30.0
 
 RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami-labs/sealed-secrets/archive/v${SEALED_SECRETS_VERSION}.tar.gz \
     && tar --strip-components=1 -xzf sealed-secrets.tar.gz \
