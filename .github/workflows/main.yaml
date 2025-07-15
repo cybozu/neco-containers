@@ -7,7 +7,7 @@ on:
       - "ceph-v*"
 jobs:
   prepare_matrix:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     outputs:
       jobs: ${{ steps.prepare-matrix.outputs.jobs }}
     steps:
@@ -288,7 +288,7 @@ jobs:
     strategy:
       matrix:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       go-version: "1.24.5"
     steps:
@@ -324,7 +324,7 @@ jobs:
           target: ${{ matrix.job.target }}
 
   build_envoy:
-    runs-on: neco-containers-ubuntu-22.04
+    runs-on: neco-containers-ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - name: Build container image
@@ -335,7 +335,7 @@ jobs:
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
 
   build_ceph:
-    runs-on: neco-containers-ubuntu-22.04
+    runs-on: neco-containers-ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - name: Build ceph image
@@ -345,9 +345,9 @@ jobs:
         version: 19.2.2
 
   build_cilium:
-    runs-on: neco-containers-ubuntu-22.04
+    runs-on: neco-containers-ubuntu-24.04
     env:
-      go-version: "1.23.3"
+      go-version: "1.24.5"
     steps:
       - uses: actions/checkout@v4
       - name: Setup build environment
