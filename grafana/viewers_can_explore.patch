@@ -1,0 +1,38 @@
+diff --git a/pkg/api/accesscontrol.go b/pkg/api/accesscontrol.go
+index de783d3309e..4511c23c8dd 100644
+--- a/pkg/api/accesscontrol.go
++++ b/pkg/api/accesscontrol.go
+@@ -59,30 +59,33 @@ func (hs *HTTPServer) declareFixedRoles() error {
+ 	datasourcesExplorerRole := ac.RoleRegistration{
+ 		Role: ac.RoleDTO{
+ 			Name:        "fixed:datasources:explorer",
+ 			DisplayName: "Explorer",
+ 			Description: "Enable the Explore and Drilldown features. Data source permissions still apply; you can only query data sources for which you have query permissions.",
+ 			Group:       "Data sources",
+ 			Permissions: []ac.Permission{
+ 				{
+ 					Action: ac.ActionDatasourcesExplore,
+ 				},
+ 			},
+ 		},
+ 		Grants: []string{string(org.RoleEditor)},
+ 	}
+ 
++	// Viewers can Explore
++	datasourcesExplorerRole.Grants = append(datasourcesExplorerRole.Grants, string(org.RoleViewer))
++
+ 	//nolint:staticcheck // ViewersCanEdit is deprecated but still used for backward compatibility
+ 	if hs.Cfg.ViewersCanEdit {
+ 		datasourcesExplorerRole.Grants = append(datasourcesExplorerRole.Grants, string(org.RoleViewer))
+ 	}
+ 
+ 	datasourcesReaderRole := ac.RoleRegistration{
+ 		Role: ac.RoleDTO{
+ 			Name:        "fixed:datasources:reader",
+ 			DisplayName: "Reader",
+ 			Description: "Read and query all data sources.",
+ 			Group:       "Data sources",
+ 			Permissions: []ac.Permission{
+ 				{
+ 					Action: datasources.ActionRead,
+ 					Scope:  datasources.ScopeAll,
