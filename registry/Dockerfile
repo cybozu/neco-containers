@@ -13,7 +13,7 @@ RUN mkdir -p /go/src/github.com/docker/ \
 
 WORKDIR /go/src/github.com/docker/distribution/
 
-RUN GO111MODULE=off CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
+RUN CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
