@@ -7,7 +7,7 @@ on:
       - "ceph-v*"
 jobs:
   prepare_matrix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     outputs:
       jobs: ${{ steps.prepare-matrix.outputs.jobs }}
     steps:
@@ -288,7 +288,7 @@ jobs:
     strategy:
       matrix:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-22.04
     env:
       go-version: "1.24.5"
     steps:
