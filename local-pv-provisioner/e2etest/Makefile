@@ -33,6 +33,7 @@ setup:
 .PHONY: test
 test:
 	$(MAKE) launch-cluster MINIKUBE_PROFILE=$(MINIKUBE_PROFILE)
+	$(MAKE) setup-workaround-for-xfs
 	$(MAKE) create-loop-dev
 	$(MAKE) launch-local-pv-provisioner
 	$(MAKE) do-test
@@ -72,6 +73,18 @@ launch-cluster:
 	fi
 	$(MINIKUBE) profile $(MINIKUBE_PROFILE)
 	$(MAKE) image-build
+
+# mkfs.xfs and the kernel on the minikube VM may be incompatible.
+# This workaround replaces mkfs.xfs to create compatible superblock with the kernel version.
+.PHONY: setup-workaround-for-xfs
+setup-workaround-for-xfs:
+	@if ! $(MINIKUBE) ssh -- uname -r | grep -qF "5.10"; then \
+		echo "the kernel version on minikube is not 5.10, it may not need workaround, please check it."; \
+		exit 1; \
+	fi
+	$(MINIKUBE) ssh -- $(SUDO) sh -c '"[ -e /usr/sbin/mkfs.xfs.orig ] || mv /usr/sbin/mkfs.xfs /usr/sbin/mkfs.xfs.orig"'
+	$(MINIKUBE) cp mkfs.xfs lpptest:/usr/sbin/mkfs.xfs
+	$(MINIKUBE) ssh -- $(SUDO) chmod 0755 /usr/sbin/mkfs.xfs
 
 .PHONY: create-loop-dev
 create-loop-dev:

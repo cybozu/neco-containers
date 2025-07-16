@@ -1,0 +1,3 @@
+#!/bin/sh
+
+exec mkfs.xfs.orig -c options=/usr/share/xfsprogs/mkfs/lts_5.10.conf $@

@@ -147,10 +147,32 @@ data:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: pv-spec-cm-fs
+  name: pv-spec-cm-ext4
   namespace: kube-system
 data:
   volumeMode: Filesystem
   fsType: ext4
+  deviceDir: /dev/e2etest
+  deviceNameFilter: "loop[01]"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-spec-cm-xfs
+  namespace: kube-system
+data:
+  volumeMode: Filesystem
+  fsType: xfs
+  deviceDir: /dev/e2etest
+  deviceNameFilter: "loop[01]"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pv-spec-cm-btrfs
+  namespace: kube-system
+data:
+  volumeMode: Filesystem
+  fsType: btrfs
   deviceDir: /dev/e2etest
   deviceNameFilter: "loop[01]"

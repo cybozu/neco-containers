@@ -188,7 +188,9 @@ var _ = Describe("local-pv-provisioner", func() {
 					})
 				},
 				Entry("Block", "pv-spec-cm-block", corev1.PersistentVolumeBlock, "testdata/test-pod-block.yaml"),
-				Entry("Filesystem", "pv-spec-cm-fs", corev1.PersistentVolumeFilesystem, "testdata/test-pod-fs.yaml"),
+				Entry("Filesystem: ext4", "pv-spec-cm-ext4", corev1.PersistentVolumeFilesystem, "testdata/test-pod-fs.yaml"),
+				Entry("Filesystem: xfs", "pv-spec-cm-xfs", corev1.PersistentVolumeFilesystem, "testdata/test-pod-fs.yaml"),
+				Entry("Filesystem: btrfs", "pv-spec-cm-btrfs", corev1.PersistentVolumeFilesystem, "testdata/test-pod-fs.yaml"),
 			)
 		})
 	})

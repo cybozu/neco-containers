@@ -151,7 +151,7 @@ func testDo() {
 	})
 
 	DescribeTable(
-		"Checking that PVs are created correctly",
+		"Checking that PVs are created correctly according to the deviceNameFilter",
 		func(cmSrc *pvSpec, expectedPVNameSuffixes []string) {
 			var err error
 			ctx := context.Background()
@@ -218,9 +218,21 @@ func testDo() {
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
-				"Using correct configmap (Filesystem)",
+				"Using correct configmap (Filesystem: ext4)",
 				node,
 				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "ext4", "/dev", ".*"),
+				[]string{fmt.Sprintf("local-%s-sda", node)},
+			),
+			Entry(
+				"Using correct configmap (Filesystem: xfs)",
+				node,
+				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "xfs", "/dev", ".*"),
+				[]string{fmt.Sprintf("local-%s-sda", node)},
+			),
+			Entry(
+				"Using correct configmap (Filesystem: btrfs)",
+				node,
+				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "btrfs", "/dev", ".*"),
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
@@ -272,7 +284,7 @@ func testDo() {
 			Entry(
 				"Using invalid fsType",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "btrfs", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "ntfs", "/dev", ".*"),
 				[]string{},
 			),
 			Entry(
