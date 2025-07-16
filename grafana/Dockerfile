@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG GRAFANA_VERSION=11.6.2
+ARG GRAFANA_VERSION=12.0.2
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -10,6 +10,8 @@ WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana
+COPY viewers_can_explore.patch /work/
+RUN patch -p1 < /work/viewers_can_explore.patch
 
 # Install Node.js 22.x & yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions
