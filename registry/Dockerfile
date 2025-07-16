@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG REGISTRY_VERSION=2.8.3
+ARG REGISTRY_VERSION=3.0.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/docker/ \
@@ -13,7 +13,7 @@ RUN mkdir -p /go/src/github.com/docker/ \
 
 WORKDIR /go/src/github.com/docker/distribution/
 
-RUN GO111MODULE=off CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
+RUN CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
