@@ -652,9 +652,8 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/hubble/blob/vX.Y.Z/Dockerfile`
-3. Update the `BRANCH` and `TAG` files accordingly.
+2. Update the `BRANCH` and `TAG` files accordingly.
+3. Hubble image is no longer built by the upstream. If failing to build the image, check upstream changes.
 
 ## hubble-relay
 
