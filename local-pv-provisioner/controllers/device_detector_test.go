@@ -137,9 +137,8 @@ func testDo() {
 		return nil
 	}
 
-	It("should set up the k8s test environment", func() {
+	It("should set up the k8s test environment", func(ctx context.Context) {
 		var err error
-		ctx := context.Background()
 
 		_, err = ctrl.CreateOrUpdate(ctx, k8sClient, ns, func() error { return nil })
 		Expect(err).NotTo(HaveOccurred())
@@ -152,9 +151,8 @@ func testDo() {
 
 	DescribeTable(
 		"Checking that PVs are created correctly according to the deviceNameFilter",
-		func(cmSrc *pvSpec, expectedPVNameSuffixes []string) {
+		func(ctx context.Context, cmSrc *pvSpec, expectedPVNameSuffixes []string) {
 			var err error
-			ctx := context.Background()
 
 			expectedPVNames := []interface{}{}
 			for _, suffix := range expectedPVNameSuffixes {
@@ -171,7 +169,7 @@ func testDo() {
 				Expect(err).NotTo(HaveOccurred())
 
 				dd := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
-				dd.do()
+				dd.do(ctx)
 
 				Eventually(func(g Gomega) {
 					pvNames, err := fetchExistingPVNames(ctx)
@@ -363,9 +361,8 @@ func testDo() {
 		// or the node2, which doesn't have the annotation but is influenced by the default
 		// PV Spec ConfigMap. Then, we check if the expected PVs are created correctly.
 		// Finally, we clean up the created resources for the successive tests.
-		func(nodeName string, cm *corev1.ConfigMap, expectedPVNames []string) {
+		func(ctx context.Context, nodeName string, cm *corev1.ConfigMap, expectedPVNames []string) {
 			var err error
-			ctx := context.Background()
 
 			useTestFS(map[string]string{
 				"/dev/sda": "dummy",
@@ -375,10 +372,10 @@ func testDo() {
 
 				if nodeName == node1.GetName() {
 					dd := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
-					dd.do()
+					dd.do(ctx)
 				} else {
 					dd := newDeviceDetectorForTest(node2.GetName(), workingNamespace, defaultPVSpecConfigMapName)
-					dd.do()
+					dd.do(ctx)
 				}
 
 				Eventually(func(g Gomega) {
@@ -409,12 +406,11 @@ func testDo() {
 		oneNodeTestEntries...,
 	)
 
-	It("should handle defaultPVSpecConfigMap correctly with annotations locally attached to the nodes", func() {
+	It("should handle defaultPVSpecConfigMap correctly with annotations locally attached to the nodes", func(ctx context.Context) {
 		useTestFS(map[string]string{
 			"/dev/node1":   "dummy",
 			"/dev/default": "dummy",
 		}, func() {
-			ctx := context.Background()
 			var err error
 
 			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev/", "node1")
@@ -426,9 +422,9 @@ func testDo() {
 			Expect(err).NotTo(HaveOccurred())
 
 			dd1 := newDeviceDetectorForTest(node1.GetName(), workingNamespace, defaultPVSpecConfigMapName)
-			dd1.do()
+			dd1.do(ctx)
 			dd2 := newDeviceDetectorForTest(node2.GetName(), workingNamespace, defaultPVSpecConfigMapName)
-			dd2.do()
+			dd2.do(ctx)
 
 			// Check that the PVs are correctly created.
 			Eventually(func(g Gomega) {
@@ -444,12 +440,11 @@ func testDo() {
 		})
 	})
 
-	It("should not create any PVs on a node where existing PVs don't have any annotations, until they are annotated", func() {
+	It("should not create any PVs on a node where existing PVs don't have any annotations, until they are annotated", func(ctx context.Context) {
 		useTestFS(map[string]string{
 			"/dev/sda": "dummy",
 			"/dev/sdb": "dummy",
 		}, func() {
-			ctx := context.Background()
 			var err error
 
 			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", ".*")
@@ -503,7 +498,7 @@ func testDo() {
 			}).Should(Succeed())
 
 			dd1 := newDeviceDetectorForTest(node1.GetName(), workingNamespace, defaultPVSpecConfigMapName)
-			dd1.do()
+			dd1.do(ctx)
 
 			// Check that the reconciliation stopped.
 			Consistently(func(g Gomega) {
@@ -522,7 +517,7 @@ func testDo() {
 				return nil
 			})
 
-			dd1.do()
+			dd1.do(ctx)
 
 			// Check that the new PV is correctly created.
 			Eventually(func(g Gomega) {
@@ -538,12 +533,11 @@ func testDo() {
 		})
 	})
 
-	It("should not create any PVs on a node where pv-spec-configmap is not specified, assuming that no default-pv-spec-configmap is specified", func() {
+	It("should not create any PVs on a node where pv-spec-configmap is not specified, assuming that no default-pv-spec-configmap is specified", func(ctx context.Context) {
 		useTestFS(map[string]string{
 			"/dev/node1":              "dummy",
 			"/dev/should-not-be-used": "dummy",
 		}, func() {
-			ctx := context.Background()
 			var err error
 
 			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Filesystem", "ext4", "/dev/", "node1")
@@ -551,9 +545,9 @@ func testDo() {
 			Expect(err).NotTo(HaveOccurred())
 
 			dd1 := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
-			dd1.do()
+			dd1.do(ctx)
 			dd2 := newDeviceDetectorForTest(node2.GetName(), workingNamespace, "")
-			dd2.do()
+			dd2.do(ctx)
 
 			// Check that the PVs are correctly created.
 			Eventually(func(g Gomega) {
@@ -571,14 +565,13 @@ func testDo() {
 
 	DescribeTable(
 		"Checking that the device detector reflects the change of pv spec configmap",
-		func(cmUpdater func(), finalChecker func(Gomega)) {
+		func(ctx context.Context, cmUpdater func(context.Context), finalChecker func(Gomega, context.Context)) {
 			useTestFS(map[string]string{
 				"/dev/sda":  "dummy",
 				"/dev/sdb":  "dummy",
 				"/dev/sdc":  "dummy",
 				"/dev2/sda": "dummy",
 			}, func() {
-				ctx := context.Background()
 				var err error
 
 				cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", "sd[ab]")
@@ -586,7 +579,7 @@ func testDo() {
 				Expect(err).NotTo(HaveOccurred())
 
 				dd := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
-				dd.do()
+				dd.do(ctx)
 
 				// Check that the PVs are correctly created.
 				Eventually(func(g Gomega) {
@@ -596,9 +589,9 @@ func testDo() {
 				}).Should(Succeed())
 
 				// Change the pv spec configmap
-				cmUpdater()
+				cmUpdater(ctx)
 
-				dd.do()
+				dd.do(ctx)
 
 				// Check that the PVs already created still exist.
 				Consistently(func(g Gomega) {
@@ -619,10 +612,10 @@ func testDo() {
 					Expect(err).NotTo(HaveOccurred())
 				}
 
-				dd.do()
+				dd.do(ctx)
 
 				// Check that the PVs are correctly created.
-				Eventually(finalChecker).Should(Succeed())
+				Eventually(finalChecker).WithContext(ctx).Should(Succeed())
 
 				// Clean up the created resources for the successive tests
 				Eventually(func() error {
@@ -632,23 +625,23 @@ func testDo() {
 		},
 		Entry(
 			"Changing volumeMode and fsType",
-			func() {
+			func(ctx context.Context) {
 				cm := &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      pvSpecConfigMapName,
 						Namespace: workingNamespace,
 					},
 				}
-				_, err := ctrl.CreateOrUpdate(context.Background(), k8sClient, cm, func() error {
+				_, err := ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error {
 					cm.Data["volumeMode"] = "Filesystem"
 					cm.Data["fsType"] = "ext4"
 					return nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func(g Gomega) {
+			func(g Gomega, ctx context.Context) {
 				var pvList corev1.PersistentVolumeList
-				err := k8sClient.List(context.Background(), &pvList)
+				err := k8sClient.List(ctx, &pvList)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(pvList.Items).To(ConsistOf(
 					HaveField("Name", "local-192.168.0.1-sda"),
@@ -659,51 +652,50 @@ func testDo() {
 		),
 		Entry(
 			"Changing deviceDir",
-			func() {
+			func(ctx context.Context) {
 				cm := &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      pvSpecConfigMapName,
 						Namespace: workingNamespace,
 					},
 				}
-				_, err := ctrl.CreateOrUpdate(context.Background(), k8sClient, cm, func() error {
+				_, err := ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error {
 					cm.Data["deviceDir"] = "/dev2"
 					return nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func(g Gomega) {
-				pvNames, err := fetchExistingPVNames(context.Background())
+			func(g Gomega, ctx context.Context) {
+				pvNames, err := fetchExistingPVNames(ctx)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			},
 		),
 		Entry(
 			"Changing deviceNameFilter",
-			func() {
+			func(ctx context.Context) {
 				cm := &corev1.ConfigMap{
 					ObjectMeta: metav1.ObjectMeta{
 						Name:      pvSpecConfigMapName,
 						Namespace: workingNamespace,
 					},
 				}
-				_, err := ctrl.CreateOrUpdate(context.Background(), k8sClient, cm, func() error {
+				_, err := ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error {
 					cm.Data["deviceNameFilter"] = "sdc"
 					return nil
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func(g Gomega) {
-				pvNames, err := fetchExistingPVNames(context.Background())
+			func(g Gomega, ctx context.Context) {
+				pvNames, err := fetchExistingPVNames(ctx)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
 			},
 		),
 		Entry(
 			"Changing annotation value attached on the Node, instead of updating the configmap itself",
-			func() {
+			func(ctx context.Context) {
 				var err error
-				ctx := context.Background()
 
 				cm2 := newPVSpecConfigMap(pvSpecConfigMapName2, workingNamespace, "Block", "", "/dev", "sdc")
 				_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cm2, func() error { return nil })
@@ -720,19 +712,18 @@ func testDo() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func(g Gomega) {
-				pvNames, err := fetchExistingPVNames(context.Background())
+			func(g Gomega, ctx context.Context) {
+				pvNames, err := fetchExistingPVNames(ctx)
 				g.Expect(err).NotTo(HaveOccurred())
 				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
 			},
 		),
 	)
 
-	It("should not delete PV when its corresponding device gets deleted", func() {
+	It("should not delete PV when its corresponding device gets deleted", func(ctx context.Context) {
 		useTestFS(map[string]string{
 			"/dev/sda": "dummy",
 		}, func() {
-			ctx := context.Background()
 			var err error
 
 			cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", ".*")
@@ -740,7 +731,7 @@ func testDo() {
 			Expect(err).NotTo(HaveOccurred())
 
 			dd := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
-			dd.do()
+			dd.do(ctx)
 
 			// Check that the PVs are correctly created.
 			Eventually(func(g Gomega) {
@@ -753,7 +744,7 @@ func testDo() {
 			err = fs.Remove("/dev/sda")
 			Expect(err).NotTo(HaveOccurred())
 
-			dd.do()
+			dd.do(ctx)
 
 			// Check that the PVs already created still exist.
 			Consistently(func(g Gomega) {
@@ -964,7 +955,7 @@ func testParsePVSpecConfigMap() {
 }
 
 func testDeviceDetectorCreatePV() {
-	It("should create PV with specified ownerReference", func() {
+	It("should create PV with specified ownerReference", func(ctx context.Context) {
 		deviceDir := "dummy"
 		deviceNameFilter := ".*"
 
@@ -1026,12 +1017,12 @@ func testDeviceDetectorCreatePV() {
 			device := tt.inputDevice
 
 			By("creating PV")
-			err := dd.createPV(context.Background(), device, node, tt.volumeMode, tt.fsType, deviceDir, deviceNameFilter)
+			err := dd.createPV(ctx, device, node, tt.volumeMode, tt.fsType, deviceDir, deviceNameFilter)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("getting PV")
 			pv := new(corev1.PersistentVolume)
-			err = dd.Get(context.Background(), types.NamespacedName{Name: tt.expectedPvName}, pv)
+			err = dd.Get(ctx, types.NamespacedName{Name: tt.expectedPvName}, pv)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("checking volumeMode")
@@ -1094,7 +1085,7 @@ func testDeviceDetectorCreatePV() {
 
 		By("checking count of PVs")
 		pvList := new(corev1.PersistentVolumeList)
-		err := dd.List(context.Background(), pvList)
+		err := dd.List(ctx, pvList)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(pvList.Items).To(HaveLen(len(tests)))
 	})

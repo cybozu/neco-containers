@@ -172,7 +172,7 @@ type DeviceDetector struct {
 
 // Start implements controller-runtime's manager.Runnable.
 func (dd *DeviceDetector) Start(ctx context.Context) error {
-	dd.do()
+	dd.do(ctx)
 
 	tick := time.NewTicker(dd.interval)
 	defer tick.Stop()
@@ -180,7 +180,7 @@ func (dd *DeviceDetector) Start(ctx context.Context) error {
 	for {
 		select {
 		case <-tick.C:
-			dd.do()
+			dd.do(ctx)
 		case <-ctx.Done():
 			return nil
 		}
@@ -191,8 +191,7 @@ func (dd *DeviceDetector) Start(ctx context.Context) error {
 // +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:namespace=default,groups="",resources=configmaps,verbs=get;list;watch
 
-func (dd *DeviceDetector) do() {
-	ctx := context.Background()
+func (dd *DeviceDetector) do(ctx context.Context) {
 	log := dd.log
 
 	node := new(corev1.Node)

@@ -26,8 +26,7 @@ func (deleterMock) Delete(path string) error {
 }
 
 func testPersistentVolumeReconciler() {
-	ctx := context.Background()
-	It("should delete released PV", func() {
+	It("should delete released PV", func(ctx context.Context) {
 		pv := prepareLocalPV(ctx, "worker-1", false, false)
 
 		Eventually(func() error {
@@ -40,7 +39,7 @@ func testPersistentVolumeReconciler() {
 		}, 3*time.Second).Should(Succeed())
 	})
 
-	It("should not delete released PV without the label", func() {
+	It("should not delete released PV without the label", func(ctx context.Context) {
 		pv := prepareLocalPV(ctx, "worker-1", true, false)
 
 		Consistently(func() error {
@@ -53,7 +52,7 @@ func testPersistentVolumeReconciler() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("should not delete released PV with different node", func() {
+	It("should not delete released PV with different node", func(ctx context.Context) {
 		pv := prepareLocalPV(ctx, "worker-2", false, false)
 
 		Consistently(func() error {
@@ -66,7 +65,7 @@ func testPersistentVolumeReconciler() {
 		Expect(err).ShouldNot(HaveOccurred())
 	})
 
-	It("should delete released PV even with broken device", func() {
+	It("should delete released PV even with broken device", func(ctx context.Context) {
 		pv := prepareLocalPV(ctx, "worker-1", false, true)
 
 		Eventually(func() error {
