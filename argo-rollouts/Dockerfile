@@ -5,7 +5,7 @@
 
 FROM ghcr.io/cybozu/golang:1.23-noble AS builder
 
-ENV ARGO_ROLLOUTS_VERSION=1.8.2
+ENV ARGO_ROLLOUTS_VERSION=1.8.3
 
 WORKDIR /work
 
