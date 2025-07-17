@@ -164,7 +164,7 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 1. Check the release page.
    - <https://github.com/prometheus/alertmanager/releases>
-2. Check the upstream Makefile and Dockerfile. If there are any updates, update our `Dockefile`.
+2. Check the upstream Makefile and Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Makefile`
    - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/Dockerfile`
    - `https://github.com/prometheus/alertmanager/blob/vX.Y.Z/ui/Dockerfile` (check Node.js version)
@@ -179,8 +179,8 @@ Alloy contains two versions, one for alloy and the other for libsystemd.
 The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://www.flatcar.org/releases).
 
 1. Check the release page.
-   - https://github.com/grafana/alloy/releases
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockefile`.
+   - <https://github.com/grafana/alloy/releases>
+2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/Dockerfile`
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/Makefile`
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/tools/build-image/Dockerfile`
@@ -244,7 +244,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 ![Regular Update](./regular_update.svg)
 
 1. Check the latest version on the [download page](https://bird.network.cz/?download) of the official website.
-2. Check the https://gitlab.nic.cz/labs/bird/-/blob/vX.Y.Z/NEWS in the official GitLab repository at the specified version tag for release notes.
+2. Check the `https://gitlab.nic.cz/labs/bird/-/blob/vX.Y.Z/NEWS` in the official GitLab repository at the specified version tag for release notes.
 3. Check the release announcement mail from the [mailing list archive](https://bird.network.cz/?m_list) on the official website.
 4. Update `BIRD_VERSION` variable in `Dockerfile`.
 5. Update image tag in `README.md`.
@@ -400,7 +400,7 @@ follow these steps.
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `neco-containers/cilium/Makefile`.
-   1. `CILIUM_IMAGE_TOOLS_TARGET` is a commit SHA of https://github.com/cilium/image-tools .
+   1. `CILIUM_IMAGE_TOOLS_TARGET` is a commit SHA of <https://github.com/cilium/image-tools> .
       Update to the latest one and go backward to find an appropriate SHA.
 3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
    1. Run `make checkout` and download them under `neco-containers/cilium/src`.
@@ -586,6 +586,7 @@ This section applies to the following containers. These containers are maintaine
 Automated by `.github/workflows/update.yaml`.
 
 Manual update
+
 1. Check the [release history](https://golang.org/doc/devel/release.html).
 2. Update `GO_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG`.
@@ -675,14 +676,15 @@ Only the base image and module dependency should be updated.
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - https://github.com/cilium/hubble-ui/blob/master/Dockerfile
+   - <https://github.com/cilium/hubble-ui/blob/master/Dockerfile>
    - Update `NODE_VERSION` and `NGINX_VERSION` in `Dockerfile`.
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
-      - Browse https://github.com/nginx/docker-nginx-unprivileged/commits/main/ .
+      - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
    - Run `make clean checkout`.
 4. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
-   ```
+
+   ```sh
    OLD_NGINX_VERSION=
    NEW_NGINX_VERSION=
 
@@ -694,6 +696,7 @@ Only the base image and module dependency should be updated.
    <(cat hubble-ui/Dockerfile) \
    <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
    ```
+
 5. Update `NJS_VERSION` and `PKG_RELEASE` in `Dockerfile`.
 
 ## kube-metrics-adapter
@@ -868,7 +871,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    ```
 
 3. Update `Dockerfile`.
-   - Pomeruim version
+   - Pomerium version
    - Golang version
    - Node.js version
 4. Update `TAG` file.

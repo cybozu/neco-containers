@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
 
-ENV ARGOCD_IMAGE_UPDATER_VERSION=0.15.2
+ENV ARGOCD_IMAGE_UPDATER_VERSION=0.16.0
 
 WORKDIR /work
 
