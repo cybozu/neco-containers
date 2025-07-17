@@ -21,6 +21,7 @@ FROM gcr.io/distroless/static-debian11
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /work/argo-rollouts/dist/rollouts-controller /bin/
+COPY --from=builder /work/argo-rollouts/LICENSE /LICENSE
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 USER 10000:10000
