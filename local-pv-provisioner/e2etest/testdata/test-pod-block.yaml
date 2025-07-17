@@ -34,5 +34,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: local-storage
+  storageClassName: local-storage-block
   volumeMode: Block

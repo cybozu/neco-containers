@@ -129,7 +129,15 @@ subjects:
 kind: StorageClass
 apiVersion: storage.k8s.io/v1
 metadata:
-  name: local-storage
+  name: local-storage-block
+provisioner: kubernetes.io/no-provisioner
+volumeBindingMode: WaitForFirstConsumer
+reclaimPolicy: Retain
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: local-storage-fs
 provisioner: kubernetes.io/no-provisioner
 volumeBindingMode: WaitForFirstConsumer
 reclaimPolicy: Retain
@@ -140,6 +148,7 @@ metadata:
   name: pv-spec-cm-block
   namespace: kube-system
 data:
+  storageClassName: local-storage-block
   volumeMode: Block
   deviceDir: /dev/e2etest
   deviceNameFilter: "loop[01]"
@@ -150,6 +159,7 @@ metadata:
   name: pv-spec-cm-ext4
   namespace: kube-system
 data:
+  storageClassName: local-storage-fs
   volumeMode: Filesystem
   fsType: ext4
   deviceDir: /dev/e2etest
@@ -161,6 +171,7 @@ metadata:
   name: pv-spec-cm-xfs
   namespace: kube-system
 data:
+  storageClassName: local-storage-fs
   volumeMode: Filesystem
   fsType: xfs
   deviceDir: /dev/e2etest
@@ -172,6 +183,7 @@ metadata:
   name: pv-spec-cm-btrfs
   namespace: kube-system
 data:
+  storageClassName: local-storage-fs
   volumeMode: Filesystem
   fsType: btrfs
   deviceDir: /dev/e2etest

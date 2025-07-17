@@ -47,8 +47,17 @@ func newDeviceDetectorForTest(nodeName, workingNamespace, defaultPVSpecConfigMap
 	}
 }
 
-func newPVSpecConfigMap(name, namespace, volumeMode, fsType, deviceDir, deviceNameFilter string) *corev1.ConfigMap {
+func newPVSpecConfigMap(
+	name,
+	namespace,
+	storageClassName,
+	volumeMode,
+	fsType,
+	deviceDir,
+	deviceNameFilter string,
+) *corev1.ConfigMap {
 	data := map[string]string{
+		"storageClassName": storageClassName,
 		"volumeMode":       volumeMode,
 		"deviceDir":        deviceDir,
 		"deviceNameFilter": deviceNameFilter,
@@ -85,6 +94,7 @@ func testDo() {
 	pvSpecConfigMapName2 := "lpp-pv-spec-cm2"
 	defaultPVSpecConfigMapName := "lpp-default-pv-spec-cm"
 	workingNamespace := "lpp"
+	storageClassName := "local-storage"
 	ns := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: workingNamespace,
@@ -164,7 +174,15 @@ func testDo() {
 				"/dev/sdb": "dummy",
 				"/dev/sdc": "dummy",
 			}, func() {
-				cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, cmSrc.volumeMode, cmSrc.fsType, cmSrc.deviceDir, cmSrc.deviceNameFilter)
+				cm := newPVSpecConfigMap(
+					pvSpecConfigMapName,
+					workingNamespace,
+					storageClassName,
+					cmSrc.volumeMode,
+					cmSrc.fsType,
+					cmSrc.deviceDir,
+					cmSrc.deviceNameFilter,
+				)
 				_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error { return nil })
 				Expect(err).NotTo(HaveOccurred())
 
@@ -211,25 +229,25 @@ func testDo() {
 			Entry(
 				"Using correct configmap (Block)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Block", "", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Block", "", "/dev", ".*"),
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
 				"Using correct configmap (Filesystem: ext4)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "ext4", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Filesystem", "ext4", "/dev", ".*"),
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
 				"Using correct configmap (Filesystem: xfs)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "xfs", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Filesystem", "xfs", "/dev", ".*"),
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
 				"Using correct configmap (Filesystem: btrfs)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "btrfs", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Filesystem", "btrfs", "/dev", ".*"),
 				[]string{fmt.Sprintf("local-%s-sda", node)},
 			),
 			Entry(
@@ -241,6 +259,7 @@ func testDo() {
 						Namespace: workingNamespace,
 					},
 					Data: map[string]string{
+						"storageClassName": storageClassName,
 						"volumeMode":       "Block",
 						"fsType":           "ext4", // redundant, should be ignored.
 						"deviceDir":        "/dev",
@@ -258,6 +277,7 @@ func testDo() {
 						Namespace: workingNamespace,
 					},
 					Data: map[string]string{
+						"storageClassName": storageClassName,
 						"volumeMode":       "Block",
 						"deviceDir":        "/dev",
 						"deviceNameFilter": ".*",
@@ -269,37 +289,54 @@ func testDo() {
 			Entry(
 				"Using invalid configmap name to get no PVs",
 				node,
-				newPVSpecConfigMap(cmName+"foo", workingNamespace, "Filesystem", "ext4", "/dev", ".*"),
+				newPVSpecConfigMap(cmName+"foo", workingNamespace, storageClassName, "Filesystem", "ext4", "/dev", ".*"),
 				[]string{},
 			),
 			Entry(
 				"Using invalid volumeMode",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Foo", "", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Foo", "", "/dev", ".*"),
 				[]string{},
 			),
 			Entry(
 				"Using invalid fsType",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Filesystem", "ntfs", "/dev", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Filesystem", "ntfs", "/dev", ".*"),
 				[]string{},
 			),
 			Entry(
 				"Using invalid deviceDir (no entry)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Block", "", "/foo", ".*"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Block", "", "/foo", ".*"),
 				[]string{},
 			),
 			Entry(
 				"Using invalid deviceNameFilter (ill-formed regex)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Block", "", "/dev", "("),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Block", "", "/dev", "("),
 				[]string{},
 			),
 			Entry(
 				"Using invalid deviceNameFilter (no entry)",
 				node,
-				newPVSpecConfigMap(cmName, workingNamespace, "Block", "", "/dev", "foo"),
+				newPVSpecConfigMap(cmName, workingNamespace, storageClassName, "Block", "", "/dev", "foo"),
+				[]string{},
+			),
+			Entry(
+				"Using missing storageClassName",
+				node,
+				&corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      cmName,
+						Namespace: workingNamespace,
+					},
+					Data: map[string]string{
+						// storageClassName is missing
+						"volumeMode":       "Block",
+						"deviceDir":        "/dev",
+						"deviceNameFilter": ".*",
+					},
+				},
 				[]string{},
 			),
 			Entry(
@@ -312,6 +349,7 @@ func testDo() {
 					},
 					Data: map[string]string{
 						// volumeMode is missing
+						"storageClassName": storageClassName,
 						"deviceDir":        "/dev",
 						"deviceNameFilter": ".*",
 					},
@@ -328,6 +366,7 @@ func testDo() {
 					},
 					Data: map[string]string{
 						// deviceDir is missing
+						"storageClassName": storageClassName,
 						"volumeMode":       "Block",
 						"deviceNameFilter": ".*",
 					},
@@ -344,8 +383,9 @@ func testDo() {
 					},
 					Data: map[string]string{
 						// deviceNameFilter is missing
-						"volumeMode": "Block",
-						"deviceDir":  "/dev",
+						"storageClassName": storageClassName,
+						"volumeMode":       "Block",
+						"deviceDir":        "/dev",
 					},
 				},
 				[]string{},
@@ -413,11 +453,11 @@ func testDo() {
 		}, func() {
 			var err error
 
-			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev/", "node1")
+			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev/", "node1")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cmNode1, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
-			cmDefault := newPVSpecConfigMap(defaultPVSpecConfigMapName, workingNamespace, "Block", "", "/dev/", "default")
+			cmDefault := newPVSpecConfigMap(defaultPVSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev/", "default")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cmDefault, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
@@ -447,11 +487,11 @@ func testDo() {
 		}, func() {
 			var err error
 
-			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", ".*")
+			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev", ".*")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cmNode1, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
-			cmDefault := newPVSpecConfigMap(defaultPVSpecConfigMapName, workingNamespace, "Block", "", "/dev", ".*")
+			cmDefault := newPVSpecConfigMap(defaultPVSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev", ".*")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cmDefault, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
@@ -484,7 +524,7 @@ func testDo() {
 					PersistentVolumeSource: corev1.PersistentVolumeSource{
 						Local: &corev1.LocalVolumeSource{Path: "/dev/sda"},
 					},
-					StorageClassName: "local-storage",
+					StorageClassName: storageClassName,
 					VolumeMode:       &block,
 				},
 			}
@@ -510,6 +550,7 @@ func testDo() {
 			// Annotate the existing PVs
 			ctrl.CreateOrUpdate(ctx, k8sClient, pv, func() error {
 				pv.ObjectMeta.Annotations = map[string]string{
+					lppAnnotStorageClassName: storageClassName,
 					lppAnnotVolumeMode:       "Block",
 					lppAnnotDeviceDir:        "/dev",
 					lppAnnotDeviceNameFilter: ".*",
@@ -540,7 +581,7 @@ func testDo() {
 		}, func() {
 			var err error
 
-			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Filesystem", "ext4", "/dev/", "node1")
+			cmNode1 := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, storageClassName, "Filesystem", "ext4", "/dev/", "node1")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cmNode1, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
@@ -574,7 +615,7 @@ func testDo() {
 			}, func() {
 				var err error
 
-				cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", "sd[ab]")
+				cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev", "sd[ab]")
 				_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error { return nil })
 				Expect(err).NotTo(HaveOccurred())
 
@@ -623,6 +664,31 @@ func testDo() {
 				}).Should(Succeed())
 			})
 		},
+		Entry(
+			"Changing storageClassName",
+			func(ctx context.Context) {
+				cm := &corev1.ConfigMap{
+					ObjectMeta: metav1.ObjectMeta{
+						Name:      pvSpecConfigMapName,
+						Namespace: workingNamespace,
+					},
+				}
+				_, err := ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error {
+					cm.Data["storageClassName"] = "local-storage-2"
+					return nil
+				})
+				Expect(err).NotTo(HaveOccurred())
+			},
+			func(g Gomega, ctx context.Context) {
+				var pvList corev1.PersistentVolumeList
+				err := k8sClient.List(ctx, &pvList)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvList.Items).To(ConsistOf(
+					HaveField("Name", "local-192.168.0.1-sda"),
+					HaveField("Name", "local-192.168.0.1-sdb")))
+				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.StorageClassName", "local-storage-2")))
+			},
+		),
 		Entry(
 			"Changing volumeMode and fsType",
 			func(ctx context.Context) {
@@ -699,7 +765,7 @@ func testDo() {
 			func(ctx context.Context) {
 				var err error
 
-				cm2 := newPVSpecConfigMap(pvSpecConfigMapName2, workingNamespace, "Block", "", "/dev", "sdc")
+				cm2 := newPVSpecConfigMap(pvSpecConfigMapName2, workingNamespace, storageClassName, "Block", "", "/dev", "sdc")
 				_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cm2, func() error { return nil })
 				Expect(err).NotTo(HaveOccurred())
 
@@ -728,7 +794,7 @@ func testDo() {
 		}, func() {
 			var err error
 
-			cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, "Block", "", "/dev", ".*")
+			cm := newPVSpecConfigMap(pvSpecConfigMapName, workingNamespace, storageClassName, "Block", "", "/dev", ".*")
 			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, cm, func() error { return nil })
 			Expect(err).NotTo(HaveOccurred())
 
@@ -783,105 +849,122 @@ func testHasAnnotsSetByAnotherConfiguration() {
 	},
 		Entry(
 			"Using volumeMode: Block; No created PVs",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{},
 			false,
 		),
 		Entry(
 			"Using volumeMode: Filesystem; No created PVs",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{},
 			false,
 		),
 
 		Entry(
 			"Using volumeMode: Block; pvSpec is the same settings as the elements in alreadyCreatedPVs",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
-				{lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			false,
 		),
 		Entry(
 			"Using volumeMode: Filesystem; pvSpec is the same settings as the elements in alreadyCreatedPVs",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			false,
 		),
 
 		Entry(
 			"Using volumeMode: Block; alreadyCreatedPVs have no annotations",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{{}},
 			true,
 		),
 		Entry(
 			"Using volumeMode: Filesystem; alreadyCreatedPVs have no annotations",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{{}},
 			true,
 		),
 
 		Entry(
-			"Using volumeMode: Block; alreadyCreatedPVs have a different volumeMode",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			"Using volumeMode: Block; alreadyCreatedPVs have a different storageClassName",
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage-2", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+			},
+			true,
+		),
+		Entry(
+			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different storageClassName",
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			[]map[string]string{
+				{lppAnnotStorageClassName: "local-storage-2", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+			},
+			true,
+		),
+
+		Entry(
+			"Using volumeMode: Block; alreadyCreatedPVs have a different volumeMode",
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			[]map[string]string{
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 		Entry(
 			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different volumeMode",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 
 		Entry(
 			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different fsType",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "xfs", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "xfs", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 
 		Entry(
 			"Using volumeMode: Block; alreadyCreatedPVs have a different deviceDir",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir2", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir2", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 		Entry(
-			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different volumeMode",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different deviceDir",
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir2", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir2", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 
 		Entry(
 			"Using volumeMode: Block; alreadyCreatedPVs have a different deviceNameFilter",
-			&pvSpec{volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*2"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", deviceDir: "/dir", deviceNameFilter: ".*2"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Block", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*"},
 			},
 			true,
 		),
 		Entry(
-			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different volumeMode",
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
+			"Using volumeMode: Filesystem; alreadyCreatedPVs have a different deviceNameFilter",
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dir", deviceNameFilter: ".*"},
 			[]map[string]string{
-				{lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*2"},
+				{lppAnnotStorageClassName: "local-storage", lppAnnotVolumeMode: "Filesystem", lppAnnotFSType: "ext4", lppAnnotDeviceDir: "/dir", lppAnnotDeviceNameFilter: ".*2"},
 			},
 			true,
 		),
@@ -906,18 +989,18 @@ func testParsePVSpecConfigMap() {
 	},
 		Entry(
 			"Using volumeMode: Block",
-			map[string]string{"volumeMode": "Block", "deviceDir": "/dev", "deviceNameFilter": ".*"},
-			&pvSpec{volumeMode: "Block", fsType: "", deviceDir: "/dev", deviceNameFilter: ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Block", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", fsType: "", deviceDir: "/dev", deviceNameFilter: ".*"},
 		),
 		Entry(
 			"Using volumeMode: Block, fsType: ignored",
-			map[string]string{"volumeMode": "Block", "fsType": "ignored", "deviceDir": "/dev", "deviceNameFilter": ".*"},
-			&pvSpec{volumeMode: "Block", fsType: "ignored", deviceDir: "/dev", deviceNameFilter: ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Block", "fsType": "ignored", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Block", fsType: "ignored", deviceDir: "/dev", deviceNameFilter: ".*"},
 		),
 		Entry(
 			"Using volumeMode: Filesystem",
-			map[string]string{"volumeMode": "Filesystem", "fsType": "ext4", "deviceDir": "/dev", "deviceNameFilter": ".*"},
-			&pvSpec{volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dev", deviceNameFilter: ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Filesystem", "fsType": "ext4", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+			&pvSpec{storageClassName: "local-storage", volumeMode: "Filesystem", fsType: "ext4", deviceDir: "/dev", deviceNameFilter: ".*"},
 		),
 	)
 
@@ -934,24 +1017,28 @@ func testParsePVSpecConfigMap() {
 		})
 	},
 		Entry(
+			"storageClasName is missing",
+			map[string]string{"volumeMode": "Block", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+		),
+		Entry(
 			"volumeMode is invalid",
-			map[string]string{"volumeMode": "Foo", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Foo", "deviceDir": "/dev", "deviceNameFilter": ".*"},
 		),
 		Entry(
 			"fsType is invalid",
-			map[string]string{"volumeMode": "Filesystem", "fsType": "foo", "deviceDir": "/dev", "deviceNameFilter": ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Filesystem", "fsType": "foo", "deviceDir": "/dev", "deviceNameFilter": ".*"},
 		),
 		Entry(
 			"deviceDir is invalid (not exists)",
-			map[string]string{"volumeMode": "Block", "deviceDir": "/this-should-not-exist", "deviceNameFilter": ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Block", "deviceDir": "/this-should-not-exist", "deviceNameFilter": ".*"},
 		),
 		Entry(
 			"deviceDir is invalid (not a directory)",
-			map[string]string{"volumeMode": "Block", "deviceDir": "/dev/sda", "deviceNameFilter": ".*"},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Block", "deviceDir": "/dev/sda", "deviceNameFilter": ".*"},
 		),
 		Entry(
 			"deviceNameFilter is invalid",
-			map[string]string{"volumeMode": "Block", "deviceDir": "/dev", "deviceNameFilter": "("},
+			map[string]string{"storageClassName": "local-storage", "volumeMode": "Block", "deviceDir": "/dev", "deviceNameFilter": "("},
 		),
 	)
 }
@@ -960,6 +1047,7 @@ func testDeviceDetectorCreatePV() {
 	It("should create PV with specified ownerReference", func(ctx context.Context) {
 		deviceDir := "dummy"
 		deviceNameFilter := ".*"
+		storageClassName := "local-storage"
 
 		dd := &DeviceDetector{
 			Client:                 k8sClient,
@@ -1019,7 +1107,13 @@ func testDeviceDetectorCreatePV() {
 			device := tt.inputDevice
 
 			By("creating PV")
-			err := dd.createPV(ctx, device, node, tt.volumeMode, tt.fsType, deviceDir, deviceNameFilter)
+			err := dd.createPV(ctx, device, node, &pvSpec{
+				storageClassName: storageClassName,
+				volumeMode:       tt.volumeMode,
+				fsType:           tt.fsType,
+				deviceDir:        deviceDir,
+				deviceNameFilter: deviceNameFilter,
+			})
 			Expect(err).NotTo(HaveOccurred())
 
 			By("getting PV")
@@ -1047,18 +1141,19 @@ func testDeviceDetectorCreatePV() {
 
 			By("checking annotations")
 			if tt.volumeMode == "Filesystem" {
-				Expect(pv.ObjectMeta.Annotations).To(HaveLen(4))
+				Expect(pv.ObjectMeta.Annotations).To(HaveLen(5))
 				Expect(pv.ObjectMeta.Annotations[lppAnnotFSType]).To(Equal(tt.fsType))
 			} else {
-				Expect(pv.ObjectMeta.Annotations).To(HaveLen(3))
+				Expect(pv.ObjectMeta.Annotations).To(HaveLen(4))
 				Expect(pv.ObjectMeta.Annotations[lppAnnotFSType]).To(Equal(""))
 			}
+			Expect(pv.ObjectMeta.Annotations[lppAnnotStorageClassName]).To(Equal(storageClassName))
 			Expect(pv.ObjectMeta.Annotations[lppAnnotVolumeMode]).To(Equal(tt.volumeMode))
 			Expect(pv.ObjectMeta.Annotations[lppAnnotDeviceDir]).To(Equal(deviceDir))
 			Expect(pv.ObjectMeta.Annotations[lppAnnotDeviceNameFilter]).To(Equal(deviceNameFilter))
 
 			By("checking storageClassName")
-			Expect(pv.Spec.StorageClassName).To(Equal("local-storage"))
+			Expect(pv.Spec.StorageClassName).To(Equal(storageClassName))
 
 			By("checking capacity")
 			Expect(pv.Spec.Capacity).To(HaveKey(corev1.ResourceStorage))
