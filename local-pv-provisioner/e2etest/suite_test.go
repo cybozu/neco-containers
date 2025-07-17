@@ -104,20 +104,15 @@ var _ = Describe("local-pv-provisioner", func() {
 					Expect(err).NotTo(HaveOccurred())
 
 					By("checking that PVs are created")
-					Eventually(func() error {
+					Eventually(func(g Gomega) {
 						pv0, err := getPV("local-minikube-worker-loop0")
-						if err != nil {
-							return err
-						}
+						g.Expect(err).NotTo(HaveOccurred())
 						pv1, err := getPV("local-minikube-worker-loop1")
-						if err != nil {
-							return err
-						}
-						Expect(pv0.Status.Phase).To(Equal(corev1.VolumeAvailable))
-						Expect(*pv0.Spec.VolumeMode).To(Equal(expectedVolumeMode))
-						Expect(pv1.Status.Phase).To(Equal(corev1.VolumeAvailable))
-						Expect(*pv1.Spec.VolumeMode).To(Equal(expectedVolumeMode))
-						return nil
+						g.Expect(err).NotTo(HaveOccurred())
+						g.Expect(pv0.Status.Phase).To(Equal(corev1.VolumeAvailable))
+						g.Expect(*pv0.Spec.VolumeMode).To(Equal(expectedVolumeMode))
+						g.Expect(pv1.Status.Phase).To(Equal(corev1.VolumeAvailable))
+						g.Expect(*pv1.Spec.VolumeMode).To(Equal(expectedVolumeMode))
 					}).Should(Succeed())
 
 					By("starting a Pod using the PV")

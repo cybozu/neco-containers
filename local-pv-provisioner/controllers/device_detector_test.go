@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -13,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -173,11 +173,10 @@ func testDo() {
 				dd := newDeviceDetectorForTest(node1.GetName(), workingNamespace, "")
 				dd.do()
 
-				Eventually(func() error {
+				Eventually(func(g Gomega) {
 					pvNames, err := fetchExistingPVNames(ctx)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pvNames).To(ConsistOf(expectedPVNames...))
-					return nil
+					g.Expect(err).NotTo(HaveOccurred())
+					g.Expect(pvNames).To(ConsistOf(expectedPVNames...))
 				}).Should(Succeed())
 
 				// Clean up the created resources for the successive tests
@@ -382,11 +381,10 @@ func testDo() {
 					dd.do()
 				}
 
-				Eventually(func() error {
+				Eventually(func(g Gomega) {
 					pvNames, err := fetchExistingPVNames(ctx)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pvNames).To(Equal(expectedPVNames))
-					return nil
+					g.Expect(err).NotTo(HaveOccurred())
+					g.Expect(pvNames).To(Equal(expectedPVNames))
 				}).Should(Succeed())
 
 				// Clean up the created resources for the successive tests
@@ -433,11 +431,10 @@ func testDo() {
 			dd2.do()
 
 			// Check that the PVs are correctly created.
-			Eventually(func() error {
+			Eventually(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-node1", "local-192.168.0.2-default"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-node1", "local-192.168.0.2-default"))
 			}).Should(Succeed())
 
 			// Clean up the created resources for the successive tests
@@ -499,22 +496,20 @@ func testDo() {
 			err = k8sClient.Create(ctx, pv)
 			Expect(err).NotTo(HaveOccurred())
 
-			Eventually(func() error {
+			Eventually(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			}).Should(Succeed())
 
 			dd1 := newDeviceDetectorForTest(node1.GetName(), workingNamespace, defaultPVSpecConfigMapName)
 			dd1.do()
 
 			// Check that the reconciliation stopped.
-			Consistently(func() error {
+			Consistently(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			}, "1s", "2s").Should(Succeed())
 
 			// Annotate the existing PVs
@@ -530,11 +525,10 @@ func testDo() {
 			dd1.do()
 
 			// Check that the new PV is correctly created.
-			Eventually(func() error {
+			Eventually(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
 			}, "1s", "2s").Should(Succeed())
 
 			// Clean up the created resources for the successive tests
@@ -562,11 +556,10 @@ func testDo() {
 			dd2.do()
 
 			// Check that the PVs are correctly created.
-			Eventually(func() error {
+			Eventually(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-node1"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-node1"))
 			}).Should(Succeed())
 
 			// Clean up the created resources for the successive tests
@@ -578,7 +571,7 @@ func testDo() {
 
 	DescribeTable(
 		"Checking that the device detector reflects the change of pv spec configmap",
-		func(cmUpdater func(), finalChecker func() error) {
+		func(cmUpdater func(), finalChecker func(Gomega)) {
 			useTestFS(map[string]string{
 				"/dev/sda":  "dummy",
 				"/dev/sdb":  "dummy",
@@ -596,11 +589,10 @@ func testDo() {
 				dd.do()
 
 				// Check that the PVs are correctly created.
-				Eventually(func() error {
+				Eventually(func(g Gomega) {
 					pvNames, err := fetchExistingPVNames(ctx)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
-					return nil
+					g.Expect(err).NotTo(HaveOccurred())
+					g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
 				}).Should(Succeed())
 
 				// Change the pv spec configmap
@@ -609,11 +601,10 @@ func testDo() {
 				dd.do()
 
 				// Check that the PVs already created still exist.
-				Consistently(func() error {
+				Consistently(func(g Gomega) {
 					pvNames, err := fetchExistingPVNames(ctx)
-					Expect(err).NotTo(HaveOccurred())
-					Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
-					return nil
+					g.Expect(err).NotTo(HaveOccurred())
+					g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda", "local-192.168.0.1-sdb"))
 				}, "2s", "1s").Should(Succeed())
 
 				// Remove PVs
@@ -655,26 +646,15 @@ func testDo() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func() error {
+			func(g Gomega) {
 				var pvList corev1.PersistentVolumeList
-				if err := k8sClient.List(context.Background(), &pvList); err != nil {
-					return err
-				}
-				if len(pvList.Items) != 2 {
-					return errors.New("len(pvList.Items) should be 2")
-				}
-				sdaOk, sdbOk := false, false
-				for _, pv := range pvList.Items {
-					if pv.Name == "local-192.168.0.1-sda" {
-						sdaOk = *pv.Spec.VolumeMode == corev1.PersistentVolumeFilesystem && *pv.Spec.Local.FSType == "ext4"
-					} else if pv.Name == "local-192.168.0.1-sdb" {
-						sdbOk = *pv.Spec.VolumeMode == corev1.PersistentVolumeFilesystem && *pv.Spec.Local.FSType == "ext4"
-					}
-				}
-				if !sdaOk || !sdbOk {
-					return errors.New("either sda or sdb is not ok")
-				}
-				return nil
+				err := k8sClient.List(context.Background(), &pvList)
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvList.Items).To(ConsistOf(
+					HaveField("Name", "local-192.168.0.1-sda"),
+					HaveField("Name", "local-192.168.0.1-sdb")))
+				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.VolumeMode", ptr.To(corev1.PersistentVolumeFilesystem))))
+				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.Local.FSType", ptr.To("ext4"))))
 			},
 		),
 		Entry(
@@ -692,11 +672,10 @@ func testDo() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func() error {
+			func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(context.Background())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			},
 		),
 		Entry(
@@ -714,11 +693,10 @@ func testDo() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func() error {
+			func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(context.Background())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
 			},
 		),
 		Entry(
@@ -742,11 +720,10 @@ func testDo() {
 				})
 				Expect(err).NotTo(HaveOccurred())
 			},
-			func() error {
+			func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(context.Background())
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sdc"))
 			},
 		),
 	)
@@ -766,11 +743,10 @@ func testDo() {
 			dd.do()
 
 			// Check that the PVs are correctly created.
-			Eventually(func() error {
+			Eventually(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			}).Should(Succeed())
 
 			// Delete /dev/sda here
@@ -780,11 +756,10 @@ func testDo() {
 			dd.do()
 
 			// Check that the PVs already created still exist.
-			Consistently(func() error {
+			Consistently(func(g Gomega) {
 				pvNames, err := fetchExistingPVNames(ctx)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
-				return nil
+				g.Expect(err).NotTo(HaveOccurred())
+				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
 			}, "2s", "1s").Should(Succeed())
 
 			// Clean up the created resources for the successive tests
