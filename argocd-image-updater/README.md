@@ -1,6 +1,6 @@
 # Argo CD Image Updater Container
 
-This derectory provides a Dockerfile to build a arogocd-image-updater container
+This directory provides a Dockerfile to build a argocd-image-updater container
 that runs [argoproj-labs/argocd-image-updater](https://github.com/argoproj-labs/argocd-image-updater).
 
 ## Docker images
