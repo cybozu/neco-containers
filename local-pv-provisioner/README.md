@@ -21,12 +21,13 @@ the following values:
 
 - `deviceDir`: The directory where `local-pv-provisioner` searches for devices.
 - `deviceNameFilter`: The regular expression used to filter the devices.
+- `storageClassName`: The StorageClass name of the created PVs.
 - `volumeMode`: The mode of the PV created by `local-pv-provisioner`, which should be either "Filesystem" or "Block".
 - `fsType`: The type of the filesystem, which should be set if and only if `volumeMode` is `"Filesystem"`. Currently, `local-pv-provisioner` supports ext4, xfs and btrfs for this field.
 
 After obtaining these values, `local-pv-provisioner` searches for devices, based on `deviceDir` and `deviceNameFilter`.
 It then creates one PV for each found device, using the
-`volumeMode` and `fsType` values specified in the PV spec ConfigMap.
+`storageClassName`, `volumeMode` and `fsType` values specified in the PV spec ConfigMap.
 
 ### An example
 
@@ -37,6 +38,7 @@ kind: ConfigMap
 metadata:
   name: pv-spec-cm-fs
 data:
+  storageClassName: local-storage
   volumeMode: Filesystem
   fsType: ext4
   deviceDir: /dev/disk/by-path/
@@ -81,7 +83,6 @@ spec:
 * `metadata.name` is decided according to the following rules.
     * The name is a concatenation of `local`, node name, and device name with `-`.
     * If it contains characters other than alphabets, numbers, `-` and `.`, it is replaced with `-`.
-* `spec.storageClassName` is automatically set a value `local-storage`.
 * `spec.capacity.storage` is decided from the max capacity of the device.
 * The device specified `spec.local.path` is cleaned up by filling 100MB with zero values from offset 0, 1GB, 10GB, 100GB, and 1000GB.
    It is to wipe filesystem signatures and Ceph bdev labels.
@@ -209,8 +210,8 @@ Please use `make -C e2etest clean`.
 ## How to cleanup released PVs
 
 The cleanup process is:
-1. Watches Update events for Persistent Volume
-2. If `spec.storageClassName: local-storage` and `status.phase: Released`, clean up the block device in the same way as during PV creation.
+1. Watches Update events for Persistent Volumes.
+2. If it has `local-pv-provisioner.cybozu.com/node` label and its status is `status.phase: Released`, clean up the block device in the same way as during the PV creation.
 3. Delete the Persistent Volume from Kubernetes API server.
   - Note that, this process is executed even if failed to cleanup the device.
 

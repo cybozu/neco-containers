@@ -19,6 +19,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -27,19 +28,18 @@ import (
 )
 
 const (
-	// StorageClass is the name of StorageClass. It is set to pv.spec.storageClassName.
-	StorageClass = "local-storage"
-
 	lppLegacyLabelKey = "local-pv-provisioner.cybozu.com/node"
 
 	lppDomain                = "local-pv-provisioner.cybozu.io/"
 	lppAnnotNode             = lppDomain + "node"
 	lppAnnotPVSpecConfigMap  = lppDomain + "pv-spec-configmap"
+	lppAnnotStorageClassName = lppDomain + "storageClassName"
 	lppAnnotVolumeMode       = lppDomain + "volumeMode"
 	lppAnnotFSType           = lppDomain + "fsType"
 	lppAnnotDeviceDir        = lppDomain + "deviceDir"
 	lppAnnotDeviceNameFilter = lppDomain + "deviceNameFilter"
 
+	pvSpecCMKeyStorageClassName = "storageClassName"
 	pvSpecCMKeyVolumeMode       = "volumeMode"
 	pvSpecCMKeyFsType           = "fsType"
 	pvSpecCMKeyDeviceDir        = "deviceDir"
@@ -57,6 +57,7 @@ func isFilesystem(volumeMode string) bool {
 }
 
 type pvSpec struct {
+	storageClassName         string
 	volumeMode               string
 	fsType                   string
 	deviceDir                string
@@ -66,11 +67,12 @@ type pvSpec struct {
 
 func parsePVSpecConfigMap(cm *corev1.ConfigMap) (*pvSpec, error) {
 	// Parse the values of the config map. If a required value is missing, return an error.
-	pvSpecVolumeMode, ok1 := cm.Data[pvSpecCMKeyVolumeMode]
-	pvSpecFSType, ok2 := cm.Data[pvSpecCMKeyFsType]
-	pvSpecDeviceDir, ok3 := cm.Data[pvSpecCMKeyDeviceDir]
-	pvSpecDeviceNameFilter, ok4 := cm.Data[pvSpecCMKeyDeviceNameFilter]
-	if !ok1 || (isFilesystem(pvSpecVolumeMode) && !ok2) || !ok3 || !ok4 {
+	pvSpecStorageClassName, ok1 := cm.Data[pvSpecCMKeyStorageClassName]
+	pvSpecVolumeMode, ok2 := cm.Data[pvSpecCMKeyVolumeMode]
+	pvSpecFSType, ok3 := cm.Data[pvSpecCMKeyFsType]
+	pvSpecDeviceDir, ok4 := cm.Data[pvSpecCMKeyDeviceDir]
+	pvSpecDeviceNameFilter, ok5 := cm.Data[pvSpecCMKeyDeviceNameFilter]
+	if !ok1 || !ok2 || (isFilesystem(pvSpecVolumeMode) && !ok3) || !ok4 || !ok5 {
 		return nil, errors.New("required value not found in pv spec ConfigMap")
 	}
 
@@ -97,6 +99,7 @@ func parsePVSpecConfigMap(cm *corev1.ConfigMap) (*pvSpec, error) {
 	}
 
 	return &pvSpec{
+		storageClassName:         pvSpecStorageClassName,
 		volumeMode:               pvSpecVolumeMode,
 		fsType:                   pvSpecFSType,
 		deviceDir:                pvSpecDeviceDir,
@@ -110,13 +113,17 @@ func hasAnnotsSetByAnotherConfiguration(pvSpec *pvSpec, alreadyCreatedPVs []core
 	conflicted := false
 	for _, pv := range alreadyCreatedPVs {
 		annot := pv.GetAnnotations()
-		volumeMode, ok1 := annot[lppAnnotVolumeMode]
-		fsType, ok2 := annot[lppAnnotFSType]
-		deviceDir, ok3 := annot[lppAnnotDeviceDir]
-		deviceNameFilter, ok4 := annot[lppAnnotDeviceNameFilter]
-		if !ok1 || (isFilesystem(volumeMode) && !ok2) || !ok3 || !ok4 ||
-			volumeMode != pvSpec.volumeMode || (isFilesystem(volumeMode) && fsType != pvSpec.fsType) ||
-			deviceDir != pvSpec.deviceDir || deviceNameFilter != pvSpec.deviceNameFilter {
+		storageClassName, ok1 := annot[lppAnnotStorageClassName]
+		volumeMode, ok2 := annot[lppAnnotVolumeMode]
+		fsType, ok3 := annot[lppAnnotFSType]
+		deviceDir, ok4 := annot[lppAnnotDeviceDir]
+		deviceNameFilter, ok5 := annot[lppAnnotDeviceNameFilter]
+		if !ok1 || !ok2 || (isFilesystem(volumeMode) && !ok3) || !ok4 || !ok5 ||
+			storageClassName != pvSpec.storageClassName ||
+			volumeMode != pvSpec.volumeMode ||
+			(isFilesystem(volumeMode) && fsType != pvSpec.fsType) ||
+			deviceDir != pvSpec.deviceDir ||
+			deviceNameFilter != pvSpec.deviceNameFilter {
 			conflicted = true
 			break
 		}
@@ -125,7 +132,17 @@ func hasAnnotsSetByAnotherConfiguration(pvSpec *pvSpec, alreadyCreatedPVs []core
 }
 
 // NewDeviceDetector creates a new DeviceDetector.
-func NewDeviceDetector(client client.Client, reader client.Reader, log logr.Logger, nodeName string, interval time.Duration, scheme *runtime.Scheme, deleter Deleter, defaultPVSpecConfigMap, workingNamespace string) manager.Runnable {
+func NewDeviceDetector(
+	client client.Client,
+	reader client.Reader,
+	log logr.Logger,
+	nodeName string,
+	interval time.Duration,
+	scheme *runtime.Scheme,
+	deleter Deleter,
+	defaultPVSpecConfigMap string,
+	workingNamespace string,
+) manager.Runnable {
 	dd := &DeviceDetector{
 		client, reader, log, nodeName, interval, scheme,
 		prometheus.NewGauge(prometheus.GaugeOpts{
@@ -172,7 +189,7 @@ type DeviceDetector struct {
 
 // Start implements controller-runtime's manager.Runnable.
 func (dd *DeviceDetector) Start(ctx context.Context) error {
-	dd.do()
+	dd.do(ctx)
 
 	tick := time.NewTicker(dd.interval)
 	defer tick.Stop()
@@ -180,7 +197,7 @@ func (dd *DeviceDetector) Start(ctx context.Context) error {
 	for {
 		select {
 		case <-tick.C:
-			dd.do()
+			dd.do(ctx)
 		case <-ctx.Done():
 			return nil
 		}
@@ -191,8 +208,7 @@ func (dd *DeviceDetector) Start(ctx context.Context) error {
 // +kubebuilder:rbac:groups="",resources=persistentvolumes,verbs=get;list;watch;create;update;patch
 // +kubebuilder:rbac:namespace=default,groups="",resources=configmaps,verbs=get;list;watch
 
-func (dd *DeviceDetector) do() {
-	ctx := context.Background()
+func (dd *DeviceDetector) do(ctx context.Context) {
 	log := dd.log
 
 	node := new(corev1.Node)
@@ -268,7 +284,7 @@ func (dd *DeviceDetector) do() {
 			}
 		}
 
-		err = dd.createPV(ctx, dev, node, pvSpec.volumeMode, pvSpec.fsType, pvSpec.deviceDir, pvSpec.deviceNameFilter)
+		err = dd.createPV(ctx, dev, node, pvSpec)
 		if err != nil {
 			log.Error(err, "unable to create or update PV", "path", dev.Path)
 			errDevices = append(errDevices, dev)
@@ -286,12 +302,12 @@ func (dd *DeviceDetector) pvName(devPath string) string {
 	return strings.ToLower(vpNameRegexp.ReplaceAllString(tmp, "-"))
 }
 
-func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node, volumeMode, fsType, deviceDir, deviceNameFilter string) error {
+func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1.Node, pvSpec *pvSpec) error {
 	log := dd.log
 	pv := &corev1.PersistentVolume{ObjectMeta: metav1.ObjectMeta{Name: dd.pvName(dev.Path)}}
 
 	pvMode := corev1.PersistentVolumeBlock
-	if isFilesystem(volumeMode) {
+	if isFilesystem(pvSpec.volumeMode) {
 		pvMode = corev1.PersistentVolumeFilesystem
 	}
 
@@ -305,12 +321,13 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		if pv.ObjectMeta.Annotations == nil {
 			pv.ObjectMeta.Annotations = make(map[string]string)
 		}
-		pv.ObjectMeta.Annotations[lppAnnotVolumeMode] = volumeMode
-		if isFilesystem(volumeMode) {
-			pv.ObjectMeta.Annotations[lppAnnotFSType] = fsType
+		pv.ObjectMeta.Annotations[lppAnnotStorageClassName] = pvSpec.storageClassName
+		pv.ObjectMeta.Annotations[lppAnnotVolumeMode] = pvSpec.volumeMode
+		if isFilesystem(pvSpec.volumeMode) {
+			pv.ObjectMeta.Annotations[lppAnnotFSType] = pvSpec.fsType
 		}
-		pv.ObjectMeta.Annotations[lppAnnotDeviceDir] = deviceDir
-		pv.ObjectMeta.Annotations[lppAnnotDeviceNameFilter] = deviceNameFilter
+		pv.ObjectMeta.Annotations[lppAnnotDeviceDir] = pvSpec.deviceDir
+		pv.ObjectMeta.Annotations[lppAnnotDeviceNameFilter] = pvSpec.deviceNameFilter
 
 		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 
@@ -336,10 +353,10 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 		pv.Spec.PersistentVolumeSource = corev1.PersistentVolumeSource{
 			Local: &corev1.LocalVolumeSource{Path: dev.Path},
 		}
-		if isFilesystem(volumeMode) {
-			pv.Spec.PersistentVolumeSource.Local.FSType = &fsType
+		if isFilesystem(pvSpec.volumeMode) {
+			pv.Spec.PersistentVolumeSource.Local.FSType = ptr.To(pvSpec.fsType)
 		}
-		pv.Spec.StorageClassName = StorageClass
+		pv.Spec.StorageClassName = pvSpec.storageClassName
 		pv.Spec.VolumeMode = &pvMode
 
 		return ctrl.SetControllerReference(node, pv, dd.scheme)

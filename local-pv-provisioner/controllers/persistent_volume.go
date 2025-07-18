@@ -51,7 +51,7 @@ func (r *PersistentVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Req
 	}
 
 	logger.Info("deleting PersistentVolume from api server")
-	if err := r.Delete(context.Background(), &pv); err != nil {
+	if err := r.Delete(ctx, &pv); err != nil {
 		logger.Error(err, "unable to delete PersistentVolume")
 		return ctrl.Result{}, err
 	}
@@ -105,7 +105,7 @@ func (w *persistentVolumeWatcher) Start(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		case <-ticker.C:
-			err := w.fireEvent(context.Background())
+			err := w.fireEvent(ctx)
 			if err != nil {
 				return err
 			}
