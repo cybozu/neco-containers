@@ -5,7 +5,7 @@
 
 FROM ghcr.io/cybozu/golang:1.23-noble AS builder
 
-ENV ARGO_ROLLOUTS_VERSION=1.8.2
+ENV ARGO_ROLLOUTS_VERSION=1.8.3
 
 WORKDIR /work
 
@@ -21,6 +21,7 @@ FROM gcr.io/distroless/static-debian11
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /work/argo-rollouts/dist/rollouts-controller /bin/
+COPY --from=builder /work/argo-rollouts/LICENSE /LICENSE
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 USER 10000:10000
