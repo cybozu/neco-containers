@@ -666,9 +666,11 @@ func testDo() {
 				Expect(err).NotTo(HaveOccurred())
 			},
 			func(g Gomega, ctx context.Context) {
-				pvNames, err := fetchExistingPVNames(ctx)
+				var pvList corev1.PersistentVolumeList
+				err := k8sClient.List(ctx, &pvList)
 				g.Expect(err).NotTo(HaveOccurred())
-				g.Expect(pvNames).To(ConsistOf("local-192.168.0.1-sda"))
+				g.Expect(pvList.Items).To(ConsistOf(HaveField("Name", "local-192.168.0.1-sda")))
+				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.Local.Path", "/dev2/sda")))
 			},
 		),
 		Entry(
