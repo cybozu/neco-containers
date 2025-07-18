@@ -25,11 +25,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY --from=build /go/src/github.com/docker/distribution/bin/registry /bin/registry
 COPY --from=build /go/src/github.com/docker/distribution/LICENSE /usr/local/distribution/LICENSE
-COPY --from=build /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/docker/registry/config.yml
+COPY --from=build /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/distribution/config.yml
 
 USER 10000:10000
 VOLUME ["/var/lib/registry"]
 EXPOSE 5000
 
 ENTRYPOINT ["registry"]
-CMD ["serve", "/etc/docker/registry/config.yml"]
+CMD ["serve", "/etc/distribution/config.yml"]
