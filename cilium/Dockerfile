@@ -33,20 +33,20 @@ RUN /tmp/install-deps.sh
 # https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-llvm
 COPY src/image-tools/images/llvm/checkout-llvm.sh /tmp/checkout-llvm.sh
-COPY src/image-tools/images/llvm/build-llvm.sh /tmp/build-llvm.sh
+COPY src/image-tools/images/llvm/build-llvm-native.sh /tmp/build-llvm-native.sh
 
 RUN /tmp/checkout-llvm.sh
-RUN /tmp/build-llvm.sh
-RUN cp /out/bin/* /usr/local/bin/
+RUN /tmp/build-llvm-native.sh
+RUN cp /out/linux/amd64/bin/* /usr/local/bin/
 
 # ----------------------------------------------------------------------------------------
 # https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-bpftool
 COPY src/image-tools/images/bpftool/checkout-linux.sh /tmp/checkout-linux.sh
-COPY src/image-tools/images/bpftool/build-bpftool.sh /tmp/build-bpftool.sh
+COPY src/image-tools/images/bpftool/build-bpftool-native.sh /tmp/build-bpftool-native.sh
 
 RUN /tmp/checkout-linux.sh
-RUN /tmp/build-bpftool.sh
+RUN /tmp/build-bpftool-native.sh
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libelf1 \
@@ -103,7 +103,7 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/runtime,target=/go/src/
     ./iptables-wrapper-installer.sh --no-sanity-check
 
 COPY --from=cilium-llvm /usr/local/bin/clang /usr/local/bin/llc /usr/local/bin/
-COPY --from=cilium-bpftool /out/bin/bpftool /usr/local/bin/
+COPY --from=cilium-bpftool /out/linux/amd64/bin/bpftool /usr/local/bin/
 COPY --from=gops-cni-builder /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=gops-cni-builder /out/linux/amd64/bin/gops /bin/gops
 
