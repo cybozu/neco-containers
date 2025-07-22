@@ -25,7 +25,7 @@ Usage
     --cap-drop ALL \
     --cap-add SYS_TIME \
     --cap-add NET_BIND_SERVICE \
-    ghcr.io/cybozu/chrony:4.6
+    ghcr.io/cybozu/chrony:4.7
     ```
 
 ### Use `chronyc`
