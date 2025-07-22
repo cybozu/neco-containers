@@ -6,7 +6,6 @@
 #   gops-cni-builder            intermediate (https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile)
 #   cilium-runtime              quay.io/cilium/cilium-runtime
 #   cilium-builder              quay.io/cilium/cilium-builder
-#   cilium-hubble               intermediate (https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile)
 #   cilium-agent-builder        intermediate (https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile)
 #
 # ref: https://docs.cilium.io/en/stable/contributing/development/images/
@@ -34,20 +33,20 @@ RUN /tmp/install-deps.sh
 # https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-llvm
 COPY src/image-tools/images/llvm/checkout-llvm.sh /tmp/checkout-llvm.sh
-COPY src/image-tools/images/llvm/build-llvm-native.sh /tmp/build-llvm-native.sh
+COPY src/image-tools/images/llvm/build-llvm.sh /tmp/build-llvm.sh
 
 RUN /tmp/checkout-llvm.sh
-RUN /tmp/build-llvm-native.sh
-RUN cp /out/linux/amd64/bin/* /usr/local/bin/
+RUN /tmp/build-llvm.sh
+RUN cp /out/bin/* /usr/local/bin/
 
 # ----------------------------------------------------------------------------------------
 # https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-bpftool
 COPY src/image-tools/images/bpftool/checkout-linux.sh /tmp/checkout-linux.sh
-COPY src/image-tools/images/bpftool/build-bpftool-native.sh /tmp/build-bpftool-native.sh
+COPY src/image-tools/images/bpftool/build-bpftool.sh /tmp/build-bpftool.sh
 
 RUN /tmp/checkout-linux.sh
-RUN /tmp/build-bpftool-native.sh
+RUN /tmp/build-bpftool.sh
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libelf1 \
@@ -104,7 +103,7 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/runtime,target=/go/src/
     ./iptables-wrapper-installer.sh --no-sanity-check
 
 COPY --from=cilium-llvm /usr/local/bin/clang /usr/local/bin/llc /usr/local/bin/
-COPY --from=cilium-bpftool /out/linux/amd64/bin/bpftool /usr/local/bin/
+COPY --from=cilium-bpftool /out/bin/bpftool /usr/local/bin/
 COPY --from=gops-cni-builder /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=gops-cni-builder /out/linux/amd64/bin/gops /bin/gops
 
@@ -170,14 +169,6 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/
 # used to facilitate the verifier tests
 COPY --from=cilium-llvm /usr/local/bin/llvm-objcopy /bin/
 
-# -------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile (AS hubble)
-FROM cilium-builder AS cilium-hubble
-COPY src/cilium/images/cilium/download-hubble.sh /tmp/download-hubble.sh
-
-RUN /tmp/download-hubble.sh
-RUN /out/linux/amd64/bin/hubble completion bash > /out/linux/bash_completion
-
 # --------------------------------------------------------------------------------
 # https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile (AS builder)
 FROM cilium-builder AS cilium-agent-builder
@@ -186,6 +177,12 @@ WORKDIR /go/src/github.com/cilium/cilium
 RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cilium/cilium \
     make GOARCH=amd64 DESTDIR=/tmp/install/linux/amd64 PKG_BUILD=1 \
     build-container install-container-binary
+
+RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cilium/cilium \
+    cd hubble && \
+    mkdir -p /tmp/hubble/linux/amd64 && \
+    make GOARCH=amd64 && \
+    mv hubble /tmp/hubble/linux/amd64
 
 RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cilium/cilium \
     make GOARCH=amd64 DESTDIR=/tmp/install/linux/amd64 PKG_BUILD=1 \
@@ -207,9 +204,10 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock
 
 RUN echo ". /etc/profile.d/bash_completion.sh" >> /etc/bash.bashrc
-COPY --from=cilium-hubble /out/linux/amd64/bin/hubble /usr/bin/hubble
-COPY --from=cilium-hubble /out/linux/bash_completion /etc/bash_completion.d/hubble
+COPY --from=cilium-agent-builder /tmp/hubble/linux/amd64/hubble /usr/bin/hubble
 COPY --from=cilium-agent-builder /tmp/install/linux/amd64/ /
+
+RUN /usr/bin/hubble completion bash > /etc/bash_completion.d/hubble
 
 WORKDIR /home/cilium
 ENV INITSYSTEM="SYSTEMD"
