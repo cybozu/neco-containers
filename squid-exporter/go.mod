@@ -1,9 +1,9 @@
 module github.com/cybozu/neco-containers/squid-exporter
 
-go 1.24.1
+go 1.24.5
 
 require (
-	github.com/VictoriaMetrics/metrics v1.35.2
+	github.com/VictoriaMetrics/metrics v1.38.0
 	github.com/onsi/ginkgo/v2 v2.23.0
 	github.com/onsi/gomega v1.36.2
 	github.com/stretchr/testify v1.10.0
@@ -28,7 +28,7 @@ require (
 	github.com/valyala/histogram v1.2.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	golang.org/x/net v0.37.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/sys v0.34.0 // indirect
 	golang.org/x/text v0.23.0 // indirect
 	golang.org/x/tools v0.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
