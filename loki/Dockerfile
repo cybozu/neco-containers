@@ -5,9 +5,10 @@ WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
-COPY log-per-chunk-flush.patch /work
+COPY *.patch /work
 WORKDIR /work/loki
 RUN patch -p1 < ../log-per-chunk-flush.patch
+RUN patch -p1 < ../objectbucket-list-trace.patch
 RUN make BUILD_IN_CONTAINER=false loki logcli loki-canary
 
 FROM ghcr.io/cybozu/ubuntu:24.04

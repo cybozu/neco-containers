@@ -1,0 +1,154 @@
+diff --git a/pkg/compactor/index_set.go b/pkg/compactor/index_set.go
+index 481d6aa399..c3dc06ae9f 100644
+--- a/pkg/compactor/index_set.go
++++ b/pkg/compactor/index_set.go
+@@ -10,6 +10,7 @@ import (
+ 
+ 	"github.com/go-kit/log"
+ 	"github.com/go-kit/log/level"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 
+ 	"github.com/grafana/loki/v3/pkg/compactor/retention"
+@@ -84,6 +85,9 @@ func newCommonIndexSet(ctx context.Context, tableName string, baseUserIndexSet s
+ }
+ 
+ func newIndexSet(ctx context.Context, tableName, userID string, baseIndexSet storage.IndexSet, workingDir string, logger log.Logger) (*indexSet, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "compactor.newIndexSet")
++	defer sp.Finish()
++
+ 	if err := util.EnsureDirectory(workingDir); err != nil {
+ 		return nil, err
+ 	}
+diff --git a/pkg/storage/chunk/client/aws/s3_storage_client.go b/pkg/storage/chunk/client/aws/s3_storage_client.go
+index d685f55885..bf3cbfa077 100644
+--- a/pkg/storage/chunk/client/aws/s3_storage_client.go
++++ b/pkg/storage/chunk/client/aws/s3_storage_client.go
+@@ -23,6 +23,7 @@ import (
+ 	"github.com/grafana/dskit/backoff"
+ 	"github.com/grafana/dskit/flagext"
+ 	"github.com/grafana/dskit/instrument"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	amnet "k8s.io/apimachinery/pkg/util/net"
+@@ -483,12 +484,18 @@ func (a *S3ObjectClient) PutObject(ctx context.Context, objectKey string, object
+ 
+ // List implements chunk.ObjectClient.
+ func (a *S3ObjectClient) List(ctx context.Context, prefix, delimiter string) ([]client.StorageObject, []client.StorageCommonPrefix, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "S3ObjectClient.List")
++	defer sp.Finish()
++
+ 	var storageObjects []client.StorageObject
+ 	var commonPrefixes []client.StorageCommonPrefix
+ 	commonPrefixesSet := make(map[string]bool)
+ 
+ 	for i := range a.bucketNames {
+ 		err := loki_instrument.TimeRequest(ctx, "S3.List", s3RequestDuration, instrument.ErrorCode, func(ctx context.Context) error {
++			sp, ctx := opentracing.StartSpanFromContext(ctx, "S3.List")
++			defer sp.Finish()
++
+ 			input := s3.ListObjectsV2Input{
+ 				Bucket:    aws.String(a.bucketNames[i]),
+ 				Prefix:    aws.String(prefix),
+diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
+index 971dcb0fb6..bdd181cd04 100644
+--- a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
++++ b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
+@@ -15,6 +15,7 @@ import (
+ 	"github.com/go-kit/log"
+ 	"github.com/go-kit/log/level"
+ 	"github.com/grafana/dskit/concurrency"
++	"github.com/opentracing/opentracing-go"
+ 	"golang.org/x/sync/errgroup"
+ 
+ 	"github.com/grafana/loki/v3/pkg/storage/chunk/client/util"
+@@ -365,6 +366,9 @@ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err er
+ 
+ // checkStorageForUpdates compares files from cache with storage and builds the list of files to be downloaded from storage and to be deleted from cache
+ func (t *indexSet) checkStorageForUpdates(ctx context.Context, lock, bypassListCache bool) (toDownload []storage.IndexFile, toDelete []string, err error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.checkStorageForUpdates")
++	defer sp.Finish()
++
+ 	// listing tables from store
+ 	var files []storage.IndexFile
+ 
+diff --git a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go b/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
+index 2aa3cfda87..b4f76ad48b 100644
+--- a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
++++ b/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
+@@ -80,6 +80,9 @@ func (c *cachedObjectClient) RefreshIndexTableCache(ctx context.Context, tableNa
+ }
+ 
+ func (c *cachedObjectClient) List(ctx context.Context, prefix, objectDelimiter string, bypassCache bool) ([]client.StorageObject, []client.StorageCommonPrefix, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "cachedObjectClient.List")
++	defer sp.Finish()
++
+ 	if bypassCache {
+ 		return c.ObjectClient.List(ctx, prefix, objectDelimiter)
+ 	}
+diff --git a/pkg/storage/stores/shipper/indexshipper/storage/client.go b/pkg/storage/stores/shipper/indexshipper/storage/client.go
+index 1aba848d8b..790b9e8307 100644
+--- a/pkg/storage/stores/shipper/indexshipper/storage/client.go
++++ b/pkg/storage/stores/shipper/indexshipper/storage/client.go
+@@ -8,6 +8,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/grafana/loki/v3/pkg/storage/chunk/client"
++	"github.com/opentracing/opentracing-go"
+ )
+ 
+ const delimiter = "/"
+@@ -63,6 +64,9 @@ func (s *indexStorageClient) RefreshIndexTableCache(ctx context.Context, tableNa
+ }
+ 
+ func (s *indexStorageClient) ListTables(ctx context.Context) ([]string, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexStorageClient.ListTables")
++	defer sp.Finish()
++
+ 	_, tables, err := s.objectClient.List(ctx, "", delimiter, false)
+ 	if err != nil {
+ 		return nil, err
+@@ -77,6 +81,9 @@ func (s *indexStorageClient) ListTables(ctx context.Context) ([]string, error) {
+ }
+ 
+ func (s *indexStorageClient) ListFiles(ctx context.Context, tableName string, bypassCache bool) ([]IndexFile, []string, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexStorageClient.ListFiles")
++	defer sp.Finish()
++
+ 	// The forward slash here needs to stay because we are trying to list contents of a directory without which
+ 	// we will get the name of the same directory back with hosted object stores.
+ 	// This is due to the object stores not having a concept of directories.
+@@ -106,6 +113,9 @@ func (s *indexStorageClient) ListFiles(ctx context.Context, tableName string, by
+ }
+ 
+ func (s *indexStorageClient) ListUserFiles(ctx context.Context, tableName, userID string, bypassCache bool) ([]IndexFile, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexStorageClient.ListUserFiles")
++	defer sp.Finish()
++
+ 	// The forward slash here needs to stay because we are trying to list contents of a directory without which
+ 	// we will get the name of the same directory back with hosted object stores.
+ 	// This is due to the object stores not having a concept of directories.
+diff --git a/pkg/storage/stores/shipper/indexshipper/storage/index_set.go b/pkg/storage/stores/shipper/indexshipper/storage/index_set.go
+index 74762a7e3e..2e79ed07fa 100644
+--- a/pkg/storage/stores/shipper/indexshipper/storage/index_set.go
++++ b/pkg/storage/stores/shipper/indexshipper/storage/index_set.go
+@@ -4,6 +4,8 @@ import (
+ 	"context"
+ 	"errors"
+ 	"io"
++
++	"github.com/opentracing/opentracing-go"
+ )
+ 
+ var (
+@@ -50,6 +52,9 @@ func (i indexSet) RefreshIndexTableCache(ctx context.Context, tableName string)
+ }
+ 
+ func (i indexSet) ListFiles(ctx context.Context, tableName, userID string, bypassCache bool) ([]IndexFile, error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.ListFiles")
++	defer sp.Finish()
++
+ 	err := i.validateUserID(userID)
+ 	if err != nil {
+ 		return nil, err
