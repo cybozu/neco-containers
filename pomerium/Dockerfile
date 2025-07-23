@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
-ARG POMERIUM_VERSION=0.28.0
+FROM ghcr.io/cybozu/golang:1.24-jammy AS build
+ARG POMERIUM_VERSION=0.30.3
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -24,7 +24,7 @@ RUN go mod download
 RUN make build-go NAME=pomerium
 RUN touch /config.yaml
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 WORKDIR /pomerium
