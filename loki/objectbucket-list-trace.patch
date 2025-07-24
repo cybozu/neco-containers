@@ -1,3 +1,35 @@
+diff --git a/pkg/compactor/compactor.go b/pkg/compactor/compactor.go
+index 6c3871b7a2..1f17a43cde 100644
+--- a/pkg/compactor/compactor.go
++++ b/pkg/compactor/compactor.go
+@@ -17,6 +17,7 @@ import (
+ 	"github.com/grafana/dskit/kv"
+ 	"github.com/grafana/dskit/ring"
+ 	"github.com/grafana/dskit/services"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/common/model"
+@@ -626,6 +627,9 @@ func (c *Compactor) stopping(_ error) error {
+ }
+ 
+ func (c *Compactor) CompactTable(ctx context.Context, tableName string, applyRetention bool) error {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "Compactor.CompactTable")
++	defer sp.Finish()
++
+ 	schemaCfg, ok := SchemaPeriodForTable(c.schemaConfig, tableName)
+ 	if !ok {
+ 		level.Error(util_log.Logger).Log("msg", "skipping compaction since we can't find schema for table", "table", tableName)
+@@ -703,6 +707,9 @@ func (c *Compactor) RegisterIndexCompactor(indexType string, indexCompactor Inde
+ }
+ 
+ func (c *Compactor) RunCompaction(ctx context.Context, applyRetention bool) (err error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "Compactor.RunCompaction")
++	defer sp.Finish()
++
+ 	status := statusSuccess
+ 	start := time.Now()
+ 
 diff --git a/pkg/compactor/index_set.go b/pkg/compactor/index_set.go
 index 481d6aa399..c3dc06ae9f 100644
 --- a/pkg/compactor/index_set.go
@@ -52,7 +84,7 @@ index d685f55885..bf3cbfa077 100644
  				Bucket:    aws.String(a.bucketNames[i]),
  				Prefix:    aws.String(prefix),
 diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
-index 971dcb0fb6..bdd181cd04 100644
+index 971dcb0fb6..be60c7908b 100644
 --- a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
 +++ b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
 @@ -15,6 +15,7 @@ import (
@@ -63,7 +95,37 @@ index 971dcb0fb6..bdd181cd04 100644
  	"golang.org/x/sync/errgroup"
  
  	"github.com/grafana/loki/v3/pkg/storage/chunk/client/util"
-@@ -365,6 +366,9 @@ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err er
+@@ -283,6 +284,9 @@ func (t *indexSet) cleanupDB(fileName string) error {
+ }
+ 
+ func (t *indexSet) Sync(ctx context.Context) (err error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.Sync")
++	defer sp.Finish()
++
+ 	if !t.indexMtx.isReady() {
+ 		level.Info(t.logger).Log("msg", "skip sync since the index set is not ready")
+ 		return nil
+@@ -293,6 +297,9 @@ func (t *indexSet) Sync(ctx context.Context) (err error) {
+ 
+ // syncWithRetry runs a sync with upto maxSyncRetries on failure
+ func (t *indexSet) syncWithRetry(ctx context.Context, lock, bypassListCache bool) error {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.syncWithRetry")
++	defer sp.Finish()
++
+ 	var err error
+ 	for i := 0; i <= maxSyncRetries; i++ {
+ 		err = t.sync(ctx, lock, bypassListCache)
+@@ -313,6 +320,9 @@ func (t *indexSet) syncWithRetry(ctx context.Context, lock, bypassListCache bool
+ 
+ // sync downloads updated and new files from the storage relevant for the table and removes the deleted ones
+ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.sync")
++	defer sp.Finish()
++
+ 	level.Debug(t.logger).Log("msg", fmt.Sprintf("syncing files for table %s", t.tableName))
+ 
+ 	toDownload, toDelete, err := t.checkStorageForUpdates(ctx, lock, bypassListCache)
+@@ -365,6 +375,9 @@ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err er
  
  // checkStorageForUpdates compares files from cache with storage and builds the list of files to be downloaded from storage and to be deleted from cache
  func (t *indexSet) checkStorageForUpdates(ctx context.Context, lock, bypassListCache bool) (toDownload []storage.IndexFile, toDelete []string, err error) {
@@ -73,6 +135,50 @@ index 971dcb0fb6..bdd181cd04 100644
  	// listing tables from store
  	var files []storage.IndexFile
  
+diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/table.go b/pkg/storage/stores/shipper/indexshipper/downloads/table.go
+index 0c02f2aba0..0fc8c85db0 100644
+--- a/pkg/storage/stores/shipper/indexshipper/downloads/table.go
++++ b/pkg/storage/stores/shipper/indexshipper/downloads/table.go
+@@ -14,6 +14,7 @@ import (
+ 	"github.com/go-kit/log"
+ 	"github.com/go-kit/log/level"
+ 	"github.com/grafana/dskit/concurrency"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 	"golang.org/x/sync/errgroup"
+ 
+@@ -270,6 +271,9 @@ func (t *table) DropUnusedIndex(ttl time.Duration, now time.Time) (bool, error)
+ 
+ // Sync downloads updated and new files from the storage relevant for the table and removes the deleted ones
+ func (t *table) Sync(ctx context.Context) error {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "table.Sync")
++	defer sp.Finish()
++
+ 	level.Debug(t.logger).Log("msg", fmt.Sprintf("syncing files for table %s", t.name))
+ 
+ 	t.indexSetsMtx.RLock()
+diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/table_manager.go b/pkg/storage/stores/shipper/indexshipper/downloads/table_manager.go
+index 8e258fb7ae..405b123bb8 100644
+--- a/pkg/storage/stores/shipper/indexshipper/downloads/table_manager.go
++++ b/pkg/storage/stores/shipper/indexshipper/downloads/table_manager.go
+@@ -13,6 +13,7 @@ import (
+ 
+ 	"github.com/go-kit/log"
+ 	"github.com/go-kit/log/level"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 	"github.com/prometheus/client_golang/prometheus"
+ 	"github.com/prometheus/common/model"
+@@ -219,6 +220,9 @@ func (tm *tableManager) getOrCreateTable(tableName string) (Table, error) {
+ }
+ 
+ func (tm *tableManager) syncTables(ctx context.Context) error {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "tableManager.syncTables")
++	defer sp.Finish()
++
+ 	tm.tablesMtx.RLock()
+ 	tables := slices.Collect(maps.Keys(tm.tables))
+ 	tm.tablesMtx.RUnlock()
 diff --git a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go b/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
 index 2aa3cfda87..b4f76ad48b 100644
 --- a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
