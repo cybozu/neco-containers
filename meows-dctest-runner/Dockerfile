@@ -5,7 +5,7 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 
 USER root
 
-ENV GO_VERSION=1.24.4
+ENV GO_VERSION=1.24.5
 ENV PLACEMAT_VERSION=2.4.9
 
 ENV HOME=/home/actions
