@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/cybozu/neco-containers/websocket-keepalive/internal/common"
+	"github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 	"github.com/gorilla/websocket"
 )
 
@@ -27,13 +28,36 @@ func Run(host string, port int, interval time.Duration) error {
 		PingInterval:   interval,
 		MaxPingRetries: 3,
 	}
-	return RunWithConfig(config)
+
+	metricsConfig := &metrics.Config{
+		Export:   true,
+		AddrPort: "0.0.0.0:8080",
+	}
+	return RunWithConfig(config, metricsConfig)
 }
 
-func RunWithConfig(config *Config) error {
+func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s:%d", config.Host, config.Port), Path: "/ws"}
-	slog.Info("Connecting to WebSocket server", "url", u.String())
 
+	m, err := NewMetrics(metricsConfig)
+	if err != nil {
+		return err
+	}
+	if metricsConfig.Export {
+		slog.Info("Start metrics server", "listen", m.AddrPort)
+		go func() {
+			for {
+				if err := m.Metrics.Serve(); err != nil {
+					slog.Error("failed to server the metrics server", "error", err)
+					time.Sleep(time.Second * 5)
+				}
+			}
+
+		}()
+	}
+	m.setUnestablished()
+
+	slog.Info("Connecting to WebSocket server", "url", u.String())
 	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return err
@@ -41,6 +65,7 @@ func RunWithConfig(config *Config) error {
 	defer conn.Close()
 
 	slog.Info("Connected to WebSocket server")
+	m.setEstablished()
 
 	done := make(chan struct{})
 	interrupt := make(chan os.Signal, 1)
@@ -84,6 +109,7 @@ func RunWithConfig(config *Config) error {
 					}
 					if retryCount < config.MaxPingRetries {
 						retryCount += 1
+						m.incrementRetryCount()
 						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries)
 						err := conn.WriteMessage(websocket.PingMessage, []byte("hello from client"))
 						if err != nil {
