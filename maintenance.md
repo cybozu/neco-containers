@@ -100,6 +100,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [victoriametrics](#victoriametrics)
 - [victoriametrics-datasource](#victoriametrics-datasource)
 - [victoriametrics-operator](#victoriametrics-operator)
+- [websocket-keepalive](#websocket-keepalive)
 
 ---
 
@@ -1162,3 +1163,10 @@ Only the base image and module dependency should be updated.
 2. Check upstream Makefile and Dockerfile, and update our Dockerfile if needed.
 3. Update `VICTORIAMETRICS_OPERATOR_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
+
+## websocket-keepalive
+
+![Regular Update](./regular_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update `TAG` files.
