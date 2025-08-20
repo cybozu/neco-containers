@@ -234,6 +234,8 @@ jobs:
               container-image: "tempo"
             - dir: "./testhttpd"
               container-image: "testhttpd"
+              platforms: "linux/amd64,linux/arm64"
+              load: "false"
               make-targets: "setup check-generate test"
             - dir: "./trust-manager"
               container-image: "trust-manager"
