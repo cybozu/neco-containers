@@ -13,11 +13,13 @@ if [ ! -f ${DIR}/BRANCH ]; then
 fi
 
 TAG=$(cat "${DIR}"/TAG)
-BRANCH=$(cat "${DIR}"/BRANCH)
+BRANCH=$(cat ${DIR}/BRANCH | xargs)
 
-if [ ${TAG} = $(echo ${BRANCH}$(echo ${TAG} | sed -e s/${BRANCH}//)) ]; then
-    exit 0
-fi
+for b in $BRANCH; do
+  if [ ${TAG} != $(echo ${b}$(echo ${TAG} | sed -e s/${b}//)) ]; then
+      echo "TAG: ${TAG} and BRANCH: ${b} diverge"
+      exit 1
+  fi
+done
 
-echo "TAG: ${TAG} and BRANCH: ${BRANCH} diverge"
-exit 1
+exit 0

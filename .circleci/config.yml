@@ -113,9 +113,11 @@ jobs:
             fi
             for image in $images; do
               if [ -f $dir/BRANCH ]; then
-                  BRANCH=$(cat $dir/BRANCH)
-                  docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
-                  docker push quay.io/cybozu/$image:$BRANCH
+                  BRANCH=$(cat ${DIR}/BRANCH | xargs)
+                  for b in $BRANCH; do
+                    docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$b
+                    docker push quay.io/cybozu/$image:$b
+                  done
               fi
             done
       - when:

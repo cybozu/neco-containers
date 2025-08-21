@@ -102,9 +102,8 @@ runs:
         platforms: "linux/amd64"
         provenance: false
         push: ${{ steps.prepare.outputs.docker_push }}
-        tags: |
-          ${{ steps.prepare.outputs.tag }}
-          ${{ steps.prepare.outputs.branch }}
+        # Input comma-separated tags: <tag>,<branch1>,<branch2>,...
+        tags: ${{ steps.prepare.outputs.tag }}${{ steps.prepare.outputs.branch && format(',{0}', steps.prepare.outputs.branch) }}
         load: true
     - name: Scan images
       if: ${{ steps.prepare.outputs.scan }}
