@@ -834,7 +834,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 
 1. Check the [release page](https://github.com/cybozu-go/meows/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile`
 3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
    - Also update `GRPCURL_VERSION`, if there are any changes.
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6>
