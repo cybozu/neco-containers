@@ -1,7 +1,11 @@
 package common
 
+import "fmt"
+
 func WebSocketMessageType(n int) string {
 	switch n {
+	case 0:
+		return "Continuation Frame"
 	case 1:
 		return "Text"
 	case 2:
@@ -13,6 +17,6 @@ func WebSocketMessageType(n int) string {
 	case 10:
 		return "Pong"
 	default:
-		return "Unknown"
+		return fmt.Sprintf("Unknown(%d)", n)
 	}
 }

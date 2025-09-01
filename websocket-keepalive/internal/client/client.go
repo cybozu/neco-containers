@@ -1,11 +1,14 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
+	"sync/atomic"
 	"syscall"
 	"time"
 
@@ -19,6 +22,29 @@ type Config struct {
 	Port           int
 	PingInterval   time.Duration
 	MaxPingRetries int
+}
+
+type message struct {
+	messageType int
+	message     []byte
+}
+
+type conn struct {
+	*websocket.Conn
+	closeCh chan struct{}
+	closing atomic.Bool
+	ctrlC   chan os.Signal
+}
+
+func newConn(c *websocket.Conn) *conn {
+	ctrlC := make(chan os.Signal, 1)
+	signal.Notify(ctrlC, os.Interrupt, syscall.SIGTERM)
+	return &conn{
+		Conn:    c,
+		closing: atomic.Bool{},
+		closeCh: make(chan struct{}),
+		ctrlC:   ctrlC,
+	}
 }
 
 func Run(host string, port int, interval time.Duration) error {
@@ -37,7 +63,13 @@ func Run(host string, port int, interval time.Duration) error {
 }
 
 func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
-	u := url.URL{Scheme: "ws", Host: fmt.Sprintf("%s:%d", config.Host, config.Port), Path: "/ws"}
+	addr, err := net.ResolveTCPAddr("tcp", fmt.Sprintf("%s:%d", config.Host, config.Port))
+	if err != nil {
+		return err
+	}
+	u := url.URL{Scheme: "ws", Host: addr.AddrPort().String(), Path: "/ws"}
+
+	// ctx := context.Background()
 
 	m, err := NewMetrics(metricsConfig)
 	if err != nil {
@@ -46,43 +78,43 @@ func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 	if metricsConfig.Export {
 		slog.Info("Start metrics server", "listen", m.AddrPort)
 		go func() {
-			for {
-				if err := m.Metrics.Serve(); err != nil {
-					slog.Error("failed to server the metrics server", "error", err)
-					time.Sleep(time.Second * 5)
-				}
+			if err := m.Metrics.Serve(); err != nil {
+				slog.Error("metrics server failed", "error", err)
+				// When metrics server doesn't run correctly, program shouldn't do any more. Just panic here.
+				panic(err)
 			}
-
 		}()
 	}
-	m.setUnestablished()
 
 	slog.Info("Connecting to WebSocket server", "url", u.String())
-	conn, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		return err
 	}
-	defer conn.Close()
 
-	slog.Info("Connected to WebSocket server")
+	initMetrics(c.LocalAddr().String(), fmt.Sprintf("%s:%d", config.Host, config.Port))
+
+	m.setUnestablished()
 	m.setEstablished()
 
-	done := make(chan struct{})
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	conn := newConn(c)
+	slog.Info("Connected to WebSocket server", "remote_addr", conn.RemoteAddr())
+	defer conn.Close()
 
-	type message struct {
-		messageType int
-		message     []byte
-	}
+	return conn.handleWebsocketConnection(context.Background(), config, m)
+
+}
+
+func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m *Metrics) error {
 	msgCh := make(chan message)
 
 	// Set pong handler
-	conn.SetPongHandler(func(appData string) error {
+	c.SetPongHandler(func(appData string) error {
 		msgCh <- message{
 			messageType: websocket.PongMessage,
 			message:     []byte(appData),
 		}
+		m.incrementPongTotal()
 		return nil
 	})
 
@@ -96,78 +128,89 @@ func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 		waitingCount := 0
 		waitingLimit := 1
 
-		defer close(done)
-
 		for {
 			select {
 			case <-ticker.C:
 				if waitingForReply {
 					if waitingCount < waitingLimit {
-						slog.Warn("Still waiting for reply")
+						slog.Warn("Still waiting for reply", "remote_addr", c.RemoteAddr())
 						waitingCount += 1
 						continue
 					}
 					if retryCount < config.MaxPingRetries {
 						retryCount += 1
 						m.incrementRetryCount()
-						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries)
-						err := conn.WriteMessage(websocket.PingMessage, []byte("hello from client"))
+						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries, "remote_addr", c.RemoteAddr())
+						err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
 						if err != nil {
-							slog.Error("Failed to send ping message", "error", err)
+							slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr())
 							return
 						}
+						m.incrementPingTotal()
 						waitingCount = 0
 					} else {
 						// decide the connection is broken.
-						slog.Error("Reached to retry limit. The connection is broken.")
+						slog.Error("Reached to retry limit. The connection is broken.", "remote_addr", c.RemoteAddr())
+						c.closeCh <- struct{}{}
 						return
 					}
 				} else {
-					slog.Debug("Sending ping message")
-					err := conn.WriteMessage(websocket.PingMessage, []byte("hello from client"))
+					slog.Debug("Sending ping message", "remote_addr", c.RemoteAddr())
+					err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
 					if err != nil {
-						slog.Error("Failed to send ping message", "error", err)
+						slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr())
 						return
 					}
+					m.incrementPingTotal()
 				}
 				waitingForReply = true
 			case msg := <-msgCh:
-				slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType))
+				slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType), "remote_addr", c.RemoteAddr())
 				retryCount = 0
 				waitingForReply = false
-			case <-done:
-				return
 			}
 		}
 	}()
 
 	go func() {
-		defer close(done)
 		for {
-			msgType, message, err := conn.ReadMessage()
+			msgType, message, err := c.ReadMessage()
 			if err != nil {
-				slog.Error("Failed to read message", "error", err)
+				if !websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+					slog.Info("Received close message", "msg", message, "remote_addr", c.RemoteAddr())
+					c.closeCh <- struct{}{}
+					if !c.closing.Load() {
+						msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client")
+						if err := c.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second*5)); err != nil {
+							slog.Error("failed to write the final close message", "error", err, "remote_addr", c.RemoteAddr())
+						}
+					}
+					return
+				}
+				slog.Error("Failed to read message", "error", err, "remote_addr", c.RemoteAddr())
 				return
 			}
-			slog.Debug("Received message", "message", string(message), "message-type", common.WebSocketMessageType(msgType))
+			slog.Debug("Received message", "message", string(message), "message-type", common.WebSocketMessageType(msgType), "remote_addr", c.RemoteAddr())
 		}
 	}()
 
-	for {
-		select {
-		case <-done:
-			return fmt.Errorf("connection closed")
-		case <-interrupt:
-			slog.Info("Interrupt received, closing connection")
-			err := conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				return err
-			}
-			select {
-			case <-done:
-			case <-time.After(time.Second):
-			}
-			return nil
+	select {
+	case <-c.ctrlC:
+		slog.Info("Interrupt received, closing connection", "remote_addr", c.RemoteAddr())
+		if err := c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client"), time.Now().Add(time.Second*5)); err != nil {
+			return err
 		}
+		c.closing.Store(true)
+		select {
+		case <-c.closeCh:
+			slog.Info("the final close message was got. closed.", "remote_addr", c.RemoteAddr())
+		case <-time.After(time.Second * 10):
+			slog.Info("dead line for waiting the final close message, close.", "remote_addr", c.RemoteAddr())
+		}
+	case <-c.closeCh:
+		slog.Info("connection closed.", "remote_addr", c.RemoteAddr())
 	}
+
+	m.setUnestablished()
+	return nil
 }
