@@ -84,7 +84,7 @@ runs:
         mkdir -p workspace
         mv src/envoy/bazel-bin/source/exe/envoy-static.stripped workspace/envoy
         mv src/envoy/LICENSE workspace/
-        mv src/envoy/ci/docker-entrypoint.sh workspace/
+        mv src/envoy/distribution/docker/docker-entrypoint.sh workspace/
     - name: Build and push
       if: ${{ steps.prepare.outputs.build }}
       uses: docker/build-push-action@v6
