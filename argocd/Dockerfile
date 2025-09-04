@@ -1,18 +1,18 @@
 # Argo CD container
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM ghcr.io/cybozu/ubuntu:22.04 AS builder
+FROM ghcr.io/cybozu/ubuntu:24.04 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=5.4.3
+ENV KUSTOMIZE_VERSION=5.6.0
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.15.4
+ENV HELM_VERSION=3.17.1
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
@@ -22,13 +22,12 @@ RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/rel
     chmod +x /usr/local/bin/tini-static
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.23-jammy AS argocd-build
-ENV ARGOCD_VERSION=2.13.9
+FROM ghcr.io/cybozu/golang:1.24-jammy AS argocd-build
+ENV ARGOCD_VERSION=3.0.13
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# Install Node.js 20.x and yarn
 # https://github.com/nodesource/distributions/blob/master/README.md#debinstall
 RUN curl -sSLf https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
