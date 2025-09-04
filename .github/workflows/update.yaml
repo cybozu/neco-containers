@@ -12,7 +12,7 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
       UBUNTU_VERSIONS: "22.04 24.04"
-      GO_MAJOR_VERSIONS: "1.23 1.24"
+      GO_MAJOR_VERSIONS: "1.24 1.25"
     permissions:
       contents: write
       pull-requests: write
