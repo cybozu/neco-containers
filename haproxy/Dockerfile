@@ -1,13 +1,13 @@
-FROM ghcr.io/cybozu/ubuntu-dev:22.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ENV HAPROXY_BRANCH=2.6
-ENV HAPROXY_MINOR=2.6.17
+ENV HAPROXY_BRANCH=3.0
+ENV HAPROXY_MINOR=3.0.11
 ENV HAPROXY_SRC_URL="https://www.haproxy.org/download/${HAPROXY_BRANCH}/src/haproxy-${HAPROXY_MINOR}.tar.gz"
-ENV HAPROXY_SHA256=be48ee8ff9127c402b4c6cf1445cef7052f2c540ed1eff2dd04af677b8cd9dd0
+ENV HAPROXY_SHA256=a133e2d550c5fd9a849b5c7ab17bb945bcdad209ca140d41f45ebf31943ae783
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        liblua5.3-dev \
+        liblua5.4-dev \
         libpcre2-dev \
         wget && \
     rm -rf /var/lib/apt/lists/* && \
@@ -19,7 +19,7 @@ RUN apt-get update && \
     makeOpts=' \
         TARGET=linux-glibc \
         USE_GETADDRINFO=1 \
-        USE_LUA=1 LUA_INC=/usr/include/lua5.3 \
+        USE_LUA=1 LUA_INC=/usr/include/lua5.4 \
         USE_OPENSSL=1 \
         USE_PCRE2=1 USE_PCRE2_JIT=1 \
         USE_PROMEX=1 \
@@ -28,12 +28,12 @@ RUN apt-get update && \
     make -C /tmp/haproxy install-bin $makeOpts
 
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        liblua5.3-dev && \
+        liblua5.4-dev && \
     rm -rf /var/lib/apt/lists/* && \
     groupadd --gid 99 --system haproxy && \
     useradd \
@@ -61,5 +61,6 @@ STOPSIGNAL SIGUSR1
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 USER haproxy
+WORKDIR /var/lib/haproxy
 
 CMD ["haproxy", "-f", "/usr/local/etc/haproxy/haproxy.cfg"]
