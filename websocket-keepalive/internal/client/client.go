@@ -98,7 +98,7 @@ func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 	m.setEstablished()
 
 	conn := newConn(c)
-	slog.Info("Connected to WebSocket server", "remote_addr", conn.RemoteAddr())
+	slog.Info("Connected to WebSocket server", "remote_addr", conn.RemoteAddr().String())
 	defer conn.Close()
 
 	return conn.handleWebsocketConnection(context.Background(), config, m)
@@ -133,24 +133,24 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 			case <-ticker.C:
 				if waitingForReply {
 					if waitingCount < waitingLimit {
-						slog.Warn("Still waiting for reply", "remote_addr", c.RemoteAddr())
+						slog.Warn("Still waiting for reply", "remote_addr", c.RemoteAddr().String())
 						waitingCount += 1
 						continue
 					}
 					if retryCount < config.MaxPingRetries {
 						retryCount += 1
 						m.incrementRetryCount()
-						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries, "remote_addr", c.RemoteAddr())
+						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries, "remote_addr", c.RemoteAddr().String())
 						err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
 						if err != nil {
-							slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr())
+							slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr().String())
 							return
 						}
 						m.incrementPingTotal()
 						waitingCount = 0
 					} else {
 						// decide the connection is broken.
-						slog.Error("Reached to retry limit. The connection is broken.", "remote_addr", c.RemoteAddr())
+						slog.Error("Reached to retry limit. The connection is broken.", "remote_addr", c.RemoteAddr().String())
 						c.closeCh <- struct{}{}
 						return
 					}
@@ -158,14 +158,14 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 					slog.Debug("Sending ping message", "remote_addr", c.RemoteAddr())
 					err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
 					if err != nil {
-						slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr())
+						slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr().String())
 						return
 					}
 					m.incrementPingTotal()
 				}
 				waitingForReply = true
 			case msg := <-msgCh:
-				slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType), "remote_addr", c.RemoteAddr())
+				slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType), "remote_addr", c.RemoteAddr().String())
 				retryCount = 0
 				waitingForReply = false
 			}
@@ -177,38 +177,37 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 			msgType, message, err := c.ReadMessage()
 			if err != nil {
 				if !websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
-					slog.Info("Received close message", "msg", message, "remote_addr", c.RemoteAddr())
+					// This code will be run in both active and passive close sequence.
+					// But, in active closing, this normal closure error must be a reply message, so do nothing.
+					// When passive close, we must send the reply for its close message, but default close handler will do it, so we also do nothing in this case.
+					slog.Info("Received close message", "msg", message, "remote_addr", c.RemoteAddr().String())
 					c.closeCh <- struct{}{}
-					if !c.closing.Load() {
-						msg := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client")
-						if err := c.WriteControl(websocket.CloseMessage, msg, time.Now().Add(time.Second*5)); err != nil {
-							slog.Error("failed to write the final close message", "error", err, "remote_addr", c.RemoteAddr())
-						}
-					}
 					return
 				}
-				slog.Error("Failed to read message", "error", err, "remote_addr", c.RemoteAddr())
+				slog.Error("Failed to read message", "error", err, "remote_addr", c.RemoteAddr().String())
 				return
 			}
-			slog.Debug("Received message", "message", string(message), "message-type", common.WebSocketMessageType(msgType), "remote_addr", c.RemoteAddr())
+			slog.Debug("Received message", "message", string(message), "message-type", common.WebSocketMessageType(msgType), "remote_addr", c.RemoteAddr().String())
 		}
 	}()
 
 	select {
 	case <-c.ctrlC:
-		slog.Info("Interrupt received, closing connection", "remote_addr", c.RemoteAddr())
+		slog.Info("Interrupt received, closing connection", "remote_addr", c.RemoteAddr().String())
+		// acitve close sequence.
+		// we must send a close message.
 		if err := c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client"), time.Now().Add(time.Second*5)); err != nil {
 			return err
 		}
 		c.closing.Store(true)
 		select {
 		case <-c.closeCh:
-			slog.Info("the final close message was got. closed.", "remote_addr", c.RemoteAddr())
+			slog.Info("the final close message was got. closed.", "remote_addr", c.RemoteAddr().String())
 		case <-time.After(time.Second * 10):
-			slog.Info("dead line for waiting the final close message, close.", "remote_addr", c.RemoteAddr())
+			slog.Info("dead line for waiting the final close message, close.", "remote_addr", c.RemoteAddr().String())
 		}
 	case <-c.closeCh:
-		slog.Info("connection closed.", "remote_addr", c.RemoteAddr())
+		slog.Info("connection closed.", "remote_addr", c.RemoteAddr().String())
 	}
 
 	m.setUnestablished()

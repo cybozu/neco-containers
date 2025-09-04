@@ -183,10 +183,13 @@ func newConn(c *websocket.Conn, remoteAddr string) *conn {
 
 func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 
+	slog.Info("start to handle new connection", "remote_addr", c.remoteAddr)
+
 	closing := atomic.Bool{}
 	closeTimeout := time.Second * 10
 
 	activeClose := make(chan struct{})
+	pasiveClose := make(chan struct{})
 
 	m := initServerMetrics(c.LocalAddr().String(), c.remoteAddr)
 	m.setEstablished()
@@ -203,19 +206,23 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 	})
 
 	defer func() error {
-		// slog.Info("Closing websocket connection", "remote_addr", r.RemoteAddr)
-		closeMessage := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from server")
-		if err := c.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(5*time.Second)); err != nil {
-			slog.Error("failed to write close message", "error", err)
-		}
-		now := time.Now()
-		for !closing.Load() {
-			// waiting for a close message from client
-			if time.Since(now) > closeTimeout {
-				slog.Error("close timeout is expire, close connection")
-				break
+		// When pasive closing, we don't have to send close message maually.
+		// If server routines have already recieved, closing variable must be true.
+		if !closing.Load() {
+			closeMessage := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from server")
+			if err := c.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(5*time.Second)); err != nil {
+				slog.Error("failed to write close message", "error", err)
 			}
-			time.Sleep(time.Millisecond)
+			now := time.Now()
+			for !closing.Load() {
+				// waiting for a close message from client
+				if time.Since(now) > closeTimeout {
+					slog.Error("close timeout is expire, close connection")
+					break
+				}
+				time.Sleep(time.Millisecond)
+			}
+
 		}
 		c.Close()
 		return connections.unregister(c.remoteAddr)
@@ -237,6 +244,7 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 					if !closing.Load() {
 						slog.Info("Connection will be closed from client", "error", err, "messageType", messageType, "message", message)
 						closing.Store(true)
+						pasiveClose <- struct{}{}
 					}
 					return
 				}
@@ -258,6 +266,8 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 		slog.Info("shutdown signal received, closing.", "remote_addr", c.remoteAddr)
 	case <-activeClose:
 		slog.Error("something went wrong, close connection", "remote_addr", c.remoteAddr)
+	case <-pasiveClose:
+		slog.Info("closed passively.", "remote_addr", c.remoteAddr)
 	}
 	m.setUnestablished()
 	return nil
