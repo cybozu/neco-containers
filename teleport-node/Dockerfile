@@ -1,14 +1,14 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG TELEPORT_VERSION=17.7.1
+ARG TELEPORT_VERSION=17.7.3
 
 RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravitational/teleport && \
     cd teleport && \
     make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu-debug:22.04
+FROM ghcr.io/cybozu/ubuntu-debug:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
