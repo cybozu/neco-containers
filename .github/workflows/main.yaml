@@ -285,6 +285,8 @@ jobs:
               target: "config-reloader"
             - dir: "./victoriametrics-datasource"
               container-image: "victoriametrics-datasource"
+            - dir: "./websocket-keepalive"
+              container-image: "websocket-keepalive"
   build_container:
     needs: prepare_matrix
     strategy:
