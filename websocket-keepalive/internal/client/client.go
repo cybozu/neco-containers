@@ -120,56 +120,9 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 
 	// Start ping ticker
 	ticker := time.NewTicker(config.PingInterval)
-	defer ticker.Stop()
-
-	go func() {
-		retryCount := 0
-		waitingForReply := false
-		waitingCount := 0
-		waitingLimit := 1
-
-		for {
-			select {
-			case <-ticker.C:
-				if waitingForReply {
-					if waitingCount < waitingLimit {
-						slog.Warn("Still waiting for reply", "remote_addr", c.RemoteAddr().String())
-						waitingCount += 1
-						continue
-					}
-					if retryCount < config.MaxPingRetries {
-						retryCount += 1
-						m.incrementRetryCount()
-						slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries, "remote_addr", c.RemoteAddr().String())
-						err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
-						if err != nil {
-							slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr().String())
-							return
-						}
-						m.incrementPingTotal()
-						waitingCount = 0
-					} else {
-						// decide the connection is broken.
-						slog.Error("Reached to retry limit. The connection is broken.", "remote_addr", c.RemoteAddr().String())
-						c.closeCh <- struct{}{}
-						return
-					}
-				} else {
-					slog.Debug("Sending ping message", "remote_addr", c.RemoteAddr())
-					err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
-					if err != nil {
-						slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr().String())
-						return
-					}
-					m.incrementPingTotal()
-				}
-				waitingForReply = true
-			case msg := <-msgCh:
-				slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType), "remote_addr", c.RemoteAddr().String())
-				retryCount = 0
-				waitingForReply = false
-			}
-		}
+	defer func() {
+		ticker.Stop()
+		m.setUnestablished()
 	}()
 
 	go func() {
@@ -191,25 +144,60 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 		}
 	}()
 
-	select {
-	case <-c.ctrlC:
-		slog.Info("Interrupt received, closing connection", "remote_addr", c.RemoteAddr().String())
-		// acitve close sequence.
-		// we must send a close message.
-		if err := c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client"), time.Now().Add(time.Second*5)); err != nil {
-			return err
-		}
-		c.closing.Store(true)
+	retryCount := 0
+	waitingForReply := false
+	waitingCount := 0
+	waitingLimit := 1
+
+	for {
 		select {
 		case <-c.closeCh:
-			slog.Info("the final close message was got. closed.", "remote_addr", c.RemoteAddr().String())
-		case <-time.After(time.Second * 10):
-			slog.Info("dead line for waiting the final close message, close.", "remote_addr", c.RemoteAddr().String())
+			slog.Info("connection closed.", "remote_addr", c.RemoteAddr().String())
+			return nil
+		case <-c.ctrlC:
+			slog.Info("Interrupt received, closing connection", "remote_addr", c.RemoteAddr().String())
+			// acitve close sequence.
+			// we must send a close message.
+			if err := c.WriteControl(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from client"), time.Now().Add(time.Second*5)); err != nil {
+				return err
+			}
+			select {
+			case <-c.closeCh:
+				slog.Info("the final close message was got. closed.", "remote_addr", c.RemoteAddr().String())
+			case <-time.After(time.Second * 10):
+				slog.Info("dead line for waiting the final close message, close.", "remote_addr", c.RemoteAddr().String())
+			}
+			return nil
+		case <-ticker.C:
+			if waitingForReply {
+				if waitingCount < waitingLimit {
+					slog.Warn("Still waiting for reply", "remote_addr", c.RemoteAddr().String())
+					waitingCount += 1
+					continue
+				}
+				if retryCount >= config.MaxPingRetries {
+					// decide the connection is broken.
+					slog.Error("Reached to retry limit. The connection is broken.", "remote_addr", c.RemoteAddr().String())
+					c.closeCh <- struct{}{}
+					return nil
+				}
+				retryCount += 1
+				waitingCount = 0
+				m.incrementRetryCount()
+				slog.Debug("Sending ping message for retry", "retry", retryCount, "max-retry", config.MaxPingRetries, "remote_addr", c.RemoteAddr().String())
+			}
+			slog.Debug("Sending ping message", "remote_addr", c.RemoteAddr())
+			err := c.WriteMessage(websocket.PingMessage, []byte("hello from client"))
+			if err != nil {
+				slog.Error("Failed to send ping message", "error", err, "remote_addr", c.RemoteAddr().String())
+				return nil
+			}
+			m.incrementPingTotal()
+			waitingForReply = true
+		case msg := <-msgCh:
+			slog.Debug("Received message", "message", string(msg.message), "message-type", common.WebSocketMessageType(msg.messageType), "remote_addr", c.RemoteAddr().String())
+			retryCount = 0
+			waitingForReply = false
 		}
-	case <-c.closeCh:
-		slog.Info("connection closed.", "remote_addr", c.RemoteAddr().String())
 	}
-
-	m.setUnestablished()
-	return nil
 }

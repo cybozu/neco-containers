@@ -8,11 +8,9 @@ import (
 	"os"
 	"os/signal"
 	"sync"
-	"sync/atomic"
 	"syscall"
 	"time"
 
-	"github.com/cybozu/neco-containers/websocket-keepalive/internal/common"
 	"github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 	"github.com/gorilla/websocket"
 )
@@ -185,11 +183,8 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 
 	slog.Info("start to handle new connection", "remote_addr", c.remoteAddr)
 
-	closing := atomic.Bool{}
+	done := make(chan struct{})
 	closeTimeout := time.Second * 10
-
-	activeClose := make(chan struct{})
-	pasiveClose := make(chan struct{})
 
 	m := initServerMetrics(c.LocalAddr().String(), c.remoteAddr)
 	m.setEstablished()
@@ -206,68 +201,44 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 	})
 
 	defer func() error {
-		// When pasive closing, we don't have to send close message maually.
-		// If server routines have already recieved, closing variable must be true.
-		if !closing.Load() {
-			closeMessage := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from server")
-			if err := c.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(5*time.Second)); err != nil {
-				slog.Error("failed to write close message", "error", err)
-			}
-			now := time.Now()
-			for !closing.Load() {
-				// waiting for a close message from client
-				if time.Since(now) > closeTimeout {
-					slog.Error("close timeout is expire, close connection")
-					break
-				}
-				time.Sleep(time.Millisecond)
-			}
-
-		}
 		c.Close()
 		return connections.unregister(c.remoteAddr)
 	}()
 
 	go func() {
+		defer close(done)
 		// Message reading loop
 		for {
 			messageType, message, err := c.ReadMessage()
 			if err != nil {
-				if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
-					if websocket.IsUnexpectedCloseError(err, websocket.CloseAbnormalClosure) {
-						slog.Error("Got websocket abnormal closure", "error", err)
-					} else {
-						slog.Error("WebSocket error", "error", err)
-					}
-					activeClose <- struct{}{}
-				} else {
-					if !closing.Load() {
-						slog.Info("Connection will be closed from client", "error", err, "messageType", messageType, "message", message)
-						closing.Store(true)
-						pasiveClose <- struct{}{}
-					}
+				if websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+					slog.Info("Connection will be closed normally", "error", err, "remote_addr", c.remoteAddr)
 					return
 				}
-			}
-			switch messageType {
-			case websocket.TextMessage:
-				slog.Debug("Received text message", "message", string(message), "remote_addr", c.remoteAddr)
-			case websocket.CloseMessage:
-				slog.Info("Received close message", "message", string(message), "remote_addr", c.remoteAddr)
+				if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure) {
+					slog.Error("Got websocket abnormal closure", "error", err, "remote_addr", c.remoteAddr)
+					return
+				}
+				slog.Error("Websocket error", "error", err, "messageType", messageType, "message", string(message), "remote_addr", c.remoteAddr)
 				return
-			default:
-				slog.Debug("Received message", "type", common.WebSocketMessageType(messageType), "remote_addr", c.remoteAddr)
 			}
 		}
 	}()
 
 	select {
+	case <-done:
+		slog.Info("connection closed.", "remote_addr", c.remoteAddr)
 	case <-c.serverCloseCh:
 		slog.Info("shutdown signal received, closing.", "remote_addr", c.remoteAddr)
-	case <-activeClose:
-		slog.Error("something went wrong, close connection", "remote_addr", c.remoteAddr)
-	case <-pasiveClose:
-		slog.Info("closed passively.", "remote_addr", c.remoteAddr)
+		closeMessage := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from server")
+		if err := c.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(5*time.Second)); err != nil {
+			slog.Error("failed to write close message", "error", err)
+			return nil
+		}
+		select {
+		case <-done:
+		case <-time.After(closeTimeout):
+		}
 	}
 	m.setUnestablished()
 	return nil
