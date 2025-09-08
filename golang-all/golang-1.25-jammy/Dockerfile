@@ -4,7 +4,7 @@ FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:22.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG TARGETARCH
-ARG GO_VERSION=1.22.12
+ARG GO_VERSION=1.25.1
 
 ENV GOARCH=${TARGETARCH}
 ENV GOPATH=/go
@@ -12,7 +12,7 @@ ENV PATH=/go/bin:/usr/local/go/bin:"$PATH"
 
 RUN rm -rf /usr/local/go \
     && curl -sfL https://dl.google.com/go/go${GO_VERSION}.linux-${GOARCH}.tar.gz \
-    | tar -x -z -C /usr/local -f - \
+        | tar -x -z -C /usr/local -f - \
     && mkdir -p /go/src \
     && GOBIN=/usr/local/bin go install golang.org/x/tools/cmd/goimports@latest \
     && GOBIN=/usr/local/bin go install golang.org/x/lint/golint@latest \

@@ -9,25 +9,26 @@ defaults:
 jobs:
   update-go-versions:
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     env:
-      GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
       UBUNTU_VERSIONS: "22.04 24.04"
-      GO_MAJOR_VERSIONS: "1.23 1.24"
+      GO_MAJOR_VERSIONS: "1.24 1.25"
     permissions:
-      contents: write
-      pull-requests: write
+      contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
+        with:
+            persist-credentials: "false"
       - name: Check for Go version updates
         id: check-updates
         run: |
           NEED_UPDATE=0
           touch ./update-body.txt
-          
+
           # Get latest stable Go versions
           GO_STABLE_VERSIONS=$(curl -sSLf https://go.dev/dl/?mode=json | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "")] | unique | .[]')
-          if [ -z "${GO_STABLE_VERSIONS}" ]; then
-            echo "::error::Failed to fetch stable Go versions"
+          if [[ -z "${GO_STABLE_VERSIONS}" ]]; then
+            echo "::error:: Failed to fetch stable Go versions"
             exit 1
           fi
 
@@ -37,7 +38,7 @@ jobs:
           # Check for differences between GO_MAJOR_VERSIONS and GO_STABLE_MAJOR_VERSIONS
           DIFF=$(comm -13 <(printf "%s\n" ${GO_MAJOR_VERSIONS} | sort -V) <(printf "%s\n" ${GO_STABLE_MAJOR_VERSIONS} | sort -V))
 
-          if [ -n "${DIFF}" ]; then
+          if [[ -n "${DIFF}" ]]; then
             echo "::warning:: Differences detected in major Go versions: ${DIFF}"
           fi
 
@@ -48,60 +49,66 @@ jobs:
             local latest_version=$3
             local dockerfile_path="golang-all/golang-${go_major}-${codename}/Dockerfile"
             local tag_path="golang-all/golang-${go_major}-${codename}/TAG"
-            if [ ! -f "${dockerfile_path}" ] || [ ! -f "${tag_path}" ]; then
-              echo "::warning::Files not found for Go ${go_major} on Ubuntu ${codename}"
+
+            if [[ ! -f "${dockerfile_path}" ]] || [[ ! -f "${tag_path}" ]]; then
+              echo "::warning:: Files not found for Go ${go_major} on Ubuntu ${codename}"
               return
             fi
-            local current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
-            if [ "${current_version}" != "${latest_version}" ]; then
+
+            local current_version
+            current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
+
+            if [[ "${current_version}" != "${latest_version}" ]]; then
               NEED_UPDATE=1
               # Update Dockerfile
               sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
               # Update TAG file
               echo "${latest_version}.1_${codename}" > "${tag_path}"
-              
+
               echo "- Update Go ${go_major} for Ubuntu ${ubuntu_version} (${codename}) from ${current_version} to ${latest_version}" >> ./update-body.txt
             fi
           }
 
           # Assignment of codename
           for ubuntu_version in ${UBUNTU_VERSIONS}; do
-            if [ "${ubuntu_version}" = "22.04" ]; then
+            if [[ "${ubuntu_version}" = "22.04" ]]; then
               CODENAME=jammy
-            elif [ "${ubuntu_version}" = "24.04" ]; then
+            elif [[ "${ubuntu_version}" = "24.04" ]]; then
               CODENAME=noble
             else
-              echo "::error::Unknown Ubuntu version: ${ubuntu_version}"
+              echo "::error:: Unknown Ubuntu version: ${ubuntu_version}"
               continue
             fi
-            
+
             for go_major in ${GO_MAJOR_VERSIONS}; do
               # Find matching version from stable versions
               LATEST_VERSION=$(echo "${GO_STABLE_VERSIONS}" | grep "^${go_major}" | head -n1)
-              if [ -z "${LATEST_VERSION}" ]; then
-                echo "::warning::No matching stable version found for Go ${go_major}"
+              if [[ -z "${LATEST_VERSION}" ]]; then
+                echo "::warning:: No matching stable version found for Go ${go_major}"
                 continue
               fi
-              
+
               update_files "${go_major}" "${CODENAME}" "${LATEST_VERSION}"
             done
           done
-          
-          echo "NEED_UPDATE=${NEED_UPDATE}" >> $GITHUB_ENV
+
+          echo "NEED_UPDATE=${NEED_UPDATE}" >> $GITHUB_OUTPUT
       - name: Create PR
-        if: env.NEED_UPDATE == '1'
+        if: steps.check-updates.NEED_UPDATE == '1'
+        env:
+          GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
         run: |
           # Get latest version numbers for branch name and PR title
           LATEST_VERSIONS=$(grep -oE '[0-9]+\.[0-9]+\.[0-9]+' ./update-body.txt | sort -V | tail -n1)
-          
+
           git config --global user.email "neco@cybozu.com"
           git config --global user.name "cybozu-neco"
-          
+
           BRANCH=update-go-${LATEST_VERSIONS}
           git checkout -b ${BRANCH}
           git add -u
           git commit -m "Update Go versions to ${LATEST_VERSIONS}"
           git push origin ${BRANCH}
-          
+
           PR_TITLE="Update Go versions to ${LATEST_VERSIONS}"
           gh pr create --title "${PR_TITLE}" --body-file ./update-body.txt
