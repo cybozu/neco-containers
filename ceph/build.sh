@@ -31,10 +31,6 @@ apt-get install -y curl
 ./install-deps.sh
 apt-get install -y python3-routes
 
-# Addition of debian pkg in ceph exporter was omitted in squid.
-# https://github.com/ceph/ceph/pull/56541
-patch -p1 < ${CEPH_DIR}/exporter.patch
-
 # Prebuild ceph source to generate files in `src/pybind/mgr/dashboard/frontend/dist` needed by CMake
 ./make-dist
 
