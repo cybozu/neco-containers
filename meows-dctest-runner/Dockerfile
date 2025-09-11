@@ -19,7 +19,10 @@ ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-private/neco-apps
 # See https://bird.network.cz/pipermail/bird-users/2019-December/014075.html
 COPY include-bird /etc/dpkg/dpkg.cfg.d/
 
-RUN apt-get update \
+RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list \
+    && apt-get update \
     && apt-get -y install --no-install-recommends \
             bash-completion \
             bird2 \
@@ -29,6 +32,7 @@ RUN apt-get update \
             dnsmasq \
             fakeroot \
             freeipmi-tools \
+            gh \
             git \
             iproute2 \
             iptables \
