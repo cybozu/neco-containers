@@ -144,10 +144,11 @@ func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config, m 
 		}
 	}()
 
+	const waitingLimit = 1
+
 	retryCount := 0
 	waitingForReply := false
 	waitingCount := 0
-	waitingLimit := 1
 
 	for {
 		select {
