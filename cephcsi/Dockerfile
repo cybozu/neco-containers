@@ -1,18 +1,18 @@
 # ceph-csi container
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
-ARG BASE_IMAGE="ghcr.io/cybozu/ceph:19.2.2.1"
+ARG BASE_IMAGE="ghcr.io/cybozu/ceph:19.2.3.1"
 
 FROM ${BASE_IMAGE} as updated_base
 
-RUN mkdir /etc/selinux || true && touch /etc/selinux/config
+RUN mkdir -p /etc/selinux && touch /etc/selinux/config
 
 FROM updated_base as builder
 
 LABEL stage="build"
 
 ARG CSI_IMAGE_NAME=ghcr.io/cybozu/cephcsi
-ARG CSI_IMAGE_VERSION=3.14.0
+ARG CSI_IMAGE_VERSION=3.14.2
 ARG GO_ARCH
 ARG SRC_DIR
 ARG GIT_COMMIT
