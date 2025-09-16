@@ -2,7 +2,7 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-resizer
-ARG VERSION=1.13.1
+ARG VERSION=1.13.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
