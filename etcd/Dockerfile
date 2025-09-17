@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG ETCD_VERSION=3.5.21
+ARG ETCD_VERSION=3.6.4
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/etcd-io/etcd/archive/v${ETCD_VERSION}.tar.gz | \
@@ -11,7 +11,7 @@ RUN curl -sSLf https://github.com/etcd-io/etcd/archive/v${ETCD_VERSION}.tar.gz |
     && mv etcd-${ETCD_VERSION} etcd
 
 WORKDIR /work/etcd
-RUN ./build.sh
+RUN ./scripts/build.sh
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
