@@ -55,7 +55,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
 - [haproxy](#haproxy)
-- [heartbeat](#heartbeat)
 - [hubble](#hubble)
 - [hubble-relay](#hubble-relay)
 - [hubble-ui](#hubble-ui)
@@ -638,15 +637,6 @@ Ignore!!!
    - v2.6.x: <https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile>
 2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in <http://www.haproxy.org/download>
 3. Update `BRANCH` and `TAG` files.
-
-## heartbeat
-
-![Regular Update](./regular_update.svg)
-
-Only the base image and module dependency should be updated.
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## hubble
 
