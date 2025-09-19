@@ -61,7 +61,9 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
 
 RUN git clone --depth=1 -b v${ALLOY_VERSION} https://github.com/grafana/alloy /work/alloy
 COPY force-flush-partial-line.patch /work/
+COPY periodic-idle-close.patch /work/
 RUN cd alloy && patch -p1 < ../force-flush-partial-line.patch
+RUN cd alloy && patch -p1 < ../periodic-idle-close.patch
 
 # we do not add `builtinassets` tag because we do not require alloy ui.
 ENV GO_TAGS="netgo promtail_journal_enabled"

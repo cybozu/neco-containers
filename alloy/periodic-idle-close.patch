@@ -1,0 +1,53 @@
+diff --git a/internal/component/common/loki/client/client.go b/internal/component/common/loki/client/client.go
+index b27dcb519..fffddc67f 100644
+--- a/internal/component/common/loki/client/client.go
++++ b/internal/component/common/loki/client/client.go
+@@ -7,6 +7,7 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"io"
++	"math/rand"
+ 	"net/http"
+ 	"strconv"
+ 	"sync"
+@@ -255,6 +256,11 @@ func (c *client) run() {
+ 
+ 	maxWaitCheck := time.NewTicker(maxWaitCheckFrequency)
+ 
++	idleCloseInterval := time.Minute * 20
++	idleCloseOffset := time.Minute * 5
++	// To distribute the first timing, give random duration first and fixed duration later.
++	periodicIdleClose := time.NewTicker(idleCloseOffset + time.Duration(rand.Int63n(int64(idleCloseInterval))))
++
+ 	defer func() {
+ 		maxWaitCheck.Stop()
+ 		// Send all pending batches
+@@ -262,6 +268,8 @@ func (c *client) run() {
+ 			c.sendBatch(tenantID, batch)
+ 		}
+ 
++		periodicIdleClose.Stop()
++
+ 		c.wg.Done()
+ 	}()
+ 
+@@ -327,6 +335,19 @@ func (c *client) run() {
+ 				c.sendBatch(tenantID, batch)
+ 				delete(batches, tenantID)
+ 			}
++		case <-periodicIdleClose.C:
++			// After Loki distributors are rollout-restarted, the number of connections from alloys may be unbalanced.
++			// To avoid this situation keeping on, reconnect to a randomly chosen distributor periodically.
++			tp, ok := c.client.Transport.(*http.Transport)
++			if !ok {
++				level.Warn(c.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is not a http.Transport")
++			} else if tp == nil {
++				level.Warn(c.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is nil")
++			} else {
++				level.Info(c.logger).Log("msg", "closing idle connections to loki")
++				tp.CloseIdleConnections()
++			}
++			periodicIdleClose.Reset(idleCloseInterval)
+ 		}
+ 	}
+ }
