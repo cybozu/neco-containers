@@ -75,7 +75,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [promtail](#promtail)
-- [promtail-debug](#promtail-debug)
 - [pushgateway](#pushgateway)
 - [pyroscope](#pyroscope)
 - [redis](#redis)
@@ -897,10 +896,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Update `LOKI_VERSION` in `Dockerfile`.
 2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 3. Update `TAG` file.
-
-## promtail-debug
-
-TBD
 
 ## pushgateway
 
