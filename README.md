@@ -62,5 +62,22 @@ If the upstream version is "1.2.0-beta.3", the image tag must begin with "1.2.0-
 If the image is built for an upstream version X.Y.Z, the branch name _should_ be X.Y
 for X > 0, or "0" for X == 0.
 
+### BRANCH file format
+
+`BRANCH` file can contain one or more branch names, each separated by a newline.
+
+Example:
+
+```
+1.2
+latest
+```
+
+`latest` is not follow the rules described in [Branch naming](#branch-naming).
+In such cases, if the file `NO_TAG_BRANCH_CONSISTENCY` exists in the directory, the consistency check is skipped.
+
+The ability to specify multiple branch names is provided only for limited use cases such as the `latest` tag.
+Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
+
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/
