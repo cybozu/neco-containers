@@ -342,26 +342,26 @@ In this situation, you might encounter a security issue in the version currently
 When you want to create a new image with patches to the specific version of Ceph,
 follow these steps.
 
-1. Create a branch with the name `ceph-vX.Y.Z` from the commit you want, and push it.
+1. Create a branch with the name `maintenance/ceph-vX.Y.Z` from the commit you want, and push it.
    - You must follow the branch naming convention to activate the image build and push jobs.
    - If the branch already exists, you can skip this step.
-2. Create a PR to the branch `ceph-vX.Y.Z`, and merge it.
-3. Build a docker image for the branch `ceph-vX.Y.Z` by running [`Build Ceph image for a past version`](https://github.com/cybozu/neco-containers/actions/workflows/ceph.yaml) workflow manually.
+2. Create a PR to the branch `maintenance/ceph-vX.Y.Z`, and merge it.
+3. Build a docker image for the branch `maintenance/ceph-vX.Y.Z` by running [`Build Ceph image for a past version`](https://github.com/cybozu/neco-containers/actions/workflows/ceph.yaml) workflow manually.
 
 ```mermaid
 gitGraph
    commit id: "commit a"
    commit id: "commit b"
    commit id: "support Ceph v18.2.4"
-   branch ceph-v18.2.4
-   checkout ceph-v18.2.4
+   branch maintenance/ceph-v18.2.4
+   checkout maintenance/ceph-v18.2.4
    branch bugfix-ceph-v18.2.4
    checkout main
    commit id: "commit c"
    commit id: "support Ceph v19.2.1"
    checkout bugfix-ceph-v18.2.4
    commit id: "bugfix"
-   checkout ceph-v18.2.4
+   checkout maintenance/ceph-v18.2.4
    merge bugfix-ceph-v18.2.4
 ```
 

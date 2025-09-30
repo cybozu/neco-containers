@@ -9,8 +9,8 @@ jobs:
     - uses: actions/checkout@v4
     - name: Check branch name
       run: |
-        if ! echo "${{ github.ref_name }}" | grep -q -E '^(ceph-v.*)$'; then
-          echo "This action only runs on 'ceph-v*' branches."
+        if ! echo "${{ github.ref_name }}" | grep -q -E '^(maintenance/ceph-v.*)$'; then
+          echo "This action only runs on 'maintenance/ceph-v*' branches."
           exit 1
         fi
     - name: Build ceph image
