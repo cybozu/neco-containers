@@ -346,6 +346,7 @@ follow these steps.
    - You must follow the branch naming convention to activate the image build and push jobs.
    - If the branch already exists, you can skip this step.
 2. Create a PR to the branch `ceph-vX.Y.Z`, and merge it.
+3. Build a docker image for the branch `ceph-vX.Y.Z` by running [`Build Ceph image for a past version`](https://github.com/cybozu/neco-containers/actions/workflows/ceph.yaml) workflow manually.
 
 ```mermaid
 gitGraph

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - "main"
-      - "ceph-v*"
 jobs:
   prepare_matrix:
     runs-on: ubuntu-22.04
