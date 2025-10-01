@@ -4,9 +4,6 @@ inputs:
   github_token:
     description: "GitHub Token"
     required: true
-  version:
-    description: "ceph version"
-    required: true
 runs:
   using: composite
   steps:
@@ -24,7 +21,13 @@ runs:
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
       run: |
-        sudo ./build.sh ${{ inputs.version }}
+        TAG_CONTENT=$(cat TAG)
+        if ! echo "${TAG_CONTENT}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+          echo "Invalid TAG file format: ${TAG_CONTENT}"
+          exit 1
+        fi
+        VERSION=$(echo "${TAG_CONTENT}" | cut -d '.' -f1-3)
+        sudo ./build.sh ${VERSION}
         sudo mv src/workspace .
       working-directory: ceph
     - name: Build and push
