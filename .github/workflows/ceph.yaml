@@ -1,0 +1,19 @@
+name: Build Ceph image for a past version
+on:
+  workflow_dispatch:
+
+jobs:
+  build_ceph:
+    runs-on: neco-containers-ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - name: Check branch name
+      run: |
+        if ! echo "${{ github.ref_name }}" | grep -q -E '^(maintenance/ceph-v.*)$'; then
+          echo "This action only runs on 'maintenance/ceph-v*' branches."
+          exit 1
+        fi
+    - name: Build ceph image
+      uses: ./.github/actions/build_ceph
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
