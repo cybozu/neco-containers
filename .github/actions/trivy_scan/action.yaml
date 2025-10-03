@@ -28,8 +28,7 @@ runs:
       env:
         YAMORY_ACCESS_TOKEN: ${{ inputs.yamory_token }}
       run: |
-        echo
-        echo "scanning ${{ inputs.tag }} ..."
+        echo "Scanning ${{ inputs.tag }} ..."
         if [[ "${{ inputs.tag }}" == "ghcr.io/cybozu/golang:"* ]]; then
           dir=${{ inputs.dir }}
           BRANCH=$(cat $dir/BRANCH)

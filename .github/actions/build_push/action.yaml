@@ -88,6 +88,7 @@ runs:
           make -C ${{ inputs.dir }} $i
         done
     - name: Push
+      id: push
       if: ${{ steps.prepare.outputs.push }}
       uses: docker/build-push-action@v6
       with:
@@ -99,11 +100,15 @@ runs:
           ${{ steps.prepare.outputs.tag }}
           ${{ steps.prepare.outputs.branch }}
         target: ${{ inputs.target }}
-    - name: Scan images
-      if: ${{ steps.prepare.outputs.scan }}
-      uses: ./.github/actions/trivy_scan
-      with:
-        dir: ${{ inputs.dir }}
-        container-image: ${{ inputs.container-image }}
-        tag: ${{ steps.prepare.outputs.tag }}
-        yamory_token: ${{ inputs.yamory_token }}
+    - name: Notify push failure to Slack
+      if: ${{ steps.prepare.outputs.push && failure() && steps.push.conclusion == 'failure' }}
+      shell: bash
+      run: |
+        SLACK_WEBHOOK_URL="${{ env.SLACK_WEBHOOK_URL }}"
+        if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+          curl -X POST -H 'Content-type: application/json' \
+            --data "{\"text\":\"🚨 Container image push failed: ${{ inputs.container-image }} - Please rerun the workflow to retry. Repository: ${{ github.repository }}, Run ID: ${{ github.run_id }}\"}" \
+            "$SLACK_WEBHOOK_URL"
+        else
+          echo "::warning::Push failed for ${{ inputs.container-image }}. SLACK_WEBHOOK_URL not configured."
+        fi

@@ -1,0 +1,51 @@
+name: Manual Image Scan
+on:
+  workflow_dispatch:
+    inputs:
+      container-image:
+        description: 'Container image to scan (e.g., "admission", "alertmanager")'
+        required: true
+        type: string
+      tag:
+        description: 'Image tag to scan (optional - if not provided, will use latest tag from main branch)'
+        required: false
+        type: string
+
+jobs:
+  scan:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare scan parameters
+        id: prepare-scan
+        uses: ./.github/actions/prepare_build_params
+        with:
+          dir: ./${{ github.event.inputs.container-image }}
+          container-image: ${{ github.event.inputs.container-image }}
+          request-scan: "true"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Scan image
+        uses: ./.github/actions/trivy_scan
+        with:
+          dir: ./${{ github.event.inputs.container-image }}
+          container-image: ${{ github.event.inputs.container-image }}
+          tag: ${{ github.event.inputs.tag || steps.prepare-scan.outputs.tag }}
+          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+      - name: Notify scan completion to Slack
+        if: always()
+        shell: bash
+        run: |
+          SLACK_WEBHOOK_URL="${{ secrets.SLACK_WEBHOOK_URL }}"
+          if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+            if [[ "${{ job.status }}" == "success" ]]; then
+              MESSAGE="✅ Manual image scan completed successfully: ${{ github.event.inputs.container-image }}"
+            else
+              MESSAGE="❌ Manual image scan failed: ${{ github.event.inputs.container-image }}"
+            fi
+            
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{\"text\":\"$MESSAGE\"}" \
+              "$SLACK_WEBHOOK_URL"
+          else
+            echo "::notice::SLACK_WEBHOOK_URL not configured. Scan completed with status: ${{ job.status }}"
+          fi

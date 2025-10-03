@@ -277,6 +277,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       go-version: "1.24.5"
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup build environment
@@ -309,6 +310,47 @@ jobs:
           request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
 
+  scan_images:
+    needs: [prepare_matrix, build_container]
+    if: ${{ needs.build_container.result == 'success' }}
+    strategy:
+      matrix:
+        job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
+    runs-on: ubuntu-22.04
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare scan parameters
+        id: prepare-scan
+        uses: ./.github/actions/prepare_build_params
+        with:
+          dir: ${{ matrix.job.dir }}
+          container-image: ${{ matrix.job.container-image }}
+          request-scan: ${{ matrix.job.request-scan }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Scan container image
+        id: scan
+        if: ${{ steps.prepare-scan.outputs.scan }}
+        uses: ./.github/actions/trivy_scan
+        with:
+          dir: ${{ matrix.job.dir }}
+          container-image: ${{ matrix.job.container-image }}
+          tag: ${{ steps.prepare-scan.outputs.tag }}
+          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+      - name: Notify scan failure to Slack
+        if: ${{ steps.prepare-scan.outputs.scan && failure() && steps.scan.conclusion == 'failure' }}
+        shell: bash
+        run: |
+          SLACK_WEBHOOK_URL="${{ env.SLACK_WEBHOOK_URL }}"
+          if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{\"text\":\"🔍 Image scanning failed: ${{ matrix.job.container-image }} - Please use the manual scan workflow to retry. Repository: ${{ github.repository }}, Run ID: ${{ github.run_id }}\"}" \
+              "$SLACK_WEBHOOK_URL"
+          else
+            echo "::warning::Scan failed for ${{ matrix.job.container-image }}. SLACK_WEBHOOK_URL not configured."
+          fi
+
   build_envoy:
     runs-on: neco-containers-ubuntu-22.04
     steps:
@@ -333,6 +375,7 @@ jobs:
     runs-on: neco-containers-ubuntu-22.04
     env:
       go-version: "1.23.3"
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup build environment
@@ -350,3 +393,40 @@ jobs:
           make-targets: "checkout status test-e2e-setup test-e2e-upgrade-inotify"
           make-post-targets: "test test-e2e"
           request-scan: "true"
+
+  scan_cilium:
+    needs: [build_cilium]
+    if: ${{ needs.build_cilium.result == 'success' }}
+    runs-on: ubuntu-22.04
+    env:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare scan parameters
+        id: prepare-scan
+        uses: ./.github/actions/prepare_build_params
+        with:
+          dir: cilium
+          container-image: cilium
+          request-scan: "true"
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Scan cilium image
+        id: scan
+        uses: ./.github/actions/trivy_scan
+        with:
+          dir: cilium
+          container-image: cilium
+          tag: ${{ steps.prepare-scan.outputs.tag }}
+          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+      - name: Notify scan failure to Slack
+        if: ${{ failure() && steps.scan.conclusion == 'failure' }}
+        shell: bash
+        run: |
+          SLACK_WEBHOOK_URL="${{ env.SLACK_WEBHOOK_URL }}"
+          if [[ -n "$SLACK_WEBHOOK_URL" ]]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data "{\"text\":\"🔍 Cilium image scanning failed - Please use the manual scan workflow to retry. Repository: ${{ github.repository }}, Run ID: ${{ github.run_id }}\"}" \
+              "$SLACK_WEBHOOK_URL"
+          else
+            echo "::warning::Scan failed for cilium. SLACK_WEBHOOK_URL not configured."
+          fi
