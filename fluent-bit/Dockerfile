@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
 
-ARG FLUENT_BIT_VERSION=4.0.3
+ARG FLUENT_BIT_VERSION=4.1.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -36,7 +36,8 @@ RUN apt-get update && apt-get -y install --no-install-recommends \
     && rm -rf /tmp/fluent-bit/build/*
 
 WORKDIR /tmp/fluent-bit/build/
-RUN cmake -DFLB_RELEASE=On \
+RUN cmake -DFLB_SIMD=On \
+          -DFLB_RELEASE=On \
           -DFLB_TRACE=Off \
           -DFLB_JEMALLOC=On \
           -DFLB_TLS=On \
