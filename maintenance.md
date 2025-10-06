@@ -976,6 +976,8 @@ The libsystemd version should be the same with the one running on [the stable Fl
 - csi-provisioner
 - csi-resizer
 - csi-snapshotter
+- csi-addons-controller
+- csi-addons-sidecar
 
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the `CEPH_VERSION` of the upstream Makefile. If the version is changed, update the base image version in our `Dockerfile`.
