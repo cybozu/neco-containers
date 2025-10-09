@@ -94,7 +94,7 @@ jobs:
 
           echo "NEED_UPDATE=${NEED_UPDATE}" >> $GITHUB_OUTPUT
       - name: Create PR
-        if: steps.check-updates.NEED_UPDATE == '1'
+        if: steps.check-updates.outputs.NEED_UPDATE == '1'
         env:
           GH_TOKEN: ${{ secrets.CYBOZU_NECO_PAT }}
         run: |
