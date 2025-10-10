@@ -14,7 +14,8 @@ jobs:
       UBUNTU_VERSIONS: "22.04 24.04"
       GO_MAJOR_VERSIONS: "1.24 1.25"
     permissions:
-      contents: read
+      # write permission is required for "git push".
+      contents: write
     steps:
       - uses: actions/checkout@v5
         with:
