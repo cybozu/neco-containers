@@ -8,6 +8,7 @@ import (
 
 type SquidClient interface {
 	GetCounters() (io.ReadCloser, error)
+	GetInfo() (io.ReadCloser, error)
 	GetServiceTimes() (io.ReadCloser, error)
 }
 
@@ -27,6 +28,14 @@ func NewSquidClient(config *Config) *squidClient {
 
 func (c *squidClient) GetCounters() (io.ReadCloser, error) {
 	resp, err := c.client.Get(fmt.Sprintf("http://%s:%d/squid-internal-mgr/counters", c.Host, c.Port))
+	if err != nil {
+		return nil, err
+	}
+	return resp.Body, err
+}
+
+func (c *squidClient) GetInfo() (io.ReadCloser, error) {
+	resp, err := c.client.Get(fmt.Sprintf("http://%s:%d/squid-internal-mgr/info", c.Host, c.Port))
 	if err != nil {
 		return nil, err
 	}

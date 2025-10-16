@@ -27,6 +27,17 @@ func serverFail(step string) *httptest.Server {
 			} else {
 				w.Write([]byte(""))
 			}
+		case "info": // close connection to simulate failure
+			if r.URL.Path == "/squid-internal-mgr/info" {
+				c, _, err := w.(http.Hijacker).Hijack()
+				if err != nil {
+					log.Fatal(err)
+				}
+				c.Close()
+
+			} else {
+				w.Write([]byte(""))
+			}
 		case "service_times": // close connection to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/service_times" {
 				c, _, err := w.(http.Hijacker).Hijack()

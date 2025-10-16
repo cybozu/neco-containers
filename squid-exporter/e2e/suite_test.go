@@ -87,6 +87,41 @@ var _ = Describe("squid-exporter e2e test", func() {
 		Expect(numPrometheusMetrics).NotTo(BeZero())
 		Expect(numSquidMetrics).To(Equal(numPrometheusMetrics))
 
+		By("checking info metrics")
+		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:9100/metrics")
+		Expect(err).NotTo(HaveOccurred())
+
+		expected := map[string]bool{
+			`squid_info_cache_hit_requests{duration_minutes="5"}`:         true,
+			`squid_info_cache_hit_requests{duration_minutes="60"}`:        true,
+			`squid_info_cache_hit_bytes{duration_minutes="5"}`:            true,
+			`squid_info_cache_hit_bytes{duration_minutes="60"}`:           true,
+			`squid_info_cache_memory_hit_requests{duration_minutes="5"}`:  true,
+			`squid_info_cache_memory_hit_requests{duration_minutes="60"}`: true,
+			`squid_info_cache_disk_hit_requests{duration_minutes="5"}`:    true,
+			`squid_info_cache_disk_hit_requests{duration_minutes="60"}`:   true,
+			"squid_info_cache_disk_swap_capacity":                         true,
+			"squid_info_cache_memory_swap_capacity":                       true,
+			"squid_info_filefd_available":                                 true,
+			"squid_info_filefd_maximum":                                   true,
+			"squid_info_filefd_queued":                                    true,
+			"squid_info_filefd_reserved":                                  true,
+			"squid_info_filefd_store_disk":                                true,
+			"squid_info_filefd_used":                                      true,
+			"squid_info_filefd_used_peak":                                 true,
+		}
+
+		reader = bufio.NewScanner(bytes.NewReader(res))
+		for reader.Scan() {
+			line := reader.Text()
+			if before, _, found := strings.Cut(line, " "); found {
+				if _, ok := expected[before]; ok {
+					delete(expected, before)
+				}
+			}
+		}
+		Expect(expected).To(BeEmpty())
+
 		By("checking number of service_times and metrics")
 		res, err = kubectl(nil, "exec", "e2e", "-c", "squid", "--", "curl", "-s", "localhost:3128/squid-internal-mgr/service_times")
 		Expect(err).NotTo(HaveOccurred())
