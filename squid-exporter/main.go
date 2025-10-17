@@ -10,6 +10,7 @@ import (
 )
 
 func requestHandler(logger *slog.Logger, squidClient SquidClient) {
+	// counters
 	counters, err := squidClient.GetCounters()
 	if err != nil {
 		logger.Error("error getting squid counters", "err", err)
@@ -20,6 +21,20 @@ func requestHandler(logger *slog.Logger, squidClient SquidClient) {
 		logger.Error("failed to convert squid counters", "err", err)
 		return
 	}
+
+	// info
+	info, err := squidClient.GetInfo()
+	if err != nil {
+		logger.Error("error getting squid info", "err", err)
+		return
+	}
+	err = ConvertSquidInfo(logger, info)
+	if err != nil {
+		logger.Error("failed to convert squid info", "err", err)
+		return
+	}
+
+	// service_times
 	serviceTimes, err := squidClient.GetServiceTimes()
 	if err != nil {
 		logger.Error("error getting squid service_times", "err", err)

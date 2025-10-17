@@ -75,6 +75,31 @@ func TestGetGetCounters(t *testing.T) {
 	assert.Equal(t, "/squid-internal-mgr/counters", string(resp))
 }
 
+func TestGetInfo(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte(r.URL.String()))
+	}))
+	u, err := url.Parse(ts.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	port, err := strconv.Atoi(u.Port())
+	if err != nil {
+		t.Fatal(err)
+	}
+	conf := &Config{
+		SquidHost: u.Hostname(),
+		SquidPort: port,
+	}
+	s := NewSquidClient(conf)
+
+	res, err := s.GetInfo()
+	assert.NoError(t, err)
+	resp, err := io.ReadAll(res)
+	assert.NoError(t, err)
+	assert.Equal(t, "/squid-internal-mgr/info", string(resp))
+}
+
 func TestGetServiceTimes(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(r.URL.String()))
