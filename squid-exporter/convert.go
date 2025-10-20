@@ -95,17 +95,17 @@ func ConvertSquidInfo(logger *slog.Logger, body io.ReadCloser) error {
 			switch title {
 			// Cache information for squid:
 			case "Hits as % of all requests":
-				err = fnMinutes("squid_info_cache_hit_requests", value)
+				err = fnMinutes("squid_info_cache_hit_requests_ratio", value)
 			case "Hits as % of bytes sent":
-				err = fnMinutes("squid_info_cache_hit_bytes", value)
+				err = fnMinutes("squid_info_cache_hit_bytes_ratio", value)
 			case "Memory hits as % of hit requests":
-				err = fnMinutes("squid_info_cache_memory_hit_requests", value)
+				err = fnMinutes("squid_info_cache_memory_hit_requests_ratio", value)
 			case "Disk hits as % of hit requests":
-				err = fnMinutes("squid_info_cache_disk_hit_requests", value)
+				err = fnMinutes("squid_info_cache_disk_hit_requests_ratio", value)
 			case "Storage Swap capacity":
-				err = fnUsedFree("squid_info_cache_disk_swap_capacity", value)
+				err = fnUsedFree("squid_info_cache_disk_swap_capacity_ratio", value)
 			case "Storage Mem capacity":
-				err = fnUsedFree("squid_info_cache_memory_swap_capacity", value)
+				err = fnUsedFree("squid_info_cache_memory_swap_capacity_ratio", value)
 
 			// File descriptor usage for squid:
 			case "Maximum number of file descriptors":
