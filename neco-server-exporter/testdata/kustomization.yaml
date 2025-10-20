@@ -1,0 +1,8 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - daemonset.yaml
+  - namespace.yaml
+images:
+  - name: ghcr.io/cybozu/neco-server-exporter
+    newTag: 0.1.0

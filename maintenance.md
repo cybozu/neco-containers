@@ -70,6 +70,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [memcached\_exporter](#memcached_exporter)
 - [meows-dctest-runner](#meows-dctest-runner)
 - [meows-neco-runner](#meows-neco-runner)
+- [neco-server-exporter](#neco-server-exporter)
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
 - [pomerium](#pomerium)
@@ -850,6 +851,15 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6>
 4. Update `MEOWS_VERSION` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
+
+## neco-server-exporter
+
+![Regular Update](./regular_update.svg)
+
+1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+2. Update cilium version in `go.mod` to the version used by neco.
+3. Update neco-server-exporter version in `/neco-server-exporter/testdata/kustomization.yaml`.
+3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## opentelemetry-collector
 
