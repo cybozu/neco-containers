@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: neco-server-exporter
+  name: neco-server-exporter
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neco-server-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neco-server-exporter
+    spec:
+      securityContext:
+        fsGroup: 0
+      containers:
+        - image: ghcr.io/cybozu/neco-server-exporter:dev
+          name: exporter
+          volumeMounts:
+            - name: cilium-socket
+              mountPath: /var/run/cilium
+          securityContext:
+            capabilities:
+              add:
+                - SYS_ADMIN
+              drop:
+                - ALL
+      tolerations:
+        - operator: Exists
+      volumes:
+        - name: cilium-socket
+          hostPath:
+            path: /var/run/cilium
