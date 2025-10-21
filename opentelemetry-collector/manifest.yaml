@@ -12,7 +12,6 @@ receivers:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/kafkareceiver v${OTELCOL_CONTRIB_VERSION}
-  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/opencensusreceiver v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/prometheusreceiver v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/zipkinreceiver v${OTELCOL_CONTRIB_VERSION}
 
