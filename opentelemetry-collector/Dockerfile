@@ -2,8 +2,8 @@
 
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG OTELCOL_VERSION=0.129.0
-ARG OTELCOL_CONTRIB_VERSION=0.129.0
+ARG OTELCOL_VERSION=0.138.0
+ARG OTELCOL_CONTRIB_VERSION=0.138.0
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in
