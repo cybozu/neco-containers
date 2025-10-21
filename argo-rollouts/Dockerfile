@@ -17,7 +17,7 @@ RUN go mod download
 
 RUN make controller
 
-FROM gcr.io/distroless/static-debian11
+FROM gcr.io/distroless/static-debian12
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /work/argo-rollouts/dist/rollouts-controller /bin/
