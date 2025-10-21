@@ -92,23 +92,24 @@ var _ = Describe("squid-exporter e2e test", func() {
 		Expect(err).NotTo(HaveOccurred())
 
 		expected := map[string]bool{
-			`squid_info_cache_hit_requests{duration_minutes="5"}`:         true,
-			`squid_info_cache_hit_requests{duration_minutes="60"}`:        true,
-			`squid_info_cache_hit_bytes{duration_minutes="5"}`:            true,
-			`squid_info_cache_hit_bytes{duration_minutes="60"}`:           true,
-			`squid_info_cache_memory_hit_requests{duration_minutes="5"}`:  true,
-			`squid_info_cache_memory_hit_requests{duration_minutes="60"}`: true,
-			`squid_info_cache_disk_hit_requests{duration_minutes="5"}`:    true,
-			`squid_info_cache_disk_hit_requests{duration_minutes="60"}`:   true,
-			"squid_info_cache_disk_swap_capacity":                         true,
-			"squid_info_cache_memory_swap_capacity":                       true,
-			"squid_info_filefd_available":                                 true,
-			"squid_info_filefd_maximum":                                   true,
-			"squid_info_filefd_queued":                                    true,
-			"squid_info_filefd_reserved":                                  true,
-			"squid_info_filefd_store_disk":                                true,
-			"squid_info_filefd_used":                                      true,
-			"squid_info_filefd_used_peak":                                 true,
+			`squid_info_cache_hit_requests_ratio{duration_minutes="5"}`:         true,
+			`squid_info_cache_hit_requests_ratio{duration_minutes="60"}`:        true,
+			`squid_info_cache_hit_bytes_ratio{duration_minutes="5"}`:            true,
+			`squid_info_cache_hit_bytes_ratio{duration_minutes="60"}`:           true,
+			`squid_info_cache_memory_hit_requests_ratio{duration_minutes="5"}`:  true,
+			`squid_info_cache_memory_hit_requests_ratio{duration_minutes="60"}`: true,
+			`squid_info_cache_disk_hit_requests_ratio{duration_minutes="5"}`:    true,
+			`squid_info_cache_disk_hit_requests_ratio{duration_minutes="60"}`:   true,
+			"squid_info_cache_disk_swap_capacity_ratio":                         true,
+			"squid_info_cache_memory_swap_capacity_ratio":                       true,
+
+			"squid_info_filefd_available":  true,
+			"squid_info_filefd_maximum":    true,
+			"squid_info_filefd_queued":     true,
+			"squid_info_filefd_reserved":   true,
+			"squid_info_filefd_store_disk": true,
+			"squid_info_filefd_used":       true,
+			"squid_info_filefd_used_peak":  true,
 		}
 
 		reader = bufio.NewScanner(bytes.NewReader(res))
