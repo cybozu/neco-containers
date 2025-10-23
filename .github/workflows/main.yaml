@@ -53,6 +53,8 @@ jobs:
             - dir: "./cep-checker"
               container-image: "cep-checker"
               make-targets: "test"
+            - dir: "ceph-csi-operator"
+              container-image: "ceph-csi-operator"
             - dir: "./ceph-extra-exporter"
               container-image: "ceph-extra-exporter"
               make-targets: "check-generate test"
