@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG UNBOUND_VERSION=1.23.0
+ARG UNBOUND_VERSION=1.24.1
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
