@@ -88,8 +88,6 @@ func ConvertSquidInfo(logger *slog.Logger, body io.ReadCloser) error {
 		title, value, found := strings.Cut(scanner.Text(), ":")
 		title = strings.TrimSpace(title)
 		value = strings.TrimSpace(value)
-		fmt.Println(title)
-		fmt.Println(value)
 		if found {
 			var err error
 			switch title {
