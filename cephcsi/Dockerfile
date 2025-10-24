@@ -2,17 +2,18 @@
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
 ARG BASE_IMAGE="ghcr.io/cybozu/ceph:19.2.3.1"
+ARG CSI_IMAGE_VERSION=3.15.0
 
-FROM ${BASE_IMAGE} as updated_base
+FROM ${BASE_IMAGE} AS updated_base
 
 RUN mkdir -p /etc/selinux && touch /etc/selinux/config
 
-FROM updated_base as builder
+FROM updated_base AS builder
 
 LABEL stage="build"
 
 ARG CSI_IMAGE_NAME=ghcr.io/cybozu/cephcsi
-ARG CSI_IMAGE_VERSION=3.15.0
+ARG CSI_IMAGE_VERSION
 ARG GO_ARCH
 ARG SRC_DIR
 ARG GIT_COMMIT
@@ -46,8 +47,8 @@ ENV GOROOT=${GOROOT} \
     CGO_ENABLED=1 \
     GIT_COMMIT="${GIT_COMMIT}" \
     ENV_CSI_IMAGE_VERSION="${CSI_IMAGE_VERSION}" \
-    ENV_CSI_IMAGE_NAME="${CSI_IMAGE_NAME}" \
-    PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
+    ENV_CSI_IMAGE_NAME="${CSI_IMAGE_NAME}"
+ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
 # Build executable
 RUN make cephcsi
@@ -57,6 +58,8 @@ FROM updated_base
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR
+ARG CSI_IMAGE_VERSION
+ARG GO_ARCH
 
 LABEL version=${CSI_IMAGE_VERSION} \
     architecture=${GO_ARCH} \
