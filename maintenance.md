@@ -84,6 +84,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [s3gw](#s3gw)
 - [sealed-secrets](#sealed-secrets)
 - [serf](#serf)
+- [spegel](#spegel)
 - [squid](#squid)
 - [squid-exporter](#squid-exporter)
 - [stakater/Reloader](#stakaterreloader)
@@ -1034,6 +1035,13 @@ Only the base image and module dependency should be updated.
 3. Update `SERF_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
+
+## spegel
+
+![Regular Update](./regular_update.svg)
+1. Check the [release page](https://github.com/spegel-org/spegel/releases).
+2. Update `SPEGEL_VERSION` in `Dockerfile`.
+3. Update `TAG` file.
 
 ## squid
 
