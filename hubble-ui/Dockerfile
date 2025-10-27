@@ -1,11 +1,11 @@
 ARG NODE_VERSION=22
-ARG NGINX_VERSION=1.27.3
-ARG NJS_VERSION=0.8.7
+ARG NGINX_VERSION=1.29.1
+ARG NJS_VERSION=0.9.1
 ARG PKG_RELEASE=1~noble
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.24-noble AS backend-builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -21,7 +21,7 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.24-noble AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
 ARG NODE_VERSION
 
 WORKDIR /app
