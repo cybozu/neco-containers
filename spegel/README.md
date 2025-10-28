@@ -2,7 +2,7 @@
 
 This container contains Spegel.
 
-- [source code](https://github.com/XenitAB/spegel)
+- [source code](https://github.com/spegel-org/spegel)
 
 ## Docker images
 

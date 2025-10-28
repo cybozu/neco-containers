@@ -1,9 +1,9 @@
-FROM ghcr.io/cybozu/golang:1.22-jammy AS builder
-ARG SPEGEL_VERSION=0.0.18
+FROM ghcr.io/cybozu/golang:1.25-noble AS builder
+ARG SPEGEL_VERSION=0.4.0
 
 WORKDIR /work/spegel
 
-RUN curl -sSLf https://github.com/XenitAB/spegel/archive/v${SPEGEL_VERSION}.tar.gz | \
+RUN curl -sSLf https://github.com/spegel-org/spegel/archive/v${SPEGEL_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/spegel
 
 RUN go mod download
