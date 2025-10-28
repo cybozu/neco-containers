@@ -5,7 +5,7 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
 ARG GOSU_VERSION=1.17
-ARG REDIS_VERSION=7.2.10
+ARG REDIS_VERSION=7.2.11
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 
 RUN apt-get update \

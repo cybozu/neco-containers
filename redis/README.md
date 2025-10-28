@@ -7,7 +7,7 @@
 ### Launch Redis
 
 ```bash
-docker run --name=redis ghcr.io/cybozu/redis:7.0
+docker run --name=redis ghcr.io/cybozu/redis:7.2
 ```
 
 ### Run Redis CLI
