@@ -4,17 +4,13 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG GOSU_VERSION=1.17
 ARG REDIS_VERSION=7.2.11
 ARG REDIS_DOWNLOAD_URL=http://download.redis.io/releases/redis-${REDIS_VERSION}.tar.gz
 ARG REDIS_DOWNLOAD_SHA=2f9886eca68d30114ad6a01da65631f8007d802fd3e6c9fac711251e6390323d
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends wget pkg-config \
-    && rm -rf /var/lib/apt/lists/* \
-    && wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/${GOSU_VERSION}/gosu-amd64" \
-    && chmod +x /usr/local/bin/gosu \
-    && gosu nobody true
+    && rm -rf /var/lib/apt/lists/*
 
 RUN wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
     && echo "$REDIS_DOWNLOAD_SHA *redis.tar.gz" | sha256sum -c - \
