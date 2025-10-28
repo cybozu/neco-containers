@@ -32,6 +32,7 @@ RUN wget -O redis.tar.gz "$REDIS_DOWNLOAD_URL" \
 # (also, we do cross-builds, so we need to embed the appropriate "--build=xxx" values to that "./configure" invocation)
     && extraJemallocConfigureFlags="--build=x86_64-linux-gnu" \
 # https://salsa.debian.org/debian/jemalloc/-/blob/c0a88c37a551be7d12e4863435365c9a6a51525f/debian/rules#L8-23
+    && extraJemallocConfigureFlags="$extraJemallocConfigureFlags --with-lg-page=12" \
     && extraJemallocConfigureFlags="$extraJemallocConfigureFlags --with-lg-hugepage=21" \
     && sed -ri 's!cd jemalloc && ./configure !&'"$extraJemallocConfigureFlags"' !' /usr/src/redis/deps/Makefile \
     \
