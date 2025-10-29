@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG ROOK_VERSION=1.18.5
+ARG ROOK_VERSION=1.18.6
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
