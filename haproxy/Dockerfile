@@ -1,9 +1,9 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
 ENV HAPROXY_BRANCH=3.0
-ENV HAPROXY_MINOR=3.0.11
+ENV HAPROXY_MINOR=3.0.12
 ENV HAPROXY_SRC_URL="https://www.haproxy.org/download/${HAPROXY_BRANCH}/src/haproxy-${HAPROXY_MINOR}.tar.gz"
-ENV HAPROXY_SHA256=a133e2d550c5fd9a849b5c7ab17bb945bcdad209ca140d41f45ebf31943ae783
+ENV HAPROXY_SHA256=cd2bade59a7e2d61f2d62be7c6c4cfc0e2b3a90431023720cae7c43843b0570b
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
