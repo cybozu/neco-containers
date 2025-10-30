@@ -1,11 +1,11 @@
-ARG MEOWS_VERSION=0.21.3
+ARG MEOWS_RUNNER_TAG=2.329.0-ubuntu22.04-meows0.21.3
 
-FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_VERSION}
+FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 
-ENV GO_VERSION=1.24.6
+ENV GO_VERSION=1.25.3
 ENV PLACEMAT_VERSION=2.4.9
 
 ENV HOME=/home/actions
