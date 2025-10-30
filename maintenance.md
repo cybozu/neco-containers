@@ -980,15 +980,16 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 > [!Note]
 > A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
-
-- cephcsi
-- csi-attacher
-- csi-node-driver-registrar
-- csi-provisioner
-- csi-resizer
-- csi-snapshotter
-- csi-addons-controller
-- csi-addons-sidecar
+> 
+> - cephcsi
+> - ceph-csi-operator
+> - csi-attacher
+> - csi-node-driver-registrar
+> - csi-provisioner
+> - csi-resizer
+> - csi-snapshotter
+> - csi-addons-controller
+> - csi-addons-sidecar
 
 1. Check the [release page](https://github.com/rook/rook/releases).
 2. Check the `CEPH_VERSION` of the upstream Makefile. If the version is changed, update the base image version in our `Dockerfile`.
