@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.24-jammy AS build
-ARG POMERIUM_VERSION=0.30.3
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
+ARG POMERIUM_VERSION=0.31.1
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
