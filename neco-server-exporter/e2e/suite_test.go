@@ -23,5 +23,5 @@ var _ = Describe("Test neco-server-exporter", func() {
 })
 
 func runTest() {
-	Context("bpf-performance", testBPFPerformance)
+	Context("bpf", testBPFCollector)
 }

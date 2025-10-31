@@ -59,7 +59,7 @@ uninstall:
 .PHONY: scrape
 scrape:
 	@PORT=$$($(KUBECTL) get service -n neco-server-exporter neco-server-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
-	docker exec neco-server-exporter-control-plane curl -s http://localhost:$${PORT}/metrics
+	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
 
 .PHONY: test
 test:
