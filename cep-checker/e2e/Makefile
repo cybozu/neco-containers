@@ -27,7 +27,7 @@ start:
 	$(MAKE) -C ../ docker-build
 	$(KIND) load docker-image ghcr.io/cybozu/cep-checker:dev --name=$(KIND_CLUSTER_NAME)
 
-.PHONEY: install-cilium
+.PHONY: install-cilium
 install-cilium:
 	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait
 
