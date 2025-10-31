@@ -1,23 +1,19 @@
 package main
 
 import (
-	"context"
-	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/VictoriaMetrics/metrics"
-	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/components"
+	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/collector/bpf"
+	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/exporter"
 	"github.com/spf13/cobra"
+	ctrl "sigs.k8s.io/controller-runtime"
 )
 
 var (
-	bpfPerformanceInterval time.Duration
-	// Add new components here
-
-	log *slog.Logger
+	interval time.Duration
+	log      *slog.Logger
 )
 
 var cmd = &cobra.Command{
@@ -31,9 +27,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.Flags().DurationVar(&bpfPerformanceInterval, "bpf-performance-interval", time.Second*30, "Interval to check BPF performance")
-	// Add new components here
-
+	cmd.Flags().DurationVar(&interval, "interval", time.Second*30, "Interval to update metrics")
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 }
 
@@ -45,23 +39,11 @@ func main() {
 }
 
 func runMain() error {
-	ctx := context.Background()
+	e := exporter.NewExporter(interval)
+	e.AddCollector(bpf.NewCollector())
 
-	go func() {
-		if err := components.StartBPFPerformanceExporter(ctx, bpfPerformanceInterval); err != nil {
-			panic(fmt.Errorf("failed to monitor BPF performance: %w", err))
-		}
-	}()
-	// Add new components here
-
-	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
-		metrics.WritePrometheus(w, false)
-	})
-
-	log.InfoContext(ctx, "start metrics server")
-	if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
-		log.Error("metrics server stopped", slog.Any("error", err))
-		return err
-	}
-	return nil
+	// controller-runtime will likely be needed in the near future,
+	// so the dependency against it is not a problem
+	ctx := ctrl.SetupSignalHandler()
+	return e.Start(ctx)
 }
