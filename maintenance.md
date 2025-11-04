@@ -830,10 +830,10 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/cybozu-go/meows/releases).
+1. Check the [release page](https://github.com/cybozu-go/meows/releases) and [runner image release](https://github.com/cybozu-go/meows/pkgs/container/meows-runner).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
-3. Update `MEOWS_VERSION` in `Dockerfile`.
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile`
+3. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
 4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
    - `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
    - `PLACEMAT_VERSION`: <https://github.com/cybozu-go/placemat/releases/latest>
@@ -843,13 +843,13 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 
 ![Regular Update](./regular_update.svg)
 
-1. Check the [release page](https://github.com/cybozu-go/meows/releases).
+1. Check the [release page](https://github.com/cybozu-go/meows/releases) and [runner image release](https://github.com/cybozu-go/meows/pkgs/container/meows-runner).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/Dockerfile`
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile`
 3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
    - Also update `GRPCURL_VERSION`, if there are any changes.
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6>
-4. Update `MEOWS_VERSION` in `Dockerfile`.
+4. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
 
 ## opentelemetry-collector
