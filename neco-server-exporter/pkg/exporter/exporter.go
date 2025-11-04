@@ -57,9 +57,13 @@ func (e *Exporter) Start(ctx context.Context) error {
 }
 
 func (e *Exporter) Run(ctx context.Context) error {
+	const collectorSection = "collector"
+
 	e.running.Store(true)
 	ticker := time.NewTicker(e.interval)
 	prev := make([]map[string]struct{}, len(e.collectors))
+	health := make([]bool, len(e.collectors))
+	dur := make([]time.Duration, len(e.collectors))
 
 	for {
 		var wg sync.WaitGroup
@@ -68,8 +72,12 @@ func (e *Exporter) Run(ctx context.Context) error {
 			go func(i int) {
 				next := make(map[string]struct{})
 
-				section := c.SectionName()
+				startTime := time.Now()
 				r, err := c.Collect(ctx)
+				health[i] = (err == nil)
+				dur[i] = time.Since(startTime)
+
+				section := c.SectionName()
 				if err != nil {
 					e.log.Error("failed to collect %s metrics: %w", section, err)
 				} else {
@@ -93,6 +101,24 @@ func (e *Exporter) Run(ctx context.Context) error {
 			}(i)
 		}
 		wg.Wait()
+
+		for i, c := range e.collectors {
+			labels := map[string]string{
+				"collector": c.SectionName(),
+			}
+
+			n := GetMetricsName(collectorSection, "health", labels)
+			counter := metrics.GetOrCreateFloatCounter(n)
+			if health[i] {
+				counter.Set(1)
+			} else {
+				counter.Set(0)
+			}
+
+			n = GetMetricsName(collectorSection, "process_seconds", labels)
+			counter = metrics.GetOrCreateFloatCounter(n)
+			counter.Set(dur[i].Seconds())
+		}
 
 		select {
 		case <-ctx.Done():
