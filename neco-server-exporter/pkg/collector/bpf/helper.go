@@ -36,30 +36,36 @@ func CollectTCXMetadata() (map[ebpf.ProgramID]TCXMetadata, error) {
 	defer it.Close()
 	ret := make(map[ebpf.ProgramID]TCXMetadata)
 	for it.Next() {
-		li := it.Take()
-		defer li.Close()
+		fn := func() error {
+			li := it.Take()
+			defer li.Close()
 
-		info, err := li.Info()
-		if err != nil {
+			info, err := li.Info()
+			if err != nil {
+				return err
+			}
+
+			tcx := info.TCX()
+			if tcx == nil {
+				return nil
+			}
+
+			direction := "unknown"
+			switch ebpf.AttachType(tcx.AttachType) {
+			case ebpf.AttachTCXIngress:
+				direction = "ingress"
+			case ebpf.AttachTCXEgress:
+				direction = "egress"
+			}
+
+			ret[info.Program] = TCXMetadata{
+				Ifindex:   tcx.Ifindex,
+				Direction: direction,
+			}
+			return nil
+		}
+		if err := fn(); err != nil {
 			return nil, err
-		}
-
-		tcx := info.TCX()
-		if tcx == nil {
-			continue
-		}
-
-		direction := "unknown"
-		switch ebpf.AttachType(tcx.AttachType) {
-		case ebpf.AttachTCXIngress:
-			direction = "ingress"
-		case ebpf.AttachTCXEgress:
-			direction = "egress"
-		}
-
-		ret[info.Program] = TCXMetadata{
-			Ifindex:   tcx.Ifindex,
-			Direction: direction,
 		}
 	}
 	return ret, nil
@@ -105,9 +111,12 @@ func GetLongProgramName(info *ebpf.ProgramInfo) (string, error) {
 	})
 
 	switch len(li) {
+	case 0:
+		return "", errors.New("BTF contains no function spec")
 	case 1:
 		return li[0].(*btf.Func).Name, nil
 	default:
-		return "", errors.New("unsupported BTF info")
+		// Extra effort is needed to lookup correct function spec for this case. Not implemented for now
+		return "", errors.New("BTF contains multiple function spec")
 	}
 }

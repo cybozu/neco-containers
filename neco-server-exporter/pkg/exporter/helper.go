@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-func GetMetricsName(section, name string, labels map[string]string) string {
+func BuildMetricName(section, name string, labels map[string]string) string {
 	lbls := ""
 	if labels != nil {
 		for _, k := range slices.Sorted(maps.Keys(labels)) {

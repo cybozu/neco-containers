@@ -3,7 +3,8 @@ package e2e
 import (
 	"bufio"
 	"bytes"
-	"fmt"
+	"errors"
+	"slices"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -11,35 +12,37 @@ import (
 )
 
 func testBPFCollector() {
-	It("should scrape", func() {
-		const nsOption = "-n=neco-server-exporter"
+	It("should report necessary metrices", func() {
+		remaining := []string{
+			"neco_server_bpf_run_time_seconds_total",
+			"neco_server_bpf_run_count_total",
+		}
 
 		Eventually(func(g Gomega) {
-			stdout := kubectlSafe(g, nil, "get", "service", nsOption, "neco-server-exporter", "-o=jsonpath={ .spec.ports[0].nodePort }")
-			nodePort := string(stdout)
-
-			url := fmt.Sprintf("http://localhost:%s/metrics", nodePort)
-			stdout, stderr, err := runCommand("docker", nil, "exec", "neco-server-exporter-control-plane", "curl", "-s", url)
-			g.Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s, err: %v", string(stdout), string(stderr), err)
-
+			stdout := scrape(g)
 			reader := bufio.NewScanner(bytes.NewReader(stdout))
-			foundRunTimeSeconds := false
-			foundRunCountTotal := false
 			for reader.Scan() {
 				line := reader.Text()
-				switch {
-				case strings.Contains(line, "neco_server_bpf_run_time_seconds_total"):
-					if strings.Contains(line, "cil_from_container") {
-						foundRunTimeSeconds = true
-					}
-				case strings.Contains(line, "neco_server_bpf_run_count_total"):
-					if strings.Contains(line, "cil_from_container") {
-						foundRunCountTotal = true
-					}
+				remaining = slices.DeleteFunc(remaining, func(s string) bool {
+					return strings.Contains(line, s)
+				})
+			}
+			g.Expect(remaining).To(BeEmpty())
+		}).Should(Succeed())
+	})
+
+	It("should report long program names using BTF", func() {
+		Eventually(func(g Gomega) error {
+			stdout := scrape(g)
+			reader := bufio.NewScanner(bytes.NewReader(stdout))
+			for reader.Scan() {
+				line := reader.Text()
+				if strings.Contains(line, "neco_server_bpf_run_time_seconds_total") &&
+					strings.Contains(line, `name="cil_from_container"`) {
+					return nil
 				}
 			}
-			g.Expect(foundRunTimeSeconds).To(BeTrue())
-			g.Expect(foundRunCountTotal).To(BeTrue())
+			return errors.New("failed to find long program name")
 		}).Should(Succeed())
 	})
 }

@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/neco-server-exporter
 
-go 1.24.5
+go 1.25.4
 
 require (
 	github.com/VictoriaMetrics/metrics v1.40.2

@@ -23,5 +23,8 @@ var _ = Describe("Test neco-server-exporter", func() {
 })
 
 func runTest() {
+	Context("exporter", testExporter)
+
+	// test collectors
 	Context("bpf", testBPFCollector)
 }

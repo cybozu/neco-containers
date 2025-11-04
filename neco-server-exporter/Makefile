@@ -1,8 +1,9 @@
 IMAGE_TAG ?= ghcr.io/cybozu/neco-server-exporter:$(shell cat TAG)
 
 .PHONY: check-generate
-check-generate:
+check-generate: goimports
 	go mod tidy
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-server-exporter .
 	git diff --exit-code --name-only
 
 .PHONY build:

@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
 COPY . /work/src
 WORKDIR /work/src
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o neco-server-exporter

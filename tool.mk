@@ -12,6 +12,12 @@ endef
 
 SELF_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 
+# Download goimports locally if necessary
+GOIMPORTS := $(SELF_DIR)/bin/goimports
+.PHONY: goimports
+goimports:
+	$(call go-install-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@latest)
+
 # Download staticcheck locally if necessary
 STATICCHECK := $(SELF_DIR)/bin/staticcheck
 .PHONY: staticcheck

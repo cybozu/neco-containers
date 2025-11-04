@@ -2,39 +2,31 @@ package exporter
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/VictoriaMetrics/metrics"
 )
 
 type Exporter struct {
-	running    atomic.Bool
-	interval   time.Duration
+	port       int
 	collectors []Collector
+	interval   time.Duration
 
 	log *slog.Logger
 }
 
-func NewExporter(interval time.Duration) *Exporter {
+func NewExporter(port int, collectors []Collector, interval time.Duration) *Exporter {
 	return &Exporter{
+		port:       port,
 		interval:   interval,
-		collectors: make([]Collector, 0),
+		collectors: collectors,
 		log:        slog.New(slog.NewJSONHandler(os.Stdout, nil)),
 	}
-}
-
-func (e *Exporter) AddCollector(c Collector) error {
-	if e.running.Load() {
-		return errors.New("shouuld add collector before start")
-	}
-	e.collectors = append(e.collectors, c)
-	return nil
 }
 
 func (e *Exporter) Start(ctx context.Context) error {
@@ -44,22 +36,38 @@ func (e *Exporter) Start(ctx context.Context) error {
 		}
 	}()
 
+	addr := fmt.Sprintf("0.0.0.0:%d", e.port)
+	e.log.InfoContext(ctx, "start metrics server", slog.Any("address", addr))
+
+	server := http.Server{
+		Addr: addr,
+	}
+
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
 		metrics.WritePrometheus(w, false)
 	})
-	e.log.InfoContext(ctx, "start metrics server")
 
-	if err := http.ListenAndServe("0.0.0.0:8080", nil); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		e.log.Error("metrics server stopped", slog.Any("error", err))
 		return err
 	}
+
+	go func() {
+		select {
+		case <-ctx.Done():
+			server.Shutdown(ctx)
+		default:
+		}
+	}()
 	return nil
 }
 
+// Run starts the metric collection loop.
+// The error return is reserved for future fatal error conditions.
+// Currently always returns nil except when context is cancelled.
 func (e *Exporter) Run(ctx context.Context) error {
 	const collectorSection = "collector"
 
-	e.running.Store(true)
 	ticker := time.NewTicker(e.interval)
 	prev := make([]map[string]struct{}, len(e.collectors))
 	health := make([]bool, len(e.collectors))
@@ -77,12 +85,12 @@ func (e *Exporter) Run(ctx context.Context) error {
 				health[i] = (err == nil)
 				dur[i] = time.Since(startTime)
 
-				section := c.SectionName()
+				section := c.MetricsPrefix()
 				if err != nil {
-					e.log.Error("failed to collect %s metrics: %w", section, err)
+					e.log.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", c.MetricsPrefix()))
 				} else {
 					for _, m := range r {
-						n := GetMetricsName(section, m.Name, m.Labels)
+						n := BuildMetricName(section, m.Name, m.Labels)
 						counter := metrics.GetOrCreateFloatCounter(n)
 						counter.Set(m.Value)
 
@@ -104,10 +112,10 @@ func (e *Exporter) Run(ctx context.Context) error {
 
 		for i, c := range e.collectors {
 			labels := map[string]string{
-				"collector": c.SectionName(),
+				"collector": c.MetricsPrefix(),
 			}
 
-			n := GetMetricsName(collectorSection, "health", labels)
+			n := BuildMetricName(collectorSection, "health", labels)
 			counter := metrics.GetOrCreateFloatCounter(n)
 			if health[i] {
 				counter.Set(1)
@@ -115,7 +123,7 @@ func (e *Exporter) Run(ctx context.Context) error {
 				counter.Set(0)
 			}
 
-			n = GetMetricsName(collectorSection, "process_seconds", labels)
+			n = BuildMetricName(collectorSection, "process_seconds", labels)
 			counter = metrics.GetOrCreateFloatCounter(n)
 			counter.Set(dur[i].Seconds())
 		}

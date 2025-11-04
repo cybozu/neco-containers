@@ -29,14 +29,25 @@ func runCommand(path string, input []byte, args ...string) ([]byte, []byte, erro
 	return stdout.Bytes(), stderr.Bytes(), nil
 }
 
-// Please uncomment when needed
-
-// func kubectl(input []byte, args ...string) ([]byte, []byte, error) {
-// 	return runCommand(kubectlPath, input, args...)
-// }
+func kubectl(input []byte, args ...string) ([]byte, []byte, error) {
+	return runCommand(kubectlPath, input, args...)
+}
 
 func kubectlSafe(g Gomega, input []byte, args ...string) []byte {
-	stdout, stderr, err := runCommand(kubectlPath, input, args...)
+	stdout, stderr, err := kubectl(input, args...)
 	g.Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s", stdout, stderr)
+	return stdout
+}
+
+func scrape(g Gomega) []byte {
+	const nsOption = "-n=neco-server-exporter"
+
+	stdout := kubectlSafe(g, nil, "get", "service", nsOption, "neco-server-exporter", "-o=jsonpath={ .spec.ports[0].nodePort }")
+	nodePort := string(stdout)
+
+	url := fmt.Sprintf("http://localhost:%s/metrics", nodePort)
+	stdout, stderr, err := runCommand("docker", nil, "exec", "neco-server-exporter-control-plane", "curl", "-s", url)
+	g.Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s, err: %v", string(stdout), string(stderr), err)
+
 	return stdout
 }

@@ -857,9 +857,12 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 
 ![Regular Update](./regular_update.svg)
 
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update cilium version in `go.mod` to the version used by neco.
-3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+1. Update the software versions in the following files to the ones used by neco.
+   - `Dockerfile`
+   - `Makefile`
+   - `e2e/Makefile`
+   - `go.mod`
+2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## opentelemetry-collector
 

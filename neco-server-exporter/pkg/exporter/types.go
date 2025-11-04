@@ -9,7 +9,7 @@ type Metric struct {
 }
 
 type Collector interface {
-	// Metrics names will be "neco_server_<SectionName>_<MetricsName>{MetricsLabels}".
-	SectionName() string
+	// Metrics names will be "neco_server_<MetricsPrefix>_<MetricsName>{<MetricsLabels>}".
+	MetricsPrefix() string
 	Collect(ctx context.Context) ([]*Metric, error)
 }

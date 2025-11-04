@@ -17,6 +17,9 @@ spec:
       containers:
         - image: ghcr.io/cybozu/neco-server-exporter:dev
           name: exporter
+          args:
+            - --collectors=bpf,mock
+            - --interval=10s
           volumeMounts:
             - name: cilium-socket
               mountPath: /var/run/cilium

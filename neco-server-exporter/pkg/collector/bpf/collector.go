@@ -7,8 +7,10 @@ import (
 	"io/fs"
 	"strconv"
 
+	"github.com/cilium/cilium/api/v1/models"
 	"github.com/cilium/cilium/pkg/client"
 	"github.com/cilium/ebpf"
+
 	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/exporter"
 )
 
@@ -22,8 +24,73 @@ func NewCollector() exporter.Collector {
 	return &collector{}
 }
 
-func (c *collector) SectionName() string {
+func (c *collector) MetricsPrefix() string {
 	return "bpf"
+}
+
+func (c *collector) collectProgramMetrics(
+	id ebpf.ProgramID,
+	tcxMeta map[ebpf.ProgramID]TCXMetadata, endpointMeta map[uint32]*models.Endpoint,
+) ([]*exporter.Metric, error) {
+
+	prog, err := ebpf.NewProgramFromID(id)
+	switch {
+	case errors.Is(err, fs.ErrNotExist):
+		// possibly asynchronously removed, considered normal
+		return nil, nil
+	case err != nil:
+		return nil, fmt.Errorf("failed to open BPF Program: %w", err)
+	}
+	defer prog.Close()
+
+	// omit metrices for programs without execution
+	stats, err := prog.Stats()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BPF stats: %w", err)
+	}
+	if stats.RunCount == 0 {
+		return nil, nil
+	}
+
+	info, err := prog.Info()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get BPF program info: %w", err)
+	}
+
+	labels := map[string]string{
+		"id":   strconv.Itoa(int(id)),
+		"type": info.Type.String(),
+		"name": info.Name,
+	}
+	if n, err := GetLongProgramName(info); err == nil {
+		labels["name"] = n
+	}
+
+	if meta, ok := tcxMeta[id]; ok {
+		labels["ifindex"] = strconv.Itoa(int(meta.Ifindex))
+		labels["direction"] = meta.Direction
+		if ep, ok := endpointMeta[meta.Ifindex]; ok {
+			// reading deprecated fields, but think it later
+			// https://github.com/cilium/cilium/pull/26894
+			labels["namespace"] = ep.Status.ExternalIdentifiers.K8sNamespace
+			labels["pod"] = ep.Status.ExternalIdentifiers.K8sPodName
+			labels["container"] = ep.Status.ExternalIdentifiers.ContainerName
+		}
+	}
+
+	timeMetric := &exporter.Metric{
+		Name:   "run_time_seconds_total",
+		Value:  stats.Runtime.Seconds(),
+		Labels: labels,
+	}
+
+	countMetric := &exporter.Metric{
+		Name:   "run_count_total",
+		Value:  float64(stats.RunCount),
+		Labels: labels,
+	}
+
+	return []*exporter.Metric{timeMetric, countMetric}, nil
 }
 
 func (c *collector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
@@ -63,66 +130,11 @@ ProgramLoop:
 			return nil, fmt.Errorf("failed to iterate BPF Program: %w", err)
 		}
 
-		prog, err := ebpf.NewProgramFromID(id)
-		switch {
-		case errors.Is(err, fs.ErrNotExist):
-			// possibly asynchronously removed, continue to the next one
-			continue ProgramLoop
-		case err != nil:
-			return nil, fmt.Errorf("failed to open BPF Program: %w", err)
-		}
-		defer prog.Close()
-
-		// skip programs without execution
-		stats, err := prog.Stats()
+		sub, err := c.collectProgramMetrics(id, tcxMeta, endpointMeta)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get BPF stats: %w", err)
+			return nil, err
 		}
-		if stats.RunCount == 0 {
-			continue ProgramLoop
-		}
-
-		info, err := prog.Info()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get BPF program info: %w", err)
-		}
-
-		labels := map[string]string{
-			"id":   strconv.Itoa(int(id)),
-			"type": info.Type.String(),
-			"name": info.Name,
-		}
-		if n, err := GetLongProgramName(info); err == nil {
-			labels["name"] = n
-		}
-
-		if meta, ok := tcxMeta[id]; ok {
-			labels["ifindex"] = strconv.Itoa(int(meta.Ifindex))
-			labels["direction"] = meta.Direction
-			if ep, ok := endpointMeta[meta.Ifindex]; ok {
-				// reading deprecated fields, but think it later
-				// https://github.com/cilium/cilium/pull/26894
-				labels["namespace"] = ep.Status.ExternalIdentifiers.K8sNamespace
-				labels["pod"] = ep.Status.ExternalIdentifiers.K8sPodName
-				labels["container"] = ep.Status.ExternalIdentifiers.ContainerName
-			}
-		}
-
-		// run_time_seconds_total
-		m := &exporter.Metric{
-			Name:   "run_time_seconds_total",
-			Value:  stats.Runtime.Seconds(),
-			Labels: labels,
-		}
-		ret = append(ret, m)
-
-		// run_count_total
-		m = &exporter.Metric{
-			Name:   "run_count_total",
-			Value:  float64(stats.RunCount),
-			Labels: labels,
-		}
-		ret = append(ret, m)
+		ret = append(ret, sub...)
 
 		// interrupt program enumeration
 		select {

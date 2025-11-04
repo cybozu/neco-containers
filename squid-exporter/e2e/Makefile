@@ -1,5 +1,5 @@
-ARCH ?= amd64
-OS ?= linux
+GOARCH ?= $(shell go env GOARCH)
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 E2ETEST_K8S_VERSION  := 1.34.0
 KIND_VERSION := 0.30.0
@@ -31,18 +31,17 @@ test:
 stop:
 	$(KIND) delete cluster --name=$(KIND_CLUSTER_NAME)
 	-docker image rm ghcr.io/cybozu/squid-exporter:dev
-	-docker image prune -f
 
 .PHONY: kind
 kind: $(KIND)
 $(KIND): $(BIN_DIR)
-	$(CURL) -o $(KIND) https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(OS)-$(ARCH)
+	$(CURL) -o $(KIND) https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(OS)-$(GOARCH)
 	chmod a+x $(KIND)
 
 .PHONY: kubectl
 kubectl: $(KUBECTL)
 $(KUBECTL): $(BIN_DIR)
-	$(CURL) -o $(BIN_DIR)/kubectl https://dl.k8s.io/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(ARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
+	$(CURL) -o $(BIN_DIR)/kubectl https://dl.k8s.io/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(GOARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
 
 .PHONY: bin_dir
 $(BIN_DIR):
