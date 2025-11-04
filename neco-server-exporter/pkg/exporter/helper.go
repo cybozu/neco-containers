@@ -6,7 +6,7 @@ import (
 	"slices"
 )
 
-func GetMetricsName(name string, labels map[string]string) string {
+func GetMetricsName(section, name string, labels map[string]string) string {
 	lbls := ""
 	if labels != nil {
 		for _, k := range slices.Sorted(maps.Keys(labels)) {
@@ -14,5 +14,5 @@ func GetMetricsName(name string, labels map[string]string) string {
 		}
 		lbls = "{" + lbls[1:] + "}"
 	}
-	return fmt.Sprintf("neco_server_%s%s", name, lbls)
+	return fmt.Sprintf("neco_server_%s_%s%s", section, name, lbls)
 }

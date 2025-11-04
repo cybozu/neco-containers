@@ -68,12 +68,13 @@ func (e *Exporter) Run(ctx context.Context) error {
 			go func(i int) {
 				next := make(map[string]struct{})
 
+				section := c.SectionName()
 				r, err := c.Collect(ctx)
 				if err != nil {
-					e.log.Error("failed to collect %s metrics: %w", c.Name(), err)
+					e.log.Error("failed to collect %s metrics: %w", section, err)
 				} else {
 					for _, m := range r {
-						n := GetMetricsName(m.Name, m.Labels)
+						n := GetMetricsName(section, m.Name, m.Labels)
 						counter := metrics.GetOrCreateFloatCounter(n)
 						counter.Set(m.Value)
 

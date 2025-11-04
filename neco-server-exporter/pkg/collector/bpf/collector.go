@@ -22,7 +22,7 @@ func NewCollector() exporter.Collector {
 	return &collector{}
 }
 
-func (c *collector) Name() string {
+func (c *collector) SectionName() string {
 	return "bpf"
 }
 
@@ -108,17 +108,17 @@ ProgramLoop:
 			}
 		}
 
-		// bpf_run_time_seconds_total
+		// run_time_seconds_total
 		m := &exporter.Metric{
-			Name:   "bpf_run_time_seconds_total",
+			Name:   "run_time_seconds_total",
 			Value:  stats.Runtime.Seconds(),
 			Labels: labels,
 		}
 		ret = append(ret, m)
 
-		// bpf_run_count_total
+		// run_count_total
 		m = &exporter.Metric{
-			Name:   "bpf_run_count_total",
+			Name:   "run_count_total",
 			Value:  float64(stats.RunCount),
 			Labels: labels,
 		}
