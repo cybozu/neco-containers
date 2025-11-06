@@ -10,6 +10,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/prometheus/common/expfmt"
+	"github.com/prometheus/common/model"
 )
 
 var _ = Describe("Get Metrics export", Ordered, func() {
@@ -59,7 +60,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 			metricsLine, err := findMetrics(metricsLines, "bmc_log_requests_failed_total")
 			Expect(err).NotTo(HaveOccurred())
 
-			p := expfmt.TextParser{}
+			p := expfmt.NewTextParser(model.UTF8Validation)
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
 				GinkgoWriter.Println("err ", err)
@@ -102,7 +103,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		It("iDRAC ABC123X 172.16.0.1 success", func() {
 			metricsLine, err := findMetrics(metricsLines, "bmc_log_requests_success_total")
 			Expect(err).NotTo(HaveOccurred())
-			p := expfmt.TextParser{}
+			p := expfmt.NewTextParser(model.UTF8Validation)
 			metricsFamily, err := p.TextToMetricFamilies(strings.NewReader(metricsLine))
 			if err != nil {
 				GinkgoWriter.Println("err ", err)
