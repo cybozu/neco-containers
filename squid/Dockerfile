@@ -2,14 +2,12 @@
 
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG SQUID_VERSION=6.14
+ARG SQUID_VERSION=7.3
 
 WORKDIR /work
 # refer https://salsa.debian.org/squid-team/squid/-/blob/master/debian/rules
 RUN curl -sfLO https://github.com/squid-cache/squid/releases/download/SQUID_$(echo ${SQUID_VERSION} | sed 's/[.]/_/g')/squid-${SQUID_VERSION}.tar.xz \
     && tar --strip-components=1 -xf /work/squid-${SQUID_VERSION}.tar.xz \
-    && curl -sL https://github.com/squid-cache/squid/pull/2294.patch > 2294.patch \
-    && cat 2294.patch | patch -p1 \
     && CFLAGS="-mavx2" CXXFLAGS="-mavx2" ./configure --without-gnutls --with-openssl --without-systemd \
                    --sysconfdir=/etc/squid --with-swapdir=/var/spool/squid \
                    --with-logdir=/var/log/squid --with-pidfile=/run/squid.pid \
