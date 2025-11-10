@@ -1,15 +1,15 @@
-IMAGE_TAG ?= ghcr.io/cybozu/neco-server-exporter:$(shell cat TAG)
+IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:$(shell cat TAG)
 
 .PHONY: check-generate
 check-generate: goimports
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-server-exporter .
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-exporter .
 	git diff --exit-code --name-only
 
 .PHONY build:
 build:
 	mkdir -p bin
-	CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/neco-server-exporter .
+	CGO_ENABLED=0 go build -ldflags="-w -s" -o bin/neco-exporter .
 
 .PHONY: e2e-prepare
 e2e-prepare:

@@ -13,12 +13,12 @@ CURL := curl -sSLf
 KUBECTL := $(BIN_DIR)/kubectl
 
 KIND := $(BIN_DIR)/kind
-KIND_CLUSTER_NAME := neco-server-exporter
+KIND_CLUSTER_NAME := neco-exporter
 KIND_CONFIG := testdata/kind.yaml
 
 CILIUM_CLI := $(BIN_DIR)/cilium
 
-IMAGE_TAG ?= ghcr.io/cybozu/neco-server-exporter:dev
+IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:dev
 
 .PHONY: setup
 setup: $(KUBECTL) $(KIND) $(CILIUM_CLI)
@@ -47,6 +47,7 @@ install:
 	$(KIND) load docker-image $(IMAGE_TAG) --name=$(KIND_CLUSTER_NAME)
 	$(KUBECTL) apply -f testdata/namespace.yaml
 	$(KUBECTL) apply -f testdata/daemonset.yaml
+	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
 	$(MAKE) --no-print-directory wait-for-workloads
 
@@ -55,9 +56,14 @@ uninstall:
 	$(KUBECTL) delete -f testdata/namespace.yaml
 	-docker image rm $(IMAGE_TAG)
 
-.PHONY: scrape
-scrape:
-	@PORT=$$($(KUBECTL) get service -n neco-server-exporter neco-server-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
+.PHONY: scrape-cluster
+scrape-cluster:
+	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-cluster-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
+	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
+
+.PHONY: scrape-server
+scrape-server:
+	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-server-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
 	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
 
 .PHONY: test

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/exporter"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
 // This Collector is used in CI.
@@ -13,12 +13,8 @@ type collector struct {
 	count int
 }
 
-func NewCollector() exporter.Collector {
-	return &collector{}
-}
-
-func (c *collector) MetricsPrefix() string {
-	return "mock"
+func NewCollector() (exporter.Collector, error) {
+	return &collector{}, nil
 }
 
 func (c *collector) Collect(ctx context.Context) ([]*exporter.Metric, error) {

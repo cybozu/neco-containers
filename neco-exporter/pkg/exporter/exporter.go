@@ -13,16 +13,27 @@ import (
 )
 
 type Exporter struct {
-	port       int
-	collectors []Collector
-	interval   time.Duration
+	scope          string
+	port           int
+	metrixPrefixes []string
+	collectors     []Collector
+	interval       time.Duration
 }
 
-func NewExporter(port int, collectors []Collector, interval time.Duration) *Exporter {
+func NewExporter(scope string, port int, collectors map[string]Collector, interval time.Duration) *Exporter {
+	metrixPrefixes := make([]string, 0, len(collectors))
+	collectorList := make([]Collector, 0, len(collectors))
+	for k, v := range collectors {
+		metrixPrefixes = append(metrixPrefixes, k)
+		collectorList = append(collectorList, v)
+	}
+
 	return &Exporter{
-		port:       port,
-		interval:   interval,
-		collectors: collectors,
+		scope:          scope,
+		port:           port,
+		metrixPrefixes: metrixPrefixes,
+		collectors:     collectorList,
+		interval:       interval,
 	}
 }
 
@@ -68,8 +79,6 @@ func (e *Exporter) Start(ctx context.Context) error {
 // The error return is reserved for future fatal error conditions.
 // Currently always returns nil except when context is cancelled.
 func (e *Exporter) Run(ctx context.Context) error {
-	const collectorSection = "collector"
-
 	ticker := time.NewTicker(e.interval)
 	prev := make([]map[string]struct{}, len(e.collectors))
 	health := make([]bool, len(e.collectors))
@@ -87,12 +96,12 @@ func (e *Exporter) Run(ctx context.Context) error {
 				health[i] = (err == nil)
 				dur[i] = time.Since(startTime)
 
-				section := c.MetricsPrefix()
+				prefix := e.metrixPrefixes[i]
 				if err != nil {
-					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", c.MetricsPrefix()))
+					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", e.metrixPrefixes[i]))
 				} else {
 					for _, m := range r {
-						n := BuildMetricName(section, m.Name, m.Labels)
+						n := BuildMetricName(e.scope, prefix, m.Name, m.Labels)
 						counter := metrics.GetOrCreateFloatCounter(n)
 						counter.Set(m.Value)
 
@@ -112,12 +121,13 @@ func (e *Exporter) Run(ctx context.Context) error {
 		}
 		wg.Wait()
 
-		for i, c := range e.collectors {
+		const collectorPrefix = "collector"
+		for i := 0; i < len(e.collectors); i++ {
 			labels := map[string]string{
-				"collector": c.MetricsPrefix(),
+				"collector": e.metrixPrefixes[i],
 			}
 
-			n := BuildMetricName(collectorSection, "health", labels)
+			n := BuildMetricName(e.scope, collectorPrefix, "health", labels)
 			counter := metrics.GetOrCreateFloatCounter(n)
 			if health[i] {
 				counter.Set(1)
@@ -125,7 +135,7 @@ func (e *Exporter) Run(ctx context.Context) error {
 				counter.Set(0)
 			}
 
-			n = BuildMetricName(collectorSection, "process_seconds", labels)
+			n = BuildMetricName(e.scope, collectorPrefix, "process_seconds", labels)
 			counter = metrics.GetOrCreateFloatCounter(n)
 			counter.Set(dur[i].Seconds())
 		}

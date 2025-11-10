@@ -11,7 +11,7 @@ import (
 	"github.com/cilium/cilium/pkg/client"
 	"github.com/cilium/ebpf"
 
-	"github.com/cybozu/neco-containers/neco-server-exporter/pkg/exporter"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
 type collector struct {
@@ -20,12 +20,8 @@ type collector struct {
 
 var _ exporter.Collector = &collector{}
 
-func NewCollector() exporter.Collector {
-	return &collector{}
-}
-
-func (c *collector) MetricsPrefix() string {
-	return "bpf"
+func NewCollector() (exporter.Collector, error) {
+	return &collector{}, nil
 }
 
 func (c *collector) collectProgramMetrics(

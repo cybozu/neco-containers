@@ -70,7 +70,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [memcached\_exporter](#memcached_exporter)
 - [meows-dctest-runner](#meows-dctest-runner)
 - [meows-neco-runner](#meows-neco-runner)
-- [neco-server-exporter](#neco-server-exporter)
+- [neco-exporter](#neco-exporter)
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
 - [pomerium](#pomerium)
@@ -853,7 +853,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 4. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
 
-## neco-server-exporter
+## neco-exporter
 
 ![Regular Update](./regular_update.svg)
 

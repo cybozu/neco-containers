@@ -39,15 +39,23 @@ func kubectlSafe(g Gomega, input []byte, args ...string) []byte {
 	return stdout
 }
 
-func scrape(g Gomega) []byte {
-	const nsOption = "-n=neco-server-exporter"
+func scrape(g Gomega, svc string) []byte {
+	const nsOption = "-n=neco-exporter"
 
-	stdout := kubectlSafe(g, nil, "get", "service", nsOption, "neco-server-exporter", "-o=jsonpath={ .spec.ports[0].nodePort }")
+	stdout := kubectlSafe(g, nil, "get", "service", nsOption, svc, "-o=jsonpath={ .spec.ports[0].nodePort }")
 	nodePort := string(stdout)
 
 	url := fmt.Sprintf("http://localhost:%s/metrics", nodePort)
-	stdout, stderr, err := runCommand("docker", nil, "exec", "neco-server-exporter-control-plane", "curl", "-s", url)
-	g.Expect(err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s, err: %v", string(stdout), string(stderr), err)
+	stdout, stderr, err := runCommand("docker", nil, "exec", "neco-exporter-control-plane", "curl", "-s", url)
+	g.ExpectWithOffset(2, err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s, err: %v", string(stdout), string(stderr), err)
 
 	return stdout
+}
+
+func scrapeCluster(g Gomega) []byte {
+	return scrape(g, "neco-cluster-exporter")
+}
+
+func scrapeServer(g Gomega) []byte {
+	return scrape(g, "neco-server-exporter")
 }

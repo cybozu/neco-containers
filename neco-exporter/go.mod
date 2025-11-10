@@ -1,4 +1,4 @@
-module github.com/cybozu/neco-containers/neco-server-exporter
+module github.com/cybozu/neco-containers/neco-exporter
 
 go 1.25.4
 

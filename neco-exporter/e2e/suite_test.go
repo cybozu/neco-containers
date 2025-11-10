@@ -18,13 +18,16 @@ var _ = BeforeSuite(func() {
 	SetDefaultEventuallyTimeout(5 * time.Minute)
 })
 
-var _ = Describe("Test neco-server-exporter", func() {
+var _ = Describe("Test neco-exporter", func() {
 	runTest()
 })
 
 func runTest() {
 	Context("exporter", testExporter)
 
-	// test collectors
+	// test cluster collectors
+	// TBD
+
+	// test server collectors
 	Context("bpf", testBPFCollector)
 }

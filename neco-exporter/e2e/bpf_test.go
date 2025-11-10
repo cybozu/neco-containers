@@ -19,7 +19,7 @@ func testBPFCollector() {
 		}
 
 		Eventually(func(g Gomega) {
-			stdout := scrape(g)
+			stdout := scrapeServer(g)
 			reader := bufio.NewScanner(bytes.NewReader(stdout))
 			for reader.Scan() {
 				line := reader.Text()
@@ -33,7 +33,7 @@ func testBPFCollector() {
 
 	It("should report long program names using BTF", func() {
 		Eventually(func(g Gomega) error {
-			stdout := scrape(g)
+			stdout := scrapeServer(g)
 			reader := bufio.NewScanner(bytes.NewReader(stdout))
 			for reader.Scan() {
 				line := reader.Text()

@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  namespace: neco-server-exporter
+  namespace: neco-exporter
   name: neco-server-exporter
 spec:
   selector:
@@ -15,10 +15,11 @@ spec:
       securityContext:
         fsGroup: 0
       containers:
-        - image: ghcr.io/cybozu/neco-server-exporter:dev
+        - image: ghcr.io/cybozu/neco-exporter:dev
           name: exporter
           args:
-            - --collectors=bpf,mock
+            - --scope=server
+            - --collectors=bpf
             - --interval=10s
           volumeMounts:
             - name: cilium-socket
