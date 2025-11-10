@@ -24,7 +24,8 @@ RUN apt-get update && apt-get install -y \
     systemtap-sdt-dev \
     zlib1g-dev \
     libcurl4-openssl-dev \
-    libedit-dev
+    libedit-dev \
+    xxd
 
 WORKDIR /build
 COPY Makefile .
