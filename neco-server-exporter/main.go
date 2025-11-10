@@ -19,7 +19,6 @@ var (
 	port           int
 	collectorNames []string
 	interval       time.Duration
-	log            *slog.Logger
 )
 
 var cmd = &cobra.Command{
@@ -36,12 +35,13 @@ func init() {
 	cmd.Flags().IntVar(&port, "port", 8080, "Specify port to expose metrics")
 	cmd.Flags().StringSliceVar(&collectorNames, "collectors", []string{"bpf"}, "Specify collectors to activate")
 	cmd.Flags().DurationVar(&interval, "interval", time.Second*30, "Interval to update metrics")
-	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	slog.SetDefault(logger)
 }
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		log.Error("failed to run", slog.Any("error", err))
+		slog.Error("failed to run", slog.Any("error", err))
 		os.Exit(1)
 	}
 }
@@ -63,7 +63,7 @@ func runMain() error {
 		collectors = append(collectors, candidates[index])
 	}
 
-	log.Info("activate collectors", slog.Any("collectors", collectorNames))
+	slog.Info("activate collectors", slog.Any("collectors", collectorNames))
 	e := exporter.NewExporter(port, collectors, interval)
 
 	// controller-runtime will likely be needed in the near future,

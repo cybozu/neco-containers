@@ -2,10 +2,10 @@ package exporter
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"sync"
 	"time"
 
@@ -16,8 +16,6 @@ type Exporter struct {
 	port       int
 	collectors []Collector
 	interval   time.Duration
-
-	log *slog.Logger
 }
 
 func NewExporter(port int, collectors []Collector, interval time.Duration) *Exporter {
@@ -25,19 +23,18 @@ func NewExporter(port int, collectors []Collector, interval time.Duration) *Expo
 		port:       port,
 		interval:   interval,
 		collectors: collectors,
-		log:        slog.New(slog.NewJSONHandler(os.Stdout, nil)),
 	}
 }
 
 func (e *Exporter) Start(ctx context.Context) error {
 	go func() {
 		if err := e.Run(ctx); err != nil {
-			e.log.Error("failed to scrape metrics", slog.Any("error", err))
+			slog.ErrorContext(ctx, "failed to scrape metrics", slog.Any("error", err))
 		}
 	}()
 
 	addr := fmt.Sprintf("0.0.0.0:%d", e.port)
-	e.log.InfoContext(ctx, "start metrics server", slog.Any("address", addr))
+	slog.InfoContext(ctx, "start metrics server", slog.Any("address", addr))
 
 	server := http.Server{
 		Addr: addr,
@@ -47,19 +44,24 @@ func (e *Exporter) Start(ctx context.Context) error {
 		metrics.WritePrometheus(w, false)
 	})
 
-	if err := server.ListenAndServe(); err != nil {
-		e.log.Error("metrics server stopped", slog.Any("error", err))
-		return err
-	}
-
+	serveErr := make(chan error)
 	go func() {
-		select {
-		case <-ctx.Done():
-			server.Shutdown(ctx)
-		default:
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.ErrorContext(ctx, "metrics server stopped", slog.Any("error", err))
+			serveErr <- err
 		}
 	}()
-	return nil
+
+	select {
+	case err := <-serveErr:
+		return err
+	case <-ctx.Done():
+		slog.InfoContext(ctx, "shutting down server")
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	return server.Shutdown(shutdownCtx)
 }
 
 // Run starts the metric collection loop.
@@ -87,7 +89,7 @@ func (e *Exporter) Run(ctx context.Context) error {
 
 				section := c.MetricsPrefix()
 				if err != nil {
-					e.log.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", c.MetricsPrefix()))
+					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", c.MetricsPrefix()))
 				} else {
 					for _, m := range r {
 						n := BuildMetricName(section, m.Name, m.Labels)
