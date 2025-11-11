@@ -14,8 +14,8 @@ import (
 func testBPFCollector() {
 	It("should report necessary metrices", func() {
 		remaining := []string{
-			"neco_server_bpf_run_time_seconds_total",
-			"neco_server_bpf_run_count_total",
+			"neco_node_bpf_run_time_seconds_total",
+			"neco_node_bpf_run_count_total",
 		}
 
 		Eventually(func(g Gomega) {
@@ -37,7 +37,7 @@ func testBPFCollector() {
 			reader := bufio.NewScanner(bytes.NewReader(stdout))
 			for reader.Scan() {
 				line := reader.Text()
-				if strings.Contains(line, "neco_server_bpf_run_time_seconds_total") &&
+				if strings.Contains(line, "neco_node_bpf_run_time_seconds_total") &&
 					strings.Contains(line, `name="cil_from_container"`) {
 					return nil
 				}

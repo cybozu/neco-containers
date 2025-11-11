@@ -28,6 +28,6 @@ func runTest() {
 	// test cluster collectors
 	// TBD
 
-	// test server collectors
+	// test node collectors
 	Context("bpf", testBPFCollector)
 }

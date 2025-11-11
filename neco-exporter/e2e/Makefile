@@ -61,9 +61,9 @@ scrape-cluster:
 	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-cluster-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
 	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
 
-.PHONY: scrape-server
-scrape-server:
-	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-server-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
+.PHONY: scrape-node
+scrape-node:
+	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-node-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
 	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
 
 .PHONY: test

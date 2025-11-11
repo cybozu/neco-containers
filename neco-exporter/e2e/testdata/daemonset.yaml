@@ -2,15 +2,15 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   namespace: neco-exporter
-  name: neco-server-exporter
+  name: neco-node-exporter
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: neco-server-exporter
+      app.kubernetes.io/name: neco-node-exporter
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: neco-server-exporter
+        app.kubernetes.io/name: neco-node-exporter
     spec:
       securityContext:
         fsGroup: 0
@@ -18,7 +18,7 @@ spec:
         - image: ghcr.io/cybozu/neco-exporter:dev
           name: exporter
           args:
-            - --scope=server
+            - --scope=node
             - --collectors=bpf
             - --interval=10s
           volumeMounts:

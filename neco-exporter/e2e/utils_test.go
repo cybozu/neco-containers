@@ -57,5 +57,5 @@ func scrapeCluster(g Gomega) []byte {
 }
 
 func scrapeServer(g Gomega) []byte {
-	return scrape(g, "neco-server-exporter")
+	return scrape(g, "neco-node-exporter")
 }
