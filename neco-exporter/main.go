@@ -10,7 +10,6 @@ import (
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/registry"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
@@ -51,9 +50,9 @@ func main() {
 
 func runMain() error {
 	candidates := registry.All()
-	collectors := make([]collector.Collector, 0)
+	collectors := make([]exporter.Collector, 0)
 	for _, name := range collectorNames {
-		index := slices.IndexFunc(candidates, func(c collector.Collector) bool {
+		index := slices.IndexFunc(candidates, func(c exporter.Collector) bool {
 			return name == c.MetricsPrefix()
 		})
 		if index < 0 {
@@ -61,11 +60,8 @@ func runMain() error {
 		}
 
 		c := candidates[index]
-		switch {
-		case scope == constants.ScopeCluster && c.Scope() == constants.ScopeNode:
-			return fmt.Errorf("collector is not available in cluster-scope: %s", name)
-		case scope == constants.ScopeNode && c.Scope() == constants.ScopeCluster:
-			return fmt.Errorf("collector is not available in node-scope: %s", name)
+		if scope != c.Scope() {
+			return fmt.Errorf("%s collector is not available in %s-scope", name, scope)
 		}
 		if err := c.Setup(); err != nil {
 			return fmt.Errorf("failed to setup collector: %s", name)

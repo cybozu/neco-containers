@@ -10,18 +10,16 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/metrics"
-
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
 )
 
 type Exporter struct {
 	scope      string
 	port       int
-	collectors []collector.Collector
+	collectors []Collector
 	interval   time.Duration
 }
 
-func NewExporter(scope string, port int, collectors []collector.Collector, interval time.Duration) *Exporter {
+func NewExporter(scope string, port int, collectors []Collector, interval time.Duration) *Exporter {
 	return &Exporter{
 		scope:      scope,
 		port:       port,

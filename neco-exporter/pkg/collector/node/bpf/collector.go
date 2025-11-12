@@ -11,17 +11,17 @@ import (
 	"github.com/cilium/cilium/pkg/client"
 	"github.com/cilium/ebpf"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
 type bpfCollector struct {
 	ciliumClient *client.Client
 }
 
-var _ collector.Collector = &bpfCollector{}
+var _ exporter.Collector = &bpfCollector{}
 
-func NewCollector() collector.Collector {
+func NewCollector() exporter.Collector {
 	return &bpfCollector{}
 }
 
@@ -46,7 +46,7 @@ func (c *bpfCollector) Setup() error {
 func (c *bpfCollector) collectProgramMetrics(
 	id ebpf.ProgramID,
 	tcxMeta map[ebpf.ProgramID]TCXMetadata, endpointMeta map[uint32]*models.Endpoint,
-) ([]*collector.Metric, error) {
+) ([]*exporter.Metric, error) {
 
 	prog, err := ebpf.NewProgramFromID(id)
 	switch {
@@ -93,22 +93,22 @@ func (c *bpfCollector) collectProgramMetrics(
 		}
 	}
 
-	timeMetric := &collector.Metric{
+	timeMetric := &exporter.Metric{
 		Name:   "run_time_seconds_total",
 		Value:  stats.Runtime.Seconds(),
 		Labels: labels,
 	}
 
-	countMetric := &collector.Metric{
+	countMetric := &exporter.Metric{
 		Name:   "run_count_total",
 		Value:  float64(stats.RunCount),
 		Labels: labels,
 	}
 
-	return []*collector.Metric{timeMetric, countMetric}, nil
+	return []*exporter.Metric{timeMetric, countMetric}, nil
 }
 
-func (c *bpfCollector) Collect(ctx context.Context) ([]*collector.Metric, error) {
+func (c *bpfCollector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
 	if err := CheckBPFStatsEnabled(); err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (c *bpfCollector) Collect(ctx context.Context) ([]*collector.Metric, error)
 		}
 	}
 
-	ret := make([]*collector.Metric, 0)
+	ret := make([]*exporter.Metric, 0)
 	var id ebpf.ProgramID
 
 ProgramLoop:

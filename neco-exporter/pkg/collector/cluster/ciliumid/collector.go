@@ -3,16 +3,16 @@ package ciliumid
 import (
 	"context"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
 type ciliumIDCollector struct {
 }
 
-var _ collector.Collector = &ciliumIDCollector{}
+var _ exporter.Collector = &ciliumIDCollector{}
 
-func NewCollector() collector.Collector {
+func NewCollector() exporter.Collector {
 	return &ciliumIDCollector{}
 }
 
@@ -29,6 +29,6 @@ func (c *ciliumIDCollector) Setup() error {
 	return nil
 }
 
-func (c *ciliumIDCollector) Collect(ctx context.Context) ([]*collector.Metric, error) {
+func (c *ciliumIDCollector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
 	return nil, nil
 }
