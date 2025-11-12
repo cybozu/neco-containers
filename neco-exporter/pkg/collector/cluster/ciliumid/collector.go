@@ -3,17 +3,32 @@ package ciliumid
 import (
 	"context"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 )
 
-type collector struct {
+type ciliumIDCollector struct {
 }
 
-func NewCollector() (exporter.Collector, error) {
-	// Leave it as a stub to the next PR
-	return &collector{}, nil
+var _ collector.Collector = &ciliumIDCollector{}
+
+func NewCollector() collector.Collector {
+	return &ciliumIDCollector{}
 }
 
-func (c *collector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
+func (c *ciliumIDCollector) Scope() string {
+	return constants.ScopeCluster
+}
+
+func (c *ciliumIDCollector) MetricsPrefix() string {
+	return "ciliumid"
+}
+
+func (c *ciliumIDCollector) Setup() error {
+	// TODO: setup shared informer to fetch CiliumIdentity resources
+	return nil
+}
+
+func (c *ciliumIDCollector) Collect(ctx context.Context) ([]*collector.Metric, error) {
 	return nil, nil
 }

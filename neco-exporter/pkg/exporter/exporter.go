@@ -10,30 +10,23 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/metrics"
+
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
 )
 
 type Exporter struct {
-	scope          string
-	port           int
-	metrixPrefixes []string
-	collectors     []Collector
-	interval       time.Duration
+	scope      string
+	port       int
+	collectors []collector.Collector
+	interval   time.Duration
 }
 
-func NewExporter(scope string, port int, collectors map[string]Collector, interval time.Duration) *Exporter {
-	metrixPrefixes := make([]string, 0, len(collectors))
-	collectorList := make([]Collector, 0, len(collectors))
-	for k, v := range collectors {
-		metrixPrefixes = append(metrixPrefixes, k)
-		collectorList = append(collectorList, v)
-	}
-
+func NewExporter(scope string, port int, collectors []collector.Collector, interval time.Duration) *Exporter {
 	return &Exporter{
-		scope:          scope,
-		port:           port,
-		metrixPrefixes: metrixPrefixes,
-		collectors:     collectorList,
-		interval:       interval,
+		scope:      scope,
+		port:       port,
+		collectors: collectors,
+		interval:   interval,
 	}
 }
 
@@ -86,9 +79,8 @@ func (e *Exporter) Run(ctx context.Context) error {
 
 	for {
 		var wg sync.WaitGroup
-		wg.Add(len(e.collectors))
 		for i, c := range e.collectors {
-			go func(i int) {
+			wg.Go(func() {
 				next := make(map[string]struct{})
 
 				startTime := time.Now()
@@ -96,9 +88,9 @@ func (e *Exporter) Run(ctx context.Context) error {
 				health[i] = (err == nil)
 				dur[i] = time.Since(startTime)
 
-				prefix := e.metrixPrefixes[i]
+				prefix := c.MetricsPrefix()
 				if err != nil {
-					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", e.metrixPrefixes[i]))
+					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", prefix))
 				} else {
 					for _, m := range r {
 						n := BuildMetricName(e.scope, prefix, m.Name, m.Labels)
@@ -115,16 +107,14 @@ func (e *Exporter) Run(ctx context.Context) error {
 					metrics.UnregisterMetric(k)
 				}
 				prev[i] = next
-
-				wg.Done()
-			}(i)
+			})
 		}
 		wg.Wait()
 
 		const collectorPrefix = "collector"
-		for i := 0; i < len(e.collectors); i++ {
+		for i, c := range e.collectors {
 			labels := map[string]string{
-				"collector": e.metrixPrefixes[i],
+				"collector": c.MetricsPrefix(),
 			}
 
 			n := BuildMetricName(e.scope, collectorPrefix, "health", labels)

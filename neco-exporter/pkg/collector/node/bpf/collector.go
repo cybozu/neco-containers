@@ -11,23 +11,42 @@ import (
 	"github.com/cilium/cilium/pkg/client"
 	"github.com/cilium/ebpf"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 )
 
-type collector struct {
+type bpfCollector struct {
 	ciliumClient *client.Client
 }
 
-var _ exporter.Collector = &collector{}
+var _ collector.Collector = &bpfCollector{}
 
-func NewCollector() (exporter.Collector, error) {
-	return &collector{}, nil
+func NewCollector() collector.Collector {
+	return &bpfCollector{}
 }
 
-func (c *collector) collectProgramMetrics(
+func (c *bpfCollector) Scope() string {
+	return constants.ScopeNode
+}
+
+func (c *bpfCollector) MetricsPrefix() string {
+	return "bpf"
+}
+
+func (c *bpfCollector) Setup() error {
+	var cli *client.Client
+	var err error
+	if cli, err = client.NewClient(""); err != nil {
+		return fmt.Errorf("failed to open Cilium socket: %w", err)
+	}
+	c.ciliumClient = cli
+	return nil
+}
+
+func (c *bpfCollector) collectProgramMetrics(
 	id ebpf.ProgramID,
 	tcxMeta map[ebpf.ProgramID]TCXMetadata, endpointMeta map[uint32]*models.Endpoint,
-) ([]*exporter.Metric, error) {
+) ([]*collector.Metric, error) {
 
 	prog, err := ebpf.NewProgramFromID(id)
 	switch {
@@ -74,30 +93,24 @@ func (c *collector) collectProgramMetrics(
 		}
 	}
 
-	timeMetric := &exporter.Metric{
+	timeMetric := &collector.Metric{
 		Name:   "run_time_seconds_total",
 		Value:  stats.Runtime.Seconds(),
 		Labels: labels,
 	}
 
-	countMetric := &exporter.Metric{
+	countMetric := &collector.Metric{
 		Name:   "run_count_total",
 		Value:  float64(stats.RunCount),
 		Labels: labels,
 	}
 
-	return []*exporter.Metric{timeMetric, countMetric}, nil
+	return []*collector.Metric{timeMetric, countMetric}, nil
 }
 
-func (c *collector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
+func (c *bpfCollector) Collect(ctx context.Context) ([]*collector.Metric, error) {
 	if err := CheckBPFStatsEnabled(); err != nil {
 		return nil, err
-	}
-	if c.ciliumClient == nil {
-		var err error
-		if c.ciliumClient, err = client.NewClient(""); err != nil {
-			return nil, fmt.Errorf("failed to open Cilium socket: %w", err)
-		}
 	}
 
 	tcxMeta, err := CollectTCXMetadata()
@@ -107,12 +120,18 @@ func (c *collector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
 
 	endpointMeta, err := CollectEndpointMetadata(c.ciliumClient)
 	if err != nil {
-		// maybe disconnected? connect again on the next iteration
-		c.ciliumClient = nil
-		return nil, fmt.Errorf("failed to read from Cilium socket: %w", err)
+		// maybe disconnected? connect again
+		if err := c.Setup(); err != nil {
+			return nil, fmt.Errorf("failed to reopen Cilium socket: %w", err)
+		}
+		// retry
+		endpointMeta, err = CollectEndpointMetadata(c.ciliumClient)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read from Cilium socket: %w", err)
+		}
 	}
 
-	ret := make([]*exporter.Metric, 0)
+	ret := make([]*collector.Metric, 0)
 	var id ebpf.ProgramID
 
 ProgramLoop:

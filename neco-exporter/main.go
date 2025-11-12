@@ -10,22 +10,11 @@ import (
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/ciliumid"
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/mock"
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/bpf"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/registry"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
-
-const (
-	scopeCluster = "cluster"
-	scopeNode    = "node"
-)
-
-type factory struct {
-	scope        string
-	metrixPrefix string
-	newFunc      func() (exporter.Collector, error)
-}
 
 var (
 	scope          string
@@ -45,7 +34,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.Flags().StringVar(&scope, "scope", scopeCluster, fmt.Sprintf("Collection scope (%s or %s)", scopeCluster, scopeNode))
+	cmd.Flags().StringVar(&scope, "scope", constants.ScopeCluster, fmt.Sprintf("Collection scope (%s or %s)", constants.ScopeCluster, constants.ScopeNode))
 	cmd.Flags().IntVar(&port, "port", 8080, "Specify port to expose metrics")
 	cmd.Flags().StringSliceVar(&collectorNames, "collectors", []string{"bpf"}, "Specify collectors to activate")
 	cmd.Flags().DurationVar(&interval, "interval", time.Second*30, "Interval to update metrics")
@@ -61,48 +50,28 @@ func main() {
 }
 
 func runMain() error {
-	factories := []factory{
-		// scope: cluster
-		{
-			scope:        scopeCluster,
-			metrixPrefix: "ciliumid",
-			newFunc:      ciliumid.NewCollector,
-		},
-		{
-			scope:        scopeCluster,
-			metrixPrefix: "mock",
-			newFunc:      mock.NewCollector,
-		},
-		// scope: node
-		{
-			scope:        scopeNode,
-			metrixPrefix: "bpf",
-			newFunc:      bpf.NewCollector,
-		},
-	}
-
-	collectors := make(map[string]exporter.Collector)
+	candidates := registry.All()
+	collectors := make([]collector.Collector, 0)
 	for _, name := range collectorNames {
-		index := slices.IndexFunc(factories, func(f factory) bool {
-			return name == f.metrixPrefix
+		index := slices.IndexFunc(candidates, func(c collector.Collector) bool {
+			return name == c.MetricsPrefix()
 		})
 		if index < 0 {
 			return fmt.Errorf("unknown collector name: %s", name)
 		}
 
-		f := factories[index]
+		c := candidates[index]
 		switch {
-		case scope == scopeCluster && f.scope == scopeNode:
+		case scope == constants.ScopeCluster && c.Scope() == constants.ScopeNode:
 			return fmt.Errorf("collector is not available in cluster-scope: %s", name)
-		case scope == scopeNode && f.scope == scopeCluster:
+		case scope == constants.ScopeNode && c.Scope() == constants.ScopeCluster:
 			return fmt.Errorf("collector is not available in node-scope: %s", name)
-		default:
-			c, err := f.newFunc()
-			if err != nil {
-				return err
-			}
-			collectors[f.metrixPrefix] = c
 		}
+		if err := c.Setup(); err != nil {
+			return fmt.Errorf("failed to setup collector: %s", name)
+		}
+
+		collectors = append(collectors, c)
 	}
 
 	slog.Info("activate collectors", slog.Any("collectors", collectorNames))

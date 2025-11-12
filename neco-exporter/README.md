@@ -8,11 +8,10 @@ If you want to add a new collector to extend functionality, follow the below ins
     - If the metrics represents node property, it should be served when `--scope=node`
 2. Determine short name
     - Name your collector with a unique short name, e.g. `bpf`, `ciliumid`, `mock`...
-3. Add a collector
-    - If yours runs in cluster-scope, add it under `pkg/collector/cluster`
-    - If yours runs in node-scope, add it under `pkg/collector/node`
-4. Add your collector to bootstrap
-    - Open `main.go` and add yours in `factories` variable
+3. Write a collector
+    - If it runs in cluster-scope, add it under `pkg/collector/cluster`
+    - If it runs in node-scope, add it under `pkg/collector/node`
+4. Register the collector in `pkg/collector/registry/registry.go`
 
 ### Instruction for CI
 
