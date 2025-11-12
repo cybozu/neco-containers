@@ -64,7 +64,7 @@ func runMain() error {
 			return fmt.Errorf("%s collector is not available in %s-scope", name, scope)
 		}
 		if err := c.Setup(); err != nil {
-			return fmt.Errorf("failed to setup collector: %s", name)
+			return fmt.Errorf("failed to setup %s collector: %w", name, err)
 		}
 
 		collectors = append(collectors, c)

@@ -29,9 +29,11 @@ func NewExporter(scope string, port int, collectors []Collector, interval time.D
 }
 
 func (e *Exporter) Start(ctx context.Context) error {
+	runErr := make(chan error)
 	go func() {
 		if err := e.Run(ctx); err != nil {
 			slog.ErrorContext(ctx, "failed to scrape metrics", slog.Any("error", err))
+			runErr <- err
 		}
 	}()
 
@@ -39,7 +41,11 @@ func (e *Exporter) Start(ctx context.Context) error {
 	slog.InfoContext(ctx, "start metrics server", slog.Any("address", addr))
 
 	server := http.Server{
-		Addr: addr,
+		Addr:              addr,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       5 * time.Second,
+		WriteTimeout:      60 * time.Second,
+		IdleTimeout:       120 * time.Second,
 	}
 
 	http.HandleFunc("/metrics", func(w http.ResponseWriter, req *http.Request) {
@@ -55,6 +61,8 @@ func (e *Exporter) Start(ctx context.Context) error {
 	}()
 
 	select {
+	case err := <-runErr:
+		return err
 	case err := <-serveErr:
 		return err
 	case <-ctx.Done():
