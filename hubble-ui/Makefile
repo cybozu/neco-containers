@@ -1,7 +1,7 @@
 HUBBLE_UI_REPO ?= https://github.com/cilium/hubble-ui.git
 HUBBLE_UI_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
 NGINX_REPO ?= https://github.com/nginx/docker-nginx-unprivileged.git
-NGINX_COMMIT_HASH ?= 7e515bf70e10e5ea7cdcc14fd3e736ebc639df9a
+NGINX_COMMIT_HASH ?= 872c2c0617f10eecc31b7826168a759f24dc02d7
 
 BACKEND_BUILDER_IMAGE_TAG ?= backend-builder:dev
 BACKEND_IMAGE_TAG ?= ghcr.io/cybozu/hubble-ui-backend:$(shell cat TAG)

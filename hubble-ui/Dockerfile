@@ -1,11 +1,11 @@
 ARG NODE_VERSION=22
-ARG NGINX_VERSION=1.27.3
-ARG NJS_VERSION=0.8.7
+ARG NGINX_VERSION=1.29.1
+ARG NJS_VERSION=0.9.1
 ARG PKG_RELEASE=1~noble
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.24-noble AS backend-builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -21,7 +21,7 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.24-noble AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
 ARG NODE_VERSION
 
 WORKDIR /app
@@ -63,11 +63,11 @@ RUN set -x \
             pgp.mit.edu \
         ; do \
             echo "Fetching GPG key $NGINX_GPGKEY from $server"; \
-            gpg1 --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break; \
+            gpg1 --batch --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break; \
         done; \
         test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_GPGKEY" && exit 1; \
     done; \
-    gpg1 --export "$NGINX_GPGKEYS" > "$NGINX_GPGKEY_PATH" ; \
+    gpg1 --batch --export $NGINX_GPGKEYS > "$NGINX_GPGKEY_PATH" ; \
     rm -rf "$GNUPGHOME"; \
     apt-get remove --purge --auto-remove -y gnupg1 && rm -rf /var/lib/apt/lists/* \
     && dpkgArch="$(dpkg --print-architecture)" \
@@ -106,8 +106,9 @@ RUN set -x \
 # implement changes required to run NGINX as an unprivileged user
 RUN sed -i 's,listen       80;,listen       8080;,' /etc/nginx/conf.d/default.conf \
     && sed -i '/user  nginx;/d' /etc/nginx/nginx.conf \
-    && sed -i 's,/var/run/nginx.pid,/tmp/nginx.pid,' /etc/nginx/nginx.conf \
+    && sed -i 's,\(/var\)\{0\,1\}/run/nginx.pid,/tmp/nginx.pid,' /etc/nginx/nginx.conf \
     && sed -i "/^http {/a \    proxy_temp_path /tmp/proxy_temp;\n    client_body_temp_path /tmp/client_temp;\n    fastcgi_temp_path /tmp/fastcgi_temp;\n    uwsgi_temp_path /tmp/uwsgi_temp;\n    scgi_temp_path /tmp/scgi_temp;\n" /etc/nginx/nginx.conf \
+    && sed -i 's,PIDFILE=${PIDFILE:-/run/nginx.pid},PIDFILE=${PIDFILE:-/tmp/nginx.pid},' /etc/init.d/nginx \
 # nginx user must own the cache and etc directory to write cache and tweak the nginx config
     && chown -R $UID:0 /var/cache/nginx \
     && chmod -R g+w /var/cache/nginx \
