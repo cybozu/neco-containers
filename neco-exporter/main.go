@@ -28,6 +28,8 @@ var cmd = &cobra.Command{
 
 	Args: cobra.ExactArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {
+		cmd.SilenceErrors = true
+		cmd.SilenceUsage = true
 		return runMain()
 	},
 }

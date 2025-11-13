@@ -63,7 +63,6 @@ func (e *Exporter) Start(ctx context.Context) error {
 
 	<-ctx.Done()
 	if err := context.Cause(ctx); err != nil {
-		slog.ErrorContext(ctx, "received error", slog.Any("error", err))
 		return err
 	}
 
