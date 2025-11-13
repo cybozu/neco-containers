@@ -29,11 +29,13 @@ func NewExporter(scope string, port int, collectors []Collector, interval time.D
 }
 
 func (e *Exporter) Start(ctx context.Context) error {
-	runErr := make(chan error)
+	ctx, cancelCause := context.WithCancelCause(ctx)
+	defer cancelCause(nil)
+
 	go func() {
 		if err := e.Run(ctx); err != nil {
-			slog.ErrorContext(ctx, "failed to scrape metrics", slog.Any("error", err))
-			runErr <- err
+			err = fmt.Errorf("failed to scrape metrics: %w", err)
+			cancelCause(err)
 		}
 	}()
 
@@ -52,23 +54,20 @@ func (e *Exporter) Start(ctx context.Context) error {
 		metrics.WritePrometheus(w, false)
 	})
 
-	serveErr := make(chan error)
 	go func() {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
-			slog.ErrorContext(ctx, "metrics server stopped", slog.Any("error", err))
-			serveErr <- err
+			err = fmt.Errorf("metrics server stopped: %w", err)
+			cancelCause(err)
 		}
 	}()
 
-	select {
-	case err := <-runErr:
+	<-ctx.Done()
+	if err := context.Cause(ctx); err != nil {
+		slog.ErrorContext(ctx, "received error", slog.Any("error", err))
 		return err
-	case err := <-serveErr:
-		return err
-	case <-ctx.Done():
-		slog.InfoContext(ctx, "shutting down server")
 	}
 
+	slog.InfoContext(ctx, "shutting down server")
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	return server.Shutdown(shutdownCtx)
