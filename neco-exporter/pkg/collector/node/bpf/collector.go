@@ -58,7 +58,7 @@ func (c *bpfCollector) collectProgramMetrics(
 	}
 	defer prog.Close()
 
-	// omit metrices for programs without execution
+	// omit metrics for programs without execution
 	stats, err := prog.Stats()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get BPF stats: %w", err)

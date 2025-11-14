@@ -12,7 +12,7 @@ import (
 )
 
 func testBPFCollector() {
-	It("should report necessary metrices", func() {
+	It("should report necessary metrics", func() {
 		remaining := []string{
 			"neco_node_bpf_run_time_seconds_total",
 			"neco_node_bpf_run_count_total",

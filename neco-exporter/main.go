@@ -24,7 +24,7 @@ var (
 
 var cmd = &cobra.Command{
 	Use:   "neco-exporter",
-	Short: "neco-exporter exposes node-local metrices",
+	Short: "neco-exporter exposes node-local metrics",
 
 	Args: cobra.ExactArgs(0),
 	RunE: func(cmd *cobra.Command, args []string) error {

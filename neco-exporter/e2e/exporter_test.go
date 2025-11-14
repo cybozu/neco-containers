@@ -16,7 +16,7 @@ func testExporter() {
 	})
 
 	It("should report collectors health", func() {
-		// mock collector is designed to fail returning metrices sometimes.
+		// mock collector is designed to fail returning metrics sometimes.
 		var healthOK, healthNG, duration bool
 		Eventually(func(g Gomega) {
 			output := string(scrapeCluster(g))

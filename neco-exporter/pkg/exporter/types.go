@@ -18,7 +18,7 @@ type Collector interface {
 	// NOTE: This function is called one-by-one for multiple Collectors.
 	Setup() error
 
-	// Collect relevant metrices.
+	// Collect relevant metrics.
 	// NOTE: this function is called simultaneously with other Collectors.
 	Collect(ctx context.Context) ([]*Metric, error)
 }
