@@ -214,7 +214,7 @@ jobs:
               container-image: "squid"
             - dir: "./squid-exporter"
               container-image: "squid-exporter"
-              make-targets: "test"
+              make-targets: "check-generate test"
             - dir: "./tcp-keepalive"
               container-image: "tcp-keepalive"
               make-targets: "check-diff test"

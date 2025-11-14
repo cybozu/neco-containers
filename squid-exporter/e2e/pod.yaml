@@ -5,7 +5,7 @@ metadata:
 spec:
   containers:
   - name: squid
-    image: ghcr.io/cybozu/squid:6
+    image: ghcr.io/cybozu/squid:7
   - name: squid-exporter
     image: ghcr.io/cybozu/squid-exporter:dev
     imagePullPolicy: Never
