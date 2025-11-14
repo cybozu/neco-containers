@@ -28,7 +28,7 @@ func NewExporter(scope string, port int, collectors []Collector, interval time.D
 	}
 }
 
-func (e *Exporter) Start(ctx context.Context) error {
+func (e *Exporter) Start(ctx context.Context) (ret error) {
 	ctx, cancelCause := context.WithCancelCause(ctx)
 	defer cancelCause(nil)
 
@@ -36,6 +36,8 @@ func (e *Exporter) Start(ctx context.Context) error {
 		if err := e.Run(ctx); err != nil {
 			err = fmt.Errorf("failed to scrape metrics: %w", err)
 			cancelCause(err)
+		} else {
+			cancelCause(nil)
 		}
 	}()
 
@@ -58,18 +60,35 @@ func (e *Exporter) Start(ctx context.Context) error {
 		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			err = fmt.Errorf("metrics server stopped: %w", err)
 			cancelCause(err)
+		} else {
+			cancelCause(nil)
+		}
+	}()
+	defer func() {
+		slog.InfoContext(ctx, "shutting down server")
+		shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		err := server.Shutdown(shutdownCtx)
+		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+			err = nil
+		}
+
+		if err != nil {
+			if ret != nil {
+				// Log previously-captured error before overwrite
+				slog.ErrorContext(ctx, "server failed to shutdown after exporter failure", slog.Any("error", ret))
+			}
+			ret = err
 		}
 	}()
 
 	<-ctx.Done()
-	if err := context.Cause(ctx); err != nil {
-		return err
+	ret = context.Cause(ctx)
+	if errors.Is(ret, context.Canceled) || errors.Is(ret, context.DeadlineExceeded) {
+		ret = nil
 	}
-
-	slog.InfoContext(ctx, "shutting down server")
-	shutdownCtx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer cancel()
-	return server.Shutdown(shutdownCtx)
+	return ret
 }
 
 // Run starts the metric collection loop.
