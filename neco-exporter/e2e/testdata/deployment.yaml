@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: neco-exporter
+  name: neco-cluster-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: neco-cluster-exporter
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: neco-cluster-exporter
+    spec:
+      containers:
+        - image: ghcr.io/cybozu/neco-exporter:dev
+          name: exporter
+          args:
+            - --scope=cluster
+            - --collectors=ciliumid,mock
+            - --interval=10s

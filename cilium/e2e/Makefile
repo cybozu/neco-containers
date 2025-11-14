@@ -1,3 +1,6 @@
+GOARCH ?= $(shell go env GOARCH)
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+
 SUDO ?= sudo
 CILIUM := bin/cilium
 CILIUM_DIR := ../src/cilium
@@ -8,7 +11,7 @@ HUBBLE_RELAY_IMAGE_TAG ?= ghcr.io/cybozu/hubble-relay:$(shell cat ../../hubble-r
 .PHONY: setup
 setup:
 	mkdir -p bin
-	curl -sL -o- https://github.com/cilium/cilium-cli/releases/latest/download/cilium-linux-amd64.tar.gz | tar -xz -C bin/
+	curl -sL -o- https://github.com/cilium/cilium-cli/releases/latest/download/cilium-$(OS)-$(GOARCH).tar.gz | tar -xz -C bin/
 	helm repo add cilium https://helm.cilium.io/
 	helm repo update
 

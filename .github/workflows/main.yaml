@@ -155,6 +155,10 @@ jobs:
             - dir: "./meows-neco-runner"
               container-image: "meows-neco-runner"
               request-scan: "true"
+            - dir: "./neco-exporter"
+              container-image: "neco-exporter"
+              make-targets: "check-generate e2e-prepare test"
+              make-post-targets: "sanity-check"
             - dir: "./opentelemetry-collector"
               container-image: "opentelemetry-collector"
             - dir: "./hubble"
@@ -278,7 +282,7 @@ jobs:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
     runs-on: ubuntu-22.04
     env:
-      go-version: "1.25.3"
+      go-version: "1.25.4"
     steps:
       - uses: actions/checkout@v4
       - name: Setup build environment
