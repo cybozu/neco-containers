@@ -1,7 +1,7 @@
 .PHONY: check-generate
 check-generate: goimports
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-exporter .
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/squid-exporter .
 	git diff --exit-code --name-only
 
 .PHONY build:
