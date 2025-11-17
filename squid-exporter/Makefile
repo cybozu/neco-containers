@@ -1,3 +1,8 @@
+.PHONY: check-generate
+check-generate: goimports
+	go mod tidy
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/squid-exporter .
+	git diff --exit-code --name-only
 
 .PHONY build:
 build:
@@ -5,7 +10,7 @@ build:
 
 .PHONY run-squid:
 run-squid:
-	docker run --rm -it --net=host --name squid ghcr.io/cybozu/squid:6
+	docker run --rm -it --net=host --name squid ghcr.io/cybozu/squid:7
 
 .PHONY test:
 test:
@@ -21,3 +26,5 @@ unit-test:
 .PHONY docker-build:
 docker-build:
 	docker build -t ghcr.io/cybozu/squid-exporter:dev .
+
+include ../tool.mk
