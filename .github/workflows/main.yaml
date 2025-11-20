@@ -10,7 +10,7 @@ jobs:
     outputs:
       jobs: ${{ steps.prepare-matrix.outputs.jobs }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: ./.github/actions/prepare_matrix
         id: prepare-matrix
         with:
@@ -284,7 +284,7 @@ jobs:
     env:
       go-version: "1.25.4"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup build environment
         uses: ./.github/actions/setup
         with:
@@ -318,7 +318,7 @@ jobs:
   build_envoy:
     runs-on: neco-containers-ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Build container image
         uses: ./.github/actions/build_envoy
         with:
@@ -329,7 +329,7 @@ jobs:
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Build ceph image
       uses: ./.github/actions/build_ceph
       with:
@@ -340,7 +340,7 @@ jobs:
     env:
       go-version: "1.23.3"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup build environment
         uses: ./.github/actions/setup
         with:
