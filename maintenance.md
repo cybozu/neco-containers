@@ -159,6 +159,10 @@ In Regular update, do the following as part of the update of each CRD-providing 
 
 5. Update `TAG` file.
 
+> [!Note]
+> Update `Makefile` even if you find no changes in CRDs.
+> Update `TAG` if you have changed mutation/validation code.
+
 ## alertmanager
 
 ![Regular Update](./regular_update.svg)
@@ -215,7 +219,8 @@ The libsystemd version should be the same with the one running on [the stable Fl
 5. Update version variables in `Dockerfile`.
     - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
-7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
+7. Update `ARGOCD_VERSION` in `admission/Makefile`.
+8. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
 
 > [!Note]
 > ArgoCD depends on dex,Redis,HAProxy.
@@ -227,7 +232,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 > [!Note]
 > ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).
-> If Application CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
 
 ## argocd-image-updater
 
@@ -495,11 +500,12 @@ gitGraph
 3. Update `CONTOUR_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
-6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
+6. Update `CONTOUR_VERSION` in `admission/Makefile`.
+7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
 
 > [!Note]
 > Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).
-> If HTTPProxy CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
 
 ## coredns
 
@@ -649,11 +655,11 @@ Ignore!!!
 3. Update `VERSION` in `Dockerfile`.
 4. Update `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
-6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission) if needed.
+6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
 
 > [!Note]
 > Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).
-> If GrafanaDashboard CRD has been changed, you may need to update [neco-admission](#admission-neco-admission).
+> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
 
 ## haproxy
 
