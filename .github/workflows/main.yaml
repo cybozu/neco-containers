@@ -322,7 +322,7 @@ jobs:
       - name: Build container image
         uses: ./.github/actions/build_envoy
         with:
-          clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-14.0.0/clang+llvm-14.0.0-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           github_token: ${{ secrets.GITHUB_TOKEN }}
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
 

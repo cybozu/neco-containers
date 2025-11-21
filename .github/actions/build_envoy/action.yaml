@@ -50,6 +50,15 @@ runs:
         # https://github.com/envoyproxy/envoy/blob/main/.bazelversion
         mkdir -p src
         cd src
+        
+        # Install Build dependencies
+        # LLVM 18.1.8 is built for ubuntu 18.04 and requires libtinfo.so.5,
+        # while GitHub runners use ubuntu 22.04 which only has libtinfo.so.6.
+        # We need to install libtinfo5 explicitly.
+        # https://github.com/llvm/llvm-project/issues/75490
+        # https://github.com/envoyproxy/envoy/pull/39264
+        sudo apt-get update
+        sudo apt-get install -y libtinfo5
 
         # Extract clang+llvm
         # Please update the archive path if supported compiler version is upgraded
