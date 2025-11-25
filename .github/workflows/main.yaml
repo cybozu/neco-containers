@@ -52,7 +52,7 @@ jobs:
               request-scan: "false"
             - dir: "./cep-checker"
               container-image: "cep-checker"
-              make-targets: "test"
+              make-targets: "check-generate test"
             - dir: "ceph-csi-operator"
               container-image: "ceph-csi-operator"
             - dir: "./ceph-extra-exporter"
