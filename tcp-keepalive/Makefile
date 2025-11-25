@@ -14,6 +14,8 @@ DOCKER_CONTEXT=.
 CUSTOM_CHECKER=custom-checker
 STATIC_CHECK=staticcheck
 
+include ../tool.mk
+
 $(CUSTOM_CHECKER):
 	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@latest
 
@@ -34,7 +36,8 @@ mod:
 	$(GO) mod tidy
 
 .PHONY: check-diff
-check-diff: mod fmt
+check-diff: mod fmt goimports
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/tcp-keepalive .
 	git diff --exit-code --name-only
 
 .PHONY: test
