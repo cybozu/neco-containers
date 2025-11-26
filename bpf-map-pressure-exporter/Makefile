@@ -4,8 +4,9 @@ SUDO = sudo
 all: check-generate test
 
 .PHONY: check-generate
-check-generate:
+check-generate: goimports
 	go mod tidy
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/bpf-map-pressure-exporter .
 	git diff --exit-code --name-only
 
 .PHONY: test
