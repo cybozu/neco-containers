@@ -1,4 +1,6 @@
 
+include ../tool.mk
+
 .PHONY: build
 build:
 	CGO_ENABLED=0 go build -ldflags="-w -s" -o cep-checker .
@@ -14,3 +16,9 @@ test:
 .PHONY: docker-build
 docker-build:
 	docker build -t ghcr.io/cybozu/cep-checker:dev .
+
+.PHONY: check-generate
+check-generate: goimports
+	go mod tidy
+	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/cep-checker .
+	git diff --exit-code --name-only
