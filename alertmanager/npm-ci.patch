@@ -1,0 +1,13 @@
+diff --git a/Makefile b/Makefile
+index 3e8db3ae..9420d556 100644
+--- a/Makefile
++++ b/Makefile
+@@ -34,7 +34,7 @@ lint: assets-compress common-lint
+ 
+ .PHONY: build-react-app
+ build-react-app:
+-	cd ui/react-app && npm install && npm run build
++	cd ui/react-app && npm ci && npm run build
+ 
+ .PHONY: assets-compress
+ assets-compress: build-react-app
