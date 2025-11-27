@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG EXTERNALDNS_VERSION=0.17.0
+ARG EXTERNALDNS_VERSION=0.20.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/kubernetes-sigs/external-dns/archive/v${EXTERNALDNS_VERSION}.tar.gz | \
