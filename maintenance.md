@@ -42,7 +42,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [cilium](#cilium)
 - [cilium-certgen](#cilium-certgen)
 - [cilium-operator-generic](#cilium-operator-generic)
-- [configmap-reload](#configmap-reload)
 - [contour](#contour)
 - [coredns](#coredns)
 - [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
@@ -474,16 +473,6 @@ gitGraph
 
 > [!Note]
 > The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
-
-## configmap-reload
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [tags page](https://github.com/jimmidyson/configmap-reload/tags).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/jimmidyson/configmap-reload/blob/vX.Y.Z/Dockerfile`
-3. Update `CONFIGMAP_RELOAD_VERSION` in `Dockerfile`
-4. Update `BRANCH` and `TAG` files.
 
 ## contour
 

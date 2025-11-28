@@ -68,8 +68,6 @@ jobs:
             - dir: "./cilium-operator-generic"
               container-image: "cilium-operator-generic"
               request-scan: "false"
-            - dir: "./configmap-reload"
-              container-image: "configmap-reload"
             - dir: "./contour"
               container-image: "contour"
             - dir: "./coredns"
