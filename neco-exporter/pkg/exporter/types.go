@@ -14,9 +14,12 @@ type Collector interface {
 	Scope() string
 	MetricsPrefix() string
 
+	// Metrics are collected only when it is elected by controller-runtime as a leader.
+	IsLeaderMetrics() bool
+
 	// Run necessary setup.
 	// NOTE: This function is called one-by-one for multiple Collectors.
-	Setup() error
+	Setup(ctx context.Context) error
 
 	// Collect relevant metrics.
 	// NOTE: this function is called simultaneously with other Collectors.

@@ -1,7 +1,7 @@
 GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-E2ETEST_K8S_VERSION  := 1.32.8
+E2ETEST_K8S_VERSION  := 1.33.4
 KIND_VERSION := 0.30.0
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
 CILIUM_CLI_VERSION := 0.18.8
@@ -59,6 +59,8 @@ install: install-pilot
 	$(KIND) load docker-image $(IMAGE_TAG) --name=$(KIND_CLUSTER_NAME)
 	$(KUBECTL) apply -f testdata/namespace.yaml
 	$(KUBECTL) apply -f testdata/serviceaccount.yaml
+	$(KUBECTL) apply -f testdata/role.yaml
+	$(KUBECTL) apply -f testdata/rolebinding.yaml
 	$(KUBECTL) apply -f testdata/daemonset.yaml
 	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
