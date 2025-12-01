@@ -10,6 +10,9 @@ import (
 	"time"
 
 	"github.com/VictoriaMetrics/metrics"
+
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/manager"
 )
 
 type Exporter struct {
@@ -31,6 +34,18 @@ func NewExporter(scope string, port int, collectors []Collector, interval time.D
 func (e *Exporter) Start(ctx context.Context) (ret error) {
 	ctx, cancelCause := context.WithCancelCause(ctx)
 	defer cancelCause(nil)
+
+	if mgr := manager.PeekManager(); mgr != nil {
+		go func() {
+			if err := mgr.Start(ctx); err != nil {
+				err = fmt.Errorf("failed to start manager: %w", err)
+				cancelCause(err)
+			} else {
+				cancelCause(nil)
+			}
+		}()
+		mgr.GetCache().WaitForCacheSync(ctx)
+	}
 
 	go func() {
 		if err := e.Run(ctx); err != nil {
@@ -102,26 +117,37 @@ func (e *Exporter) Run(ctx context.Context) error {
 
 	for {
 		var wg sync.WaitGroup
+		var isLeader bool
+		if mgr := manager.PeekManager(); mgr != nil {
+			select {
+			case <-mgr.Elected():
+				isLeader = true
+			default:
+			}
+		}
+
 		for i, c := range e.collectors {
 			wg.Go(func() {
 				next := make(map[string]struct{})
 
-				startTime := time.Now()
-				r, err := c.Collect(ctx)
-				health[i] = (err == nil)
-				dur[i] = time.Since(startTime)
+				if isLeader || !c.IsLeaderMetrics() {
+					startTime := time.Now()
+					r, err := c.Collect(ctx)
+					health[i] = (err == nil)
+					dur[i] = time.Since(startTime)
 
-				prefix := c.MetricsPrefix()
-				if err != nil {
-					slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", prefix))
-				} else {
-					for _, m := range r {
-						n := BuildMetricName(e.scope, prefix, m.Name, m.Labels)
-						counter := metrics.GetOrCreateFloatCounter(n)
-						counter.Set(m.Value)
+					prefix := c.MetricsPrefix()
+					if err != nil {
+						slog.ErrorContext(ctx, "failed to collect metrics", slog.Any("error", err), slog.String("collector", prefix))
+					} else {
+						for _, m := range r {
+							n := BuildMetricName(e.scope, prefix, m.Name, m.Labels)
+							counter := metrics.GetOrCreateFloatCounter(n)
+							counter.Set(m.Value)
 
-						delete(prev[i], n)
-						next[n] = struct{}{}
+							delete(prev[i], n)
+							next[n] = struct{}{}
+						}
 					}
 				}
 
@@ -135,22 +161,37 @@ func (e *Exporter) Run(ctx context.Context) error {
 		wg.Wait()
 
 		const collectorPrefix = "collector"
-		for i, c := range e.collectors {
-			labels := map[string]string{
-				"collector": c.MetricsPrefix(),
+		if e.scope == constants.ScopeCluster {
+			// neco_cluster_collector_leader
+			n := BuildMetricName(e.scope, collectorPrefix, "leader", nil)
+			v := float64(0)
+			if isLeader {
+				v = 1
 			}
-
-			n := BuildMetricName(e.scope, collectorPrefix, "health", labels)
 			counter := metrics.GetOrCreateFloatCounter(n)
-			if health[i] {
-				counter.Set(1)
-			} else {
-				counter.Set(0)
-			}
+			counter.Set(v)
+		}
 
-			n = BuildMetricName(e.scope, collectorPrefix, "process_seconds", labels)
-			counter = metrics.GetOrCreateFloatCounter(n)
-			counter.Set(dur[i].Seconds())
+		for i, c := range e.collectors {
+			if isLeader || !c.IsLeaderMetrics() {
+				labels := map[string]string{
+					"collector": c.MetricsPrefix(),
+				}
+
+				// neco_xxx_collector_health
+				n := BuildMetricName(e.scope, collectorPrefix, "health", labels)
+				counter := metrics.GetOrCreateFloatCounter(n)
+				if health[i] {
+					counter.Set(1)
+				} else {
+					counter.Set(0)
+				}
+
+				// neco_xxx_collector_process_seconds
+				n = BuildMetricName(e.scope, collectorPrefix, "process_seconds", labels)
+				counter = metrics.GetOrCreateFloatCounter(n)
+				counter.Set(dur[i].Seconds())
+			}
 		}
 
 		select {
