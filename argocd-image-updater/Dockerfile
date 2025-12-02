@@ -1,6 +1,8 @@
-FROM ghcr.io/cybozu/golang:1.23-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.24-noble AS builder
 
-ENV ARGOCD_IMAGE_UPDATER_VERSION=0.16.0
+ENV ARGOCD_IMAGE_UPDATER_VERSION=1.0.1
+ARG TARGETOS=linux
+ARG TARGETARCH=amd64
 
 WORKDIR /work
 
@@ -8,16 +10,17 @@ RUN git clone --depth 1 --branch v${ARGOCD_IMAGE_UPDATER_VERSION} https://github
 
 WORKDIR /work/argocd-image-updater
 RUN mkdir -p dist && \
-    make controller
+    OS=${TARGETOS} ARCH=${TARGETARCH} make build
 
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \
     useradd -r -u 10000 -g argocd argocd && \
     mkdir -p /home/argocd && \
-    chown argocd:argocd /home/argocd && \
-    apt-get update && \
+    chown argocd:argocd /home/argocd
+
+RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         git \
         gpg \
@@ -27,15 +30,24 @@ RUN groupadd -g 10000 argocd && \
         unzip && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf awscliv2.zip ./aws
+# awscli
+WORKDIR /work
+COPY awscli-gpg-public-key.pub .
+## download
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o "awscliv2.zip" && \
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip.sig" -o "awscliv2.sig"
+## verify
+RUN gpg --import awscli-gpg-public-key.pub && \
+    gpg --verify awscliv2.sig awscliv2.zip && \
+    ## install
+    unzip awscliv2.zip && \
+    ./aws/install && \
+    rm -rf awscliv2.zip ./aws
 
-COPY --from=builder /work/argocd-image-updater/dist/argocd-image-updater /usr/local/bin
+COPY --from=builder /work/argocd-image-updater/dist/argocd-image-updater /manager
 COPY --from=builder /work/argocd-image-updater/hack/git-ask-pass.sh /usr/local/bin/git-ask-pass.sh
 COPY --from=builder /work/argocd-image-updater/LICENSE /usr/local/argocd-image-updater/LICENSE
 
 USER 10000:10000
 
-ENTRYPOINT ["/usr/bin/tini", "--", "/usr/local/bin/argocd-image-updater"]
+ENTRYPOINT ["/usr/bin/tini", "--", "/manager"]
