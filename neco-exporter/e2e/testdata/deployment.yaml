@@ -13,6 +13,7 @@ spec:
       labels:
         app.kubernetes.io/name: neco-cluster-exporter
     spec:
+      serviceAccount: neco-cluster-exporter
       containers:
         - image: ghcr.io/cybozu/neco-exporter:dev
           name: exporter

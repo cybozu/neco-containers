@@ -41,11 +41,26 @@ start:
 stop:
 	$(KIND) delete cluster --name=$(KIND_CLUSTER_NAME)
 
+.PHONY: install-pilot
+install-pilot:
+	$(KUBECTL) apply -f testdata/pilot.yaml
+	$(MAKE) --no-print-directory wait-for-workloads
+
+	PODNAME=$$(kubectl get po -l app=pilot -o name | cut -d'/' -f2); \
+	kubectl cp testdata/onboard $${PODNAME}:/tmp/; \
+	kubectl exec $${PODNAME} -- chmod +x /tmp/onboard; \
+	kubectl exec $${PODNAME} -- /tmp/onboard; \
+	kubectl cp $(KUBECTL) $${PODNAME}:/tmp/; \
+	kubectl exec $${PODNAME} -- chmod +x /tmp/kubectl
+
 .PHONY: install
-install:
+install: install-pilot
 	$(MAKE) -C ../ IMAGE_TAG=$(IMAGE_TAG) docker-build
 	$(KIND) load docker-image $(IMAGE_TAG) --name=$(KIND_CLUSTER_NAME)
 	$(KUBECTL) apply -f testdata/namespace.yaml
+	$(KUBECTL) apply -f testdata/serviceaccount.yaml
+	$(KUBECTL) apply -f testdata/role.yaml
+	$(KUBECTL) apply -f testdata/rolebinding.yaml
 	$(KUBECTL) apply -f testdata/daemonset.yaml
 	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
@@ -56,15 +71,18 @@ uninstall:
 	$(KUBECTL) delete -f testdata/namespace.yaml
 	-docker image rm $(IMAGE_TAG)
 
+.PHONY: pilot
+pilot:
+	@PODNAME=$$(kubectl get po -l app=pilot -o name | cut -d'/' -f2); \
+	kubectl exec -it $${PODNAME} -- bash
+
 .PHONY: scrape-cluster
 scrape-cluster:
-	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-cluster-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
-	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
+	$(KUBECTL) exec deploy/pilot -it -- curl -s http://neco-cluster-exporter.neco-exporter.svc/metrics
 
 .PHONY: scrape-node
 scrape-node:
-	@PORT=$$($(KUBECTL) get service -n neco-exporter neco-node-exporter "-o=jsonpath={ .spec.ports[0].nodePort }"); \
-	docker exec $(KIND_CLUSTER_NAME)-control-plane curl -s http://localhost:$${PORT}/metrics
+	$(KUBECTL) exec deploy/pilot -it -- curl -s http://neco-node-exporter.neco-exporter.svc/metrics
 
 .PHONY: test
 test:

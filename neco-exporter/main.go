@@ -5,21 +5,13 @@ import (
 	"log/slog"
 	"os"
 	"slices"
-	"time"
 
 	"github.com/spf13/cobra"
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/registry"
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
-)
-
-var (
-	scope          string
-	port           int
-	collectorNames []string
-	interval       time.Duration
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/option"
 )
 
 var cmd = &cobra.Command{
@@ -35,10 +27,7 @@ var cmd = &cobra.Command{
 }
 
 func init() {
-	cmd.Flags().StringVar(&scope, "scope", constants.ScopeCluster, fmt.Sprintf("Collection scope (%s or %s)", constants.ScopeCluster, constants.ScopeNode))
-	cmd.Flags().IntVar(&port, "port", 8080, "Specify port to expose metrics")
-	cmd.Flags().StringSliceVar(&collectorNames, "collectors", []string{"bpf"}, "Specify collectors to activate")
-	cmd.Flags().DurationVar(&interval, "interval", time.Second*30, "Interval to update metrics")
+	option.SetupOptionFlags(cmd)
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 }
@@ -53,7 +42,7 @@ func main() {
 func runMain() error {
 	candidates := registry.All()
 	collectors := make([]exporter.Collector, 0)
-	for _, name := range collectorNames {
+	for _, name := range option.CollectorNames {
 		index := slices.IndexFunc(candidates, func(c exporter.Collector) bool {
 			return name == c.MetricsPrefix()
 		})
@@ -62,8 +51,8 @@ func runMain() error {
 		}
 
 		c := candidates[index]
-		if scope != c.Scope() {
-			return fmt.Errorf("%s collector is not available in %s-scope", name, scope)
+		if option.Scope != c.Scope() {
+			return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
 		}
 		if err := c.Setup(); err != nil {
 			return fmt.Errorf("failed to setup %s collector: %w", name, err)
@@ -72,8 +61,8 @@ func runMain() error {
 		collectors = append(collectors, c)
 	}
 
-	slog.Info("activate collectors", slog.Any("collectors", collectorNames))
-	e := exporter.NewExporter(scope, port, collectors, interval)
+	slog.Info("activate collectors", slog.Any("collectors", option.CollectorNames))
+	e := exporter.NewExporter(option.Scope, option.Port, collectors, option.Interval)
 
 	// controller-runtime will likely be needed in the near future,
 	// so the dependency against it is not a problem

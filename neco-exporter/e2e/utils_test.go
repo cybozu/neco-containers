@@ -2,15 +2,18 @@ package e2e
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"os/exec"
 	"path/filepath"
 
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 )
 
 const (
 	kubectlPath = "../bin/kubectl"
+	nsOption    = "-n=neco-exporter"
 )
 
 func runCommand(path string, input []byte, args ...string) ([]byte, []byte, error) {
@@ -39,23 +42,32 @@ func kubectlSafe(g Gomega, input []byte, args ...string) []byte {
 	return stdout
 }
 
-func scrape(g Gomega, svc string) []byte {
-	const nsOption = "-n=neco-exporter"
+func kubectlGetSafe[T any](g Gomega, args ...string) *T {
+	args = append([]string{"get", "-o=json"}, args...)
+	stdout := kubectlSafe(g, nil, args...)
 
-	stdout := kubectlSafe(g, nil, "get", "service", nsOption, svc, "-o=jsonpath={ .spec.ports[0].nodePort }")
-	nodePort := string(stdout)
+	ret := new(T)
+	err := json.Unmarshal(stdout, ret)
+	g.ExpectWithOffset(1, err).NotTo(HaveOccurred(), "unmarshal failed. input: %s, err: %w", err)
+	return ret
+}
 
-	url := fmt.Sprintf("http://localhost:%s/metrics", nodePort)
-	stdout, stderr, err := runCommand("docker", nil, "exec", "neco-exporter-control-plane", "curl", "-s", url)
-	g.ExpectWithOffset(2, err).NotTo(HaveOccurred(), "stdout: %s, stderr: %s, err: %v", string(stdout), string(stderr), err)
+func scrape(g Gomega, host string) []byte {
+	url := fmt.Sprintf("http://%s/metrics", host)
 
-	return stdout
+	pilotList := kubectlGetSafe[corev1.PodList](g, "pod", "-l=app=pilot")
+	g.Expect(pilotList.Items).To(HaveLen(1))
+	pilotName := pilotList.Items[0].Name
+
+	return kubectlSafe(g, nil, "exec", pilotName, "--", "curl", "-s", url)
 }
 
 func scrapeCluster(g Gomega) []byte {
-	return scrape(g, "neco-cluster-exporter")
+	service := kubectlGetSafe[corev1.Service](g, "service", nsOption, "neco-cluster-exporter")
+	return scrape(g, service.Spec.ClusterIP)
 }
 
-func scrapeServer(g Gomega) []byte {
-	return scrape(g, "neco-node-exporter")
+func scrapeNode(g Gomega) []byte {
+	service := kubectlGetSafe[corev1.Service](g, "service", nsOption, "neco-node-exporter")
+	return scrape(g, service.Spec.ClusterIP)
 }
