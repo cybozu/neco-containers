@@ -16,6 +16,9 @@ func Test(t *testing.T) {
 var _ = BeforeSuite(func() {
 	SetDefaultEventuallyPollingInterval(time.Second)
 	SetDefaultEventuallyTimeout(5 * time.Minute)
+
+	SetDefaultConsistentlyPollingInterval(time.Second)
+	SetDefaultConsistentlyDuration(15 * time.Second)
 })
 
 var _ = Describe("Test neco-exporter", func() {
@@ -26,7 +29,7 @@ func runTest() {
 	Context("exporter", testExporter)
 
 	// test cluster collectors
-	// TBD
+	Context("ciliumid", testCiliumIDCollector)
 
 	// test node collectors
 	Context("bpf", testBPFCollector)

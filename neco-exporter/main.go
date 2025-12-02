@@ -40,6 +40,8 @@ func main() {
 }
 
 func runMain() error {
+	ctx := ctrl.SetupSignalHandler()
+
 	candidates := registry.All()
 	collectors := make([]exporter.Collector, 0)
 	for _, name := range option.CollectorNames {
@@ -54,7 +56,7 @@ func runMain() error {
 		if option.Scope != c.Scope() {
 			return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
 		}
-		if err := c.Setup(); err != nil {
+		if err := c.Setup(ctx); err != nil {
 			return fmt.Errorf("failed to setup %s collector: %w", name, err)
 		}
 
@@ -63,9 +65,5 @@ func runMain() error {
 
 	slog.Info("activate collectors", slog.Any("collectors", option.CollectorNames))
 	e := exporter.NewExporter(option.Scope, option.Port, collectors, option.Interval)
-
-	// controller-runtime will likely be needed in the near future,
-	// so the dependency against it is not a problem
-	ctx := ctrl.SetupSignalHandler()
 	return e.Start(ctx)
 }

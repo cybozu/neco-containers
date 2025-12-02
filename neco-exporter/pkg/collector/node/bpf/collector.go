@@ -33,7 +33,11 @@ func (c *bpfCollector) MetricsPrefix() string {
 	return "bpf"
 }
 
-func (c *bpfCollector) Setup() error {
+func (c *bpfCollector) IsLeaderMetrics() bool {
+	return false
+}
+
+func (c *bpfCollector) Setup(_ context.Context) error {
 	var cli *client.Client
 	var err error
 	if cli, err = client.NewClient(""); err != nil {
@@ -121,7 +125,7 @@ func (c *bpfCollector) Collect(ctx context.Context) ([]*exporter.Metric, error) 
 	endpointMeta, err := CollectEndpointMetadata(c.ciliumClient)
 	if err != nil {
 		// maybe disconnected? connect again
-		if err := c.Setup(); err != nil {
+		if err := c.Setup(ctx); err != nil {
 			return nil, fmt.Errorf("failed to reopen Cilium socket: %w", err)
 		}
 		// retry

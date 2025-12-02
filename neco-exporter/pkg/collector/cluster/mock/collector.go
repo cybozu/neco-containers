@@ -28,7 +28,11 @@ func (c *mockCollector) MetricsPrefix() string {
 	return "mock"
 }
 
-func (c *mockCollector) Setup() error {
+func (c *mockCollector) IsLeaderMetrics() bool {
+	return true
+}
+
+func (c *mockCollector) Setup(_ context.Context) error {
 	return nil
 }
 
