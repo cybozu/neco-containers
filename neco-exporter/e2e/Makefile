@@ -1,7 +1,7 @@
 GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-E2ETEST_K8S_VERSION  := 1.33.4
+E2ETEST_K8S_VERSION  := 1.32.8
 KIND_VERSION := 0.30.0
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
 CILIUM_CLI_VERSION := 0.18.8
@@ -46,12 +46,12 @@ install-pilot:
 	$(KUBECTL) apply -f testdata/pilot.yaml
 	$(MAKE) --no-print-directory wait-for-workloads
 
-	PODNAME=$$(kubectl get po -l app=pilot -o name | cut -d'/' -f2); \
-	kubectl cp testdata/onboard $${PODNAME}:/tmp/; \
-	kubectl exec $${PODNAME} -- chmod +x /tmp/onboard; \
-	kubectl exec $${PODNAME} -- /tmp/onboard; \
-	kubectl cp $(KUBECTL) $${PODNAME}:/tmp/; \
-	kubectl exec $${PODNAME} -- chmod +x /tmp/kubectl
+	PODNAME=$$($(KUBECTL) get po -l app=pilot -o name | cut -d'/' -f2); \
+	$(KUBECTL) cp testdata/onboard $${PODNAME}:/tmp/; \
+	$(KUBECTL) exec $${PODNAME} -- chmod +x /tmp/onboard; \
+	$(KUBECTL) exec $${PODNAME} -- /tmp/onboard; \
+	$(KUBECTL) cp $(KUBECTL) $${PODNAME}:/tmp/; \
+	$(KUBECTL) exec $${PODNAME} -- chmod +x /tmp/kubectl
 
 .PHONY: install
 install: install-pilot
@@ -59,8 +59,6 @@ install: install-pilot
 	$(KIND) load docker-image $(IMAGE_TAG) --name=$(KIND_CLUSTER_NAME)
 	$(KUBECTL) apply -f testdata/namespace.yaml
 	$(KUBECTL) apply -f testdata/serviceaccount.yaml
-	$(KUBECTL) apply -f testdata/role.yaml
-	$(KUBECTL) apply -f testdata/rolebinding.yaml
 	$(KUBECTL) apply -f testdata/daemonset.yaml
 	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
@@ -73,8 +71,8 @@ uninstall:
 
 .PHONY: pilot
 pilot:
-	@PODNAME=$$(kubectl get po -l app=pilot -o name | cut -d'/' -f2); \
-	kubectl exec -it $${PODNAME} -- bash
+	@PODNAME=$$($(KUBECTL) get po -l app=pilot -o name | cut -d'/' -f2); \
+	$(KUBECTL) exec -it $${PODNAME} -- bash
 
 .PHONY: scrape-cluster
 scrape-cluster:
