@@ -1,11 +1,9 @@
-Configuration
-=============
+# Configuration
 
 The configuration of `neco-admission` is a collection of webhooks configurations.
 This collection is indexed by webhooks names.
 
-ArgoCDApplicationValidator
--------------------------
+## ArgoCDApplicationValidator
 
 The configuration of `ArgoCDApplicationValidator` is a map with the following keys.
 
@@ -42,10 +40,10 @@ ArgoCDApplicationValidator:
         - maneki
 ```
 
-HTTPProxyMutator
-----------------
+## HTTPProxyMutator
 
 The configuration of `HTTPProxyMutator` is a map with the following keys.
+
 | Name     | Type       | Description       |
 | -------- | ---------- | ----------------- |
 | policies | \[\]policy | A list of policy. |
@@ -62,6 +60,7 @@ if the originally listed ipAllowPolicy and the ipAllowPolicy specified in the an
 ### Example
 
 config.yaml
+
 ```yaml
 HTTPProxyMutator:
   policies:
@@ -72,6 +71,7 @@ HTTPProxyMutator:
 ```
 
 httpproxy.yaml
+
 ```yaml
 apiVersion: projectcontour.io/v1
 kind: HTTPProxy
