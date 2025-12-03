@@ -14,10 +14,6 @@ var (
 	Port           int
 	CollectorNames []string
 	Interval       time.Duration
-
-	ControllerMetricsPort   int
-	ControllerProbePort     int
-	LeaderElectionNamespace string
 )
 
 func SetupOptionFlags(cmd *cobra.Command) {
