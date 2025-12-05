@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG GRAFANA_VERSION=12.0.2+security-01
+ARG GRAFANA_VERSION=12.3.0
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -13,18 +13,19 @@ RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.ta
 COPY viewers_can_explore.patch /work/
 RUN patch -p1 < /work/viewers_can_explore.patch
 
-# Install Node.js 22.x & yarn
-# https://github.com/nodesource/distributions/blob/master/README.md#installation-instructions
-RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+# Install Node.js 24.x & yarn
+# https://nodesource.com/products/distributions
+RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
-    && npm install --global yarn
+    && npm install --global yarn@1.22.22
+    # `node` container image, which is used to build this product in the upsteram, includes yarn 1.22.22 at this time.
 
 RUN yarn install --immutable
 ENV NODE_ENV=production
 RUN yarn build
 
-RUN go mod verify
+RUN go mod download
 RUN make build-go
 
 # Stage2: setup runtime container

@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG ALERTMANAGER_VERSION=0.28.1
+ARG ALERTMANAGER_VERSION=0.29.0
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
@@ -19,8 +19,10 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 
 RUN curl -fsSL -o alertmanager.tar.gz "https://github.com/prometheus/alertmanager/archive/v${ALERTMANAGER_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f alertmanager.tar.gz \
-    && rm -f alertmanager.tar.gz \
-    && make "PREFIX=$GOPATH/bin/alertmanager" build
+    && rm -f alertmanager.tar.gz
+COPY npm-ci.patch /npm-ci.patch
+RUN patch -p1 < /npm-ci.patch
+RUN make "PREFIX=$GOPATH/bin/alertmanager" build
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04

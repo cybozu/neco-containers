@@ -1,37 +1,5 @@
-diff --git a/pkg/compactor/compactor.go b/pkg/compactor/compactor.go
-index 6c3871b7a2..1f17a43cde 100644
---- a/pkg/compactor/compactor.go
-+++ b/pkg/compactor/compactor.go
-@@ -17,6 +17,7 @@ import (
- 	"github.com/grafana/dskit/kv"
- 	"github.com/grafana/dskit/ring"
- 	"github.com/grafana/dskit/services"
-+	"github.com/opentracing/opentracing-go"
- 	"github.com/pkg/errors"
- 	"github.com/prometheus/client_golang/prometheus"
- 	"github.com/prometheus/common/model"
-@@ -626,6 +627,9 @@ func (c *Compactor) stopping(_ error) error {
- }
- 
- func (c *Compactor) CompactTable(ctx context.Context, tableName string, applyRetention bool) error {
-+	sp, ctx := opentracing.StartSpanFromContext(ctx, "Compactor.CompactTable")
-+	defer sp.Finish()
-+
- 	schemaCfg, ok := SchemaPeriodForTable(c.schemaConfig, tableName)
- 	if !ok {
- 		level.Error(util_log.Logger).Log("msg", "skipping compaction since we can't find schema for table", "table", tableName)
-@@ -703,6 +707,9 @@ func (c *Compactor) RegisterIndexCompactor(indexType string, indexCompactor Inde
- }
- 
- func (c *Compactor) RunCompaction(ctx context.Context, applyRetention bool) (err error) {
-+	sp, ctx := opentracing.StartSpanFromContext(ctx, "Compactor.RunCompaction")
-+	defer sp.Finish()
-+
- 	status := statusSuccess
- 	start := time.Now()
- 
 diff --git a/pkg/compactor/index_set.go b/pkg/compactor/index_set.go
-index 481d6aa399..c3dc06ae9f 100644
+index 2a850ea616..5eb38607b3 100644
 --- a/pkg/compactor/index_set.go
 +++ b/pkg/compactor/index_set.go
 @@ -10,6 +10,7 @@ import (
@@ -40,9 +8,9 @@ index 481d6aa399..c3dc06ae9f 100644
  	"github.com/go-kit/log/level"
 +	"github.com/opentracing/opentracing-go"
  	"github.com/pkg/errors"
+ 	"github.com/prometheus/prometheus/model/labels"
  
- 	"github.com/grafana/loki/v3/pkg/compactor/retention"
-@@ -84,6 +85,9 @@ func newCommonIndexSet(ctx context.Context, tableName string, baseUserIndexSet s
+@@ -88,6 +89,9 @@ func newCommonIndexSet(ctx context.Context, tableName string, baseUserIndexSet s
  }
  
  func newIndexSet(ctx context.Context, tableName, userID string, baseIndexSet storage.IndexSet, workingDir string, logger log.Logger) (*indexSet, error) {
@@ -52,19 +20,51 @@ index 481d6aa399..c3dc06ae9f 100644
  	if err := util.EnsureDirectory(workingDir); err != nil {
  		return nil, err
  	}
+diff --git a/pkg/compactor/tables_manager.go b/pkg/compactor/tables_manager.go
+index a8ad07dff3..249e35d39a 100644
+--- a/pkg/compactor/tables_manager.go
++++ b/pkg/compactor/tables_manager.go
+@@ -8,6 +8,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/go-kit/log/level"
++	"github.com/opentracing/opentracing-go"
+ 	"github.com/pkg/errors"
+ 
+ 	"github.com/grafana/loki/v3/pkg/compactor/deletion"
+@@ -217,6 +218,9 @@ func (c *tablesManager) initTable(ctx context.Context, tableName string) (*table
+ }
+ 
+ func (c *tablesManager) runCompaction(ctx context.Context, applyRetention bool) (err error) {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("tablesManager.runCompaction(%v)", applyRetention))
++	defer sp.Finish()
++
+ 	status := statusSuccess
+ 	start := time.Now()
+ 
+@@ -320,6 +324,9 @@ func (c *tablesManager) runCompaction(ctx context.Context, applyRetention bool)
+ }
+ 
+ func (c *tablesManager) CompactTable(ctx context.Context, tableName string, applyRetention bool) error {
++	sp, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("tablesManager.CompactTable(%v)", applyRetention))
++	defer sp.Finish()
++
+ 	schemaCfg, ok := SchemaPeriodForTable(c.schemaConfig, tableName)
+ 	if !ok {
+ 		level.Error(util_log.Logger).Log("msg", "skipping compaction since we can't find schema for table", "table", tableName)
 diff --git a/pkg/storage/chunk/client/aws/s3_storage_client.go b/pkg/storage/chunk/client/aws/s3_storage_client.go
-index d685f55885..bf3cbfa077 100644
+index 75c885f65c..87f183575e 100644
 --- a/pkg/storage/chunk/client/aws/s3_storage_client.go
 +++ b/pkg/storage/chunk/client/aws/s3_storage_client.go
-@@ -23,6 +23,7 @@ import (
+@@ -25,6 +25,7 @@ import (
  	"github.com/grafana/dskit/backoff"
  	"github.com/grafana/dskit/flagext"
  	"github.com/grafana/dskit/instrument"
 +	"github.com/opentracing/opentracing-go"
  	"github.com/pkg/errors"
  	"github.com/prometheus/client_golang/prometheus"
- 	amnet "k8s.io/apimachinery/pkg/util/net"
-@@ -483,12 +484,18 @@ func (a *S3ObjectClient) PutObject(ctx context.Context, objectKey string, object
+ 	"go.opentelemetry.io/otel"
+@@ -516,12 +517,18 @@ func (a *S3ObjectClient) PutObject(ctx context.Context, objectKey string, object
  
  // List implements chunk.ObjectClient.
  func (a *S3ObjectClient) List(ctx context.Context, prefix, delimiter string) ([]client.StorageObject, []client.StorageCommonPrefix, error) {
@@ -84,7 +84,7 @@ index d685f55885..bf3cbfa077 100644
  				Bucket:    aws.String(a.bucketNames[i]),
  				Prefix:    aws.String(prefix),
 diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
-index 971dcb0fb6..be60c7908b 100644
+index 5829ab2490..46ca8727e8 100644
 --- a/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
 +++ b/pkg/storage/stores/shipper/indexshipper/downloads/index_set.go
 @@ -15,6 +15,7 @@ import (
@@ -95,7 +95,17 @@ index 971dcb0fb6..be60c7908b 100644
  	"golang.org/x/sync/errgroup"
  
  	"github.com/grafana/loki/v3/pkg/storage/chunk/client/util"
-@@ -283,6 +284,9 @@ func (t *indexSet) cleanupDB(fileName string) error {
+@@ -99,6 +100,9 @@ func (t *indexSet) Init(forQuerying bool, logger log.Logger) (err error) {
+ 	ctx := context.Background()
+ 	ctx, t.cancelFunc = context.WithTimeout(ctx, downloadTimeout)
+ 
++	sp, ctx := opentracing.StartSpanFromContext(ctx, "indexSet.Init")
++	defer sp.Finish()
++
+ 	defer func() {
+ 		if err != nil {
+ 			level.Error(logger).Log("msg", "failed to initialize table, cleaning it up", "table", t.tableName, "err", err)
+@@ -283,6 +287,9 @@ func (t *indexSet) cleanupDB(fileName string) error {
  }
  
  func (t *indexSet) Sync(ctx context.Context) (err error) {
@@ -105,7 +115,7 @@ index 971dcb0fb6..be60c7908b 100644
  	if !t.indexMtx.isReady() {
  		level.Info(t.logger).Log("msg", "skip sync since the index set is not ready")
  		return nil
-@@ -293,6 +297,9 @@ func (t *indexSet) Sync(ctx context.Context) (err error) {
+@@ -293,6 +300,9 @@ func (t *indexSet) Sync(ctx context.Context) (err error) {
  
  // syncWithRetry runs a sync with upto maxSyncRetries on failure
  func (t *indexSet) syncWithRetry(ctx context.Context, lock, bypassListCache bool) error {
@@ -115,7 +125,7 @@ index 971dcb0fb6..be60c7908b 100644
  	var err error
  	for i := 0; i <= maxSyncRetries; i++ {
  		err = t.sync(ctx, lock, bypassListCache)
-@@ -313,6 +320,9 @@ func (t *indexSet) syncWithRetry(ctx context.Context, lock, bypassListCache bool
+@@ -313,6 +323,9 @@ func (t *indexSet) syncWithRetry(ctx context.Context, lock, bypassListCache bool
  
  // sync downloads updated and new files from the storage relevant for the table and removes the deleted ones
  func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err error) {
@@ -125,7 +135,7 @@ index 971dcb0fb6..be60c7908b 100644
  	level.Debug(t.logger).Log("msg", fmt.Sprintf("syncing files for table %s", t.tableName))
  
  	toDownload, toDelete, err := t.checkStorageForUpdates(ctx, lock, bypassListCache)
-@@ -365,6 +375,9 @@ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err er
+@@ -365,6 +378,9 @@ func (t *indexSet) sync(ctx context.Context, lock, bypassListCache bool) (err er
  
  // checkStorageForUpdates compares files from cache with storage and builds the list of files to be downloaded from storage and to be deleted from cache
  func (t *indexSet) checkStorageForUpdates(ctx context.Context, lock, bypassListCache bool) (toDownload []storage.IndexFile, toDelete []string, err error) {
@@ -136,7 +146,7 @@ index 971dcb0fb6..be60c7908b 100644
  	var files []storage.IndexFile
  
 diff --git a/pkg/storage/stores/shipper/indexshipper/downloads/table.go b/pkg/storage/stores/shipper/indexshipper/downloads/table.go
-index 0c02f2aba0..0fc8c85db0 100644
+index 146d89a49c..0987259689 100644
 --- a/pkg/storage/stores/shipper/indexshipper/downloads/table.go
 +++ b/pkg/storage/stores/shipper/indexshipper/downloads/table.go
 @@ -14,6 +14,7 @@ import (
@@ -180,10 +190,18 @@ index 8e258fb7ae..405b123bb8 100644
  	tables := slices.Collect(maps.Keys(tm.tables))
  	tm.tablesMtx.RUnlock()
 diff --git a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go b/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
-index 2aa3cfda87..b4f76ad48b 100644
+index 6f759b98a1..72bd62c14c 100644
 --- a/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
 +++ b/pkg/storage/stores/shipper/indexshipper/storage/cached_client.go
-@@ -80,6 +80,9 @@ func (c *cachedObjectClient) RefreshIndexTableCache(ctx context.Context, tableNa
+@@ -9,6 +9,7 @@ import (
+ 	"time"
+ 
+ 	"github.com/go-kit/log/level"
++	"github.com/opentracing/opentracing-go"
+ 	"go.opentelemetry.io/otel/attribute"
+ 	"go.opentelemetry.io/otel/trace"
+ 	"golang.org/x/sync/singleflight"
+@@ -81,6 +82,9 @@ func (c *cachedObjectClient) RefreshIndexTableCache(ctx context.Context, tableNa
  }
  
  func (c *cachedObjectClient) List(ctx context.Context, prefix, objectDelimiter string, bypassCache bool) ([]client.StorageObject, []client.StorageCommonPrefix, error) {
