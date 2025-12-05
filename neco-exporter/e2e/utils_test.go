@@ -63,11 +63,9 @@ func scrape(g Gomega, host string) []byte {
 }
 
 func scrapeCluster(g Gomega) []byte {
-	service := kubectlGetSafe[corev1.Service](g, "service", nsOption, "neco-cluster-exporter")
-	return scrape(g, service.Spec.ClusterIP)
+	return scrape(g, "neco-cluster-exporter.neco-exporter.svc")
 }
 
 func scrapeNode(g Gomega) []byte {
-	service := kubectlGetSafe[corev1.Service](g, "service", nsOption, "neco-node-exporter")
-	return scrape(g, service.Spec.ClusterIP)
+	return scrape(g, "neco-node-exporter.neco-exporter.svc")
 }
