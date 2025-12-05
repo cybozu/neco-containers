@@ -10,7 +10,6 @@ spec:
       targetPort: 8080
   selector:
     app.kubernetes.io/name: neco-cluster-exporter
-  type: NodePort
 ---
 apiVersion: v1
 kind: Service
@@ -18,12 +17,9 @@ metadata:
   namespace: neco-exporter
   name: neco-node-exporter
 spec:
-  externalTrafficPolicy: Local
-  internalTrafficPolicy: Local
   ports:
     - port: 80
       protocol: TCP
       targetPort: 8080
   selector:
     app.kubernetes.io/name: neco-node-exporter
-  type: NodePort

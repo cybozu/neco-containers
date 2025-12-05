@@ -12,6 +12,7 @@ spec:
       labels:
         app.kubernetes.io/name: neco-node-exporter
     spec:
+      serviceAccount: neco-node-exporter
       securityContext:
         fsGroup: 0
       containers:

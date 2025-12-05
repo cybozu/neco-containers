@@ -11,7 +11,7 @@ func testExporter() {
 	It("should scrape", func() {
 		Eventually(func(g Gomega) {
 			scrapeCluster(g)
-			scrapeServer(g)
+			scrapeNode(g)
 		}).Should(Succeed())
 	})
 
