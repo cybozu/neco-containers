@@ -20,8 +20,13 @@ If neco-admission has no rule for a given App's repoURL, neco-admission denies t
 | repositoryPrefix | string     | A URL prefix of the repositories to be matched with `repoURL`s.                        |
 | projects         | \[\]string | A list of `applications.spec.project`s allowed for the applications in the repository. |
 
-`repoURL`s are specified as `applications.spec.source.repoURL` or `applications.spec.sources[].repoURL`.
-All of `repoURL`s must allow the application's project.
+The validator extracts and checks `repoURL`s from the following fields in the Application manifest:
+
+- `spec.source.repoURL`
+- `spec.sources[].repoURL`
+- `spec.sourceHydrator.drySource.repoURL`
+
+All of the extracted `repoURL`s must allow the application's project.
 
 If both the `repository` and `repositoryPrefix` are specified, the rule is considered erroneous and ignored.
 
