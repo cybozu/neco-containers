@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if ! grep boarded /root/.bashrc > /dev/null 2>&1; then
+    echo '. /usr/share/bash-completion/bash_completion' >> /root/.bashrc
+    echo 'export PATH=${PATH}:/tmp' >> /root/.bashrc
+    echo '. <(kubectl completion bash)' >> /root/.bashrc
+    echo '# boarded' >> /root/.bashrc
+fi
