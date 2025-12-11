@@ -1,9 +1,9 @@
-ARG MEOWS_RUNNER_TAG=2.329.0-ubuntu22.04-meows0.21.3
+ARG MEOWS_RUNNER_TAG=2.330.0-ubuntu22.04-meows0.21.5
 
 FROM ghcr.io/cybozu/golang:1.25-jammy AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
-ARG GRPCURL_VERSION=1.9.2
+ARG GRPCURL_VERSION=1.9.3
 RUN curl -fsSL -o grpcurl.tar.gz "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
     && tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && rm -f grpcurl.tar.gz \
