@@ -94,6 +94,8 @@ jobs:
               container-image: "external-dns"
             - dir: "./fluent-bit"
               container-image: "fluent-bit"
+            - dir: "./gitleaks"
+              container-image: "gitleaks"
             - dir: "./golang-all/golang-1.24-jammy"
               container-image: "golang"
               platforms: "linux/amd64,linux/arm64"
