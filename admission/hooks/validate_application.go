@@ -121,10 +121,6 @@ func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructu
 		repoURLs = append(repoURLs, hydratorRepoURL)
 	}
 
-	if len(repoURLs) == 0 {
-		return nil, errors.New("spec.source.repoURL, spec.sources, or spec.sourceHydrator.drySource.repoURL not found")
-	}
-
 	return repoURLs, nil
 }
 
