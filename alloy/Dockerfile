@@ -66,7 +66,7 @@ RUN cd alloy && patch -p1 < ../force-flush-partial-line.patch
 RUN cd alloy && patch -p1 < ../periodic-idle-close.patch
 
 # we do not add `builtinassets` tag because we do not require alloy ui.
-ENV GO_TAGS="netgo promtail_journal_enabled"
+ENV GO_TAGS="netgo promtail_journal_enabled slicelabels"
 RUN make -C /work/alloy USE_CONTAINER=0 alloy
 
 FROM ghcr.io/cybozu/ubuntu:24.04
