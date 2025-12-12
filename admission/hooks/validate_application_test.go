@@ -10,7 +10,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func fillApplication(name, project, repoURL string, repoURLs []string) (*unstructured.Unstructured, error) {
+func fillApplication(name, project, repoURL string, repoURLs []string, drySourceRepoURL string) (*unstructured.Unstructured, error) {
 	app := &unstructured.Unstructured{}
 	app.SetGroupVersionKind(schema.GroupVersionKind{Group: "argoproj.io", Kind: "Application", Version: "v1alpha1"})
 	app.SetName(name)
@@ -33,6 +33,27 @@ func fillApplication(name, project, repoURL string, repoURLs []string) (*unstruc
 			sources[i] = map[string]interface{}{"repoURL": r}
 		}
 		err := unstructured.SetNestedSlice(app.UnstructuredContent(), sources, "spec", "sources")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if len(drySourceRepoURL) != 0 {
+		drySource := map[string]interface{}{
+			"repoURL":        drySourceRepoURL,
+			"path":           "test-app",
+			"targetRevision": "HEAD",
+		}
+		err := unstructured.SetNestedMap(app.UnstructuredContent(), drySource, "spec", "sourceHydrator", "drySource")
+		if err != nil {
+			return nil, err
+		}
+
+		syncSource := map[string]interface{}{
+			"path":         "test-app",
+			"targetBranch": "main",
+		}
+		err = unstructured.SetNestedMap(app.UnstructuredContent(), syncSource, "spec", "sourceHydrator", "syncSource")
 		if err != nil {
 			return nil, err
 		}
@@ -64,21 +85,21 @@ var applicationValidatorConfig = &ArgoCDApplicationValidatorConfig{
 
 var _ = Describe("Application WebHook", func() {
 	It("should allow admin App on admin repo", func() {
-		app, err := fillApplication("test1", "admin", adminRepoURL, nil)
+		app, err := fillApplication("test1", "admin", adminRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should allow admin App on admin organization", func() {
-		app, err := fillApplication("test2", "admin", adminOrgRepoURL, nil)
+		app, err := fillApplication("test2", "admin", adminOrgRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should deny admin App on tenant repo", func() {
-		app, err := fillApplication("test3", "admin", tenantRepoURL, nil)
+		app, err := fillApplication("test3", "admin", tenantRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
@@ -86,7 +107,7 @@ var _ = Describe("Application WebHook", func() {
 	})
 
 	It("should deny admin App on tenant organization", func() {
-		app, err := fillApplication("test4", "admin", tenantOrgRepoURL, nil)
+		app, err := fillApplication("test4", "admin", tenantOrgRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
@@ -94,7 +115,7 @@ var _ = Describe("Application WebHook", func() {
 	})
 
 	It("should deny updating App with invalid repoURL", func() {
-		app, err := fillApplication("test5", "admin", adminRepoURL, nil)
+		app, err := fillApplication("test5", "admin", adminRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
@@ -107,7 +128,7 @@ var _ = Describe("Application WebHook", func() {
 	})
 
 	It("should deny updating App with invalid organization repoURL", func() {
-		app, err := fillApplication("test6", "admin", adminOrgRepoURL, nil)
+		app, err := fillApplication("test6", "admin", adminOrgRepoURL, nil, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
@@ -120,14 +141,14 @@ var _ = Describe("Application WebHook", func() {
 	})
 
 	It("should allow admin repos for admin project", func() {
-		app, err := fillApplication("admin-repos-admin-project", "admin", "", []string{adminRepoURL, adminOrgRepoURL})
+		app, err := fillApplication("admin-repos-admin-project", "admin", "", []string{adminRepoURL, adminOrgRepoURL}, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
 	})
 
 	It("should deny tenant repo in multiple sources for admin project", func() {
-		app, err := fillApplication("tenant-repo-multiple-sources-admin-project", "admin", "", []string{adminRepoURL, tenantRepoURL})
+		app, err := fillApplication("tenant-repo-multiple-sources-admin-project", "admin", "", []string{adminRepoURL, tenantRepoURL}, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
@@ -135,7 +156,7 @@ var _ = Describe("Application WebHook", func() {
 	})
 
 	It("should deny adding tenant repos for admin project", func() {
-		app, err := fillApplication("add-tenant-repos-admin-project", "admin", adminRepoURL, []string{adminOrgRepoURL})
+		app, err := fillApplication("add-tenant-repos-admin-project", "admin", adminRepoURL, []string{adminOrgRepoURL}, "")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Create(testCtx, app)
 		Expect(err).NotTo(HaveOccurred())
@@ -148,6 +169,21 @@ var _ = Describe("Application WebHook", func() {
 		err = unstructured.SetNestedSlice(app.UnstructuredContent(), sources, "spec", "sources")
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.Update(testCtx, app)
+		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
+		Expect(err == nil).To(Equal(permissive))
+	})
+
+	It("should allow admin drySource repo for admin project", func() {
+		app, err := fillApplication("admin-hydrator-admin-project", "admin", adminRepoURL, nil, adminRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
+		Expect(err).NotTo(HaveOccurred())
+	})
+
+	It("should deny tenant drySource repo for admin project", func() {
+		app, err := fillApplication("tenant-hydrator-admin-project", "admin", adminRepoURL, nil, tenantRepoURL)
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.Create(testCtx, app)
 		permissive := os.Getenv("TEST_PERMISSIVE") == "true"
 		Expect(err == nil).To(Equal(permissive))
 	})
