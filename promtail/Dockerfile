@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG LOKI_VERSION=3.6.2
+ARG LOKI_VERSION=3.6.3
 ARG SYSTEMD_VERSION=256
 
 WORKDIR /work
