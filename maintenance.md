@@ -186,6 +186,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Check the release page.
    - <https://github.com/grafana/alloy/releases>
 2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/grafana/alloy/blob/vX.Y.Z/.github/workflows/build.yml`
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/Dockerfile`
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/Makefile`
    - `https://github.com/grafana/alloy/blob/vX.Y.Z/tools/build-image/Dockerfile`
