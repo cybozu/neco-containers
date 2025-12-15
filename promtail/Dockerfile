@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG LOKI_VERSION=3.6.2
+ARG LOKI_VERSION=3.6.3
 ARG SYSTEMD_VERSION=256
 
 WORKDIR /work
@@ -62,8 +62,10 @@ RUN meson setup /work/systemd/build/ /work/systemd/ && \
 RUN git clone --depth=1 -b v${LOKI_VERSION} https://github.com/grafana/loki /work/loki
 COPY force-flush-partial-line.patch /work/
 COPY periodic-idle-close.patch /work/
+COPY enable-promtail-journal-tag.patch /work/
 RUN cd loki && patch -p1 < ../force-flush-partial-line.patch
 RUN cd loki && patch -p1 < ../periodic-idle-close.patch
+RUN cd loki && patch -p1 < ../enable-promtail-journal-tag.patch
 RUN make -C /work/loki BUILD_IN_CONTAINER=false PROMTAIL_JOURNAL_ENABLED=true promtail
 
 FROM ghcr.io/cybozu/ubuntu:24.04
