@@ -3,11 +3,14 @@ package e2e
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	. "github.com/onsi/gomega"
+	coordinationv1 "k8s.io/api/coordination/v1"
 	corev1 "k8s.io/api/core/v1"
 )
 
@@ -64,6 +67,48 @@ func scrape(g Gomega, host string) []byte {
 
 func scrapeCluster(g Gomega) []byte {
 	return scrape(g, "neco-cluster-exporter.neco-exporter.svc")
+}
+
+func scrapeClusterLeader(g Gomega) []byte {
+	lease := kubectlGetSafe[coordinationv1.Lease](g, "lease", nsOption, "neco-cluster-exporter")
+	pods := kubectlGetSafe[corev1.PodList](g, "pod", nsOption, "-l=app.kubernetes.io/name=neco-cluster-exporter")
+
+	id := lease.Spec.HolderIdentity
+	if id == nil {
+		err := errors.New("holder identity is not set")
+		g.Expect(err).NotTo(HaveOccurred())
+	}
+
+	for _, p := range pods.Items {
+		if strings.HasPrefix(*id, p.Name) {
+			return scrape(g, p.Status.PodIP+":8080")
+		}
+	}
+
+	err := errors.New("no leader found")
+	g.Expect(err).NotTo(HaveOccurred())
+	return nil
+}
+
+func scrapeClusterNonLeader(g Gomega) []byte {
+	lease := kubectlGetSafe[coordinationv1.Lease](g, "lease", nsOption, "neco-cluster-exporter")
+	pods := kubectlGetSafe[corev1.PodList](g, "pod", nsOption, "-l=app.kubernetes.io/name=neco-cluster-exporter")
+
+	id := lease.Spec.HolderIdentity
+	if id == nil {
+		err := errors.New("holder identity is not set")
+		g.Expect(err).NotTo(HaveOccurred())
+	}
+
+	for _, p := range pods.Items {
+		if !strings.HasPrefix(*id, p.Name) {
+			return scrape(g, p.Status.PodIP+":8080")
+		}
+	}
+
+	err := errors.New("no non-leader found")
+	g.Expect(err).NotTo(HaveOccurred())
+	return nil
 }
 
 func scrapeNode(g Gomega) []byte {
