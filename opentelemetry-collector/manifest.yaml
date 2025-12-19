@@ -35,3 +35,6 @@ processors:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/probabilisticsamplerprocessor v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/filterprocessor v${OTELCOL_CONTRIB_VERSION}
+
+replaces:
+  - github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../opentelemetry-collector-contrib/processor/tailsamplingprocessor

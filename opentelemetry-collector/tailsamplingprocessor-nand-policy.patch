@@ -1,0 +1,302 @@
+diff --git a/processor/tailsamplingprocessor/and_helper.go b/processor/tailsamplingprocessor/and_helper.go
+index 239fadfc29..604abe6b55 100644
+--- a/processor/tailsamplingprocessor/and_helper.go
++++ b/processor/tailsamplingprocessor/and_helper.go
+@@ -25,5 +25,10 @@ func getNewAndPolicy(settings component.TelemetrySettings, config *AndCfg, polic
+ 
+ // Return instance of and sub-policy
+ func getAndSubPolicyEvaluator(settings component.TelemetrySettings, cfg *AndSubPolicyCfg, policyExtensions map[string]samplingpolicy.Extension) (samplingpolicy.Evaluator, error) {
+-	return getSharedPolicyEvaluator(settings, &cfg.sharedPolicyCfg, policyExtensions)
++	switch cfg.Type {
++	case Nand:
++		return getNewNandPolicy(settings, &cfg.NandCfg, policyExtensions)
++	default:
++		return getSharedPolicyEvaluator(settings, &cfg.sharedPolicyCfg, policyExtensions)
++	}
+ }
+diff --git a/processor/tailsamplingprocessor/config.go b/processor/tailsamplingprocessor/config.go
+index fc7b0979a8..2d4c429bb4 100644
+--- a/processor/tailsamplingprocessor/config.go
++++ b/processor/tailsamplingprocessor/config.go
+@@ -33,6 +33,8 @@ const (
+ 	Composite PolicyType = "composite"
+ 	// And allows defining a And policy, combining the other policies in one
+ 	And PolicyType = "and"
++	// Nand allows defining a Nand policy, combining the other policies in one and negate
++	Nand PolicyType = "nand"
+ 	// Drop allows defining a Drop policy, combining one or more policies to drop traces.
+ 	Drop PolicyType = "drop"
+ 	// SpanCount sample traces that are have more spans per Trace than a given threshold.
+@@ -93,6 +95,14 @@ type CompositeSubPolicyCfg struct {
+ // AndSubPolicyCfg holds the common configuration to all policies under and policy.
+ type AndSubPolicyCfg struct {
+ 	sharedPolicyCfg `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct
++
++	// Configs for nand policy evaluator
++	NandCfg NandCfg `mapstructure:"nand"`
++}
++
++// NandSubPolicyCfg holds the common configuration to all policies under nand policy.
++type NandSubPolicyCfg struct {
++	sharedPolicyCfg `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct
+ }
+ 
+ // TraceStateCfg holds the common configuration for trace states.
+@@ -110,6 +120,13 @@ type AndCfg struct {
+ 	_ struct{}
+ }
+ 
++// NandCfg holds the common configuration to all nand policies.
++type NandCfg struct {
++	SubPolicyCfg []NandSubPolicyCfg `mapstructure:"nand_sub_policy"`
++	// prevent unkeyed literal initialization
++	_ struct{}
++}
++
+ // DropCfg holds the common configuration to all policies under drop policy.
+ type DropCfg struct {
+ 	SubPolicyCfg []AndSubPolicyCfg `mapstructure:"drop_sub_policy"`
+@@ -142,6 +159,8 @@ type PolicyCfg struct {
+ 	CompositeCfg CompositeCfg `mapstructure:"composite"`
+ 	// Configs for defining and policy
+ 	AndCfg AndCfg `mapstructure:"and"`
++	// Configs for defining nand policy
++	NandCfg NandCfg `mapstructure:"nand"`
+ 	// Configs for defining drop policy
+ 	DropCfg DropCfg `mapstructure:"drop"`
+ }
+diff --git a/processor/tailsamplingprocessor/internal/sampling/nand.go b/processor/tailsamplingprocessor/internal/sampling/nand.go
+new file mode 100644
+index 0000000000..79b796875c
+--- /dev/null
++++ b/processor/tailsamplingprocessor/internal/sampling/nand.go
+@@ -0,0 +1,45 @@
++// based on and.go
++//
++
++package sampling // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/internal/sampling"
++
++import (
++	"context"
++
++	"go.opentelemetry.io/collector/pdata/pcommon"
++	"go.uber.org/zap"
++
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/pkg/samplingpolicy"
++)
++
++type Nand struct {
++	// the subpolicy evaluators
++	subpolicies []samplingpolicy.Evaluator
++	logger      *zap.Logger
++}
++
++func NewNand(
++	logger *zap.Logger,
++	subpolicies []samplingpolicy.Evaluator,
++) samplingpolicy.Evaluator {
++	return &Nand{
++		subpolicies: subpolicies,
++		logger:      logger,
++	}
++}
++
++// Evaluate looks at the trace data and returns a corresponding SamplingDecision.
++func (c *Nand) Evaluate(ctx context.Context, traceID pcommon.TraceID, trace *samplingpolicy.TraceData) (samplingpolicy.Decision, error) {
++	// The policy iterates over all sub-policies and returns NotSampled if all sub-policies returned a Sampled Decision.
++	// If any subpolicy returns NotSampled or InvertNotSampled, it returns Sampled Decision.
++	for _, sub := range c.subpolicies {
++		decision, err := sub.Evaluate(ctx, traceID, trace)
++		if err != nil {
++			return samplingpolicy.Unspecified, err
++		}
++		if decision == samplingpolicy.NotSampled || decision == samplingpolicy.InvertNotSampled {
++			return samplingpolicy.Sampled, nil
++		}
++	}
++	return samplingpolicy.NotSampled, nil
++}
+diff --git a/processor/tailsamplingprocessor/internal/sampling/nand_test.go b/processor/tailsamplingprocessor/internal/sampling/nand_test.go
+new file mode 100644
+index 0000000000..ea946c9c14
+--- /dev/null
++++ b/processor/tailsamplingprocessor/internal/sampling/nand_test.go
+@@ -0,0 +1,67 @@
++// based on and_test.go
++//
++
++package sampling
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++	"github.com/stretchr/testify/require"
++	"go.opentelemetry.io/collector/component/componenttest"
++	"go.opentelemetry.io/collector/pdata/ptrace"
++	"go.uber.org/zap"
++
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/pkg/samplingpolicy"
++)
++
++func TestNandEvaluatorSampled(t *testing.T) {
++	n1, err := NewStringAttributeFilter(componenttest.NewNopTelemetrySettings(), "name", []string{"value"}, false, 0, false)
++	require.NoError(t, err)
++	n2, err := NewStatusCodeFilter(componenttest.NewNopTelemetrySettings(), []string{"ERROR"})
++	require.NoError(t, err)
++
++	and := NewNand(zap.NewNop(), []samplingpolicy.Evaluator{n1, n2})
++
++	traces := ptrace.NewTraces()
++	rs := traces.ResourceSpans().AppendEmpty()
++	ils := rs.ScopeSpans().AppendEmpty()
++
++	span := ils.Spans().AppendEmpty()
++	span.Status().SetCode(ptrace.StatusCodeError)
++	span.SetTraceID([16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16})
++	span.SetSpanID([8]byte{1, 2, 3, 4, 5, 6, 7, 8})
++
++	trace := &samplingpolicy.TraceData{
++		ReceivedBatches: traces,
++	}
++	decision, err := and.Evaluate(t.Context(), traceID, trace)
++	require.NoError(t, err, "Failed to evaluate and policy: %v", err)
++	assert.Equal(t, samplingpolicy.Sampled, decision)
++}
++
++func TestNandEvaluatorNotSampled(t *testing.T) {
++	n1, err := NewStringAttributeFilter(componenttest.NewNopTelemetrySettings(), "attribute_name", []string{"attribute_value"}, false, 0, false)
++	require.NoError(t, err)
++	n2, err := NewStatusCodeFilter(componenttest.NewNopTelemetrySettings(), []string{"ERROR"})
++	require.NoError(t, err)
++
++	and := NewNand(zap.NewNop(), []samplingpolicy.Evaluator{n1, n2})
++
++	traces := ptrace.NewTraces()
++	rs := traces.ResourceSpans().AppendEmpty()
++	ils := rs.ScopeSpans().AppendEmpty()
++
++	span := ils.Spans().AppendEmpty()
++	span.Attributes().PutStr("attribute_name", "attribute_value")
++	span.Status().SetCode(ptrace.StatusCodeError)
++	span.SetTraceID([16]byte{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16})
++	span.SetSpanID([8]byte{1, 2, 3, 4, 5, 6, 7, 8})
++
++	trace := &samplingpolicy.TraceData{
++		ReceivedBatches: traces,
++	}
++	decision, err := and.Evaluate(t.Context(), traceID, trace)
++	require.NoError(t, err, "Failed to evaluate and policy: %v", err)
++	assert.Equal(t, samplingpolicy.NotSampled, decision)
++}
+diff --git a/processor/tailsamplingprocessor/nand_helper.go b/processor/tailsamplingprocessor/nand_helper.go
+new file mode 100644
+index 0000000000..082c011f72
+--- /dev/null
++++ b/processor/tailsamplingprocessor/nand_helper.go
+@@ -0,0 +1,29 @@
++// based on and_helper.go
++//
++
++package tailsamplingprocessor // import "github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor"
++
++import (
++	"go.opentelemetry.io/collector/component"
++
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/internal/sampling"
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/pkg/samplingpolicy"
++)
++
++func getNewNandPolicy(settings component.TelemetrySettings, config *NandCfg, policyExtensions map[string]samplingpolicy.Extension) (samplingpolicy.Evaluator, error) {
++	subPolicyEvaluators := make([]samplingpolicy.Evaluator, len(config.SubPolicyCfg))
++	for i := range config.SubPolicyCfg {
++		policyCfg := &config.SubPolicyCfg[i]
++		policy, err := getNandSubPolicyEvaluator(settings, policyCfg, policyExtensions)
++		if err != nil {
++			return nil, err
++		}
++		subPolicyEvaluators[i] = policy
++	}
++	return sampling.NewNand(settings.Logger, subPolicyEvaluators), nil
++}
++
++// Return instance of nand sub-policy
++func getNandSubPolicyEvaluator(settings component.TelemetrySettings, cfg *NandSubPolicyCfg, policyExtensions map[string]samplingpolicy.Extension) (samplingpolicy.Evaluator, error) {
++	return getSharedPolicyEvaluator(settings, &cfg.sharedPolicyCfg, policyExtensions)
++}
+diff --git a/processor/tailsamplingprocessor/nand_helper_test.go b/processor/tailsamplingprocessor/nand_helper_test.go
+new file mode 100644
+index 0000000000..4ea795d2dc
+--- /dev/null
++++ b/processor/tailsamplingprocessor/nand_helper_test.go
+@@ -0,0 +1,57 @@
++// based on and_helper_test.go
++//
++
++package tailsamplingprocessor
++
++import (
++	"testing"
++
++	"github.com/stretchr/testify/assert"
++	"github.com/stretchr/testify/require"
++	"go.opentelemetry.io/collector/component/componenttest"
++	"go.uber.org/zap"
++
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/internal/sampling"
++	"github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor/pkg/samplingpolicy"
++)
++
++func TestNandHelper(t *testing.T) {
++	t.Run("valid", func(t *testing.T) {
++		actual, err := getNewNandPolicy(componenttest.NewNopTelemetrySettings(), &NandCfg{
++			SubPolicyCfg: []NandSubPolicyCfg{
++				{
++					sharedPolicyCfg: sharedPolicyCfg{
++						Name:       "test-nand-policy-1",
++						Type:       Latency,
++						LatencyCfg: LatencyCfg{ThresholdMs: 100},
++					},
++				},
++			},
++		}, nil)
++		require.NoError(t, err)
++
++		expected := sampling.NewNand(zap.NewNop(), []samplingpolicy.Evaluator{
++			sampling.NewLatency(componenttest.NewNopTelemetrySettings(), 100, 0),
++		})
++		assert.Equal(t, expected, actual)
++	})
++
++	t.Run("nand under and", func(t *testing.T) {
++		actual, err := getNewAndPolicy(componenttest.NewNopTelemetrySettings(), &AndCfg{
++			SubPolicyCfg: []AndSubPolicyCfg{
++				{
++					sharedPolicyCfg: sharedPolicyCfg{
++						Name: "test-nand-policy-2",
++						Type: Nand,
++					},
++				},
++			},
++		}, nil)
++		require.NoError(t, err)
++
++		expected := sampling.NewAnd(zap.NewNop(), []samplingpolicy.Evaluator{
++			sampling.NewNand(zap.NewNop(), []samplingpolicy.Evaluator{}),
++		})
++		assert.Equal(t, expected, actual)
++	})
++}
+diff --git a/processor/tailsamplingprocessor/processor.go b/processor/tailsamplingprocessor/processor.go
+index a257df03c7..41d4e95735 100644
+--- a/processor/tailsamplingprocessor/processor.go
++++ b/processor/tailsamplingprocessor/processor.go
+@@ -315,6 +315,8 @@ func getPolicyEvaluator(settings component.TelemetrySettings, cfg *PolicyCfg, po
+ 		return getNewAndPolicy(settings, &cfg.AndCfg, policyExtensions)
+ 	case Drop:
+ 		return getNewDropPolicy(settings, &cfg.DropCfg, policyExtensions)
++	case Nand:
++		return getNewNandPolicy(settings, &cfg.NandCfg, policyExtensions)
+ 	default:
+ 		return getSharedPolicyEvaluator(settings, &cfg.sharedPolicyCfg, policyExtensions)
+ 	}
