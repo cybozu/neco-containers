@@ -74,7 +74,15 @@ latest
 ```
 
 `latest` is not follow the rules described in [Branch naming](#branch-naming).
-In such cases, if the file `NO_TAG_BRANCH_CONSISTENCY` exists in the directory, the consistency check is skipped.
+In such cases, you can skip the consistency check for specific branches by listing them in a file named `NO_TAG_BRANCH_CONSISTENCY` which exists in the same directory.
+
+Example of `NO_TAG_BRANCH_CONSISTENCY`:
+
+```
+latest
+```
+
+In this example, the consistency check for branch `1.2` is performed as usual, while the check for `latest` is skipped.
 
 The ability to specify multiple branch names is provided only for limited use cases such as the `latest` tag.
 Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.

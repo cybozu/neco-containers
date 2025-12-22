@@ -109,7 +109,7 @@ jobs:
             done
             for image in $images; do
               if [ -f $dir/BRANCH ]; then
-                  BRANCH=$(cat ${DIR}/BRANCH | xargs)
+                  BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
                   for b in $BRANCH; do
                     docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$b
                     docker push quay.io/cybozu/$image:$b

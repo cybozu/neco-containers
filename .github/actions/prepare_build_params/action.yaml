@@ -79,7 +79,7 @@ runs:
           echo "tag=ghcr.io/cybozu/${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
 
           if [ -f ${DIR}/BRANCH ]; then
-            BRANCH=$(cat ${DIR}/BRANCH | xargs)
+            BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
             branch_array=()
             for b in $BRANCH; do
               branch_array+=("ghcr.io/cybozu/${IMAGE}:${b}")
@@ -174,7 +174,6 @@ runs:
       shell: bash
       run: |
         DIR=${{ steps.dir.outputs.dir }}
-        if [ -e "${DIR}/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
         ./tag_branch_consistency ${DIR}
     - name: Echo output
       shell: bash

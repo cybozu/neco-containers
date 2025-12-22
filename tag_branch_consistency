@@ -13,9 +13,15 @@ if [ ! -f ${DIR}/BRANCH ]; then
 fi
 
 TAG=$(cat "${DIR}"/TAG)
-BRANCH=$(cat ${DIR}/BRANCH | xargs)
+BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
+SKIP_BRANCHES="${DIR}/NO_TAG_BRANCH_CONSISTENCY"
 
 for b in $BRANCH; do
+  if [ -e "${SKIP_BRANCHES}" ] && grep -x "${b}" "${SKIP_BRANCHES}"; then
+      echo "Skipped consistency check for BRANCH: ${b} (listed in ${SKIP_BRANCHES})"
+      continue
+  fi
+
   if [ ${TAG} != $(echo ${b}$(echo ${TAG} | sed -e s/${b}//)) ]; then
       echo "TAG: ${TAG} and BRANCH: ${b} diverge"
       exit 1
