@@ -58,7 +58,6 @@ jobs:
           command: |
             dir=<< parameters.dir >>
             if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
-            if [ -e "$dir/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
             ./tag_branch_consistency $dir
       - run:
           name: Build images
@@ -107,15 +106,13 @@ jobs:
               docker tag quay.io/cybozu/$image:latest quay.io/cybozu/$image:$TAG
               docker push quay.io/cybozu/$image:$TAG
             done
-            if echo $TAG | grep -q -e - ; then
-                echo ===== Skip pushing branch tags for pre-release $TAG =====
-                exit 0
-            fi
             for image in $images; do
               if [ -f $dir/BRANCH ]; then
-                  BRANCH=$(cat $dir/BRANCH)
-                  docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$BRANCH
-                  docker push quay.io/cybozu/$image:$BRANCH
+                  BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
+                  for b in $BRANCH; do
+                    docker tag quay.io/cybozu/$image:$TAG quay.io/cybozu/$image:$b
+                    docker push quay.io/cybozu/$image:$b
+                  done
               fi
             done
       - when:
