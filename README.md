@@ -27,9 +27,9 @@ CircleCI does the following each time commits are pushed to a branch.
 3. If the branch is `main`, for each directory with a built image:
     1. Tag the built image with tag in `TAG` file.
     2. Push the tagged image to ghcr.io.
-    3. If `TAG` represents a pre-release such as `1.2-rc.1`, continue to the  next directory.
-    4. If the directory contains `BRANCH` file:
-        1. Tag the built image with tag in `BRANCH` file.
+    3. If the directory contains `BRANCH` file:
+        1. Tag the built image with each tag listed in `BRANCH` file.
+            - See [Branch naming](#branch-naming) section for details.
         2. Push the tagged image to ghcr.io.
 
 ## Tag naming
