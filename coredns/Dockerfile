@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG COREDNS_VERSION=1.12.2
+ARG COREDNS_VERSION=1.13.2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
@@ -19,5 +19,6 @@ COPY --from=build /go/src/github.com/coredns/coredns/coredns /usr/local/coredns/
 ENV PATH=/usr/local/coredns/bin:"$PATH"
 
 USER 10000:10000
+WORKDIR /
 EXPOSE 1053 1053/udp
 ENTRYPOINT ["coredns"]
