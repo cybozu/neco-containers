@@ -27,9 +27,9 @@ CircleCI does the following each time commits are pushed to a branch.
 3. If the branch is `main`, for each directory with a built image:
     1. Tag the built image with tag in `TAG` file.
     2. Push the tagged image to ghcr.io.
-    3. If `TAG` represents a pre-release such as `1.2-rc.1`, continue to the  next directory.
-    4. If the directory contains `BRANCH` file:
-        1. Tag the built image with tag in `BRANCH` file.
+    3. If the directory contains `BRANCH` file:
+        1. Tag the built image with each tag listed in `BRANCH` file.
+            - See [Branch naming](#branch-naming) section for details.
         2. Push the tagged image to ghcr.io.
 
 ## Tag naming
@@ -61,6 +61,31 @@ If the upstream version is "1.2.0-beta.3", the image tag must begin with "1.2.0-
 
 If the image is built for an upstream version X.Y.Z, the branch name _should_ be X.Y
 for X > 0, or "0" for X == 0.
+
+### BRANCH file format
+
+`BRANCH` file can contain one or more branch names, each separated by a newline.
+
+Example:
+
+```
+1.2
+latest
+```
+
+`latest` is not follow the rules described in [Branch naming](#branch-naming).
+In such cases, you can skip the consistency check for specific branches by listing them in a file named `NO_TAG_BRANCH_CONSISTENCY` which exists in the same directory.
+
+Example of `NO_TAG_BRANCH_CONSISTENCY`:
+
+```
+latest
+```
+
+In this example, the consistency check for branch `1.2` is performed as usual, while the check for `latest` is skipped.
+
+The ability to specify multiple branch names is provided only for limited use cases such as the `latest` tag.
+Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
 
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/

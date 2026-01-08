@@ -29,7 +29,7 @@ inputs:
     required: true
 outputs:
   branch:
-    description: "branch"
+    description: "branch list (comma-separated list)"
     value: ${{ steps.extract.outputs.branch }}
   tag:
     description: "tag"
@@ -79,12 +79,13 @@ runs:
           echo "tag=ghcr.io/cybozu/${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
 
           if [ -f ${DIR}/BRANCH ]; then
-            if echo ${TAG} | grep -q -e - ; then
-              echo ===== Skip pushing branch tags for pre-release ${TAG} =====
-            else
-              BRANCH=$(cat ${DIR}/BRANCH)
-              echo "branch=ghcr.io/cybozu/${IMAGE}:${BRANCH}" >> $GITHUB_OUTPUT
-            fi
+            BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
+            branch_array=()
+            for b in $BRANCH; do
+              branch_array+=("ghcr.io/cybozu/${IMAGE}:${b}")
+            done
+            # Output branch is comma-separated list
+            echo "branch=$(echo ${branch_array[@]} | sed 's/ /,/g')" >> $GITHUB_OUTPUT
           fi
         fi
       env:
@@ -173,7 +174,6 @@ runs:
       shell: bash
       run: |
         DIR=${{ steps.dir.outputs.dir }}
-        if [ -e "${DIR}/NO_TAG_BRANCH_CONSISTENCY" ]; then exit 0; fi
         ./tag_branch_consistency ${DIR}
     - name: Echo output
       shell: bash
