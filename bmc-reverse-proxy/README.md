@@ -5,9 +5,14 @@ bmc-reverse-proxy-container
 
 The following products are assumed as BMC.
 
-- dell iDRAC.
+- Dell iDRAC
+- Cisco CIMC
 
-This program provides reverse proxy at once for the two ports (443, 5900) used by iDRAC.
+This program provides reverse proxy at once for the following three ports.
+
+- 443 (Both iDRAC GUI and CIMC GUI)
+- 5900 (iDRAC Virtual Console)
+- 2028 (Cisco KVM Console)
 
 And it resolve the BMC address by ConfigMap and the host name of the access destination.
 

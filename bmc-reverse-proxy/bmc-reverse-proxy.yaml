@@ -42,10 +42,14 @@ spec:
       port: 443
       protocol: TCP
       targetPort: 8443
-    - name: virtual-console
+    - name: idrac-virtual-console
       port: 5900
       protocol: TCP
       targetPort: 5900
+    - name: cisco-kvm-console
+      port: 2028
+      protocol: TCP
+      targetPort: 2028
   selector:
     app.kubernetes.io/name: bmc-reverse-proxy
 ---
@@ -91,8 +95,11 @@ spec:
         - name: web
           containerPort: 8443
           protocol: TCP
-        - name: virtual-console
+        - name: idrac-virtual-console
           containerPort: 5900
+          protocol: TCP
+        - name: cisco-kvm-console
+          containerPort: 2028
           protocol: TCP
       volumes:
       - name: secret-fs

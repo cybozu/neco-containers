@@ -190,6 +190,10 @@ func main() {
 		return makeTunnel(5900, 5900)
 	})
 
+	well.Go(func(ctx context.Context) error {
+		return makeTunnel(2028, 2028)
+	})
+
 	well.Stop()
 	err = well.Wait()
 	if !well.IsSignaled(err) && err != nil {
