@@ -4,6 +4,14 @@ metadata:
   name: neco-cluster-exporter
 rules:
 - apiGroups:
+    - ""
+  resources:
+    - secrets
+  verbs:
+    - get
+    - list
+    - watch
+- apiGroups:
     - cilium.io
   resources:
     - ciliumidentities

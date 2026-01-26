@@ -12,6 +12,7 @@ If you want to add a new collector to extend functionality, follow the below ins
     - If it runs in cluster-scope, add it under `pkg/collector/cluster`
     - If it runs in node-scope, add it under `pkg/collector/node`
 4. Register the collector in `pkg/collector/registry/registry.go`
+5. Write document on [`metrics.md`](/docs/metrics.md)
 
 ### Instruction for CI
 

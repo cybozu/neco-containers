@@ -29,6 +29,7 @@ func runTest() {
 	Context("exporter", testExporter)
 
 	// test cluster collectors
+	Context("cert", testCertCollector)
 	Context("ciliumid", testCiliumIDCollector)
 
 	// test node collectors
