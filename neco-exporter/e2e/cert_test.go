@@ -27,7 +27,7 @@ func testCertCollector() {
 				g, nil, "openssl", "req", "-x509", "-newkey=ed25519", "-sha256", "-nodes", "-days=123", "-subj=/CN=localhost", "-keyout="+keyPath, "-out="+crtPath,
 			)
 			pilotSafe(
-				g, nil, "/tmp/kubectl", "create", "secret", "tls", "-n=default", secretName, "--cert=/tmp/cert-dummy.key", "--key="+keyPath, "--cert="+crtPath,
+				g, nil, "/tmp/kubectl", "create", "secret", "tls", "-n=default", secretName, "--key="+keyPath, "--cert="+crtPath,
 			)
 		}).Should(Succeed())
 	})
