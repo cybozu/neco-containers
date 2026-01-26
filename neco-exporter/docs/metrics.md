@@ -33,6 +33,18 @@ Execution count for the BPF Program.
 
 See [`bpf_run_time_seconds_total`](#bpf_run_time_seconds_total) for the associated labels.
 
+## cert
+
+### `cert_expiration_time_seconds`
+
+Expiration (`notAfter`) of TLS certificates.
+It appears only for Kubernetes Secrets not maintained by cert-manager.
+
+| Label       | Description         |
+| ----------- | ------------------- |
+| `namespace` | Namespace of Secret |
+| `name`      | Name of Secret      |
+
 ## ciliumid
 
 ### `ciliumid_identity_count`

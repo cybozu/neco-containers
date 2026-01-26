@@ -55,6 +55,11 @@ func kubectlGetSafe[T any](g Gomega, args ...string) *T {
 	return ret
 }
 
+func pilotSafe(g Gomega, input []byte, args ...string) []byte {
+	args = append([]string{"exec", "-i", "deploy/pilot", "--"}, args...)
+	return kubectlSafe(g, input, args...)
+}
+
 func scrape(g Gomega, host string) []byte {
 	url := fmt.Sprintf("http://%s/metrics", host)
 
