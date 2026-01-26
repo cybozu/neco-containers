@@ -8,6 +8,7 @@ dist:
   output_path: ./_build
 
 receivers:
+  - gomod: go.opentelemetry.io/collector/receiver/nopreceiver v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/hostmetricsreceiver v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/jaegerreceiver v${OTELCOL_CONTRIB_VERSION}
@@ -18,9 +19,14 @@ receivers:
 exporters:
   - gomod: go.opentelemetry.io/collector/exporter/debugexporter v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/loadbalancingexporter v${OTELCOL_CONTRIB_VERSION}
+  - gomod: go.opentelemetry.io/collector/exporter/nopexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v${OTELCOL_VERSION}
   - gomod: go.opentelemetry.io/collector/exporter/otlphttpexporter v${OTELCOL_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/exporter/prometheusexporter v${OTELCOL_CONTRIB_VERSION}
+
+connectors:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/connector/countconnector v${OTELCOL_CONTRIB_VERSION}
+  - gomod: go.opentelemetry.io/collector/connector/forwardconnector v${OTELCOL_VERSION}
 
 extensions:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_CONTRIB_VERSION}
