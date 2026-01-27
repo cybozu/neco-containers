@@ -50,7 +50,7 @@ func (c *certCollector) Collect(ctx context.Context) ([]*exporter.Metric, error)
 		}
 		metric := &exporter.Metric{
 			Name:   "expiration_timestamp_seconds",
-			Value:  float64(v.UnixNano()),
+			Value:  float64(v.Unix()),
 			Labels: labels,
 		}
 		ret = append(ret, metric)

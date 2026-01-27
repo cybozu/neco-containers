@@ -47,7 +47,7 @@ func testCertCollector() {
 			g.Expect(err).NotTo(HaveOccurred())
 
 			// ref. https://github.com/VictoriaMetrics/metrics/blob/v1.40.1/floatcounter.go#L63
-			expected := fmt.Sprintf("%g", float64(expiration.UnixNano()))
+			expected := fmt.Sprintf("%g", float64(expiration.Unix()))
 
 			found := false
 			for li := range strings.Lines(string(scrapeClusterLeader(g))) {
