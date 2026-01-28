@@ -23,7 +23,7 @@ RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/rel
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.24-noble AS argocd-build
-ENV ARGOCD_VERSION=3.0.20
+ENV ARGOCD_VERSION=3.0.23
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
