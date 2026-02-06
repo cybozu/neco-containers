@@ -29,6 +29,7 @@ connectors:
   - gomod: go.opentelemetry.io/collector/connector/forwardconnector v${OTELCOL_VERSION}
 
 extensions:
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/cgroupruntimeextension v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/healthcheckextension v${OTELCOL_CONTRIB_VERSION}
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/extension/pprofextension v${OTELCOL_CONTRIB_VERSION}
 
