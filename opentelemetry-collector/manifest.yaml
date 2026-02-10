@@ -45,3 +45,4 @@ processors:
 
 replaces:
   - github.com/open-telemetry/opentelemetry-collector-contrib/processor/tailsamplingprocessor => ../opentelemetry-collector-contrib/processor/tailsamplingprocessor
+  - github.com/open-telemetry/opentelemetry-collector-contrib/exporter/loadbalancingexporter => ../opentelemetry-collector-contrib/exporter/loadbalancingexporter
