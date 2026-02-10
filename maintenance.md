@@ -440,9 +440,9 @@ gitGraph
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `neco-containers/cilium/Makefile`.
-   1. `CILIUM_IMAGE_TOOLS_TARGET` is a commit SHA of <https://github.com/cilium/image-tools> .
-      Update to the latest one and go backward to find an appropriate SHA.
+2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `neco-containers/cilium/Makefile`. This is a commit SHA of <https://github.com/cilium/image-tools> .
+   1. Run `make IMAGE_TAG=quay.io/cilium/cilium:vX.Y.Z test` to see tools versions upstream uses.
+   2. See [history](https://github.com/cilium/image-tools/commits/master/) of `image-tools` to find an appropriate SHA, that provides matching tools version (especially for LLVM/Clang).
 3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
    1. Run `make checkout` and download them under `neco-containers/cilium/src`.
 4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
@@ -452,8 +452,6 @@ gitGraph
    1. Run `make build` to build.
    2. Run `make test` to make sanity check.
    3. Run `make test-e2e` to run the standard connectivity test.
-      1. Remove `--test=!check-log-errors` in `e2e/Makefile` to confirm no important error is ignored.
-      2. Restore the flag until we catch up with the upstream that solves the LLVM-17-related issue.
    4. If any problem found, `dive ghcr.io/cybozu/cilium:$(cat TAG)` will help.
 
 > [!Note]
