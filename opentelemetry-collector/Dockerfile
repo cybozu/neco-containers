@@ -9,7 +9,9 @@ WORKDIR /work/opentelemetry-collector-contrib
 RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-collector-contrib/archive/v${OTELCOL_CONTRIB_VERSION}.tar.gz | \
     tar -xzf - --strip-components 1
 COPY tailsamplingprocessor-nand-policy.patch ../
+COPY loadbalancingexporter-larger-hash-ring.patch ../
 RUN patch -p1 < ../tailsamplingprocessor-nand-policy.patch
+RUN patch -p1 < ../loadbalancingexporter-larger-hash-ring.patch
 
 WORKDIR /work
 COPY manifest.yaml manifest.yaml.in

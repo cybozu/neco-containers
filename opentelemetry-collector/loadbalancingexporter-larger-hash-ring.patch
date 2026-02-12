@@ -1,0 +1,48 @@
+diff --git a/exporter/loadbalancingexporter/consistent_hashing.go b/exporter/loadbalancingexporter/consistent_hashing.go
+index 8590eee6ea..361821ce3c 100644
+--- a/exporter/loadbalancingexporter/consistent_hashing.go
++++ b/exporter/loadbalancingexporter/consistent_hashing.go
+@@ -5,14 +5,15 @@ package loadbalancingexporter // import "github.com/open-telemetry/opentelemetry
+ 
+ import (
+ 	"encoding/binary"
++	"fmt"
+ 	"hash/crc32"
+ 	"sort"
+ )
+ 
+ const (
+-	maxPositions     uint32 = 36000 // 360 degrees with two decimal places
+-	defaultWeight    int    = 100   // the number of points in the ring for each entry. For better results, it should be greater than 100.
+-	linearProbeLimit int    = 10    // The number of times to probe ahead in the hash ring if there is a collision while constructing the hash ring
++	maxPositions     uint32 = 360000 // 360 degrees with ~~two~~ three decimal places
++	defaultWeight    int    = 1000   // the number of points in the ring for each entry. For better results, it should be greater than 100.
++	linearProbeLimit int    = 10     // The number of times to probe ahead in the hash ring if there is a collision while constructing the hash ring
+ )
+ 
+ // position represents a specific angle in the ring.
+@@ -34,6 +35,24 @@ type hashRing struct {
+ // newHashRing builds a new immutable consistent hash ring based on the given endpoints.
+ func newHashRing(endpoints []string) *hashRing {
+ 	items := positionsForEndpoints(endpoints, defaultWeight)
++	areas := map[string]int{}
++	for i := range items {
++		var area int
++		if i == 0 {
++			area = int(items[0].pos + position(maxPositions) - items[len(items)-1].pos)
++		} else {
++			area = int(items[i].pos - items[i-1].pos)
++		}
++		areas[items[i].endpoint] += area
++	}
++	logstr := fmt.Sprintf("hash ring distribution (%d endpoints):", len(endpoints))
++	for i, ep := range endpoints {
++		if i != 0 {
++			logstr += ","
++		}
++		logstr += fmt.Sprintf(" %s: %.2f%%", ep, (float64(areas[ep])/float64(maxPositions))*100.0)
++	}
++	fmt.Println(logstr)
+ 	return &hashRing{
+ 		items: items,
+ 	}
