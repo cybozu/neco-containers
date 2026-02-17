@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG COREDNS_VERSION=1.13.2
+ARG COREDNS_VERSION=1.14.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
