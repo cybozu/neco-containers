@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG K8S_VERSION=1.33.7
+ARG K8S_VERSION=1.34.4
 ARG PAUSE_VERSION=3.10.1
 
 RUN mkdir /work

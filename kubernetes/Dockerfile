@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG K8S_VERSION=1.33.7
+ARG K8S_VERSION=1.34.4
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
