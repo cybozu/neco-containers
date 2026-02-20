@@ -1,6 +1,6 @@
-KUBERNETES_VERSION := 1.33.1
+KUBERNETES_VERSION := 1.34.4
 # https://github.com/kubernetes/minikube/releases
-MINIKUBE_VERSION := 1.36.0
+MINIKUBE_VERSION := 1.38.1
 
 # Tools versions which are defined in go.mod
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
