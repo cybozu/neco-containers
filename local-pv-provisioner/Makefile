@@ -5,8 +5,9 @@ IMAGE_VERSION = `cat ./TAG`
 IMAGE_TAG = ghcr.io/cybozu/local-pv-provisioner:$(IMAGE_VERSION)
 IMAGE_TAG_LATEST = ghcr.io/cybozu/local-pv-provisioner:latest
 
-CONTROLLER_TOOLS_VERSION = 0.18.0
-ENVTEST_K8S_VERSION = 1.33.0
+# https://github.com/kubernetes-sigs/controller-tools/releases
+CONTROLLER_TOOLS_VERSION = 0.19.0
+ENVTEST_K8S_VERSION = 1.34.0
 export ENVTEST_K8S_VERSION
 
 # Specify envtest branch according to controller-runtime version
