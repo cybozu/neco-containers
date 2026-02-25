@@ -1,0 +1,33 @@
+diff --git a/pkg/services/pluginsintegration/plugininstaller/service.go b/pkg/services/pluginsintegration/plugininstaller/service.go
+index 7232703820c..16ec8fed66b 100644
+--- a/pkg/services/pluginsintegration/plugininstaller/service.go
++++ b/pkg/services/pluginsintegration/plugininstaller/service.go
+@@ -124,6 +124,9 @@ func (s *Service) installPlugins(ctx context.Context, pluginsToInstall []setting
+ 		}
+ 
+ 		s.log.Info("Installing plugin", "pluginId", installPlugin.ID, "version", installPlugin.Version)
++		if installPlugin.Version == "" {
++			return fmt.Errorf("failed to install plugin %s: Version is not specified", installPlugin.ID)
++		}
+ 		start := time.Now()
+ 		ctx = repo.WithRequestOrigin(ctx, "preinstall")
+ 		compatOpts := plugins.NewAddOpts(s.cfg.BuildVersion, runtime.GOOS, runtime.GOARCH, installPlugin.URL)
+diff --git a/pkg/setting/setting_plugins.go b/pkg/setting/setting_plugins.go
+index 0080f61d0a4..4ac0e97c72f 100644
+--- a/pkg/setting/setting_plugins.go
++++ b/pkg/setting/setting_plugins.go
+@@ -34,13 +34,7 @@ func extractPluginSettings(sections []*ini.Section) PluginSettings {
+ }
+ 
+ var (
+-	defaultPreinstallPlugins = map[string]InstallPlugin{
+-		// Default preinstalled plugins
+-		"grafana-lokiexplore-app":      {ID: "grafana-lokiexplore-app"},
+-		"grafana-pyroscope-app":        {ID: "grafana-pyroscope-app"},
+-		"grafana-exploretraces-app":    {ID: "grafana-exploretraces-app"},
+-		"grafana-metricsdrilldown-app": {ID: "grafana-metricsdrilldown-app"},
+-	}
++	defaultPreinstallPlugins = map[string]InstallPlugin{}
+ )
+ 
+ func (cfg *Cfg) migrateInstallPluginsToPreinstallPluginsSync(rawInstallPlugins, installPluginsForce string, preinstallPluginsSync map[string]InstallPlugin) {
