@@ -1,10 +1,10 @@
 GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
-E2ETEST_K8S_VERSION  := 1.33.7
+E2ETEST_K8S_VERSION  := 1.34.3
 KIND_VERSION := 0.31.0
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
-CILIUM_CLI_VERSION := 0.19.0
+CILIUM_CLI_VERSION := 0.19.1
 
 PROJECT_DIR := $(CURDIR)/../
 BIN_DIR := $(PROJECT_DIR)/bin
