@@ -10,8 +10,9 @@ WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/grafana
-COPY viewers_can_explore.patch /work/
+COPY *.patch /work/
 RUN patch -p1 < /work/viewers_can_explore.patch
+RUN patch -p1 < /work/disable-unversioned-plugin-install.patch
 
 # Install Node.js 24.x & yarn
 # https://nodesource.com/products/distributions
