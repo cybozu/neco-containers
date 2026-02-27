@@ -1097,9 +1097,6 @@ Only the base image and module dependency should be updated.
 > [!Note]
 > The spire-server, spire-agent, and spiffe-csi-driver images should be updated at the same time for consistency.
 
-> [!Note]
-> Upstream runs spire-agent as root for socket sharing in Kubernetes. Our image runs as UID 10000 following neco-containers standards. Adjust SecurityContext in Kubernetes manifests if needed.
-
 ## spire-server
 
 ![Regular Update](./regular_update.svg)

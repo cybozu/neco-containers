@@ -25,6 +25,4 @@ COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certifica
 COPY --from=build /work/spire-agent /usr/local/bin/spire-agent
 COPY --from=build /work/spire/LICENSE /usr/local/share/doc/spire-agent/LICENSE
 
-USER 10000:10000
-
-ENTRYPOINT ["/usr/local/bin/spire-agent"]
+ENTRYPOINT ["/usr/local/bin/spire-agent", "run"]

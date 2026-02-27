@@ -21,6 +21,4 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 COPY --from=build /work/spiffe-csi-driver /usr/local/bin/spiffe-csi-driver
 COPY --from=build /work/spiffe-csi/LICENSE /usr/local/share/doc/spiffe-csi/LICENSE
 
-USER 10000:10000
-
 ENTRYPOINT ["/usr/local/bin/spiffe-csi-driver"]

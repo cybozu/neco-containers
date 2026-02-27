@@ -28,4 +28,4 @@ COPY --from=build /work/spire/LICENSE /usr/local/share/doc/spire-server/LICENSE
 USER 10000:10000
 EXPOSE 8081
 
-ENTRYPOINT ["/usr/local/bin/spire-server"]
+ENTRYPOINT ["/usr/local/bin/spire-server", "run"]
