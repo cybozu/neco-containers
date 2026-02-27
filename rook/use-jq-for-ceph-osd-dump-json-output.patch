@@ -1,0 +1,118 @@
+diff --git a/pkg/daemon/ceph/client/osd.go b/pkg/daemon/ceph/client/osd.go
+index 49d082e90881..95dbbbef3d66 100644
+--- a/pkg/daemon/ceph/client/osd.go
++++ b/pkg/daemon/ceph/client/osd.go
+@@ -16,9 +16,11 @@ limitations under the License.
+ package client
+ 
+ import (
++	"bytes"
+ 	"encoding/json"
+ 	"fmt"
+ 	"math"
++	"os/exec"
+ 	"strconv"
+ 	"strings"
+ 
+@@ -303,8 +305,16 @@ func GetOSDDump(context *clusterd.Context, clusterInfo *ClusterInfo) (*OSDDump,
+ 		return nil, errors.Wrap(err, "failed to get osd dump")
+ 	}
+ 
++	// Use jq to fix potentially invalid JSON from ceph osd dump
++	jqCmd := exec.Command("jq", ".")
++	jqCmd.Stdin = bytes.NewReader(buf)
++	validJSON, err := jqCmd.Output()
++	if err != nil {
++		return nil, errors.Wrap(err, "failed to run jq on osd dump output")
++	}
++
+ 	var osdDump OSDDump
+-	if err := json.Unmarshal(buf, &osdDump); err != nil {
++	if err := json.Unmarshal(validJSON, &osdDump); err != nil {
+ 		return nil, errors.Wrap(err, "failed to unmarshal osd dump response")
+ 	}
+ 
+diff --git a/pkg/daemon/ceph/client/osd_test.go b/pkg/daemon/ceph/client/osd_test.go
+index 282cbf3f3703..2d4550607f6a 100644
+--- a/pkg/daemon/ceph/client/osd_test.go
++++ b/pkg/daemon/ceph/client/osd_test.go
+@@ -214,3 +214,79 @@ func TestOSDOkToStop(t *testing.T) {
+ 		assert.Equal(t, "--max=0", seenArgs[3])
+ 	})
+ }
++
++func TestGetOSDDump(t *testing.T) {
++	// Valid JSON output from ceph osd dump
++	validOSDDump := `{
++		"osds": [
++			{"osd": 0, "up": 1, "in": 1},
++			{"osd": 1, "up": 1, "in": 1}
++		],
++		"flags": "nodown,sortbitwise",
++		"crush_node_flags": {},
++		"full_ratio": 0.95,
++		"backfillfull_ratio": 0.9,
++		"nearfull_ratio": 0.85
++	}`
++
++	// Invalid JSON with "inf" value that ceph osd dump can produce
++	// This causes "invalid character 'i' looking for beginning of value" error
++	invalidOSDDumpWithInf := `{
++		"osds": [
++			{"osd": 0, "up": 1, "in": 1}
++		],
++		"flags": "nodown",
++		"crush_node_flags": {},
++		"full_ratio": 0.95,
++		"backfillfull_ratio": 0.9,
++		"nearfull_ratio": inf
++	}`
++
++	t.Run("valid JSON is parsed correctly", func(t *testing.T) {
++		executor := &exectest.MockExecutor{}
++		executor.MockExecuteCommandWithOutput = func(command string, args ...string) (string, error) {
++			logger.Infof("Command: %s %v", command, args)
++			if args[0] == "osd" && args[1] == "dump" {
++				return validOSDDump, nil
++			}
++			return "", errors.Errorf("unexpected ceph command %q", args)
++		}
++
++		context := &clusterd.Context{Executor: executor}
++		clusterInfo := AdminTestClusterInfo("mycluster")
++
++		dump, err := GetOSDDump(context, clusterInfo)
++		assert.NoError(t, err)
++		assert.NotNil(t, dump)
++		assert.Equal(t, 2, len(dump.OSDs))
++		assert.Equal(t, "nodown,sortbitwise", dump.Flags)
++		assert.Equal(t, 0.95, dump.FullRatio)
++		assert.Equal(t, 0.9, dump.BackfillFullRatio)
++		assert.Equal(t, 0.85, dump.NearFullRatio)
++	})
++
++	t.Run("invalid JSON with inf is fixed by jq and parsed correctly", func(t *testing.T) {
++		executor := &exectest.MockExecutor{}
++		executor.MockExecuteCommandWithOutput = func(command string, args ...string) (string, error) {
++			logger.Infof("Command: %s %v", command, args)
++			if args[0] == "osd" && args[1] == "dump" {
++				return invalidOSDDumpWithInf, nil
++			}
++			return "", errors.Errorf("unexpected ceph command %q", args)
++		}
++
++		context := &clusterd.Context{Executor: executor}
++		clusterInfo := AdminTestClusterInfo("mycluster")
++
++		dump, err := GetOSDDump(context, clusterInfo)
++		assert.NoError(t, err)
++		assert.NotNil(t, dump)
++		assert.Equal(t, 1, len(dump.OSDs))
++		assert.Equal(t, "nodown", dump.Flags)
++		assert.Equal(t, 0.95, dump.FullRatio)
++		assert.Equal(t, 0.9, dump.BackfillFullRatio)
++		// jq converts "inf" to 1.7976931348623157e+308 (max float64)
++		// The important thing is that parsing succeeds without error
++		assert.NotEqual(t, 0.0, dump.NearFullRatio)
++	})
++}

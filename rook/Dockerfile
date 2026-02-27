@@ -19,6 +19,12 @@ RUN HELM_VERSION=$(grep "^HELM_VERSION"  ${ROOK_DIR}/build/makelib/helm.mk | cut
     ln -s ${ROOK_DIR}/.cache/tools/linux_amd64/helm-${HELM_VERSION} ${ROOK_DIR}/.cache/tools/linux_amd64/helm
 
 RUN git checkout v${ROOK_VERSION}
+
+# NOTE: This patch should be removed after the following issue is resolved:
+# https://tracker.ceph.com/issues/66215
+COPY use-jq-for-ceph-osd-dump-json-output.patch .
+RUN git apply use-jq-for-ceph-osd-dump-json-output.patch
+
 RUN mkdir -p /tmp/rook
 RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/rook SAVE_BUILD_CONTEXT_DIR=true
 # Copy output artifacts to root directory to minimize differences between Stage2 and upstream Dockerfile.
@@ -37,6 +43,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends iproute2 && rm 
 COPY --from=build rook toolbox.sh set-ceph-debug-level /usr/local/bin/
 COPY --from=build ceph-monitoring /etc/ceph-monitoring
 COPY --from=build rook-external /etc/rook-external/
+
+# NOTE: This check should be removed after the following issue is resolved:
+# https://tracker.ceph.com/issues/66215
+RUN jq --version
 
 # create or modify owner and permissions to make a watch-active container of a MGR work properly
 RUN groupadd rook -g 2016 && \
