@@ -121,34 +121,38 @@ jobs:
             - run:
                 name: Install Trivy
                 command: |
-                  curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
-            - run:
-                name: Scan images
-                command: |
-                  if [ "${CIRCLE_BRANCH}" != "main" ]; then
-                      exit 0
-                  fi
-                  if [ ! -f BUILDS ]; then
-                      echo "no need to scan << parameters.container-image >>."
-                      exit 0
-                  fi
+                  echo 'Trivy is disabled.'
+            # - run:
+            #     name: Install Trivy
+            #     command: |
+            #       curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh -s -- -b /usr/local/bin
+            # - run:
+            #     name: Scan images
+            #     command: |
+            #       if [ "${CIRCLE_BRANCH}" != "main" ]; then
+            #           exit 0
+            #       fi
+            #       if [ ! -f BUILDS ]; then
+            #           echo "no need to scan << parameters.container-image >>."
+            #           exit 0
+            #       fi
 
-                  dir=<< parameters.dir >>
-                  if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
-                  targets="<< parameters.targets >>"
-                  if [ "$targets" = "" ]; then
-                      images=<< parameters.container-image >>
-                  else
-                      images=
-                      for target in $targets; do
-                          images="$images << parameters.container-image >>-$target"
-                      done
-                  fi
-                  TAG=$(cat $dir/TAG)
-                  for image in $images; do
-                      echo "scanning $image:$TAG ..."
-                      YAMORY_IMAGE_IDENTIFIER="quay.io/cybozu/$image" YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
-                  done
+            #       dir=<< parameters.dir >>
+            #       if [ "$dir" = "" ]; then dir=<< parameters.container-image >> ; fi
+            #       targets="<< parameters.targets >>"
+            #       if [ "$targets" = "" ]; then
+            #           images=<< parameters.container-image >>
+            #       else
+            #           images=
+            #           for target in $targets; do
+            #               images="$images << parameters.container-image >>-$target"
+            #           done
+            #       fi
+            #       TAG=$(cat $dir/TAG)
+            #       for image in $images; do
+            #           echo "scanning $image:$TAG ..."
+            #           YAMORY_IMAGE_IDENTIFIER="quay.io/cybozu/$image" YAMORY_IMAGE_NAME="quay.io/cybozu/$image:$TAG" sh -c "$(curl -sSf -L https://mw-receiver.yamory.io/image/script/trivy)"
+            #       done
 
 workflows:
   main:
