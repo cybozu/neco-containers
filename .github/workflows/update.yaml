@@ -12,7 +12,7 @@ jobs:
     timeout-minutes: 30
     env:
       UBUNTU_VERSIONS: "22.04 24.04"
-      GO_MAJOR_VERSIONS: "1.24 1.25"
+      GO_MAJOR_VERSIONS: "1.25 1.26"
     permissions:
       # write permission is required for "git push".
       contents: write
