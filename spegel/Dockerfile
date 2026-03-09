@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.25-noble AS builder
-ARG SPEGEL_VERSION=0.4.0
+ARG SPEGEL_VERSION=0.6.0
 
 WORKDIR /work/spegel
 
