@@ -1,6 +1,6 @@
 # ==================== pyroscope-builder image ====================
 # https://github.com/grafana/pyroscope/blob/main/cmd/pyroscope/Dockerfile
-FROM ghcr.io/cybozu/golang:1.24-noble AS builder
+FROM ghcr.io/cybozu/golang:1.26-noble AS builder
 
 COPY src/pyroscope ./pyroscope
 RUN make -C pyroscope EMBEDASSETS="" go/bin
