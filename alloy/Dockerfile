@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG ALLOY_VERSION=1.12.0
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ARG ALLOY_VERSION=1.14.0
 ARG SYSTEMD_VERSION=256
 
 WORKDIR /work
@@ -66,8 +66,8 @@ RUN cd alloy && patch -p1 < ../force-flush-partial-line.patch
 RUN cd alloy && patch -p1 < ../periodic-idle-close.patch
 
 # we do not add `builtinassets` tag because we do not require alloy ui.
-ENV GO_TAGS="netgo promtail_journal_enabled slicelabels"
-RUN make -C /work/alloy USE_CONTAINER=0 alloy
+ENV GO_TAGS="netgo promtail_journal_enabled"
+RUN make -C /work/alloy USE_CONTAINER=0 SKIP_UI_BUILD=1 alloy
 
 FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

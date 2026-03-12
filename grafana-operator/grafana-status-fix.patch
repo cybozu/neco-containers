@@ -1,34 +1,8 @@
-diff --git a/controllers/dashboard_controller.go b/controllers/dashboard_controller.go
-index 89185299..09e0cb98 100644
---- a/controllers/dashboard_controller.go
-+++ b/controllers/dashboard_controller.go
-@@ -355,6 +355,10 @@ func (r *GrafanaDashboardReconciler) onDashboardCreated(ctx context.Context, gra
- 	// Update when missing or the CR is updated
- 	if exists && content.Unchanged(cr, hash) {
- 		log.V(1).Info("dashboard model unchanged. skipping remaining requests")
-+		if found, _ := grafana.Status.Dashboards.Find(cr.Namespace, cr.Name); !found {
-+			log.Info("fixing inconsistent .status.dashboards filed", "grafana", map[string]string{"name": grafana.Name, "namespace": grafana.Namespace})
-+			return grafana.AddNamespacedResource(ctx, r.Client, cr, cr.NamespacedResource(uid))
-+		}
- 		return nil
- 	}
- 
-@@ -364,6 +368,10 @@ func (r *GrafanaDashboardReconciler) onDashboardCreated(ctx context.Context, gra
- 	}
- 
- 	if !remoteChanged {
-+		if found, _ := grafana.Status.Dashboards.Find(cr.Namespace, cr.Name); !found {
-+			log.Info("fixing inconsistent .status.dashboards filed", "grafana", map[string]string{"name": grafana.Name, "namespace": grafana.Namespace})
-+			return grafana.AddNamespacedResource(ctx, r.Client, cr, cr.NamespacedResource(uid))
-+		}
- 		return nil
- 	}
- 
 diff --git a/controllers/datasource_controller.go b/controllers/datasource_controller.go
-index 268f1be3..b80c9255 100644
+index a179790c..7cb57219 100644
 --- a/controllers/datasource_controller.go
 +++ b/controllers/datasource_controller.go
-@@ -266,6 +266,8 @@ func (r *GrafanaDatasourceReconciler) finalize(ctx context.Context, cr *v1beta1.
+@@ -275,6 +275,8 @@ func (r *GrafanaDatasourceReconciler) finalize(ctx context.Context, cr *v1beta1.
  }
  
  func (r *GrafanaDatasourceReconciler) onDatasourceCreated(ctx context.Context, grafana *v1beta1.Grafana, cr *v1beta1.GrafanaDatasource, datasource *models.UpdateDataSourceCommand, hash string) error {
@@ -37,7 +11,7 @@ index 268f1be3..b80c9255 100644
  	if grafana.IsExternal() && cr.Spec.Plugins != nil {
  		return fmt.Errorf("external grafana instances don't support plugins, please remove spec.plugins from your datasource cr")
  	}
-@@ -285,6 +287,10 @@ func (r *GrafanaDatasourceReconciler) onDatasourceCreated(ctx context.Context, g
+@@ -294,6 +296,10 @@ func (r *GrafanaDatasourceReconciler) onDatasourceCreated(ctx context.Context, g
  	}
  
  	if exists && cr.Unchanged(hash) {
