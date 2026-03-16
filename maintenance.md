@@ -52,7 +52,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [fluent-bit](#fluent-bit)
 - [gitleaks](#gitleaks)
 - [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
-- [gorush](#gorush)
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
 - [haproxy](#haproxy)
@@ -627,10 +626,6 @@ Manual update
 1. Check the [release history](https://golang.org/doc/devel/release.html).
 2. Update `GO_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG`.
-
-## gorush
-
-Ignore!!!
 
 ## grafana
 
