@@ -1,6 +1,6 @@
 # squid container
 
-ARG SQUID_VERSION=7.3
+ARG SQUID_VERSION=7.5
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
