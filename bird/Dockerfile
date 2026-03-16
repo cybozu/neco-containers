@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG BIRD_VERSION=3.1.2
+ARG BIRD_VERSION=3.2.0
 WORKDIR /work
 
 RUN apt-get update \
@@ -15,7 +15,7 @@ RUN apt-get update \
        libssh-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSLf -O https://bird.network.cz/download/bird-${BIRD_VERSION}.tar.gz && \
+RUN curl -sSLf -O https://bird.nic.cz/download/bird-${BIRD_VERSION}.tar.gz && \
     tar xzf bird-${BIRD_VERSION}.tar.gz
 
 WORKDIR /work/bird-${BIRD_VERSION}
