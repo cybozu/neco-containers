@@ -154,8 +154,5 @@ workflows:
   main:
     jobs:
       - build:
-          name: build-gorush
-          container-image: gorush
-      - build:
           name: build-redis
           container-image: redis
