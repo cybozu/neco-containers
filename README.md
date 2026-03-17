@@ -1,4 +1,3 @@
-[![CircleCI](https://circleci.com/gh/cybozu/neco-containers.svg?style=svg)](https://circleci.com/gh/cybozu/neco-containers)
 [![main](https://github.com/cybozu/neco-containers/actions/workflows/main.yaml/badge.svg)](https://github.com/cybozu/neco-containers/actions/workflows/main.yaml)
 
 # Neco Containers
@@ -16,14 +15,14 @@ Built images can be pulled from [ghcr.io/cybozu][ghcr].
 Subdirectories in this repository have `TAG` and `BRANCH` files
 in addition to files to build Docker images.
 
-These will be used by CircleCI to tag the built images.
-CircleCI does the following each time commits are pushed to a branch.
+These will be used by GitHub Actions to tag the built images.
+GitHub Actions does the following each time commits are pushed to a branch.
 
 1. For each directory containing `TAG` file:
     1. Read `TAG` file and check if the repository at [ghcr.io/cybozu][ghcr] with the same name of the directory.
     2. If the repository contains the same tag in `TAG`, continue to the next directory.
     3. Otherwise, build a Docker image using `Dockerfile` under the directory.
-2. If the branch is not `main`, CircleCI stops here without pushing.
+2. If the branch is not `main`, GitHub Actions stops here without pushing.
 3. If the branch is `main`, for each directory with a built image:
     1. Tag the built image with tag in `TAG` file.
     2. Push the tagged image to ghcr.io.
