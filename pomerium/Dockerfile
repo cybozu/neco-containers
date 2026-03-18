@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
-ARG POMERIUM_VERSION=0.31.3
+ARG POMERIUM_VERSION=0.32.4
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -15,9 +15,8 @@ RUN apt-get update \
         | tee /etc/apt/sources.list.d/nodesource.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install --global yarn
-RUN make yarn
+    && rm -rf /var/lib/apt/lists/*
+RUN cd ui; npm ci
 RUN make build-ui
 
 RUN go mod download
