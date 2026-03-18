@@ -15,9 +15,8 @@ RUN apt-get update \
         | tee /etc/apt/sources.list.d/nodesource.list > /dev/null \
     && apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install --global yarn
-RUN make yarn
+    && rm -rf /var/lib/apt/lists/*
+RUN cd ui; npm ci
 RUN make build-ui
 
 RUN go mod download
