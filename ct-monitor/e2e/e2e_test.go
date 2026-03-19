@@ -57,5 +57,6 @@ var _ = Describe("ct-monitor e2e test", func() {
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(res)).NotTo(ContainSubstring("error"))
 		Expect(string(res)).To(ContainSubstring("done checking"))
+		Expect(string(res)).To(ContainSubstring("incluster-filter"))
 	})
 })
