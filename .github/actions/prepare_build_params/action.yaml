@@ -150,18 +150,6 @@ runs:
           exit 1
         fi
 
-        # Skip Trivy scan if scratch-based image
-        if [ -z "${{ inputs.target }}" ]; then
-          if grep FROM Dockerfile | tail -n 1 | grep scratch; then
-            echo "Scanning is disabled for scratch-based images."
-            exit 0
-          fi
-        elif grep FROM Dockerfile | grep AS | grep "${{ inputs.target }}" | grep scratch; then
-          echo "Scanning is disabled for scratch-based images."
-          exit 0
-        fi
-        echo "Scanning is enabled at image uploading."
-        echo "scan=true" >> $GITHUB_OUTPUT
     - id: scan
       name: Enable scan for upload-time only
       if: ${{ steps.flags.outputs.push }}
