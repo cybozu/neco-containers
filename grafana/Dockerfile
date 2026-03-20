@@ -1,8 +1,8 @@
 # Grafana container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
-ARG GRAFANA_VERSION=12.3.0
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ARG GRAFANA_VERSION=12.4.1
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 

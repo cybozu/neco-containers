@@ -15,35 +15,42 @@ index 239fadfc29..604abe6b55 100644
 +	}
  }
 diff --git a/processor/tailsamplingprocessor/config.go b/processor/tailsamplingprocessor/config.go
-index fc7b0979a8..2d4c429bb4 100644
+index d065ca79cb..df33bf9eb7 100644
 --- a/processor/tailsamplingprocessor/config.go
 +++ b/processor/tailsamplingprocessor/config.go
-@@ -33,6 +33,8 @@ const (
- 	Composite PolicyType = "composite"
- 	// And allows defining a And policy, combining the other policies in one
+@@ -35,6 +35,8 @@ const (
  	And PolicyType = "and"
+ 	// Not allows defining a Not policy, returning the opposite of the decision of a wrapped policy
+ 	Not PolicyType = "not"
 +	// Nand allows defining a Nand policy, combining the other policies in one and negate
 +	Nand PolicyType = "nand"
  	// Drop allows defining a Drop policy, combining one or more policies to drop traces.
  	Drop PolicyType = "drop"
  	// SpanCount sample traces that are have more spans per Trace than a given threshold.
-@@ -93,6 +95,14 @@ type CompositeSubPolicyCfg struct {
+@@ -97,6 +99,9 @@ type CompositeSubPolicyCfg struct {
  // AndSubPolicyCfg holds the common configuration to all policies under and policy.
  type AndSubPolicyCfg struct {
  	sharedPolicyCfg `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct
 +
 +	// Configs for nand policy evaluator
 +	NandCfg NandCfg `mapstructure:"nand"`
-+}
-+
+ }
+ 
+ // NotSubPolicyCfg holds the common configuration to the policy under the not policy.
+@@ -104,6 +109,11 @@ type NotSubPolicyCfg struct {
+ 	sharedPolicyCfg `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct
+ }
+ 
 +// NandSubPolicyCfg holds the common configuration to all policies under nand policy.
 +type NandSubPolicyCfg struct {
 +	sharedPolicyCfg `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct
- }
- 
++}
++
  // TraceStateCfg holds the common configuration for trace states.
-@@ -110,6 +120,13 @@ type AndCfg struct {
- 	_ struct{}
+ type TraceStateCfg struct {
+ 	// Tag that the filter is going to be matching against.
+@@ -124,6 +134,13 @@ type NotCfg struct {
+ 	SubPolicy NotSubPolicyCfg `mapstructure:"not_sub_policy"`
  }
  
 +// NandCfg holds the common configuration to all nand policies.
@@ -56,18 +63,53 @@ index fc7b0979a8..2d4c429bb4 100644
  // DropCfg holds the common configuration to all policies under drop policy.
  type DropCfg struct {
  	SubPolicyCfg []AndSubPolicyCfg `mapstructure:"drop_sub_policy"`
-@@ -142,6 +159,8 @@ type PolicyCfg struct {
- 	CompositeCfg CompositeCfg `mapstructure:"composite"`
- 	// Configs for defining and policy
+@@ -158,6 +175,8 @@ type PolicyCfg struct {
  	AndCfg AndCfg `mapstructure:"and"`
+ 	// Configs for defining not policy
+ 	NotCfg NotCfg `mapstructure:"not"`
 +	// Configs for defining nand policy
 +	NandCfg NandCfg `mapstructure:"nand"`
  	// Configs for defining drop policy
  	DropCfg DropCfg `mapstructure:"drop"`
  }
+diff --git a/processor/tailsamplingprocessor/config_test.go b/processor/tailsamplingprocessor/config_test.go
+index 11e9f8ca09..1a3cf3d6d0 100644
+--- a/processor/tailsamplingprocessor/config_test.go
++++ b/processor/tailsamplingprocessor/config_test.go
+@@ -163,6 +163,30 @@ func TestLoadConfig(t *testing.T) {
+ 						},
+ 					},
+ 				},
++				{
++					sharedPolicyCfg: sharedPolicyCfg{
++						Name: "nand-policy-1",
++						Type: Nand,
++					},
++					NandCfg: NandCfg{
++						SubPolicyCfg: []NandSubPolicyCfg{
++							{
++								sharedPolicyCfg: sharedPolicyCfg{
++									Name:                "test-nand-policy-1",
++									Type:                NumericAttribute,
++									NumericAttributeCfg: NumericAttributeCfg{Key: "key1", MinValue: 50, MaxValue: 100},
++								},
++							},
++							{
++								sharedPolicyCfg: sharedPolicyCfg{
++									Name:               "test-nand-policy-2",
++									Type:               StringAttribute,
++									StringAttributeCfg: StringAttributeCfg{Key: "key2", Values: []string{"value1", "value2"}},
++								},
++							},
++						},
++					},
++				},
+ 				{
+ 					sharedPolicyCfg: sharedPolicyCfg{
+ 						Name: "composite-policy-1",
 diff --git a/processor/tailsamplingprocessor/internal/sampling/nand.go b/processor/tailsamplingprocessor/internal/sampling/nand.go
 new file mode 100644
-index 0000000000..79b796875c
+index 0000000000..2235ae5ae5
 --- /dev/null
 +++ b/processor/tailsamplingprocessor/internal/sampling/nand.go
 @@ -0,0 +1,45 @@
@@ -191,7 +233,7 @@ index 0000000000..ea946c9c14
 +}
 diff --git a/processor/tailsamplingprocessor/nand_helper.go b/processor/tailsamplingprocessor/nand_helper.go
 new file mode 100644
-index 0000000000..082c011f72
+index 0000000000..0d797e8c62
 --- /dev/null
 +++ b/processor/tailsamplingprocessor/nand_helper.go
 @@ -0,0 +1,29 @@
@@ -288,15 +330,45 @@ index 0000000000..4ea795d2dc
 +	})
 +}
 diff --git a/processor/tailsamplingprocessor/processor.go b/processor/tailsamplingprocessor/processor.go
-index a257df03c7..41d4e95735 100644
+index a43aa808ca..5349f823d4 100644
 --- a/processor/tailsamplingprocessor/processor.go
 +++ b/processor/tailsamplingprocessor/processor.go
-@@ -315,6 +315,8 @@ func getPolicyEvaluator(settings component.TelemetrySettings, cfg *PolicyCfg, po
+@@ -331,6 +331,8 @@ func getPolicyEvaluator(settings component.TelemetrySettings, cfg *PolicyCfg, po
  		return getNewAndPolicy(settings, &cfg.AndCfg, policyExtensions)
- 	case Drop:
- 		return getNewDropPolicy(settings, &cfg.DropCfg, policyExtensions)
+ 	case Not:
+ 		return getNewNotPolicy(settings, &cfg.NotCfg, policyExtensions)
 +	case Nand:
 +		return getNewNandPolicy(settings, &cfg.NandCfg, policyExtensions)
+ 	case Drop:
+ 		return getNewDropPolicy(settings, &cfg.DropCfg, policyExtensions)
  	default:
- 		return getSharedPolicyEvaluator(settings, &cfg.sharedPolicyCfg, policyExtensions)
- 	}
+diff --git a/processor/tailsamplingprocessor/testdata/tail_sampling_config.yaml b/processor/tailsamplingprocessor/testdata/tail_sampling_config.yaml
+index fc7d219d06..9bb45ba132 100644
+--- a/processor/tailsamplingprocessor/testdata/tail_sampling_config.yaml
++++ b/processor/tailsamplingprocessor/testdata/tail_sampling_config.yaml
+@@ -106,6 +106,25 @@ tail_sampling:
+           }
+         }
+       },
++      {
++        name: nand-policy-1,
++        type: nand,
++        nand: {
++          nand_sub_policy:
++          [
++            {
++              name: test-nand-policy-1,
++              type: numeric_attribute,
++              numeric_attribute: { key: key1, min_value: 50, max_value: 100 }
++            },
++            {
++                name: test-nand-policy-2,
++                type: string_attribute,
++                string_attribute: { key: key2, values: [ value1, value2 ] }
++            },
++          ]
++        }
++      },
+       {
+         name: composite-policy-1,
+         type: composite,

@@ -1,7 +1,7 @@
 # pushgateway container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG PUSHGATEWAY_VERSION=1.11.2
 

@@ -1,9 +1,9 @@
 # opentelemetry-collector
 
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG OTELCOL_VERSION=0.142.0
-ARG OTELCOL_CONTRIB_VERSION=0.142.0
+ARG OTELCOL_VERSION=0.148.0
+ARG OTELCOL_CONTRIB_VERSION=0.148.0
 
 WORKDIR /work/opentelemetry-collector-contrib
 RUN curl -sSfL https://github.com/open-telemetry/opentelemetry-collector-contrib/archive/v${OTELCOL_CONTRIB_VERSION}.tar.gz | \
