@@ -1,7 +1,7 @@
 BCC_REPO ?= https://github.com/iovisor/bcc.git
-BCC_TARGET ?= v0.35.0
+BCC_TARGET ?= v0.36.1
 LIBBPF_REPO ?= https://github.com/libbpf/libbpf.git
-LIBBPF_TARGET ?= v1.6.2
+LIBBPF_TARGET ?= v1.7.0
 BPFTRACE_REPO ?= https://github.com/bpftrace/bpftrace.git
 BPFTRACE_TARGET ?= v$(shell cat TAG | cut -d. -f1-3)
 
