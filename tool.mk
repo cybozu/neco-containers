@@ -24,6 +24,18 @@ STATICCHECK := $(SELF_DIR)/bin/staticcheck
 staticcheck:
 	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
 
+# Download buf locally if necessary
+BUF := $(SELF_DIR)/bin/buf
+.PHONY: buf
+buf:
+	$(call go-install-tool,$(BUF),github.com/bufbuild/buf/cmd/buf@latest)
+
+# Download gofumpt locally if necessary
+GOFUMPT := $(SELF_DIR)/bin/gofumpt
+.PHONY: gofumpt
+gofumpt:
+	$(call go-install-tool,$(GOFUMPT),mvdan.cc/gofumpt@latest)
+
 # Download custom-checker locally if necessary
 CUSTOM_CHECKER := $(SELF_DIR)/bin/custom-checker
 .PHONY: custom-checker
