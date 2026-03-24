@@ -86,6 +86,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [serf](#serf)
 - [spegel](#spegel)
 - [spiffe-csi-driver](#spiffe-csi-driver)
+- [spiffe-test](#spiffe-test)
 - [spire-agent](#spire-agent)
 - [spire-server](#spire-server)
 - [spire-controller-manager](#spire-controller-manager)
@@ -1077,6 +1078,14 @@ Only the base image and module dependency should be updated.
 
 > [!Note]
 > The spire-server, spire-agent, and spiffe-csi-driver images should be updated at the same time for consistency.
+
+## spiffe-test
+
+![Regular Update](./regular_update.svg)
+
+1. Update the base image in `Dockerfile`.
+2. Update Go dependencies in the `spiffe-test` directory.
+3. Update `TAG` and `BRANCH` files.
 
 ## spire-agent
 
