@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y \
     systemtap-sdt-dev \
     zlib1g-dev \
     libcurl4-openssl-dev \
+    libdw-dev \
     libedit-dev \
     xxd
 
@@ -88,9 +89,11 @@ RUN cd src && \
 # https://github.com/bpftrace/bpftrace/blob/master/INSTALL.md#building-bpftrace
 # https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu
 WORKDIR /build/bpftrace
-RUN cmake -B build \
+RUN cp src/stdlib/include/linux/bpf.h /usr/include/linux/bpf.h && \
+    cmake -B build \
     -DBUILD_TESTING=OFF \
-    -DCMAKE_BUILD_TYPE=Release && \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DUSE_SYSTEM_LIBBPF=ON && \
     make -C build -j$(nproc)
 
 # ==================== bpftrace image ====================
