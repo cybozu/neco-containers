@@ -1,11 +1,11 @@
 # victoriametrics-xxx container
 
 ARG VICTORIAMETRICS_SRCREPO=VictoriaMetrics/VictoriaMetrics
-ARG VICTORIAMETRICS_SINGLE_VERSION=1.131.0
-ARG VICTORIAMETRICS_CLUSTER_VERSION=1.131.0-cluster
+ARG VICTORIAMETRICS_SINGLE_VERSION=1.138.0
+ARG VICTORIAMETRICS_CLUSTER_VERSION=1.138.0-cluster
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build-single
+FROM ghcr.io/cybozu/golang:1.26-noble AS build-single
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_SINGLE_VERSION
@@ -15,7 +15,7 @@ WORKDIR /go/src/github.com/VictoriaMetrics/VictoriaMetrics
 RUN VICTORIAMETRICS_VERSION=${VICTORIAMETRICS_SINGLE_VERSION} /download_and_build.sh victoria-metrics vmagent vmalert vmbackup vmrestore vmctl
 
 #
-FROM ghcr.io/cybozu/golang:1.24-noble AS build-cluster
+FROM ghcr.io/cybozu/golang:1.26-noble AS build-cluster
 
 ARG VICTORIAMETRICS_SRCREPO
 ARG VICTORIAMETRICS_CLUSTER_VERSION

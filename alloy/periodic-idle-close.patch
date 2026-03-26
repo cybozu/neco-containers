@@ -1,7 +1,7 @@
-diff --git a/internal/component/common/loki/client/client.go b/internal/component/common/loki/client/client.go
-index b27dcb519..fffddc67f 100644
---- a/internal/component/common/loki/client/client.go
-+++ b/internal/component/common/loki/client/client.go
+diff --git a/internal/component/common/loki/client/shards.go b/internal/component/common/loki/client/shards.go
+index 524100ab9..a5818207e 100644
+--- a/internal/component/common/loki/client/shards.go
++++ b/internal/component/common/loki/client/shards.go
 @@ -7,6 +7,7 @@ import (
  	"errors"
  	"fmt"
@@ -10,10 +10,11 @@ index b27dcb519..fffddc67f 100644
  	"net/http"
  	"strconv"
  	"sync"
-@@ -255,6 +256,11 @@ func (c *client) run() {
+@@ -328,12 +329,20 @@ func (s *shards) runShard(q *queue) {
+ 	maxWaitCheckFrequency := max(s.cfg.BatchWait/10, minWaitCheckFrequency)
  
  	maxWaitCheck := time.NewTicker(maxWaitCheckFrequency)
- 
++
 +	idleCloseInterval := time.Minute * 20
 +	idleCloseOffset := time.Minute * 5
 +	// To distribute the first timing, give random duration first and fixed duration later.
@@ -21,30 +22,29 @@ index b27dcb519..fffddc67f 100644
 +
  	defer func() {
  		maxWaitCheck.Stop()
- 		// Send all pending batches
-@@ -262,6 +268,8 @@ func (c *client) run() {
- 			c.sendBatch(tenantID, batch)
- 		}
  
-+		periodicIdleClose.Stop()
+ 		if s.running.Dec() == 0 {
+ 			s.onceDone.Do(func() { close(s.done) })
+ 		}
 +
- 		c.wg.Done()
++		periodicIdleClose.Stop()
  	}()
  
-@@ -327,6 +335,19 @@ func (c *client) run() {
- 				c.sendBatch(tenantID, batch)
- 				delete(batches, tenantID)
+ 	var (
+@@ -358,6 +367,19 @@ func (s *shards) runShard(q *queue) {
+ 			for _, b := range q.drain() {
+ 				s.sendBatch(b.TenantID, b.Batch, &protoBuffer, &snappyBuffer)
  			}
 +		case <-periodicIdleClose.C:
 +			// After Loki distributors are rollout-restarted, the number of connections from alloys may be unbalanced.
 +			// To avoid this situation keeping on, reconnect to a randomly chosen distributor periodically.
-+			tp, ok := c.client.Transport.(*http.Transport)
++			tp, ok := s.client.Transport.(*http.Transport)
 +			if !ok {
-+				level.Warn(c.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is not a http.Transport")
++				level.Warn(s.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is not a http.Transport")
 +			} else if tp == nil {
-+				level.Warn(c.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is nil")
++				level.Warn(s.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is nil")
 +			} else {
-+				level.Info(c.logger).Log("msg", "closing idle connections to loki")
++				level.Info(s.logger).Log("msg", "closing idle connections to loki")
 +				tp.CloseIdleConnections()
 +			}
 +			periodicIdleClose.Reset(idleCloseInterval)
