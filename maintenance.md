@@ -1045,7 +1045,7 @@ Only the base image and module dependency should be updated.
     - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/controller.Dockerfile`
     - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/kubeseal.Dockerfile`
 3. Update `SEALED_SECRETS_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
+4. Update `TAG` files.
 
 ## serf
 
