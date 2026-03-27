@@ -1,9 +1,9 @@
 # vault container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG VAULT_VERSION=1.21.1
+ARG VAULT_VERSION=1.21.4
 
 RUN git clone --depth=1 -b v${VAULT_VERSION} https://github.com/hashicorp/vault.git
 
