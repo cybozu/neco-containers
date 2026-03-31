@@ -45,6 +45,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [contour](#contour)
 - [coredns](#coredns)
 - [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
+- [ct-monitor](#ct-monitor)
 - [dex](#dex)
 - [envoy](#envoy)
 - [etcd](#etcd)
@@ -545,6 +546,17 @@ This section applies to the following containers. These containers are maintaine
 
 > [!Note]
 > You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
+
+## ct-monitor
+
+![Regular Update](./regular_update.svg)
+
+1. Check [releases](https://github.com/Hsn723/ct-monitor/releases) for changes.
+2. Update `ARG VERSION` in `Dockerfile`.
+3. Update `E2ETEST_K8S_VERSION`, `KIND_VERSION`, `CERT_MANAGER_VERSION` in e2e/Makefile if necessary.
+4. Upgrade direct dependencies in `go.mod` (for e2e test) and run `go mod tidy`.
+5. Upgrade direct dependencies in `plugin/incluster-filter/go.mod` and run `go mod tidy` in `plugin/incluster-filter/`.
+6. Update `TAG` file.
 
 ## dex
 
