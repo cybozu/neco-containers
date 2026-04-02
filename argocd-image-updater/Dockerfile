@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/golang:1.24-noble AS builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS builder
 
-ENV ARGOCD_IMAGE_UPDATER_VERSION=1.0.2
+ENV ARGOCD_IMAGE_UPDATER_VERSION=1.1.1
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
 
