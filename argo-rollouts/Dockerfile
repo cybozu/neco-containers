@@ -3,9 +3,9 @@
 # - UI build stage
 # - Kubectl plugin image
 
-FROM ghcr.io/cybozu/golang:1.25-noble AS builder
+FROM ghcr.io/cybozu/golang:1.26-noble AS builder
 
-ENV ARGO_ROLLOUTS_VERSION=1.8.3
+ENV ARGO_ROLLOUTS_VERSION=1.9.0
 
 WORKDIR /work
 
