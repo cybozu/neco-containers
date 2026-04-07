@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG REGISTRY_VERSION=3.0.0
+ARG REGISTRY_VERSION=3.1.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/docker/ \
