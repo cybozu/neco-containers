@@ -57,7 +57,7 @@ WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install --frozen-lockfile
 
 ENV ARGO_VERSION=$ARGOCD_VERSION
-RUN NODE_ENV='production' NODE_ONLINE_ENV='online' yarn build
+RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 yarn build
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
