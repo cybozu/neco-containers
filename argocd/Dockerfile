@@ -23,7 +23,7 @@ RUN curl -fsSL -O https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz &
     rm helm-v${HELM_VERSION}-linux-amd64.tar.gz
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.24-noble AS argocd-build
+FROM ghcr.io/cybozu/golang:1.25-noble AS argocd-build
 ENV ARGOCD_VERSION=3.3.6
 ENV PACKAGE=github.com/argoproj/argo-cd
 
