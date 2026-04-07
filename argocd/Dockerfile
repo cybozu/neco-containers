@@ -7,12 +7,12 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=5.6.0
+ENV KUSTOMIZE_VERSION=5.8.1
 RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
     tar zxf - -C /usr/local/bin
 
 # Install helm
-ENV HELM_VERSION=3.17.1
+ENV HELM_VERSION=3.19.4
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
@@ -23,7 +23,7 @@ RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/rel
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.24-noble AS argocd-build
-ENV ARGOCD_VERSION=3.0.23
+ENV ARGOCD_VERSION=3.3.6
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
