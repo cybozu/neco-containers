@@ -28,11 +28,22 @@ ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
-# https://github.com/nodesource/distributions/blob/master/README.md#debinstall
-RUN curl -sSLf https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install --global yarn
+# Use stable version instead of unstable version upstream uses
+ARG NODE_VERSION=v24.14.1
+ARG NODE_SHA=ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea
+RUN curl -fsSL -O https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz && \
+    echo "${NODE_SHA}  node-${NODE_VERSION}-linux-x64.tar.gz" | sha256sum -c - && \
+    tar xvf node-${NODE_VERSION}-linux-x64.tar.gz -C /opt && \
+    rm node-${NODE_VERSION}-linux-x64.tar.gz
+ENV PATH="/opt/node-${NODE_VERSION}-linux-x64/bin:${PATH}"
+
+RUN apt-get update && apt-get install -y --no-install-recommends gpg
+# ref. https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable
+RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /etc/apt/keyrings/yarn-archive-keyring.gpg > /dev/null && \
+    echo "deb [signed-by=/etc/apt/keyrings/yarn-archive-keyring.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+RUN apt-get update && apt-get install -y --no-install-recommends yarn && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /work
 RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
