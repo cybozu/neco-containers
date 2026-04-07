@@ -91,12 +91,22 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
 
+WORKDIR /app/config
+RUN mkdir -p tls && \
+    mkdir -p gpg/source && \
+    mkdir -p gpg/keys && \
+    chown argocd gpg/keys && \
+    chmod 0700 gpg/keys
+
 RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-cmp-server && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-application-controller && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-dex && \
-    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-notifications && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-applicationset-controller && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-k8s-auth && \
+    ln -s /usr/local/bin/argocd /usr/local/bin/argocd-commit-server
 
 USER 10000:10000
 
