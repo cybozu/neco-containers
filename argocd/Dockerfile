@@ -86,10 +86,6 @@ RUN groupadd -g 10000 argocd && \
 
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
-
-# workaround ksonnet issue https://github.com/ksonnet/ksonnet/issues/298
-ENV USER=argocd
-
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/bin/
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
