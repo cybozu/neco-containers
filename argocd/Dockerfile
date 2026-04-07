@@ -7,14 +7,20 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ENV KUSTOMIZE_VERSION=5.8.1
-RUN curl -sSLf https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz | \
-    tar zxf - -C /usr/local/bin
+ARG KUSTOMIZE_VERSION=5.8.1
+ARG KUSTOMIZE_SHA=029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d
+RUN curl -fsSL -O https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz && \
+    echo "${KUSTOMIZE_SHA}  kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" | sha256sum -c - && \
+    tar xvf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz -C /usr/local/bin && \
+    rm kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
 
 # Install helm
-ENV HELM_VERSION=3.19.4
-RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
-    tar zxf - -C /usr/local/bin --strip-components 1
+ARG HELM_VERSION=3.19.4
+ARG HELM_SHA=759c656fbd9c11e6a47784ecbeac6ad1eb16a9e76d202e51163ab78504848862
+RUN curl -fsSL -O https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz && \
+    echo "${HELM_SHA}  helm-v${HELM_VERSION}-linux-amd64.tar.gz" | sha256sum -c - && \
+    tar xvf helm-v${HELM_VERSION}-linux-amd64.tar.gz -C /usr/local/bin --strip-components 1 && \
+    rm helm-v${HELM_VERSION}-linux-amd64.tar.gz
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.24-noble AS argocd-build
