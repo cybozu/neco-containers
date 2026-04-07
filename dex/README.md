@@ -10,7 +10,7 @@ Run the container
 
 ```bash
 docker run -d --read-only --name=dex \
-  ghcr.io/cybozu/dex:2.41
+  ghcr.io/cybozu/dex:2.43
 ```
 
 [dex]: https://github.com/dexidp/dex

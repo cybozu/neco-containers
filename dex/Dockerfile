@@ -1,9 +1,9 @@
 # dex container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.23-jammy AS build
+FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG DEX_VERSION=2.41.1
+ARG DEX_VERSION=2.43.1
 
 WORKDIR /work/dex/
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -13,7 +13,7 @@ RUN curl -sSLf https://github.com/dexidp/dex/archive/v${DEX_VERSION}.tar.gz | \
 RUN make bin/dex VERSION=v${DEX_VERSION}
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/dex/bin/dex /usr/local/bin/dex
