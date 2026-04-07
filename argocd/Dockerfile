@@ -16,11 +16,6 @@ ENV HELM_VERSION=3.19.4
 RUN curl -sSLf https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz | \
     tar zxf - -C /usr/local/bin --strip-components 1
 
-# Install tini
-ARG TINI_VERSION=0.19.0
-RUN curl -fsSL -o /usr/local/bin/tini-static https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini-static && \
-    chmod +x /usr/local/bin/tini-static
-
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.24-noble AS argocd-build
 ENV ARGOCD_VERSION=3.3.6
@@ -72,11 +67,17 @@ RUN groupadd -g 10000 argocd && \
     mkdir -p /home/argocd && \
     chown argocd:argocd /home/argocd && \
     apt-get update && \
-    apt-get install -y --no-install-recommends git git-lfs gpg gpg-agent openssh-client connect-proxy && \
+    apt-get install -y --no-install-recommends \
+        connect-proxy \
+        git \
+        git-lfs \
+        gpg \
+        gpg-agent \
+        openssh-client \
+        tini && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-COPY --from=builder /usr/local/bin/tini-static /usr/local/bin/tini
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
 
