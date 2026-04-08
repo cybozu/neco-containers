@@ -10,13 +10,14 @@ WORKDIR /work
 RUN git clone --depth=1 -b v${TEMPO_VERSION} https://github.com/${TEMPO_SRCREPO}.git tempo
 COPY *.patch /work
 RUN cd tempo && patch -p1 < ../ingester-cut-to-wal-metrics.patch
-RUN cd tempo && make tempo
+RUN cd tempo && make tempo tempo-cli
 
 # Stage2: setup runtime containers
 FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/tempo/bin/linux/tempo-amd64 /tempo
+COPY --from=build /work/tempo/bin/linux/tempo-cli-amd64 /tempo-cli
 
 USER 10000:10000
 
