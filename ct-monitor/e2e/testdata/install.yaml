@@ -29,7 +29,7 @@ apiVersion: v1
 data:
   config.toml: |
     [[domain]]
-      name = "stage0.cybozu-ne.co"
+      name = "stage1.cybozu-ne.co"
       include_subdomains = true
       match_wildcards = true
     [alert_config]
@@ -60,6 +60,9 @@ spec:
           - image: ghcr.io/cybozu/ct-monitor:dev
             imagePullPolicy: Never
             name: ct-monitor
+            env:
+            - name: INCLUSTER_FILTER_LOG_LEVEL
+              value: debug
             volumeMounts:
             - mountPath: /etc/ct-monitor/config.toml
               name: config-volume

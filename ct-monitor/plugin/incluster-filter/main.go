@@ -8,9 +8,11 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"os"
 
 	"github.com/Hsn723/certspotter-client/api"
 	"github.com/Hsn723/ct-monitor/filter"
+	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -37,6 +39,7 @@ var certificateRequestGVR = schema.GroupVersionResource{
 
 type inclusterFilter struct {
 	client dynamic.Interface
+	logger hclog.Logger
 }
 
 func newInclusterFilter() (*inclusterFilter, error) {
@@ -48,7 +51,13 @@ func newInclusterFilter() (*inclusterFilter, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create dynamic client: %w", err)
 	}
-	return &inclusterFilter{client: client}, nil
+	return &inclusterFilter{
+		client: client,
+		logger: hclog.New(&hclog.LoggerOptions{
+			Name:  "incluster-filter",
+			Level: hclog.LevelFromString(os.Getenv("INCLUSTER_FILTER_LOG_LEVEL")),
+		}),
+	}, nil
 }
 
 func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]struct{}, error) {
@@ -60,6 +69,7 @@ func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]s
 		if err != nil {
 			return nil, fmt.Errorf("failed to list CertificateRequests for issuer %s: %w", issuer, err)
 		}
+		f.logger.Debug("listed CertificateRequests", "issuer", issuer, "count", len(list.Items))
 		for _, item := range list.Items {
 			status, ok := item.Object["status"].(map[string]interface{})
 			if !ok {
@@ -67,19 +77,23 @@ func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]s
 			}
 			certStr, ok := status["certificate"].(string)
 			if !ok || certStr == "" {
+				f.logger.Debug("skipping CertificateRequest without certificate", "name", item.GetName(), "namespace", item.GetNamespace())
 				continue
 			}
 			// dynamic client returns []byte fields as base64-encoded strings
 			certPEM, err := base64.StdEncoding.DecodeString(certStr)
 			if err != nil {
+				f.logger.Warn("failed to decode certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
 				continue
 			}
 			block, _ := pem.Decode(certPEM)
 			if block == nil {
+				f.logger.Warn("failed to PEM-decode certificate", "name", item.GetName(), "namespace", item.GetNamespace())
 				continue
 			}
 			cert, err := x509.ParseCertificate(block.Bytes)
 			if err != nil {
+				f.logger.Warn("failed to parse certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
 				continue
 			}
 			sum := sha256.Sum256(cert.Raw)
@@ -94,13 +108,17 @@ func (f *inclusterFilter) Filter(issuances []api.Issuance) ([]api.Issuance, erro
 	if err != nil {
 		return issuances, err
 	}
+	f.logger.Debug("collected fingerprints from cluster", "count", len(fingerprints))
 
 	filtered := issuances[:0]
 	for _, is := range issuances {
-		if _, known := fingerprints[is.CertSHA256]; !known {
+		if _, known := fingerprints[is.CertSHA256]; known {
+			f.logger.Debug("filtered out known issuance", "cert_sha256", is.CertSHA256, "dns_names", is.Domains)
+		} else {
 			filtered = append(filtered, is)
 		}
 	}
+	f.logger.Info("filter applied", "before", len(issuances), "after", len(filtered))
 	return filtered, nil
 }
 
