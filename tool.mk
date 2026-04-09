@@ -16,13 +16,13 @@ SELF_DIR := $(shell dirname $(abspath $(lastword $(MAKEFILE_LIST))))
 GOIMPORTS := $(SELF_DIR)/bin/goimports
 .PHONY: goimports
 goimports:
-	$(call go-install-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@latest)
+	$(call go-install-tool,$(GOIMPORTS),golang.org/x/tools/cmd/goimports@24a8e95f9d7ae2696f66314da5e50c0d98ccaa90) # v0.43.0
 
 # Download staticcheck locally if necessary
 STATICCHECK := $(SELF_DIR)/bin/staticcheck
 .PHONY: staticcheck
 staticcheck:
-	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@latest)
+	$(call go-install-tool,$(STATICCHECK),honnef.co/go/tools/cmd/staticcheck@ff63afafc529279f454e02f1d060210bd4263951) # v0.7.0
 
 # Download buf locally if necessary
 BUF := $(SELF_DIR)/bin/buf
@@ -40,4 +40,4 @@ gofumpt:
 CUSTOM_CHECKER := $(SELF_DIR)/bin/custom-checker
 .PHONY: custom-checker
 custom-checker:
-	$(call go-install-tool,$(CUSTOM_CHECKER),github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@latest)
+	$(call go-install-tool,$(CUSTOM_CHECKER),github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@5cda2f85e31dbe2453825f6520710a76465f197e) # v0.1.5
