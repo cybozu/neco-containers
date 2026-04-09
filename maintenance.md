@@ -937,7 +937,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 
 1. Check the release page.
    - <https://github.com/kubernetes-sigs/prometheus-adapter/releases>
-2. Update version variables in `Dockerfile`.
+2. Update `PROMETHEUS_ADAPTER_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
 3. Update `TAG` file.
 
 ## prometheus-config-reloader
