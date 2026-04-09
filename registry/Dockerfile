@@ -3,13 +3,13 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG REGISTRY_VERSION=3.1.0
+ARG REGISTRY_COMMIT=708f8d6b060248fe7192294dd5440320ffc86da0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/docker/ \
-    && curl -sSLf https://github.com/distribution/distribution/archive/v${REGISTRY_VERSION}.tar.gz | \
+    && curl -sSLf https://github.com/distribution/distribution/archive/${REGISTRY_COMMIT}.tar.gz | \
     tar zxf - -C /go/src/github.com/docker/ \
-    && mv /go/src/github.com/docker/distribution-${REGISTRY_VERSION} /go/src/github.com/docker/distribution
+    && mv /go/src/github.com/docker/distribution-${REGISTRY_COMMIT} /go/src/github.com/docker/distribution
 
 WORKDIR /go/src/github.com/docker/distribution/
 

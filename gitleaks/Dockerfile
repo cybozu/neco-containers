@@ -1,12 +1,12 @@
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
-ARG GITLEAKS_VERSION=8.30.0
-
-WORKDIR /work
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-RUN git clone --depth=1 -b v${GITLEAKS_VERSION} https://github.com/gitleaks/gitleaks /work/gitleaks
+ARG GITLEAKSS_COMMIT=6eaad039603a4de39fddd1cf5f727391efe9974e
 
 WORKDIR /work/gitleaks
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN curl -sLf -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/archive/${GITLEAKSS_COMMIT}.tar.gz \
+    && tar --strip-components=1 -xzf gitleaks.tar.gz -C /work/gitleaks \
+    && rm gitleaks.tar.gz
 
 RUN CGO_ENABLED=0 go build -ldflags '-w -s' -o bin/gitleaks
 

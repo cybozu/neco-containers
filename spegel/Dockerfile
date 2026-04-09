@@ -1,9 +1,9 @@
 FROM ghcr.io/cybozu/golang:1.25-noble AS builder
-ARG SPEGEL_VERSION=0.6.0
+ARG SPEGEL_COMMIT=6f02215fa3fc1d3bbdb11fa62dfa7c07dbe3b7c2
 
 WORKDIR /work/spegel
 
-RUN curl -sSLf https://github.com/spegel-org/spegel/archive/v${SPEGEL_VERSION}.tar.gz | \
+RUN curl -sSLf https://github.com/spegel-org/spegel/archive/${SPEGEL_COMMIT}.tar.gz | \
     tar zxf - --strip-components 1 -C /work/spegel
 
 RUN go mod download
