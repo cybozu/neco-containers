@@ -625,7 +625,7 @@ This section applies to the following containers. These containers are maintaine
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/gitleaks/gitleaks/releases).
-2. Update `GITLEAKS_VERSION` in `Dockerfile`.
+2. Update `GITLEAKSS_COMMIT` in `Dockerfile`.
 3. Update `TAG`.
 
 ## golang-all (golang for combinations of versions and platforms)
@@ -1005,7 +1005,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - <https://github.com/docker/distribution/blob/master/Dockerfile>
-3. Update `REGISTRY_VERSION` in `Dockerfile`.
+3. Update `REGISTRY_COMMIT` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## rook
@@ -1075,7 +1075,7 @@ Only the base image and module dependency should be updated.
 
 ![Regular Update](./regular_update.svg)
 1. Check the [release page](https://github.com/spegel-org/spegel/releases).
-2. Update `SPEGEL_VERSION` in `Dockerfile`.
+2. Update `SPEGEL_COMMIT` in `Dockerfile`.
 3. Update `TAG` file.
 
 ## spiffe-csi-driver
