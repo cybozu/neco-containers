@@ -1,12 +1,10 @@
+include ../tool.mk
+
 SUDO = sudo
 SUDO_GO = $(SUDO) $(shell which go)
 
 .PHONY: all
 all: check-generate test
-
-.PHONY: setup
-setup:
-	go install honnef.co/go/tools/cmd/staticcheck@latest
 
 .PHONY: check-generate
 check-generate:
@@ -14,8 +12,8 @@ check-generate:
 	git diff --exit-code --name-only
 
 .PHONY: test
-test:
+test: staticcheck
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
+	$(STATICCHECK) ./...
 	go vet ./...
 	$(SUDO_GO) test -race -v ./...
