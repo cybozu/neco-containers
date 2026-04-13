@@ -1,0 +1,15 @@
+diff --git a/pkg/querier/tail/tail.go b/pkg/querier/tail/tail.go
+index 97c04a6165..50a827b88f 100644
+--- a/pkg/querier/tail/tail.go
++++ b/pkg/querier/tail/tail.go
+@@ -266,6 +266,10 @@ func (t *Tailer) next() bool {
+ }
+ 
+ func (t *Tailer) close() error {
++	if t.stopped.Load() {
++		return nil
++	}
++
+ 	t.streamMtx.Lock()
+ 	defer t.streamMtx.Unlock()
+ 
