@@ -8,7 +8,7 @@ RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravita
     make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu-debug:24.04
+FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260409 
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
