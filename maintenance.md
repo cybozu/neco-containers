@@ -431,7 +431,7 @@ gitGraph
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release note](https://chrony.tuxfamily.org/news.html).
-2. Update `CHRONY_VERSION` in `Dockerfile`.
+2. Update `CHRONY_VERSION` and `CHRONY_HASH` in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
