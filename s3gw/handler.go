@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	s3manager "github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -20,6 +20,7 @@ func (credentialsProvider) Retrieve(ctx context.Context) (aws.Credentials, error
 }
 
 var client *s3.Client
+var tmClient *transfermanager.Client
 
 const bucketPathPrefix = len("/bucket/")
 const partSize = 128 << 20 // 128MiB
@@ -133,19 +134,14 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 
 func objectPutHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	objectKey := req.URL.Path[bucketPathPrefix:]
-	input := &s3.PutObjectInput{
+	input := &transfermanager.UploadObjectInput{
 		Bucket:        &bucketName,
 		Key:           &objectKey,
 		Body:          req.Body,
 		ContentLength: &req.ContentLength,
 		ContentType:   getHeaderOrNil(req.Header, "Content-Type"),
 	}
-	uploader := s3manager.NewUploader(client, func(u *s3manager.Uploader) {
-		u.Concurrency = 1
-		u.PartSize = partSize
-		u.LeavePartsOnError = false
-	})
-	_, err := uploader.Upload(req.Context(), input)
+	_, err := tmClient.UploadObject(req.Context(), input)
 	if err != nil {
 		res.WriteHeader(http.StatusBadRequest) // XXX we cannot determine appropriate status code
 		res.Write([]byte(err.Error()))
