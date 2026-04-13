@@ -6,15 +6,17 @@
 # Each target is prefixed with "storage-version-migrate-" to construct its repository name.
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG MIGRATOR_VERSION=0.0.5
+ARG MIGRATOR_COMMIT=acdee30ced218b79e39c6a701985e8cd8bd33824
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /go/src/github.com/kubernetes-sigs
 RUN git clone --depth 1 --branch v${MIGRATOR_VERSION} https://github.com/kubernetes-sigs/kube-storage-version-migrator \
     && cd kube-storage-version-migrator \
+    && git checkout ${MIGRATOR_COMMIT} \
     && mkdir -p /work \
     && CGO_ENABLED=0 GOOS=linux GO111MODULE=on go build -mod=vendor -ldflags "-X sigs.k8s.io/kube-storage-version-migrator/pkg/version.VERSION=v${MIGRATOR_VERSION}" -a -installsuffix cgo -o /work/ ./cmd/...
 
