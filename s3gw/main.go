@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/cybozu-go/log"
 	"github.com/cybozu-go/well"
@@ -109,6 +110,10 @@ func main() {
 	}, func(opts *s3.Options) {
 		opts.BaseEndpoint = aws.String("http://" + bucketHostPort + "/")
 		opts.UsePathStyle = flagUsePathStyle
+	})
+	tmClient = transfermanager.New(client, func(opts *transfermanager.Options) {
+		opts.Concurrency = 1
+		opts.PartSizeBytes = partSize
 	})
 	mux := http.NewServeMux()
 	server := &well.HTTPServer{
