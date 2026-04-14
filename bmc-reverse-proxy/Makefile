@@ -6,8 +6,8 @@ all: check-generate test
 
 .PHONY: setup
 setup:
-	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@latest
-	go install honnef.co/go/tools/cmd/staticcheck@latest
+	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@v0.1.5
+	go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
 
 .PHONY: check-generate
 check-generate:

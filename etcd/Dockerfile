@@ -1,14 +1,15 @@
 # etcd container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG ETCD_VERSION=3.6.9
+# v3.6.10
+ARG ETCD_COMMIT=db8d13a5421fcbd1c5825a148735b80c7d36cd2d
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSLf https://github.com/etcd-io/etcd/archive/v${ETCD_VERSION}.tar.gz | \
+RUN curl -sSLf https://github.com/etcd-io/etcd/archive/${ETCD_COMMIT}.tar.gz | \
         tar zxf - \
-    && mv etcd-${ETCD_VERSION} etcd
+    && mv etcd-${ETCD_COMMIT} etcd
 
 WORKDIR /work/etcd
 RUN ./scripts/build.sh

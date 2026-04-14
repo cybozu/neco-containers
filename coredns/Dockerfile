@@ -1,12 +1,13 @@
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG COREDNS_VERSION=1.14.1
+# v1.14.2
+ARG COREDNS_COMMIT=dd1df4f5db93767a44e37638df44969503b320d2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSLf https://github.com/coredns/coredns/archive/v${COREDNS_VERSION}.tar.gz | \
+RUN curl -sSLf https://github.com/coredns/coredns/archive/${COREDNS_COMMIT}.tar.gz | \
         tar zxf - -C /work/ \
     && mkdir -p /go/src/github.com/coredns/ \
-    && mv coredns-${COREDNS_VERSION} /go/src/github.com/coredns/coredns
+    && mv coredns-${COREDNS_COMMIT} /go/src/github.com/coredns/coredns
 
 WORKDIR /go/src/github.com/coredns/coredns/
 RUN make

@@ -5,8 +5,9 @@ ARG UNBOUND_VERSION=1.24.2
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev libevent-dev
-RUN curl -sSLf https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz | \
-    tar zxf - -C /work/
+RUN curl -sSLf -o unbound-${UNBOUND_VERSION}.tar.gz https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz \
+    && echo "$(curl -sSLf https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz.sha256)  unbound-${UNBOUND_VERSION}.tar.gz" | sha256sum -c - \
+    && tar zxf unbound-${UNBOUND_VERSION}.tar.gz
 
 WORKDIR /work/unbound-${UNBOUND_VERSION}
 RUN mkdir -p /usr/local/unbound \

@@ -1,9 +1,10 @@
 # kubernetes container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG K8S_VERSION=1.34.4
+# v1.35.3
+ARG K8S_COMMIT=6c1cd99aef09161ddb07b8ade6c9564e9b9bfe27
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
@@ -12,9 +13,9 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /go/src/k8s.io/ && \
-    curl -sSLf https://github.com/kubernetes/kubernetes/archive/v${K8S_VERSION}.tar.gz | \
+    curl -sSLf https://github.com/kubernetes/kubernetes/archive/${K8S_COMMIT}.tar.gz | \
     tar zxf - -C /go/src/k8s.io/ && \
-    mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
+    mv /go/src/k8s.io/kubernetes-${K8S_COMMIT} /go/src/k8s.io/kubernetes
 
 COPY kubelet-fetch-active-container.diff /work/
 
