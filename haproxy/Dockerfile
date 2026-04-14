@@ -1,21 +1,24 @@
+# ref. https://github.com/docker-library/haproxy/blob/master/3.0/Dockerfile
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ENV HAPROXY_BRANCH=3.0
-ENV HAPROXY_MINOR=3.0.12
-ENV HAPROXY_SRC_URL="https://www.haproxy.org/download/${HAPROXY_BRANCH}/src/haproxy-${HAPROXY_MINOR}.tar.gz"
-ENV HAPROXY_SHA256=cd2bade59a7e2d61f2d62be7c6c4cfc0e2b3a90431023720cae7c43843b0570b
+ARG HAPROXY_VERSION=3.0.19
+ARG HAPROXY_URL=https://www.haproxy.org/download/3.0/src/haproxy-${HAPROXY_VERSION}.tar.gz
+ARG HAPROXY_SHA256=85f2743a44e4226a0176926fbc8eebfa5551d22fe5f44366877570b6e18c6664
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        gcc \
+        libc6-dev \
         liblua5.4-dev \
         libpcre2-dev \
-        wget && \
-    rm -rf /var/lib/apt/lists/* && \
-    wget -O haproxy.tar.gz "$HAPROXY_SRC_URL" && \
+        libssl-dev \
+        wget
+
+RUN wget -O haproxy.tar.gz "$HAPROXY_URL" && \
     echo "$HAPROXY_SHA256 *haproxy.tar.gz" | sha256sum -c && \
     mkdir -p /tmp/haproxy && \
     tar -xzf haproxy.tar.gz -C /tmp/haproxy --strip-components=1 && \
-    rm -f haproxy.tar.gz && \
+    rm haproxy.tar.gz && \
     makeOpts=' \
         TARGET=linux-glibc \
         USE_GETADDRINFO=1 \
@@ -23,19 +26,23 @@ RUN apt-get update && \
         USE_OPENSSL=1 \
         USE_PCRE2=1 USE_PCRE2_JIT=1 \
         USE_PROMEX=1 \
+        USE_PTHREAD_EMULATION=1 \
         ' && \
     make -C /tmp/haproxy -j "$(nproc)" all $makeOpts && \
     make -C /tmp/haproxy install-bin $makeOpts
 
-
 FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
+# runtime does not need -dev packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        liblua5.4-dev && \
-    rm -rf /var/lib/apt/lists/* && \
-    groupadd --gid 99 --system haproxy && \
+        liblua5.4-0 \
+        socat && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN groupadd --gid 99 --system haproxy && \
     useradd \
         --gid haproxy \
         --home-dir /var/lib/haproxy \
@@ -43,21 +50,20 @@ RUN apt-get update && \
         --system \
         --uid 99 \
         haproxy && \
-    mkdir -p /usr/local/haproxy && \
     mkdir -p /usr/local/etc/haproxy && \
     mkdir -p /var/lib/haproxy && \
     chown haproxy:haproxy /var/lib/haproxy
 
-COPY --from=build /usr/local/sbin/haproxy /usr/local/bin/haproxy
+COPY --from=build /usr/local/sbin/haproxy /usr/local/sbin/haproxy
 COPY --from=build /tmp/haproxy/examples/errorfiles /usr/local/etc/haproxy/errors
-COPY --from=build /tmp/haproxy/LICENSE /usr/local/haproxy/LICENSE
-COPY docker-entrypoint.sh /usr/local/bin/
+COPY --from=build /tmp/haproxy/LICENSE /usr/local/etc/haproxy/LICENSE
 
 # smoke test
 RUN haproxy -v
 
 STOPSIGNAL SIGUSR1
 
+COPY docker-entrypoint.sh /usr/local/bin/
 ENTRYPOINT ["docker-entrypoint.sh"]
 
 USER haproxy
