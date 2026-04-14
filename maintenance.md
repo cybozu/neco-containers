@@ -764,7 +764,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/initializer/Dockerfile`
    - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/migrator/Dockerfile`
    - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/trigger/Dockerfile`
-3. Update `MIGRATOR_VERSION` in `Dockerfile`
+3. Update `MIGRATOR_VERSION` and `MIGRATOR_COMMIT` in `Dockerfile`
 4. Update `TAG` file.
 
 ## kubernetes
