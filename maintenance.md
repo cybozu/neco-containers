@@ -325,7 +325,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
    - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/release.sh`
    - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/build.sh`
    - `https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile`
-3. Update `CADVISOR_VERSION` in `Dockerfile`
+3. Update `CADVISOR_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
 4. Update `TAG` file.
 
 ## cep-checker
@@ -937,7 +937,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 
 1. Check the release page.
    - <https://github.com/kubernetes-sigs/prometheus-adapter/releases>
-2. Update version variables in `Dockerfile`.
+2. Update `PROMETHEUS_ADAPTER_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
 3. Update `TAG` file.
 
 ## prometheus-config-reloader
@@ -1067,7 +1067,7 @@ Only the base image and module dependency should be updated.
 1. Check the [release page](https://github.com/hashicorp/serf/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile`
-3. Update `SERF_VERSION` in `Dockerfile`.
+3. Update `SERF_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 

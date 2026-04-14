@@ -3,11 +3,11 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG SERF_VERSION=0.10.2
+ARG SERF_COMMIT=93c69c072b854e28812e80a803ca769ed1f85999
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/hashicorp/serf \
-&& curl -fsSL https://github.com/hashicorp/serf/archive/v${SERF_VERSION}.tar.gz | \
+&& curl -fsSL https://github.com/hashicorp/serf/archive/${SERF_COMMIT}.tar.gz | \
 tar -x -z -f - --strip-components 1 -C /go/src/github.com/hashicorp/serf
 
 WORKDIR /go/src/github.com/hashicorp/serf

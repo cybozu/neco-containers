@@ -3,12 +3,12 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG CADVISOR_VERSION=0.56.2
+ARG CADVISOR_COMMIT=7cbdee9260c4292d5d27d00416ce8a7dc1dc12a0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /go/src/github.com/google/cadvisor
-RUN curl -fsSL -o cadvisor.tar.gz "https://github.com/google/cadvisor/archive/v${CADVISOR_VERSION}.tar.gz" \
+RUN curl -fsSL -o cadvisor.tar.gz "https://github.com/google/cadvisor/archive/${CADVISOR_COMMIT}.tar.gz" \
     && tar -x -z --strip-components 1 -f cadvisor.tar.gz \
     && rm -f cadvisor.tar.gz \
     && cd cmd \
