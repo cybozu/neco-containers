@@ -347,6 +347,8 @@ jobs:
         uses: ./.github/actions/build_envoy
         with:
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
+          clang_archive_sha: 54ec30358afcc9fb8aa74307db3046f5187f9fb89fb37064cdde906e062ebf36
+          envoy_commit_sha: 75e220883447543d35571aecae826d7b1a2646b9
           github_token: ${{ secrets.GITHUB_TOKEN }}
           yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
 

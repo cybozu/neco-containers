@@ -2,12 +2,14 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
-ARG CHRONY_VERSION=4.8
+ENV CHRONY_VERSION=4.8
+ENV CHRONY_HASH=33ea8eb2a4daeaa506e8fcafd5d6d89027ed6f2f0609645c6f149b560d301706
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
-    && curl -sSLf https://chrony-project.org/releases/chrony-${CHRONY_VERSION}.tar.gz | \
-    tar zxf - -C /work/ \
+    && curl -sSLf https://chrony-project.org/releases/chrony-${CHRONY_VERSION}.tar.gz -o /tmp/chrony.tar.gz \
+    && echo "${CHRONY_HASH} /tmp/chrony.tar.gz" | sha256sum -c - \
+    && tar zxf /tmp/chrony.tar.gz -C /work/ \
     && apt-get update \
     && apt-get install -y --no-install-recommends libedit-dev \
     && rm -rf /var/lib/apt/lists/*

@@ -431,7 +431,7 @@ gitGraph
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release note](https://chrony.tuxfamily.org/news.html).
-2. Update `CHRONY_VERSION` in `Dockerfile`.
+2. Update `CHRONY_VERSION` and `CHRONY_HASH` in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -586,10 +586,11 @@ This section applies to the following containers. These containers are maintaine
 > - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
 
 1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
-2. Update `clang_archive_path` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml) if you want to update the clang version.
-3. Update image tag in `README.md`.
-4. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-5. Update `BRANCH` and `TAG` files.
+2. Update `clang_archive_path` and `clang_archive_sha` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml) if you want to update the clang version.
+3. Update `envoy_commit_sha` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml).
+4. Update image tag in `README.md`.
+5. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
+6. Update `BRANCH` and `TAG` files.
 
 ## etcd
 
@@ -701,7 +702,8 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile`
-3. Update the `BRANCH` and `TAG` files accordingly.
+3. Update `CILIUM_SHA` in `Dockerfile`.
+4. Update the `BRANCH` and `TAG` files accordingly.
 
 > [!Note]
 > The hubble-relay image should be updated at the same time as the cilium image for consistency.

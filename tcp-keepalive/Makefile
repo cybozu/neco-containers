@@ -11,17 +11,7 @@ DOCKER_REPO=ghcr.io/cybozu
 DOCKER_TAG=dev
 DOCKER_CONTEXT=.
 
-CUSTOM_CHECKER=custom-checker
-STATIC_CHECK=staticcheck
-
 include ../tool.mk
-
-$(CUSTOM_CHECKER):
-	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@latest
-
-$(STATIC_CHECK):
-	go install honnef.co/go/tools/cmd/staticcheck@latest
-
 
 .PHONY: fmt
 fmt:
@@ -41,9 +31,9 @@ check-diff: mod fmt goimports
 	git diff --exit-code --name-only
 
 .PHONY: test
-test: vet $(STATIC_CHECK) $(CUSTOM_CHECKER)
-	staticcheck ./...
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
+test: vet staticcheck custom-checker
+	$(STATICCHECK) ./...
+	test -z "$$($(CUSTOM_CHECKER) -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
 	$(GO) test $(GO_TEST_OPTS) ./...
 
 .PHONY: build

@@ -2,7 +2,7 @@ IMAGE_TAG ?= ghcr.io/cybozu/hubble-relay:$(shell cat TAG)
 
 .PHONY: build
 build:
-	docker build . --tag=$(IMAGE_TAG)
+	docker build . --progress=plain --tag=$(IMAGE_TAG)
 
 .PHONY: cilium-checkout
 cilium-checkout:

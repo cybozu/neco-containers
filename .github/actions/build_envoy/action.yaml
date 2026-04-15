@@ -4,6 +4,12 @@ inputs:
   clang_archive_path:
     description: "clang archive path"
     required: true
+  clang_archive_sha:
+    description: "clang archive sha"
+    required: true
+  envoy_commit_sha:
+    description: "envoy commit sha"
+    required: true
   github_token:
     description: "GitHub Token"
     required: true
@@ -35,7 +41,7 @@ runs:
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
       working-directory: envoy
-      run: make setup test
+      run: make test
     - name: Build
       if: ${{ steps.prepare.outputs.build }}
       shell: bash
@@ -64,12 +70,18 @@ runs:
         # Please update the archive path if supported compiler version is upgraded
         # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#supported-compiler-versions
         curl -o /tmp/clang.tar.xz -sLf ${{ inputs.clang_archive_path }}
+        echo "${{ inputs.clang_archive_sha }} /tmp/clang.tar.xz" | sha256sum -c -
         mkdir llvm
         tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
 
         # Clone Envoy repository
-        git clone --depth 1 --branch v${{ env.VERSION }} https://github.com/envoyproxy/envoy
-        cd envoy
+        git init envoy; cd envoy;
+        git remote add origin https://github.com/envoyproxy/envoy
+        git fetch --depth 1 origin "refs/tags/v${{ env.VERSION }}"
+        test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "${{ inputs.envoy_commit_sha }}";
+        git checkout --detach "${{ inputs.envoy_commit_sha }}"
+        git log -n1 --oneline
+
         bazel/setup_clang.sh $(pwd)/../llvm
         echo "build --config=clang" >> user.bazelrc
         # https://github.com/cybozu/neco-containers/pull/1119
