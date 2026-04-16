@@ -1,9 +1,10 @@
 BCC_REPO ?= https://github.com/iovisor/bcc.git
-BCC_TARGET ?= v0.36.1
+BCC_VERSION ?= 0.36.1  # used as -DREVISION in cmake to build bcc
+BCC_SHA ?= b9f1b2ab025e3ac95b6aaa1cb20bf222a7b8804e  # v0.36.1
 LIBBPF_REPO ?= https://github.com/libbpf/libbpf.git
-LIBBPF_TARGET ?= v1.7.0
+LIBBPF_SHA ?= f5dcbae736e5d7f83a35718e01be1a8e3010fa39  # v1.7.0
 BPFTRACE_REPO ?= https://github.com/bpftrace/bpftrace.git
-BPFTRACE_TARGET ?= v$(shell cat TAG | cut -d. -f1-3)
+BPFTRACE_SHA ?= 18a5ccb8c6a5c6c5dc21c818a58b797ee60df163  # v0.25.0
 
 BUILDER_IMAGE_TAG ?= bpftrace-builder:dev
 IMAGE_TAG ?= ghcr.io/cybozu/bpftrace:$(shell cat TAG)
@@ -18,8 +19,8 @@ checkout-repo:
 		echo "Please specify CHECKOUT_REPO."; \
 		exit 1; \
 	fi
-	@if [ -z "$(CHECKOUT_TARGET)" ]; then \
-		echo "Please specify CHECKOUT_TARGET."; \
+	@if [ -z "$(CHECKOUT_SHA)" ]; then \
+		echo "Please specify CHECKOUT_SHA."; \
 		exit 1; \
 	fi
 	if [ -d "$(CHECKOUT_DIR)" ]; then \
@@ -29,19 +30,20 @@ checkout-repo:
 		cd $(CHECKOUT_DIR); \
 		git init 2>/dev/null; \
 		git remote add origin $(CHECKOUT_REPO); \
-		git fetch --depth 1 origin $(CHECKOUT_TARGET); \
-		git checkout FETCH_HEAD 2>/dev/null; \
+		git fetch --depth 1 origin $(CHECKOUT_SHA); \
+		git checkout --detach "$(CHECKOUT_SHA)"; \
+		git log -n1 --oneline; \
 	fi
 
 .PHONY: checkout
 checkout:
-	@CHECKOUT_DIR=src/bcc CHECKOUT_REPO=$(BCC_REPO) CHECKOUT_TARGET=$(BCC_TARGET) \
+	@CHECKOUT_DIR=src/bcc CHECKOUT_REPO=$(BCC_REPO) CHECKOUT_SHA=$(BCC_SHA) \
 	$(MAKE) --no-print-directory checkout-repo
 
-	@CHECKOUT_DIR=src/libbpf CHECKOUT_REPO=$(LIBBPF_REPO) CHECKOUT_TARGET=$(LIBBPF_TARGET) \
+	@CHECKOUT_DIR=src/libbpf CHECKOUT_REPO=$(LIBBPF_REPO) CHECKOUT_SHA=$(LIBBPF_SHA) \
 	$(MAKE) --no-print-directory checkout-repo
 
-	@CHECKOUT_DIR=src/bpftrace CHECKOUT_REPO=$(BPFTRACE_REPO) CHECKOUT_TARGET=$(BPFTRACE_TARGET) \
+	@CHECKOUT_DIR=src/bpftrace CHECKOUT_REPO=$(BPFTRACE_REPO) CHECKOUT_SHA=$(BPFTRACE_SHA) \
 	$(MAKE) --no-print-directory checkout-repo
 
 .PHONY: clean
@@ -55,7 +57,7 @@ build:
 
 .PHONY: bcc-version
 bcc-version:
-	@echo $(BCC_TARGET) | cut -c2-
+	@echo $(BCC_VERSION)
 
 .PHONY: test
 test:
