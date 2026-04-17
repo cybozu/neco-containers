@@ -8,11 +8,11 @@ import (
 	"encoding/hex"
 	"encoding/pem"
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/Hsn723/certspotter-client/api"
 	"github.com/Hsn723/ct-monitor/filter"
-	"github.com/hashicorp/go-hclog"
 	"github.com/hashicorp/go-plugin"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -39,7 +39,15 @@ var certificateRequestGVR = schema.GroupVersionResource{
 
 type inclusterFilter struct {
 	client dynamic.Interface
-	logger hclog.Logger
+	logger *slog.Logger
+}
+
+func newLogger() *slog.Logger {
+	var level slog.Level
+	if err := level.UnmarshalText([]byte(os.Getenv("INCLUSTER_FILTER_LOG_LEVEL"))); err != nil {
+		level = slog.LevelInfo
+	}
+	return slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: level}))
 }
 
 func newInclusterFilter() (*inclusterFilter, error) {
@@ -53,10 +61,7 @@ func newInclusterFilter() (*inclusterFilter, error) {
 	}
 	return &inclusterFilter{
 		client: client,
-		logger: hclog.New(&hclog.LoggerOptions{
-			Name:  "incluster-filter",
-			Level: hclog.LevelFromString(os.Getenv("INCLUSTER_FILTER_LOG_LEVEL")),
-		}),
+		logger: newLogger(),
 	}, nil
 }
 
