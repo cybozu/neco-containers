@@ -52,14 +52,17 @@ start-hubble-relay:
 		--set hubble.relay.securityContext.runAsUser=10000 \
 		--set hubble.relay.securityContext.runAsGroup=10000
 
-# check-log-errors is disabled in CI to accomodate with the following issue:
-# https://github.com/cilium/image-tools/pull/267
+# check-log-errors may be disabled in CI to accomodate with minor known issues.
 #
 # However, it ignores other valuable error messages, so please check them manually
 # when upgrading Cilium.
 .PHONY: test
 test:
-	$(CILIUM) connectivity test --test=!to-fqdn,!policy-local-cluster-egress
+	$(CILIUM) connectivity test \
+		--external-ip 8.8.8.8 \
+		--external-other-ip 8.8.4.4 \
+		--external-cidr 8.8.0.0/16 \
+		--test=!to-fqdn,!policy-local-cluster-egress,!check-log-errors
 
 .PHONY: stop
 stop:

@@ -1,6 +1,8 @@
 ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
 ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.24-noble
-ARG CILIUM_SHA=011fab6e7b798edd17e0337307dc034ed4916653
+
+# https://github.com/cilium/cilium/releases/tag/v1.17.12
+ARG CILIUM_SHA=7533de6dc6366c5504b394a090ac7d1680dc54ee
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} AS build
