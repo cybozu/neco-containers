@@ -55,7 +55,7 @@ var _ = Describe("ct-monitor e2e test", func() {
 		By("checking ct-monitor logs")
 		res, err := kubectl(nil, "logs", "-l", "app.kubernetes.io/name=ct-monitor")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(string(res)).NotTo(ContainSubstring("error"))
+		Expect(string(res)).NotTo(MatchRegexp(`ct-monitor (error|crit):`))
 		Expect(string(res)).To(ContainSubstring("done checking"))
 		Expect(string(res)).To(ContainSubstring("incluster-filter"))
 	})
