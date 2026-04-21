@@ -4,11 +4,15 @@
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
 ARG CONTOUR_VERSION=1.33.3
+ARG CONTOUR_SHA=33278ce35c125f8f2338910c983587ac667f95e8
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSLf https://github.com/projectcontour/contour/archive/v${CONTOUR_VERSION}.tar.gz | \
-        tar zxf - -C /work/ \
-    && mv contour-${CONTOUR_VERSION} /work/contour
+RUN git init /work/contour \
+    && cd /work/contour \
+    && git remote add origin https://github.com/projectcontour/contour \
+    && git fetch --depth 1 origin "refs/tags/v${CONTOUR_VERSION}" \
+    && test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "${CONTOUR_SHA}" \
+    && git checkout --detach "${CONTOUR_SHA}"
 
 WORKDIR /work/contour/
 

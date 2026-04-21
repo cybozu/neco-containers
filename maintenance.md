@@ -334,7 +334,10 @@ The libsystemd version should be the same with the one running on [the stable Fl
 ![Regular Update](./regular_update.svg)
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update cilium and cilium-cli version in `e2e/Makefile` and `go.mod` to the version used by neco.
+2. Update versions and SHA256 checksums in `e2e/Makefile` and `go.mod` to the versions used by neco.
+   - Cilium: `CILIUM_VERSION`
+   - cilium-cli: `CILIUM_CLI_VERSION` and `CILIUM_CLI_SHA256_*` variables
+   - Kubernetes (if needed): `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE` (image digest), `KIND_VERSION` and `KIND_SHA256_*`, `KUBECTL_SHA256_*`
 3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## ceph
@@ -492,7 +495,7 @@ gitGraph
 1. Check the [release page](https://github.com/projectcontour/contour/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile`
-3. Update `CONTOUR_VERSION` in `Dockerfile`.
+3. Update `CONTOUR_VERSION` and `CONTOUR_SHA` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 6. Update `CONTOUR_VERSION` in `admission/Makefile`.
@@ -692,7 +695,8 @@ Manual update
 ![Regular Update](./regular_update.svg)
 
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
+2. Update `HUBBLE_SHA` in `Dockerfile` with the commit SHA of the new release tag.
+3. Update the `BRANCH` and `TAG` files accordingly.
 
 Hubble image is no longer built by the upstream. If failing to build the image, check upstream changes.
 
@@ -1167,7 +1171,8 @@ Only the base image and module dependency should be updated.
 1. Check the [release page](https://github.com/stakater/Reloader/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile`
-3. Update `BRANCH` and `TAG` files.
+3. Update `RELOADER_SHA` in `Dockerfile` with the commit SHA of the new release tag.
+4. Update `BRANCH` and `TAG` files.
 
 ## tcp-keepalive
 
