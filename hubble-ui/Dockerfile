@@ -2,6 +2,7 @@ ARG NODE_VERSION=22
 ARG NGINX_VERSION=1.29.1
 ARG NJS_VERSION=0.9.1
 ARG PKG_RELEASE=1~noble
+ARG PNPM_VERSION=10.33.2
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
@@ -23,6 +24,7 @@ ENTRYPOINT ["/backend"]
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
 FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
 ARG NODE_VERSION
+ARG PNPM_VERSION
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -31,10 +33,12 @@ COPY src/hubble-ui .
 RUN curl -sSLf https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/* \
-    && npm install
+    && corepack enable \
+    && corepack prepare pnpm@${PNPM_VERSION} --activate \
+    && pnpm install
 
 ARG NODE_ENV=production
-RUN npm run build
+RUN pnpm run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template
