@@ -3,15 +3,19 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
+ARG HUBBLE_SHA=13fb5dcb7aa5e8edf75481138c1271cc7224cb07
+
 COPY TAG /
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /go/src/github.com/cilium/hubble
 RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && curl -fsSL -o hubble.tar.gz "https://github.com/cilium/hubble/archive/v${VERSION}.tar.gz" \
-    && tar -x -z --strip-components 1 -f hubble.tar.gz \
-    && rm -f hubble.tar.gz \
+    && git init \
+    && git remote add origin https://github.com/cilium/hubble \
+    && git fetch --depth 1 origin "refs/tags/v${VERSION}" \
+    && test "$(git rev-parse 'FETCH_HEAD^{commit}')" = "${HUBBLE_SHA}" \
+    && git checkout --detach "${HUBBLE_SHA}" \
     && make clean && make hubble
 
 # Stage2: setup runtime container
