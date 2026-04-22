@@ -3,8 +3,8 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
 
-ARG CONTOUR_VERSION=1.33.3
-ARG CONTOUR_SHA=33278ce35c125f8f2338910c983587ac667f95e8
+ARG CONTOUR_VERSION=1.33.4
+ARG CONTOUR_SHA=6eb0dafc582ae5742301af846968c3a8e0cd4b52
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN git init /work/contour \
