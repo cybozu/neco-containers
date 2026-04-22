@@ -20,7 +20,7 @@ ENV PATH=/go/bin:/usr/local/go/bin:$PATH
 RUN --mount=type=bind,from=go-dist,source=/go.tar.gz,target=/tmp/go.tar.gz \
     rm -rf /usr/local/go \
     && tar -x -z -C /usr/local -f /tmp/go.tar.gz \
-    && mkdir -p "$GOPATH/src" "$GOPATH/bin" 
+    && mkdir -p "$GOPATH/src" "$GOPATH/bin"
 
 FROM go-base AS tools-builder
 RUN --mount=type=bind,source=tools,target=/tmp/golang-tools \
