@@ -1,4 +1,4 @@
-KUBERNETES_VERSION := 1.34.4
+KUBERNETES_VERSION := 1.35.4
 # https://github.com/kubernetes/minikube/releases
 MINIKUBE_VERSION := 1.38.1
 
