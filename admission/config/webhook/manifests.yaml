@@ -243,6 +243,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-prevent-subnamespace-deletion
+  failurePolicy: Fail
+  name: vpreventnsdeletion.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - DELETE
+    resources:
+    - namespaces
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-scale-deployment-replica-count
   failurePolicy: Fail
   name: vscaledeploymentreplicacount.kb.io
