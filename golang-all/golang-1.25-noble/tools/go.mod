@@ -1,4 +1,4 @@
-module neco-containers/golang-tools
+module  github.com/cybozu/neco-containers/golang-all/golang-1.25-noble/tools
 
 go 1.25.0
 

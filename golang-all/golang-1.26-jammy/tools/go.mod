@@ -1,4 +1,4 @@
-module neco-containers/golang-tools
+module github.com/cybozu/neco-containers/golang-all/golang-1.26-jammy/tools
 
 go 1.26.0
 
