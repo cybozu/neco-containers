@@ -1,28 +1,35 @@
-# Go container
+# syntax=docker/dockerfile:1
 
-FROM --platform=$TARGETPLATFORM ghcr.io/cybozu/ubuntu-dev:22.04
-LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+FROM scratch AS go-dist-amd64
+ADD --checksum=sha256:00859d7bd6defe8bf84d9db9e57b9a4467b2887c18cd93ae7460e713db774bc1 \
+    https://dl.google.com/go/go1.25.9.linux-amd64.tar.gz /go.tar.gz
 
+FROM scratch AS go-dist-arm64
+ADD --checksum=sha256:ec342e7389b7f489564ed5463c63b16cf8040023dabc7861256677165a8c0e2b \
+    https://dl.google.com/go/go1.25.9.linux-arm64.tar.gz /go.tar.gz
+
+FROM go-dist-${TARGETARCH} AS go-dist
+
+FROM ghcr.io/cybozu/ubuntu-dev:22.04.20260422@sha256:03593cd228e0930638232fdf5a4afa23646320750286b6c08e9ad10292f7fcca AS go-base
 ARG TARGETARCH
-ARG GO_VERSION=1.25.9
-
 ENV GOARCH=${TARGETARCH}
+ENV GOTOOLCHAIN=local
 ENV GOPATH=/go
-ENV PATH=/go/bin:/usr/local/go/bin:"$PATH"
+ENV PATH=/go/bin:/usr/local/go/bin:$PATH
 
-RUN rm -rf /usr/local/go \
-    && curl -sfL https://dl.google.com/go/go${GO_VERSION}.linux-${GOARCH}.tar.gz \
-        | tar -x -z -C /usr/local -f - \
-    && mkdir -p /go/src \
-    && GOBIN=/usr/local/bin go install golang.org/x/tools/cmd/goimports@latest \
-    && GOBIN=/usr/local/bin go install golang.org/x/lint/golint@latest \
-    && GOBIN=/usr/local/bin go install honnef.co/go/tools/cmd/staticcheck@latest \
-    && GOBIN=/usr/local/bin go install github.com/gordonklaus/ineffassign@latest \
-    && GOBIN=/usr/local/bin go install github.com/tcnksm/ghr@latest \
-    && GOBIN=/usr/local/bin go install github.com/cybozu-go/golang-custom-analyzer/cmd/...@latest \
-    && rm -rf /go \
-    && mkdir -p /go/src
+RUN --mount=type=bind,from=go-dist,source=/go.tar.gz,target=/tmp/go.tar.gz \
+    rm -rf /usr/local/go \
+    && tar -x -z -C /usr/local -f /tmp/go.tar.gz \
+    && mkdir -p "$GOPATH/src" "$GOPATH/bin"
+
+FROM go-base AS tools-builder
+RUN --mount=type=bind,source=tools,target=/tmp/golang-tools \
+    cd /tmp/golang-tools \
+    && GOBIN=/go-tools go install tool
+
+FROM go-base
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+COPY --from=tools-builder /go-tools/ /usr/local/bin/
 
 WORKDIR /work
-
 CMD ["/bin/bash"]
