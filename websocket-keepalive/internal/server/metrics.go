@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/VictoriaMetrics/metrics"
+
 	internalmetrics "github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 )
 
@@ -18,10 +19,13 @@ type serverMetricsSet struct {
 }
 
 func initServerMetrics(local, remote string) *serverMetricsSet {
+	// GetOrCreate* is used so reconnects from the same remote (after the kernel
+	// reuses the port) return the existing metric instead of panicking on double
+	// registration.
 	return &serverMetricsSet{
-		established: metrics.NewGauge(fmt.Sprintf(`established{role="server",local="%s",remote="%s"}`, local, remote), nil),
-		pingTotal:   metrics.NewCounter(fmt.Sprintf(`received_ping_total{role="server",local="%s",remote="%s"}`, local, remote)),
-		pongTotal:   metrics.NewCounter(fmt.Sprintf(`sent_pong_total{role="server",local="%s",remote="%s"}`, local, remote)),
+		established: metrics.GetOrCreateGauge(fmt.Sprintf(`established{role="server",local="%s",remote="%s"}`, local, remote), nil),
+		pingTotal:   metrics.GetOrCreateCounter(fmt.Sprintf(`received_ping_total{role="server",local="%s",remote="%s"}`, local, remote)),
+		pongTotal:   metrics.GetOrCreateCounter(fmt.Sprintf(`sent_pong_total{role="server",local="%s",remote="%s"}`, local, remote)),
 	}
 }
 

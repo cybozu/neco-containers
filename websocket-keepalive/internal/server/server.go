@@ -4,15 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
-	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
-	"github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 	"github.com/gorilla/websocket"
+
+	"github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 )
 
 var upgrader = websocket.Upgrader{
@@ -59,35 +58,23 @@ func (db *connDB) isEmpty() bool {
 }
 
 type Config struct {
-	Host string
-	Port int
+	Host         string
+	Port         int
+	PingInterval time.Duration
 }
 
-func Run(host string, port int) error {
-	config := &Config{
-		Host: host,
-		Port: port,
-	}
-
-	metricsConfig := &metrics.Config{
-		Export:   true,
-		AddrPort: "0.0.0.0:8081",
-	}
-
-	return RunWithConfig(config, metricsConfig)
-}
-
-func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
-
-	http.HandleFunc("/ws", handleWebSocket)
+func RunWithConfig(ctx context.Context, config *Config, metricsConfig *metrics.Config) error {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		handleWebSocket(ctx, config, w, r)
+	})
 
 	server := &http.Server{
-		Addr: fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Addr:    fmt.Sprintf("%s:%d", config.Host, config.Port),
+		Handler: mux,
 	}
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM)
-	shutdownTimeout := time.Second * 30
+	shutdownTimeout := 30 * time.Second
 
 	m, err := NewMetrics(metricsConfig)
 	if err != nil {
@@ -95,40 +82,41 @@ func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 	}
 	if metricsConfig.Export {
 		slog.Info("Start metrics server", "listen", m.AddrPort)
-		go func() {
-			if err := m.Metrics.Serve(); err != nil {
-				slog.Error("metrics server failed", "error", err)
-				// When metrics server doesn't run correctly, program shouldn't do any more. Just panic here.
-				panic(err)
-			}
-		}()
+		go serveMetrics(ctx, m.Metrics)
 	}
 
+	// Bind synchronously so port conflicts fail fast instead of silently zombieing.
+	ln, err := net.Listen("tcp", server.Addr)
+	if err != nil {
+		return fmt.Errorf("failed to listen on %s: %w", server.Addr, err)
+	}
+
+	serveErrCh := make(chan error, 1)
 	go func() {
 		slog.Info("WebSocket server starting", "addr", server.Addr)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("Server failed to start", "error", err)
+		if err := server.Serve(ln); err != nil && err != http.ErrServerClosed {
+			serveErrCh <- err
+			return
 		}
-		slog.Info("WebSocket server stopping", "addr", server.Addr)
+		close(serveErrCh)
 	}()
 
-	<-stop
-	slog.Info("Shutting down server...")
-
-	connections.Lock()
-	for remote, c := range connections.db {
-		slog.Debug("Notifying the closing signal", "connection", remote)
-		c.serverCloseCh <- struct{}{}
+	select {
+	case <-ctx.Done():
+		slog.Info("Shutting down server...")
+	case err := <-serveErrCh:
+		return fmt.Errorf("websocket server failed: %w", err)
 	}
-	connections.Unlock()
 
-	now := time.Now()
+	// Each per-connection handler selects on ctx.Done() and starts its own active close
+	// sequence, so shutdown just waits for them to unregister themselves.
+	deadline := time.Now().Add(shutdownTimeout)
 	for !connections.isEmpty() {
-		if time.Since(now) > shutdownTimeout {
+		if time.Now().After(deadline) {
 			slog.Error("shutdown timeout is exceeded")
 			connections.Lock()
 			for remote, c := range connections.db {
-				slog.Error("remaining connection is reset forcely", "remote_addr", remote)
+				slog.Error("remaining connection is reset forcibly", "remote_addr", remote)
 				c.Close()
 			}
 			connections.Unlock()
@@ -139,75 +127,118 @@ func RunWithConfig(config *Config, metricsConfig *metrics.Config) error {
 
 	slog.Info("all connections are closed")
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(ctx); err != nil {
+	if err := server.Shutdown(shutdownCtx); err != nil {
 		return err
 	}
 	return nil
 }
 
-func handleWebSocket(w http.ResponseWriter, r *http.Request) {
+func serveMetrics(ctx context.Context, m *metrics.Metrics) {
+	const maxBackoff = 30 * time.Second
+	backoff := time.Second
+	for {
+		err := m.Serve(ctx)
+		if ctx.Err() != nil {
+			return
+		}
+		if err == nil {
+			return
+		}
+		slog.Error("serving metrics failed", "error", err, "retry_in", backoff)
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(backoff):
+		}
+		if backoff < maxBackoff {
+			backoff *= 2
+			if backoff > maxBackoff {
+				backoff = maxBackoff
+			}
+		}
+	}
+}
+
+func handleWebSocket(ctx context.Context, config *Config, w http.ResponseWriter, r *http.Request) {
 	c, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		slog.Error("Failed to upgrade connection", "error", err)
 		return
 	}
+	// Defers run in LIFO order: Close() fires first to unblock the reader goroutine
+	// (and any pending Writes), then unregister removes the entry from the DB.
+	defer func() {
+		if err := connections.unregister(r.RemoteAddr); err != nil {
+			slog.Error("failed to unregister connection", "error", err, "remote_addr", r.RemoteAddr)
+		}
+	}()
+	defer c.Close()
 
-	conn := newConn(c, r.RemoteAddr)
-
-	connections.register(r.RemoteAddr, conn)
-
-	if err := conn.handleWebsocketConnection(context.Background()); err != nil {
-		slog.Error("faile to handle websocket connectioin", "remote_addr", r.RemoteAddr)
+	wsConn := newConn(c, r.RemoteAddr)
+	if err := connections.register(r.RemoteAddr, wsConn); err != nil {
+		slog.Error("failed to register connection", "error", err, "remote_addr", r.RemoteAddr)
+		return
 	}
 
+	if err := wsConn.handleWebsocketConnection(ctx, config); err != nil {
+		slog.Error("failed to handle websocket connection", "error", err, "remote_addr", r.RemoteAddr)
+	}
 }
 
 type conn struct {
 	*websocket.Conn
-	remoteAddr    string
-	serverCloseCh chan struct{}
+	remoteAddr string
 }
 
 func newConn(c *websocket.Conn, remoteAddr string) *conn {
 	return &conn{
-		Conn:          c,
-		remoteAddr:    remoteAddr,
-		serverCloseCh: make(chan struct{}),
+		Conn:       c,
+		remoteAddr: remoteAddr,
 	}
 }
 
-func (c *conn) handleWebsocketConnection(ctx context.Context) error {
+func (c *conn) handleWebsocketConnection(ctx context.Context, config *Config) error {
 
 	slog.Info("start to handle new connection", "remote_addr", c.remoteAddr)
 
-	done := make(chan struct{})
 	closeTimeout := time.Second * 10
+	pongWait := 2 * config.PingInterval
+
+	if err := c.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+		return fmt.Errorf("failed to set initial read deadline: %w", err)
+	}
 
 	m := initServerMetrics(c.LocalAddr().String(), c.remoteAddr)
 	m.setEstablished()
+	defer m.setUnestablished()
 
 	c.SetPingHandler(func(appData string) error {
+		if err := c.SetReadDeadline(time.Now().Add(pongWait)); err != nil {
+			slog.Warn("failed to extend read deadline on ping", "error", err, "remote_addr", c.remoteAddr)
+		}
 		m.incrementPingTotal()
-		return func() error {
-			if err := c.WriteControl(websocket.PongMessage, []byte("from server"), time.Now().Add(5*time.Second)); err != nil {
-				return err
-			}
+		// safe: gorilla serializes WriteControl internally.
+		// Match gorilla's default PingHandler policy: swallow write errors (including
+		// ErrCloseSent after we've sent a close frame, and transient net errors) and
+		// let the next ReadMessage surface real connection failures instead.
+		err := c.WriteControl(websocket.PongMessage, []byte("from server"), time.Now().Add(5*time.Second))
+		if err == nil {
 			m.incrementPongTotal()
 			return nil
-		}()
+		}
+		if err == websocket.ErrCloseSent {
+			return nil
+		}
+		slog.Warn("failed to send pong", "error", err, "remote_addr", c.remoteAddr)
+		return nil
 	})
 
-	defer func() error {
-		c.Close()
-		return connections.unregister(c.remoteAddr)
-	}()
-
+	readerDone := make(chan struct{})
 	go func() {
-		defer close(done)
-		// Message reading loop
+		defer close(readerDone)
 		for {
 			messageType, message, err := c.ReadMessage()
 			if err != nil {
@@ -226,20 +257,20 @@ func (c *conn) handleWebsocketConnection(ctx context.Context) error {
 	}()
 
 	select {
-	case <-done:
+	case <-readerDone:
 		slog.Info("connection closed.", "remote_addr", c.remoteAddr)
-	case <-c.serverCloseCh:
+	case <-ctx.Done():
 		slog.Info("shutdown signal received, closing.", "remote_addr", c.remoteAddr)
 		closeMessage := websocket.FormatCloseMessage(websocket.CloseNormalClosure, "from server")
+		// safe: gorilla serializes WriteControl internally.
 		if err := c.WriteControl(websocket.CloseMessage, closeMessage, time.Now().Add(5*time.Second)); err != nil {
-			slog.Error("failed to write close message", "error", err)
-			return nil
-		}
-		select {
-		case <-done:
-		case <-time.After(closeTimeout):
+			slog.Error("failed to write close message", "error", err, "remote_addr", c.remoteAddr)
+		} else {
+			select {
+			case <-readerDone:
+			case <-time.After(closeTimeout):
+			}
 		}
 	}
-	m.setUnestablished()
 	return nil
 }

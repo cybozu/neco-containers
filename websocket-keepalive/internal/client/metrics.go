@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/VictoriaMetrics/metrics"
+
 	internalmetrics "github.com/cybozu/neco-containers/websocket-keepalive/internal/metrics"
 )
 
@@ -20,7 +21,7 @@ var (
 
 func initMetrics(local, remote string) {
 	established = metrics.NewGauge(fmt.Sprintf(`established{role="client",local="%s",remote="%s"}`, local, remote), nil)
-	pingRetryTotal = metrics.NewCounter(fmt.Sprintf(`ping_retry_count_total{local="%s",remote="%s"}`, local, remote))
+	pingRetryTotal = metrics.NewCounter(fmt.Sprintf(`ping_retry_count_total{role="client",local="%s",remote="%s"}`, local, remote))
 	pingTotal = metrics.NewCounter(fmt.Sprintf(`sent_ping_total{role="client",local="%s",remote="%s"}`, local, remote))
 	pongTotal = metrics.NewCounter(fmt.Sprintf(`received_pong_total{role="client",local="%s",remote="%s"}`, local, remote))
 }

@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/websocket-keepalive
 
-go 1.24.5
+go 1.26.1
 
 require (
 	github.com/VictoriaMetrics/metrics v1.39.1
