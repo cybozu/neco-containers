@@ -1,7 +1,7 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG TELEPORT_VERSION=18.6.5
+ARG TELEPORT_VERSION=18.7.2
 
 RUN git clone --depth 1 --branch v${TELEPORT_VERSION} https://github.com/gravitational/teleport && \
     cd teleport && \
