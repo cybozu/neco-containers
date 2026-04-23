@@ -145,11 +145,9 @@ runs:
         # If base image is substituted by a variable, automatic detection is disabled
         # It instructs users to set scan-flag manually if missing
         if grep FROM Dockerfile | grep -F '$'; then
-          if ! grep -qE 'FROM.*\$\{?TARGETARCH\}?' Dockerfile; then
-            echo "!! FROM command may use a base image substituted by a variable."
-            echo "!! Please set scan requirement manually."
-            exit 1
-          fi
+          echo "!! FROM command may use a base image substituted by a variable."
+          echo "!! Please set scan requirement manually."
+          exit 1
         fi
 
     - id: scan
