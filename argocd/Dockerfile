@@ -7,8 +7,10 @@ WORKDIR /tmp
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-ARG KUSTOMIZE_VERSION=5.8.1
-ARG KUSTOMIZE_SHA=029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d
+# Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
+#             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
+ARG KUSTOMIZE_VERSION=5.7.1
+ARG KUSTOMIZE_SHA=ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c895818d8
 RUN curl -fsSL -O https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz && \
     echo "${KUSTOMIZE_SHA}  kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" | sha256sum -c - && \
     tar xvf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz -C /usr/local/bin && \
