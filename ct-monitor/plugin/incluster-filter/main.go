@@ -21,9 +21,7 @@ import (
 )
 
 const (
-	issuerNameLabel = "cert-manager.io/issuer-name"
-	issuerKindLabel = "cert-manager.io/issuer-kind"
-	targetKind      = "ClusterIssuer"
+	targetKind = "ClusterIssuer"
 )
 
 var targetIssuers = []string{
@@ -66,44 +64,63 @@ func newInclusterFilter() (*inclusterFilter, error) {
 }
 
 func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]struct{}, error) {
-	fingerprints := make(map[string]struct{})
+	targetIssuerSet := make(map[string]struct{}, len(targetIssuers))
 	for _, issuer := range targetIssuers {
-		list, err := f.client.Resource(certificateRequestGVR).Namespace("").List(ctx, metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=%s,%s=%s", issuerNameLabel, issuer, issuerKindLabel, targetKind),
-		})
+		targetIssuerSet[issuer] = struct{}{}
+	}
+
+	list, err := f.client.Resource(certificateRequestGVR).Namespace("").List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list CertificateRequests: %w", err)
+	}
+	f.logger.Debug("listed CertificateRequests", "count", len(list.Items))
+
+	fingerprints := make(map[string]struct{})
+	for _, item := range list.Items {
+		spec, ok := item.Object["spec"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		issuerRef, ok := spec["issuerRef"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		kind, _ := issuerRef["kind"].(string)
+		name, _ := issuerRef["name"].(string)
+		if kind != targetKind {
+			continue
+		}
+		if _, ok := targetIssuerSet[name]; !ok {
+			continue
+		}
+
+		status, ok := item.Object["status"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		certStr, ok := status["certificate"].(string)
+		if !ok || certStr == "" {
+			f.logger.Debug("skipping CertificateRequest without certificate", "name", item.GetName(), "namespace", item.GetNamespace())
+			continue
+		}
+		// dynamic client returns []byte fields as base64-encoded strings
+		certPEM, err := base64.StdEncoding.DecodeString(certStr)
 		if err != nil {
-			return nil, fmt.Errorf("failed to list CertificateRequests for issuer %s: %w", issuer, err)
+			f.logger.Warn("failed to decode certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
+			continue
 		}
-		f.logger.Debug("listed CertificateRequests", "issuer", issuer, "count", len(list.Items))
-		for _, item := range list.Items {
-			status, ok := item.Object["status"].(map[string]interface{})
-			if !ok {
-				continue
-			}
-			certStr, ok := status["certificate"].(string)
-			if !ok || certStr == "" {
-				f.logger.Debug("skipping CertificateRequest without certificate", "name", item.GetName(), "namespace", item.GetNamespace())
-				continue
-			}
-			// dynamic client returns []byte fields as base64-encoded strings
-			certPEM, err := base64.StdEncoding.DecodeString(certStr)
-			if err != nil {
-				f.logger.Warn("failed to decode certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
-				continue
-			}
-			block, _ := pem.Decode(certPEM)
-			if block == nil {
-				f.logger.Warn("failed to PEM-decode certificate", "name", item.GetName(), "namespace", item.GetNamespace())
-				continue
-			}
-			cert, err := x509.ParseCertificate(block.Bytes)
-			if err != nil {
-				f.logger.Warn("failed to parse certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
-				continue
-			}
-			sum := sha256.Sum256(cert.Raw)
-			fingerprints[hex.EncodeToString(sum[:])] = struct{}{}
+		block, _ := pem.Decode(certPEM)
+		if block == nil {
+			f.logger.Warn("failed to PEM-decode certificate", "name", item.GetName(), "namespace", item.GetNamespace())
+			continue
 		}
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			f.logger.Warn("failed to parse certificate", "name", item.GetName(), "namespace", item.GetNamespace(), "error", err)
+			continue
+		}
+		sum := sha256.Sum256(cert.Raw)
+		fingerprints[hex.EncodeToString(sum[:])] = struct{}{}
 	}
 	return fingerprints, nil
 }
