@@ -1,12 +1,13 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
 ARG UNBOUND_VERSION=1.24.2
+ARG UNBOUND_SHA256=44e7b53e008a6dcaec03032769a212b46ab5c23c105284aa05a4f3af78e59cdb
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update && apt-get -y install --no-install-recommends libexpat1-dev libevent-dev
 RUN curl -sSLf -o unbound-${UNBOUND_VERSION}.tar.gz https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz \
-    && echo "$(curl -sSLf https://nlnetlabs.nl/downloads/unbound/unbound-${UNBOUND_VERSION}.tar.gz.sha256)  unbound-${UNBOUND_VERSION}.tar.gz" | sha256sum -c - \
+    && echo "${UNBOUND_SHA256}  unbound-${UNBOUND_VERSION}.tar.gz" | sha256sum -c - \
     && tar zxf unbound-${UNBOUND_VERSION}.tar.gz
 
 WORKDIR /work/unbound-${UNBOUND_VERSION}
