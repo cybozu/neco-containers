@@ -1,44 +1,60 @@
+# syntax=docker/dockerfile:1
 # Argo CD container
 
+ARG ARGOCD_VERSION=3.3.6
+# Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
+#             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
+ARG KUSTOMIZE_VERSION=5.7.1
+ARG HELM_VERSION=3.19.4
+ARG NODE_VERSION=24.14.1
+
+FROM scratch AS kustomize-download
+ARG KUSTOMIZE_VERSION
+ADD --checksum=sha256:ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c895818d8 \
+    https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz /kustomize.tar.gz
+
+FROM scratch AS helm-download
+ARG HELM_VERSION
+ADD --checksum=sha256:759c656fbd9c11e6a47784ecbeac6ad1eb16a9e76d202e51163ab78504848862 \
+    https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz /helm.tar.gz
+
+FROM scratch AS node-download
+ARG NODE_VERSION
+ADD --checksum=sha256:ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea \
+    https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
+
+FROM scratch AS argocd-src
+ARG ARGOCD_VERSION
+ADD --checksum=sha256:c199fcb62a0250f60673d47948021267c94aa19e2b902f7455fe09e4685b2684 \
+    https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
+
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM ghcr.io/cybozu/ubuntu:24.04 AS builder
+FROM ghcr.io/cybozu/ubuntu:24.04.20260422@sha256:eb1812859faf05ef7ae1320383c6e09356a44d00521d2c6204daddcb507a4231 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
-# Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
-#             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
-ARG KUSTOMIZE_VERSION=5.7.1
-ARG KUSTOMIZE_SHA=ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c895818d8
-RUN curl -fsSL -O https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz && \
-    echo "${KUSTOMIZE_SHA}  kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz" | sha256sum -c - && \
-    tar xvf kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz -C /usr/local/bin && \
-    rm kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz
+RUN --mount=type=bind,from=kustomize-download,source=/kustomize.tar.gz,target=/tmp/kustomize.tar.gz \
+    tar xvf /tmp/kustomize.tar.gz -C /usr/local/bin
 
 # Install helm
-ARG HELM_VERSION=3.19.4
-ARG HELM_SHA=759c656fbd9c11e6a47784ecbeac6ad1eb16a9e76d202e51163ab78504848862
-RUN curl -fsSL -O https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz && \
-    echo "${HELM_SHA}  helm-v${HELM_VERSION}-linux-amd64.tar.gz" | sha256sum -c - && \
-    tar xvf helm-v${HELM_VERSION}-linux-amd64.tar.gz -C /usr/local/bin --strip-components 1 && \
-    rm helm-v${HELM_VERSION}-linux-amd64.tar.gz
+RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.tar.gz \
+    tar xvf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.25-noble AS argocd-build
-ENV ARGOCD_VERSION=3.3.6
+FROM ghcr.io/cybozu/golang:1.25.9.2_noble@sha256:0aca7f1b3326079d444b33478612421cd6b7b087f50e0a2bd0335173095a1b22 AS argocd-build
+ARG ARGOCD_VERSION
+ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Use stable version instead of unstable version upstream uses
-ARG NODE_VERSION=v24.14.1
-ARG NODE_SHA=ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d29658ea
-RUN curl -fsSL -O https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-x64.tar.gz && \
-    echo "${NODE_SHA}  node-${NODE_VERSION}-linux-x64.tar.gz" | sha256sum -c - && \
-    tar xvf node-${NODE_VERSION}-linux-x64.tar.gz -C /opt && \
-    rm node-${NODE_VERSION}-linux-x64.tar.gz
-ENV PATH="/opt/node-${NODE_VERSION}-linux-x64/bin:${PATH}"
+ARG NODE_VERSION
+RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
+    tar xvf /tmp/node.tar.gz -C /opt
+ENV PATH="/opt/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
 
 RUN apt-get update && apt-get install -y --no-install-recommends gpg
 # ref. https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable
@@ -48,17 +64,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends yarn && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-WORKDIR /work
-RUN curl -sSLf "https://${PACKAGE}/archive/v${ARGOCD_VERSION}.tar.gz" | \
-    tar zxf - -C /work/ \
-    && mkdir -p "${GOPATH}/src/github.com/argoproj/" \
-    && mv "argo-cd-${ARGOCD_VERSION}" "${GOPATH}/src/${PACKAGE}"
+WORKDIR /go/src/github.com/argoproj/argo-cd
+RUN --mount=type=bind,from=argocd-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
+    tar zxf /tmp/src.tar.gz --strip-components=1 -C .
 
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN yarn install --frozen-lockfile
 
-ENV ARGO_VERSION=$ARGOCD_VERSION
+ENV ARGO_VERSION=${ARGOCD_VERSION}
 RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 yarn build
 
 # Perform the build
@@ -67,7 +81,7 @@ RUN make argocd-all
 
 
 # Final image
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260422@sha256:eb1812859faf05ef7ae1320383c6e09356a44d00521d2c6204daddcb507a4231
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \

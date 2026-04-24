@@ -28,6 +28,7 @@ jobs:
               container-image: "argocd"
             - dir: "./argocd-image-updater"
               container-image: "argocd-image-updater"
+              request-scan: "false"
             - dir: "./bird"
               container-image: "bird"
             - dir: "./blackbox_exporter"
