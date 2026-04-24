@@ -80,6 +80,16 @@ spec:
   schedule: '*/60 * 29 2 *'
   startingDeadlineSeconds: 60
 ---
+apiVersion: cert-manager.io/v1
+kind: CertificateRequest
+metadata:
+  name: ct-monitor-e2e-test
+spec:
+  issuerRef:
+    kind: ClusterIssuer
+    name: clouddns
+  request: "AA==" # dummy CSR, not used for testing
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

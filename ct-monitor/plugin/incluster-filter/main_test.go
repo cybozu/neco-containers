@@ -63,10 +63,8 @@ func makeCertificateRequest(namespace, name, issuerName string, certBase64 strin
 	})
 	obj.SetNamespace(namespace)
 	obj.SetName(name)
-	obj.SetLabels(map[string]string{
-		issuerNameLabel: issuerName,
-		issuerKindLabel: targetKind,
-	})
+	_ = unstructured.SetNestedField(obj.Object, issuerName, "spec", "issuerRef", "name")
+	_ = unstructured.SetNestedField(obj.Object, targetKind, "spec", "issuerRef", "kind")
 	if certBase64 != "" {
 		_ = unstructured.SetNestedField(obj.Object, certBase64, "status", "certificate")
 	}

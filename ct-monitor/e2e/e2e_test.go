@@ -58,5 +58,8 @@ var _ = Describe("ct-monitor e2e test", func() {
 		Expect(string(res)).NotTo(MatchRegexp(`ct-monitor (error|crit):`))
 		Expect(string(res)).To(ContainSubstring("done checking"))
 		Expect(string(res)).To(ContainSubstring("incluster-filter"))
+
+		By("checking incluster-filter found the test CertificateRequest via spec.issuerRef")
+		Expect(string(res)).To(ContainSubstring(`msg="listed CertificateRequests" count=1`))
 	})
 })
