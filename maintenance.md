@@ -512,7 +512,7 @@ gitGraph
 1. Check the [release page](https://github.com/coredns/coredns/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile`
-3. Update `COREDNS_VERSION` in `Dockerfile`.
+3. Update `COREDNS_COMMIT` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
@@ -603,7 +603,7 @@ This section applies to the following containers. These containers are maintaine
 1. Check the [release page](https://github.com/etcd-io/etcd/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile`
-3. Update `ETCD_VERSION` in `Dockerfile`.
+3. Update `ETCD_COMMIT` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
@@ -748,7 +748,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/zalando-incubator/kube-metrics-adapter/releases).
-2. Update `KMA_VERSION` in `Dockerfile`.
+2. Update `KMA_VERSION` and `KMA_COMMIT` in `Dockerfile`.
 3. Update `TAG` file.
 
 ## kube-state-metrics
@@ -758,7 +758,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 1. Check the [release page](https://github.com/kubernetes/kube-state-metrics/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile`
-3. Update `KUBE_STATE_METRICS_VERSION` in `Dockerfile`.
+3. Update `KUBE_STATE_METRICS_COMMIT` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `TAG` files.
 
@@ -780,7 +780,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 ![Kubernetes Update](./kubernetes_update.svg)
 
 1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
-2. Update `K8S_VERSION` in `Dockerfile`.
+2. Update `K8S_COMMIT` in `Dockerfile`.
 3. Update image tag in `README.md`.
 4. Update `BRANCH` and `TAG` files.
 
@@ -915,7 +915,7 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md`
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile`
-3. Update `K8S_VERSION` and `PAUSE_VERSION` in `Dockerfile`.
+3. Update `K8S_COMMIT` and `PAUSE_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## pomerium
@@ -1303,7 +1303,7 @@ Only the base image and module dependency should be updated.
         $ git push fork tag vX.Y.Z-neco.1
         ```
 
-3. Update `UNBOUND_EXPORTER_VERSION` in `Dockerfile`.
+3. Update `UNBOUND_EXPORTER_COMMIT` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## vault
