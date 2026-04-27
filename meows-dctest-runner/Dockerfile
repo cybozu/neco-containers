@@ -1,12 +1,17 @@
-ARG MEOWS_RUNNER_TAG=2.333.1-ubuntu22.04-meows0.22.2
+# syntax=docker/dockerfile:1
 
-FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}
+FROM scratch AS go-download
+ADD --checksum=sha256:031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a \
+    https://dl.google.com/go/go1.26.1.linux-amd64.tar.gz /go.tar.gz
+
+FROM scratch AS placemat-download
+ADD --checksum=sha256:4c2660c1377c7860c31b5f0a6f89a1878e81c665c281a3ebdc4da8ccd60082ff \
+    https://github.com/cybozu-go/placemat/releases/download/v2.4.10/placemat2_2.4.10_amd64.deb /placemat2.deb
+
+FROM ghcr.io/cybozu-go/meows-runner:2.333.1-ubuntu22.04-meows0.22.2@sha256:7c2f9d674d57e5307f6efc485518bd4187a56676e96d7cbe20e9f3aeb2169ff9
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
-
-ENV GO_VERSION=1.26.1
-ENV PLACEMAT_VERSION=2.4.10
 
 ENV HOME=/home/actions
 ENV GOPATH=${HOME}/go
@@ -55,11 +60,13 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
             unzip \
             wget \
             xauth \
-    && rm -rf /var/lib/apt/lists/* \
-    && curl -sSLf https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz | tar -C /usr/local -xzf - \
-    && curl -sSfL https://github.com/cybozu-go/placemat/releases/download/v${PLACEMAT_VERSION}/placemat2_${PLACEMAT_VERSION}_amd64.deb -o placemat2_${PLACEMAT_VERSION}_amd64.deb \
-    && dpkg -i ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
-    && rm ./placemat2_${PLACEMAT_VERSION}_amd64.deb \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN --mount=type=bind,from=go-download,source=/go.tar.gz,target=/tmp/go.tar.gz,ro \
+    tar -C /usr/local -xzf /tmp/go.tar.gz
+
+RUN --mount=type=bind,from=placemat-download,source=/placemat2.deb,target=/tmp/placemat2.deb,ro \
+    dpkg -i /tmp/placemat2.deb \
     && echo "actions ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers \
     && adduser --disabled-password --gecos "" --uid 10000 actions \
     && mkdir -p /opt/hostedtoolcache \
