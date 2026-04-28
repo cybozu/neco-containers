@@ -27,10 +27,17 @@ ARG NODE_VERSION
 ARG NODE_SHA
 
 WORKDIR /app
-COPY src/hubble-ui .
-# .npmrc forces a flat node_modules (node-linker=hoisted) so that phantom
-# transitive deps webpack relies on (e.g. @protobuf-ts/runtime) resolve.
-COPY pnpm-lock.yaml .npmrc ./
+# pnpm workspace setup:
+# - package.json (workspace root) declares the phantom transitive deps that
+#   upstream forgot but webpack imports directly (e.g. @protobuf-ts/runtime).
+#   They land in /app/node_modules and resolve from src/hubble-ui via Node's
+#   natural parent-dir walk-up.
+# - pnpm-workspace.yaml lists src/hubble-ui as a workspace package and pins
+#   `overrides.sass` so all callers share one sass instance (avoids the
+#   sass.SassString instanceof failure across duplicate copies).
+# Upstream package.json is left untouched.
+COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
+COPY src/hubble-ui src/hubble-ui
 # pnpm binary is fetched and SHA256-verified on the host by `make pnpm-bin`
 # (Makefile target). Same pattern as docker-nginx-unprivileged.
 COPY --chmod=0755 .pnpm-bin/pnpm /usr/local/bin/pnpm
@@ -47,10 +54,10 @@ ENV PATH="/opt/node/bin:${PATH}"
 # --ignore-scripts blocks dependency lifecycle scripts; root postinstall is
 # invoked explicitly so patch-package and ./scripts/post-install.sh still run.
 RUN pnpm install --frozen-lockfile --ignore-scripts \
-    && pnpm run postinstall
+    && pnpm --filter hubble-ui run postinstall
 
 ARG NODE_ENV=production
-RUN pnpm run build
+RUN pnpm --filter hubble-ui run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template
@@ -138,7 +145,7 @@ COPY src/docker-nginx-unprivileged/mainline/debian/20-envsubst-on-templates.sh /
 COPY src/docker-nginx-unprivileged/mainline/debian/30-tune-worker-processes.sh /docker-entrypoint.d
 
 # https://github.com/cybozu/neco-containers/blob/main/hubble-ui/Dockerfile
-COPY --from=frontend-builder /app/server/public /app
+COPY --from=frontend-builder /app/src/hubble-ui/server/public /app
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 

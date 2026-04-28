@@ -1,2 +1,3 @@
 src
 .pnpm-bin
+node_modules

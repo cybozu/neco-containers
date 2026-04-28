@@ -723,12 +723,14 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-4. Regenerate `pnpm-lock.yaml` from the upstream `package-lock.json` (also fetches the upstream checkout and the pinned pnpm binary as side effects):
+4. Regenerate `pnpm-lock.yaml` (also fetches the upstream checkout and the pinned pnpm binary as side effects). The setup wraps upstream as a pnpm workspace package — `hubble-ui/package.json` declares phantom transitive deps the upstream forgot (e.g. `@protobuf-ts/runtime`), and `hubble-ui/pnpm-workspace.yaml` pins `overrides` to dedupe packages whose dual instances break under strict pnpm layout (e.g. `sass`). Upstream `src/hubble-ui/package.json` is left untouched.
 
    ```sh
    cd hubble-ui
    make clean import-lockfile
    ```
+
+   If `pnpm run build` fails with `Module not found: ... Can't resolve '<pkg>'`, add `<pkg>` (with the version visible in `src/hubble-ui/package-lock.json`) to `dependencies` in `hubble-ui/package.json`. If it fails with type-mismatch errors across an `instanceof` boundary (`<X> is not a sass.Value` etc.), find the duplicated package in `pnpm-lock.yaml` and pin a single version under `overrides` in `hubble-ui/pnpm-workspace.yaml`.
 
    Review the resulting diff:
    - `pnpm-lock.yaml` — inspect new dependency entries / integrity hash changes for anomalies.

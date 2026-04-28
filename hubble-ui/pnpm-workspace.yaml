@@ -1,0 +1,5 @@
+packages:
+  - src/hubble-ui
+
+overrides:
+  sass: 1.89.2

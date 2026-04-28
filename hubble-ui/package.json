@@ -1,0 +1,11 @@
+{
+  "name": "neco-hubble-ui-vendor",
+  "private": true,
+  "description": "Workspace root that vendors cilium/hubble-ui and supplies its phantom deps",
+  "dependencies": {
+    "@protobuf-ts/runtime": "2.11.1",
+    "@protobuf-ts/runtime-rpc": "2.11.1",
+    "@types/node": "24.1.0",
+    "mobx-react-lite": "4.1.0"
+  }
+}

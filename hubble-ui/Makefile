@@ -66,15 +66,17 @@ pnpm-bin:
 	   && echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c - \
 	   && chmod +x $(PNPM_BIN) )
 
+# pnpm workspace setup keeps upstream src/hubble-ui/package.json untouched:
+# - package.json (this dir): workspace root manifest declaring the phantom deps
+#   that upstream forgot but webpack imports directly (e.g. @protobuf-ts/runtime).
+# - pnpm-workspace.yaml: lists src/hubble-ui as a workspace package and pins
+#   `overrides.sass` to dedupe the dual-instance issue (sass.SassString from
+#   one copy fails instanceof in another) under strict pnpm layout.
+# pnpm reads both files at this directory level; pnpm-lock.yaml lives here too.
 .PHONY: import-lockfile
-import-lockfile: checkout pnpm-bin
-	cd src/hubble-ui && $(PNPM_BIN) import
-	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
+import-lockfile: pnpm-bin checkout
+	$(PNPM_BIN) install --lockfile-only --no-frozen-lockfile
 
 .PHONY: verify-lockfile
-verify-lockfile: checkout pnpm-bin
-	cd src/hubble-ui && $(PNPM_BIN) import >/dev/null
-	@if ! diff -q ./pnpm-lock.yaml src/hubble-ui/pnpm-lock.yaml >/dev/null; then \
-	   echo "pnpm-lock.yaml is out of date. Run 'make import-lockfile' and commit the result."; \
-	   exit 1; \
-	 fi
+verify-lockfile: pnpm-bin checkout
+	$(PNPM_BIN) install --frozen-lockfile --lockfile-only
