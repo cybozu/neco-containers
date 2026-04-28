@@ -7,6 +7,7 @@ on:
 jobs:
   label-do-not-merge:
     runs-on: ubuntu-slim
+    permissions: {}
     steps:
       - run: |-
           if [ "${{ contains(join(github.event.pull_request.labels.*.name, ', '), 'do-not-merge') }}" = "true" ]; then

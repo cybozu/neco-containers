@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       jobs: ${{ steps.prepare-matrix.outputs.jobs }}
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - uses: ./.github/actions/prepare_matrix
@@ -306,6 +308,9 @@ jobs:
       matrix:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
     env:
       go-version: "1.26.2"
     steps:
@@ -342,6 +347,9 @@ jobs:
 
   build_envoy:
     runs-on: neco-containers-ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build container image
@@ -355,6 +363,9 @@ jobs:
 
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Build ceph image
@@ -364,6 +375,9 @@ jobs:
 
   build_cilium:
     runs-on: neco-containers-ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
     env:
       go-version: "1.23.3"
     steps:
