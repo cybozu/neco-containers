@@ -13,7 +13,7 @@ WORKDIR ${SRC_DIR}
 RUN make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM gcr.io/distroless/static:latest
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-attacher
