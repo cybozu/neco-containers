@@ -1,8 +1,8 @@
 # ceph-csi container
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
-ARG BASE_IMAGE="ghcr.io/cybozu/ceph:19.2.3.1"
-ARG CSI_IMAGE_VERSION=3.15.0
+ARG BASE_IMAGE="ghcr.io/cybozu/ceph:20.2.1.1"
+ARG CSI_IMAGE_VERSION=3.16.2
 
 FROM ${BASE_IMAGE} AS updated_base
 
@@ -32,7 +32,8 @@ RUN cp build.env /
 RUN source /build.env && \
     ( test -n "${GO_ARCH}" && exit 0; echo -e "\n\nMissing GO_ARCH argument for building image, install Golang or run: make image-cephcsi GOARCH=amd64\n\n"; exit 1 ) && \
     mkdir -p ${GOROOT} && \
-    curl https://storage.googleapis.com/golang/go${GOLANG_VERSION}.linux-${GO_ARCH}.tar.gz | tar xzf - -C ${GOROOT} --strip-components=1
+    curl -fsSL https://go.dev/dl/go${GOLANG_VERSION}.linux-${GO_ARCH}.tar.gz | tar xzf - -C ${GOROOT} --strip-components=1
+
 
 # test if the downloaded version of Golang works (different arch?)
 RUN ${GOROOT}/bin/go version && ${GOROOT}/bin/go env
