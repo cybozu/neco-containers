@@ -1,8 +1,8 @@
 # ceph-csi container
 ARG SRC_DIR="/work/go/src/github.com/ceph/ceph-csi/"
 ARG GO_ARCH=amd64
-ARG BASE_IMAGE="ghcr.io/cybozu/ceph:19.2.3.1"
-ARG CSI_IMAGE_VERSION=3.15.0
+ARG BASE_IMAGE="ghcr.io/cybozu/ceph:20.2.1.1"
+ARG CSI_IMAGE_VERSION=3.16.2
 
 FROM ${BASE_IMAGE} AS updated_base
 
