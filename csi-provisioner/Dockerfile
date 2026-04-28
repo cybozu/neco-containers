@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
-ARG VERSION=5.2.0
+ARG VERSION=6.1.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
