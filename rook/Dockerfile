@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG ROOK_VERSION=1.18.6
+ARG ROOK_VERSION=1.19.4
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -20,18 +20,13 @@ RUN HELM_VERSION=$(grep "^HELM_VERSION"  ${ROOK_DIR}/build/makelib/helm.mk | cut
 
 RUN git checkout v${ROOK_VERSION}
 
-# NOTE: This patch should be removed after the following issue is resolved:
-# https://tracker.ceph.com/issues/66215
-COPY use-jq-for-ceph-osd-dump-json-output.patch .
-RUN git apply use-jq-for-ceph-osd-dump-json-output.patch
-
 RUN mkdir -p /tmp/rook
 RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/rook SAVE_BUILD_CONTEXT_DIR=true
 # Copy output artifacts to root directory to minimize differences between Stage2 and upstream Dockerfile.
 RUN cp -r /tmp/rook/* /
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ceph:19.2.3.1
+FROM ghcr.io/cybozu/ceph:20.2.1.1
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG ROOK_DIR=/work/go/src/github.com/rook/rook
