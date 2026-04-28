@@ -1,8 +1,8 @@
-ARG NODE_VERSION=22
+ARG NODE_VERSION=22.22.2
+ARG NODE_SHA=88fd1ce767091fd8d4a99fdb2356e98c819f93f3b1f8663853a2dee9b438068a
 ARG NGINX_VERSION=1.29.1
 ARG NJS_VERSION=0.9.1
 ARG PKG_RELEASE=1~noble
-ARG PNPM_VERSION=10.33.2
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
@@ -24,18 +24,30 @@ ENTRYPOINT ["/backend"]
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
 FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
 ARG NODE_VERSION
-ARG PNPM_VERSION
+ARG NODE_SHA
 
 WORKDIR /app
 COPY src/hubble-ui .
+# .npmrc forces a flat node_modules (node-linker=hoisted) so that phantom
+# transitive deps webpack relies on (e.g. @protobuf-ts/runtime) resolve.
+COPY pnpm-lock.yaml .npmrc ./
+# pnpm binary is fetched and SHA256-verified on the host by `make pnpm-bin`
+# (Makefile target). Same pattern as docker-nginx-unprivileged.
+COPY --chmod=0755 .pnpm-bin/pnpm /usr/local/bin/pnpm
 
-# https://deb.nodesource.com/
-RUN curl -sSLf https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && corepack enable \
-    && corepack prepare pnpm@${PNPM_VERSION} --activate \
-    && pnpm install
+# SHA256-pinned Node.js (avoids unauthenticated curl|bash from nodesource)
+RUN curl -fsSL -O https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz \
+    && echo "${NODE_SHA}  node-v${NODE_VERSION}-linux-x64.tar.xz" | sha256sum -c - \
+    && tar xJf node-v${NODE_VERSION}-linux-x64.tar.xz -C /opt \
+    && mv /opt/node-v${NODE_VERSION}-linux-x64 /opt/node \
+    && rm node-v${NODE_VERSION}-linux-x64.tar.xz
+ENV PATH="/opt/node/bin:${PATH}"
+
+# --frozen-lockfile against committed pnpm-lock.yaml (reproducible).
+# --ignore-scripts blocks dependency lifecycle scripts; root postinstall is
+# invoked explicitly so patch-package and ./scripts/post-install.sh still run.
+RUN pnpm install --frozen-lockfile --ignore-scripts \
+    && pnpm run postinstall
 
 ARG NODE_ENV=production
 RUN pnpm run build
