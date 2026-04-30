@@ -1,9 +1,9 @@
 ARG SRC_DIR=/work/go/src/github.com/csi-addons/kubernetes-csi-addons
 # Build the manager binary
-FROM ghcr.io/cybozu/golang:1.24-noble AS builder
+FROM ghcr.io/cybozu/golang:1.25-noble AS builder
 
 ARG SRC_DIR
-ARG VERSION=0.13.0
+ARG VERSION=0.14.0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 

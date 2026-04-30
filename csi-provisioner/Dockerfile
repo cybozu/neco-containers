@@ -1,8 +1,8 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.24-noble AS build
+FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
-ARG VERSION=5.2.0
+ARG VERSION=6.1.1
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -13,7 +13,7 @@ WORKDIR ${SRC_DIR}
 RUN make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:22.04
+FROM gcr.io/distroless/static:latest
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-provisioner
