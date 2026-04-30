@@ -66,14 +66,20 @@ pnpm-bin:
 	   && echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c - \
 	   && chmod +x $(PNPM_BIN) )
 
-# Lockfile covers upstream's package.json only. Phantoms and sass override
-# are applied at Dockerfile build time and do not enter this lockfile.
+# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
+# time, so the lockfile pins every transitive dep and Dockerfile can run
+# with --frozen-lockfile.
+#
+# `clean` is a hard dep: pnpm/pnpm#5670 — `--lockfile-only` with readPackage
+# rewrites the local package.json on disk, so reusing src/hubble-ui across
+# runs would let the mutation accumulate. Always start from a fresh checkout.
 .PHONY: import-lockfile
-import-lockfile: pnpm-bin checkout
+import-lockfile: pnpm-bin clean checkout
+	cp ./.pnpmfile.cjs src/hubble-ui/.pnpmfile.cjs
 	cd src/hubble-ui && $(PNPM_BIN) install --lockfile-only --no-frozen-lockfile --ignore-scripts
 	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
 
 .PHONY: verify-lockfile
-verify-lockfile: pnpm-bin checkout
-	cp ./pnpm-lock.yaml src/hubble-ui/pnpm-lock.yaml
+verify-lockfile: pnpm-bin clean checkout
+	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
 	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts

@@ -28,7 +28,7 @@ ARG NODE_SHA
 
 WORKDIR /app
 COPY src/hubble-ui .
-COPY pnpm-lock.yaml .
+COPY pnpm-lock.yaml .pnpmfile.cjs ./
 # pnpm binary is fetched and SHA256-verified on the host by `make pnpm-bin`.
 COPY --chmod=0755 .pnpm-bin/pnpm /usr/local/bin/pnpm
 
@@ -40,20 +40,10 @@ RUN curl -fsSL -O https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}
     && rm node-v${NODE_VERSION}-linux-x64.tar.xz
 ENV PATH="/opt/node/bin:${PATH}"
 
-# Sequence:
-#   1. frozen install of upstream deps (lockfile covers upstream only)
-#   2. sass dedupe via pnpm.overrides (instanceof fails with duplicate copies)
-#   3. phantom deps upstream's webpack imports but doesn't declare
-#      (registry fetch; pinned to pkg@version)
-#   4. root postinstall (patch-package + ./scripts/post-install.sh)
-# --ignore-scripts blocks lifecycle scripts; root postinstall is explicit.
+# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
+# time. --ignore-scripts blocks dep lifecycle scripts; root postinstall
+# (patch-package + ./scripts/post-install.sh) is invoked explicitly.
 RUN pnpm install --frozen-lockfile --ignore-scripts \
-    && pnpm pkg set "pnpm.overrides.sass=1.89.2" \
-    && pnpm install -D --ignore-scripts \
-        @protobuf-ts/runtime@2.11.1 \
-        @protobuf-ts/runtime-rpc@2.11.1 \
-        @types/node@24.1.0 \
-        mobx-react-lite@4.1.0 \
     && pnpm run postinstall
 
 ARG NODE_ENV=production

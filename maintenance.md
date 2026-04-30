@@ -723,18 +723,18 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-4. Regenerate `pnpm-lock.yaml`. The committed lockfile covers upstream's `package.json` only; phantom deps (e.g. `@protobuf-ts/runtime`) and `pnpm.overrides` (e.g. `sass` dedupe) are applied at Dockerfile build time on top.
+4. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`.
 
    ```sh
    cd hubble-ui
-   make clean import-lockfile
+   make import-lockfile
    ```
 
-   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, add `<pkg>@<version>` to the `pnpm install -D` line in `hubble-ui/Dockerfile`. For `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add `pnpm pkg set "pnpm.overrides.<pkg>=<version>"` for the duplicated package.
+   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, add `<pkg>: '<version>'` to `PHANTOM_DEV_DEPS` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`. For `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add an entry to `DEDUPE` in `hubble-ui/.pnpmfile.cjs`.
 
    Review the diff:
    - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
-   - `grep -c '"hasInstallScript": true' src/hubble-ui/package-lock.json` should return `4` (root + `core-js` + `@parcel/watcher` + `fsevents`). Audit deviations before bumping `TAG`.
+   - `grep -c '"hasInstallScript": true' src/hubble-ui/package-lock.json` should return `4` (root + `core-js` + `@parcel/watcher` + `fsevents`). `--ignore-scripts` blocks these at install time, but a deviation signals new upstream exec surface worth auditing before bumping `TAG`.
 5. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
 
    ```sh
