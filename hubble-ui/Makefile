@@ -47,7 +47,7 @@ checkout:
 
 .PHONY: clean
 clean:
-	rm -rf src
+	rm -rf src .pnpm-bin
 
 .PHONY: build-backend
 build-backend:
@@ -84,12 +84,12 @@ check-takumi-guard: pnpm-bin
 # A full install (not --lockfile-only) routes every tarball through Takumi
 # Guard so the new dep set is screened before the lockfile is committed.
 .PHONY: import-lockfile
-import-lockfile: check-takumi-guard clean checkout
+import-lockfile: clean check-takumi-guard checkout
 	cp ./.pnpmfile.cjs src/hubble-ui/.pnpmfile.cjs
 	cd src/hubble-ui && $(PNPM_BIN) install --no-frozen-lockfile --ignore-scripts
 	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
 
 .PHONY: verify-lockfile
-verify-lockfile: pnpm-bin clean checkout
+verify-lockfile: clean pnpm-bin checkout
 	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
 	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts
