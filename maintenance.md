@@ -723,7 +723,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-4. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`.
+4. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
 
    ```sh
    cd hubble-ui
