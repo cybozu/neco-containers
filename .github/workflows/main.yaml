@@ -178,7 +178,7 @@ jobs:
               request-scan: "false"
             - dir: "./hubble-ui"
               container-image: "hubble-ui-frontend"
-              make-targets: "checkout"
+              make-targets: "checkout verify-lockfile"
               request-scan: "true"
               target: "frontend"
             - dir: "./hubble-ui"

@@ -1,4 +1,5 @@
-ARG NODE_VERSION=22
+ARG NODE_VERSION=22.22.2
+ARG NODE_SHA=88fd1ce767091fd8d4a99fdb2356e98c819f93f3b1f8663853a2dee9b438068a
 ARG NGINX_VERSION=1.29.1
 ARG NJS_VERSION=0.9.1
 ARG PKG_RELEASE=1~noble
@@ -23,18 +24,30 @@ ENTRYPOINT ["/backend"]
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
 FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
 ARG NODE_VERSION
+ARG NODE_SHA
 
 WORKDIR /app
 COPY src/hubble-ui .
+COPY pnpm-lock.yaml .pnpmfile.cjs ./
+# pnpm binary is fetched and SHA256-verified on the host by `make pnpm-bin`.
+COPY --chmod=0755 .pnpm-bin/pnpm /usr/local/bin/pnpm
 
-# https://deb.nodesource.com/
-RUN curl -sSLf https://deb.nodesource.com/setup_${NODE_VERSION}.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install
+# SHA256-pinned Node.js (avoids unauthenticated curl|bash from nodesource).
+RUN curl -fsSL -O https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz \
+    && echo "${NODE_SHA}  node-v${NODE_VERSION}-linux-x64.tar.xz" | sha256sum -c - \
+    && tar xJf node-v${NODE_VERSION}-linux-x64.tar.xz -C /opt \
+    && mv /opt/node-v${NODE_VERSION}-linux-x64 /opt/node \
+    && rm node-v${NODE_VERSION}-linux-x64.tar.xz
+ENV PATH="/opt/node/bin:${PATH}"
+
+# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
+# time. --ignore-scripts blocks dep lifecycle scripts; root postinstall
+# (patch-package + ./scripts/post-install.sh) is invoked explicitly.
+RUN pnpm install --frozen-lockfile --ignore-scripts \
+    && pnpm run postinstall
 
 ARG NODE_ENV=production
-RUN npm run build
+RUN pnpm run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template

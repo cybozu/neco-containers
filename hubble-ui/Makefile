@@ -2,6 +2,10 @@ HUBBLE_UI_REPO ?= https://github.com/cilium/hubble-ui.git
 HUBBLE_UI_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
 NGINX_REPO ?= https://github.com/nginx/docker-nginx-unprivileged.git
 NGINX_COMMIT_HASH ?= 872c2c0617f10eecc31b7826168a759f24dc02d7
+PNPM_VERSION ?= 10.33.2
+PNPM_SHA ?= 39d7b6600239712bc9581ea219b17ffef46ba60998779cb717be2e068be029ef
+PNPM_BIN ?= $(CURDIR)/.pnpm-bin/pnpm
+TAKUMI_GUARD_REGISTRY ?= https://npm.flatt.tech/
 
 BACKEND_BUILDER_IMAGE_TAG ?= backend-builder:dev
 BACKEND_IMAGE_TAG ?= ghcr.io/cybozu/hubble-ui-backend:$(shell cat TAG)
@@ -43,7 +47,7 @@ checkout:
 
 .PHONY: clean
 clean:
-	rm -rf src
+	rm -rf src .pnpm-bin
 
 .PHONY: build-backend
 build-backend:
@@ -51,6 +55,41 @@ build-backend:
 	docker build . --progress=plain --target backend -t $(BACKEND_IMAGE_TAG)
 
 .PHONY: build-frontend
-build-frontend:
+build-frontend: pnpm-bin
 	docker build . --progress=plain --target frontend-builder -t $(FRONTEND_BUILDER_IMAGE_TAG)
 	docker build . --progress=plain --target frontend -t $(FRONTEND_IMAGE_TAG)
+
+.PHONY: pnpm-bin
+pnpm-bin:
+	@mkdir -p $(dir $(PNPM_BIN))
+	@echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c --status 2>/dev/null || ( \
+	   curl -fsSL -o $(PNPM_BIN) https://github.com/pnpm/pnpm/releases/download/v$(PNPM_VERSION)/pnpm-linux-x64 \
+	   && echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c - \
+	   && chmod +x $(PNPM_BIN) )
+
+# Refuse to proceed unless pnpm is configured to fetch through Takumi Guard.
+.PHONY: check-takumi-guard
+check-takumi-guard: pnpm-bin
+	@[ "$$($(PNPM_BIN) config get registry)" = "$(TAKUMI_GUARD_REGISTRY)" ] || \
+	    { echo "ERROR: pnpm registry is not Takumi Guard ($(TAKUMI_GUARD_REGISTRY)). Setup: https://shisho.dev/docs/ja/t/guard/quickstart/npm/" >&2; exit 1; }
+
+# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
+# time, so the lockfile pins every transitive dep and Dockerfile can run
+# with --frozen-lockfile.
+#
+# `clean` is a hard dep: pnpm/pnpm#5670 — `--lockfile-only` with readPackage
+# rewrites the local package.json on disk, so reusing src/hubble-ui across
+# runs would let the mutation accumulate. Always start from a fresh checkout.
+#
+# A full install (not --lockfile-only) routes every tarball through Takumi
+# Guard so the new dep set is screened before the lockfile is committed.
+.PHONY: import-lockfile
+import-lockfile: clean check-takumi-guard checkout
+	cp ./.pnpmfile.cjs src/hubble-ui/.pnpmfile.cjs
+	cd src/hubble-ui && $(PNPM_BIN) install --no-frozen-lockfile --ignore-scripts
+	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
+
+.PHONY: verify-lockfile
+verify-lockfile: clean pnpm-bin checkout
+	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
+	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts

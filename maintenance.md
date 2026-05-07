@@ -720,13 +720,26 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.
 3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - <https://github.com/cilium/hubble-ui/blob/master/Dockerfile>
-   - Update `NODE_VERSION` and `NGINX_VERSION` in `Dockerfile`.
+   - `https://github.com/cilium/hubble-ui/blob/vX.Y.Z/Dockerfile` (replace `vX.Y.Z` with the tag from `TAG`)
+   - Update `NODE_VERSION` (full patch version, e.g. `22.22.2`) and `NODE_SHA` in `Dockerfile`. Get the SHA256 from `https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt` for `node-v${NODE_VERSION}-linux-x64.tar.xz`.
+   - Update `NGINX_VERSION` in `Dockerfile`.
+   - Update `PNPM_VERSION` and `PNPM_SHA` in `Makefile` (check the [pnpm releases](https://github.com/pnpm/pnpm/releases) page; `PNPM_SHA` is the sha256 of `pnpm-linux-x64` for that release — `curl -fsSL https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64 | sha256sum`).
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-   - Run `make clean checkout`.
-4. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
+4. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
+
+   ```sh
+   cd hubble-ui
+   make import-lockfile
+   ```
+
+   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, add `<pkg>: '<version>'` to `PHANTOM_DEV_DEPS` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`. For `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add an entry to `DEDUPE` in `hubble-ui/.pnpmfile.cjs`.
+
+   Review the diff:
+   - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
+   - `grep -c '"hasInstallScript": true' src/hubble-ui/package-lock.json` should return `4` (root + `core-js` + `@parcel/watcher` + `fsevents`). `--ignore-scripts` blocks these at install time, but a deviation signals new upstream exec surface worth auditing before bumping `TAG`.
+5. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
 
    ```sh
    OLD_NGINX_VERSION=
@@ -741,7 +754,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
    ```
 
-5. Update `NJS_VERSION` and `PKG_RELEASE` in `Dockerfile`.
+6. Update `NJS_VERSION` and `PKG_RELEASE` in `Dockerfile`.
 
 ## kube-metrics-adapter
 
