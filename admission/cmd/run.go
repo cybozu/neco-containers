@@ -4,6 +4,8 @@ import (
 	"github.com/cybozu/neco-containers/admission/hooks"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -45,6 +47,17 @@ func run(addr string, port int, conf *hooks.Config) error {
 		return err
 	}
 
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create discovery client")
+		return err
+	}
+	dynamicClient, err := dynamic.NewForConfig(mgr.GetConfig())
+	if err != nil {
+		setupLog.Error(err, "unable to create dynamic client")
+		return err
+	}
+
 	// register webhook handlers
 	// admission.NewDecoder never returns non-nil error
 	dec := admission.NewDecoder(scheme)
@@ -60,6 +73,7 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/validate-preventdelete", hooks.NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-deployment-replica-count", hooks.NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-scale-deployment-replica-count", hooks.NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
+	wh.Register("/validate-subnamespace-deletion", hooks.NewSubNamespaceDeletionValidator(mgr.GetClient(), dec, discoveryClient, dynamicClient))
 
 	// +kubebuilder:scaffold:builder
 

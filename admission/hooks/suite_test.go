@@ -19,6 +19,8 @@ import (
 
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/discovery"
+	"k8s.io/client-go/dynamic"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -46,6 +48,7 @@ var (
 	deploymentReplicaCountValidateWebhookPath      = "/validate-deployment-replica-count"
 	deploymentReplicaCountScaleValidateWebhookPath = "/validate-scale-deployment-replica-count"
 	podCPURequestReduceWebhookPath                 = "/mutate-pod-cpu-request-reduce"
+	subNamespaceDeletionValidateWebhookPath        = "/validate-subnamespace-deletion"
 )
 
 var scheme *runtime.Scheme
@@ -150,6 +153,12 @@ var _ = BeforeSuite(func() {
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(deploymentReplicaCountValidateWebhookPath, NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
 	wh.Register(deploymentReplicaCountScaleValidateWebhookPath, NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
+
+	discoveryClient, err := discovery.NewDiscoveryClientForConfig(k8sConfig)
+	Expect(err).NotTo(HaveOccurred())
+	dynamicClient, err := dynamic.NewForConfig(k8sConfig)
+	Expect(err).NotTo(HaveOccurred())
+	wh.Register(subNamespaceDeletionValidateWebhookPath, NewSubNamespaceDeletionValidator(mgr.GetClient(), dec, discoveryClient, dynamicClient))
 
 	//+kubebuilder:scaffold:webhook
 
