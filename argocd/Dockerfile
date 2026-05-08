@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.3.6
+ARG ARGOCD_VERSION=3.3.9
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
@@ -25,7 +25,7 @@ ADD --checksum=sha256:ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d2
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:c199fcb62a0250f60673d47948021267c94aa19e2b902f7455fe09e4685b2684 \
+ADD --checksum=sha256:5d72a6d6e343c76be782c48b6082f6739eaea63ff2dc3c93067ab5c0f659198b \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
