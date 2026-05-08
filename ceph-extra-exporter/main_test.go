@@ -29,7 +29,7 @@ func TestServer(t *testing.T) {
 	var port uint = 8080
 	go startServer(testRules, port, true)
 
-	expected := strings.NewReader(`# HELP ceph_extra_osd_df_crush_weight WEIGHT of ` + "`ceph osd df`" + ` command
+	expected := `# HELP ceph_extra_osd_df_crush_weight WEIGHT of ` + "`ceph osd df`" + ` command
 # TYPE ceph_extra_osd_df_crush_weight gauge
 ceph_extra_osd_df_crush_weight{ceph_daemon="osd.0"} 0.078094482421875
 ceph_extra_osd_df_crush_weight{ceph_daemon="osd.1"} 0.078094482421875
@@ -73,12 +73,12 @@ ceph_extra_rgw_bucket_stats_s3_size_bytes{bucket="session-log-bucket-3d9a7583-f1
 ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes{bucket="loki-data-bucket-bedc5054-a90f-41b0-82f8-c077c2c32217"} 6.723739648e+09
 ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes{bucket="rook-ceph-bucket-checker-193e3cc1-063c-4d44-8a1a-cf147c682680"} 0
 ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes{bucket="session-log-bucket-3d9a7583-f11b-4186-b4bc-8bf84c852662"} 2.326528e+06
-`)
+`
 
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		err := testutil.ScrapeAndCompare(
 			fmt.Sprintf("http://localhost:%d/v1/metrics", port),
-			expected,
+			strings.NewReader(expected),
 			"ceph_extra_osd_pool_autoscale_status_pool_count",
 			"ceph_extra_rgw_bucket_stats_s3_object_count",
 			"ceph_extra_rgw_bucket_stats_s3_size_bytes",
