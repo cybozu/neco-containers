@@ -1,4 +1,4 @@
-ARG MEOWS_RUNNER_TAG=2.333.1-ubuntu22.04-meows0.22.2
+ARG MEOWS_RUNNER_TAG=2.334.0-ubuntu22.04-meows0.22.2
 
 FROM ghcr.io/cybozu/golang:1.26-jammy AS builder
 
