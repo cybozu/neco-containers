@@ -1,7 +1,8 @@
 CONTROLLER_TOOLS_VERSION = 0.20.1
 KUSTOMIZE_VERSION = 5.8.1
 CONTOUR_VERSION = 1.33.4
-ARGOCD_VERSION = 3.3.6
+# Argo CD v3.3.9
+ARGOCD_COMMIT_HASH = 1b1bb48f981385cf40b282e965cf63419be3d93f
 GRAFANA_OPERATOR_VERSION = 5.18.0
 ENVTEST_K8S_VERSION = 1.35.0
 
@@ -20,7 +21,7 @@ all: build
 crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
-	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/v$(ARGOCD_VERSION)/manifests/crds/application-crd.yaml
+	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/$(ARGOCD_COMMIT_HASH)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/kustomize/base/crds.yaml
 
 # Run tests, and set up envtest if not done already.
