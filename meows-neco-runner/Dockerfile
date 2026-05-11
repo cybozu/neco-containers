@@ -1,15 +1,17 @@
 ARG MEOWS_RUNNER_TAG=2.334.0-ubuntu22.04-meows0.23.0
 
-FROM ghcr.io/cybozu/golang:1.26-jammy AS builder
+FROM ghcr.io/cybozu/golang:1.26.3.1_jammy@sha256:5286ca13634ae4217fe033c1564c5c4751e7f8979b81f017306db7a6a2544791 AS builder
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.9.3
-RUN curl -fsSL -o grpcurl.tar.gz "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
-    && tar -x -z --strip-components 1 -f grpcurl.tar.gz \
-    && rm -f grpcurl.tar.gz \
+ARG GRPCURL_SHA256=bb555087f279af156159c86d4d3d5dd3f2991129e4cd6b09114e6851a679340d
+ADD --checksum=sha256:${GRPCURL_SHA256} \
+    "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
+    grpcurl.tar.gz
+RUN tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -ldflags "-X \"main.version=${GRPCURL_VERSION}\"" -o /go/bin/grpcurl ./cmd/grpcurl
 
-FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}
+FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@sha256:9593b1cfa5856fffb518c09ff6a0d572701ab409c6010b751302bbd6bb74a9a6
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
