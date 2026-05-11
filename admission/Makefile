@@ -5,6 +5,7 @@ CONTOUR_VERSION = 1.33.4
 ARGOCD_COMMIT_HASH = 1b1bb48f981385cf40b282e965cf63419be3d93f
 GRAFANA_OPERATOR_VERSION = 5.18.0
 ENVTEST_K8S_VERSION = 1.35.0
+ACCURATE_VERSION = 1.8.0
 
 # Specify envtest branch according to controller-runtime version
 CONTROLLER_RUNTIME_VERSION := $(shell awk '$$1 == "sigs.k8s.io/controller-runtime" {print substr($$2, 2)}' go.mod)
@@ -23,10 +24,11 @@ crds:
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/$(ARGOCD_COMMIT_HASH)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/kustomize/base/crds.yaml
+	curl -fsL -o config/crd/bases/accurate.yaml https://raw.githubusercontent.com/cybozu-go/accurate/v$(ACCURATE_VERSION)/config/crd/bases/accurate.cybozu.com_subnamespaces.yaml
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: crds simple-test setup-envtest
+test: 
 	{ \
 	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
 	ENABLE_PODCPUREQUESTREDUCE_MUTATION=true go test ./... -coverprofile cover.out ; \

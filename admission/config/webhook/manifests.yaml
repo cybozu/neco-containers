@@ -256,3 +256,23 @@ webhooks:
     resources:
     - deployments/scale
   sideEffects: None
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-subnamespace-deletion
+  failurePolicy: Fail
+  name: vsubnamespacedeletion.kb.io
+  rules:
+  - apiGroups:
+    - accurate.cybozu.com
+    apiVersions:
+    - v2
+    operations:
+    - DELETE
+    resources:
+    - subnamespaces
+  sideEffects: None
