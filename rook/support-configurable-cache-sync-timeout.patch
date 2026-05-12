@@ -1,0 +1,47 @@
+diff --git a/pkg/operator/ceph/cr_manager.go b/pkg/operator/ceph/cr_manager.go
+index 42c7d5853b2d..bbf928161f24 100644
+--- a/pkg/operator/ceph/cr_manager.go
++++ b/pkg/operator/ceph/cr_manager.go
+@@ -18,6 +18,7 @@ package operator
+ 
+ import (
+ 	"context"
++	"time"
+ 
+ 	"github.com/pkg/errors"
+ 	"github.com/rook/rook/pkg/clusterd"
+@@ -143,6 +144,21 @@ func (o *Operator) startCRDManager(context context.Context, mgrErrorCh chan erro
+ 
+ 	metricsBindAddress := k8sutil.GetOperatorSetting("ROOK_OPERATOR_METRICS_BIND_ADDRESS", "0")
+ 	skipNameValidation := true
++
++	controllerCfg := config.Controller{
++		SkipNameValidation: &skipNameValidation,
++		CacheSyncTimeout:   10 * time.Minute,
++	}
++	if cacheSyncTimeoutStr := k8sutil.GetOperatorSetting("ROOK_CACHE_SYNC_TIMEOUT", ""); cacheSyncTimeoutStr != "" {
++		d, err := time.ParseDuration(cacheSyncTimeoutStr)
++		if err != nil {
++			logger.Errorf("failed to parse ROOK_CACHE_SYNC_TIMEOUT %q: %v", cacheSyncTimeoutStr, err)
++		} else {
++			logger.Infof("setting CacheSyncTimeout to %v", d)
++			controllerCfg.CacheSyncTimeout = d
++		}
++	}
++
+ 	// Set up a manager
+ 	mgrOpts := manager.Options{
+ 		LeaderElection: false,
+@@ -150,10 +166,8 @@ func (o *Operator) startCRDManager(context context.Context, mgrErrorCh chan erro
+ 			// BindAddress is the bind address for controller runtime metrics server. Defaulted to "0" which is off.
+ 			BindAddress: metricsBindAddress,
+ 		},
+-		Scheme: scheme,
+-		Controller: config.Controller{
+-			SkipNameValidation: &skipNameValidation,
+-		},
++		Scheme:     scheme,
++		Controller: controllerCfg,
+ 	}
+ 
+ 	if o.config.NamespaceToWatch != "" {
