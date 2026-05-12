@@ -34,4 +34,4 @@ runs:
         go-version-file: ${{ inputs.go-version-file }}
     - name: Install container-tag-exists
       shell: bash
-      run: go install github.com/Hsn723/container-tag-exists@latest
+      run: go install github.com/Hsn723/container-tag-exists@v1.2.4
