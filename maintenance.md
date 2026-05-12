@@ -452,6 +452,7 @@ gitGraph
 4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
    1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
    2. All the build specification is written in `neco-containers/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
+   3. Update github.com/go-delve/delve/cmd/dlv version. Upstream may be using @latest but we must specify a version.
 5. Update cilium-cli version in `e2e/Makefile`. See cilium-cli's [README](https://github.com/cilium/cilium-cli?tab=readme-ov-file#releases) to make sure that the cilium-cli version is compatible with the cilium version.
 6. Build `ghcr.io/cybozu/cilium` and see the result.
    1. Run `make build` to build.
