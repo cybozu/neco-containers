@@ -20,6 +20,10 @@ RUN HELM_VERSION=$(grep "^HELM_VERSION"  ${ROOK_DIR}/build/makelib/helm.mk | cut
 
 RUN git checkout v${ROOK_VERSION}
 
+# Apply a patch to support configurable CacheSyncTimeout
+COPY support-configurable-cache-sync-timeout.patch .
+RUN git apply support-configurable-cache-sync-timeout.patch
+
 RUN mkdir -p /tmp/rook
 RUN make build IMAGES="ceph" BUILD_CONTAINER_IMAGE=false BUILD_CONTEXT_DIR=/tmp/rook SAVE_BUILD_CONTEXT_DIR=true
 # Copy output artifacts to root directory to minimize differences between Stage2 and upstream Dockerfile.
