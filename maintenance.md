@@ -458,6 +458,8 @@ gitGraph
    1. Run `make build` to build.
    2. Run `make test` to make sanity check.
    3. Run `make test-e2e` to run the standard connectivity test.
+      - `check-log-errors` has often been disabled to work around minor known issues.
+      Check the logs for significant errors manually and consider re-enabling it.
    4. If any problem found, `dive ghcr.io/cybozu/cilium:$(cat TAG)` will help.
 
 > [!Note]

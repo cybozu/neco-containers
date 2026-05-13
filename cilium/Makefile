@@ -1,7 +1,8 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
-CILIUM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
+CILIUM_UPSTREAM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
+CILIUM_TARGET ?= $(CILIUM_UPSTREAM_TARGET)-cybozu
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
-CILIUM_IMAGE_TOOLS_TARGET ?= 330cbaf79dc380d2ee32c42678bf54dab978972c
+CILIUM_IMAGE_TOOLS_TARGET ?= 3caa2c416a912dce00e641dd89201975be8c9ce8
 
 IMAGE_TAG ?= ghcr.io/cybozu/cilium:$(shell cat TAG)
 
@@ -110,6 +111,6 @@ urls:
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/llvm/Dockerfile"
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/bpftool/Dockerfile"
 	@echo "https://github.com/cilium/image-tools/blob/$(CILIUM_IMAGE_TOOLS_TARGET)/images/iptables/Dockerfile"
-	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/runtime/Dockerfile"
-	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/builder/Dockerfile"
-	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_TARGET)/images/cilium/Dockerfile"
+	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_UPSTREAM_TARGET)/images/runtime/Dockerfile"
+	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_UPSTREAM_TARGET)/images/builder/Dockerfile"
+	@echo "https://github.com/cilium/cilium/blob/$(CILIUM_UPSTREAM_TARGET)/images/cilium/Dockerfile"

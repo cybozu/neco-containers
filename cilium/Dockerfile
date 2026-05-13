@@ -143,9 +143,9 @@ COPY --from=cilium-compiler /usr/lib/aarch64-linux-gnu /usr/lib/aarch64-linux-gn
 COPY --from=cybozu-golang /usr/local/go /usr/local/go
 
 RUN mkdir -p /go
-ENV GOROOT /usr/local/go
-ENV GOPATH /go
-ENV PATH "${GOROOT}/bin:${GOPATH}/bin:${PATH}"
+ENV GOROOT=/usr/local/go
+ENV GOPATH=/go
+ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
 RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@v1.26.3
 
@@ -166,6 +166,9 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/
 RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/github.com/cilium/cilium/images/builder \
     ./install-protoplugins.sh
 
+RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/github.com/cilium/cilium/images/builder \
+    ./install-test-formatters.sh
+
 # used to facilitate the verifier tests
 COPY --from=cilium-llvm /usr/local/bin/llvm-objcopy /bin/
 
@@ -179,15 +182,13 @@ RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cili
     build-container install-container-binary
 
 RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cilium/cilium \
-    cd hubble && \
-    mkdir -p /tmp/hubble/linux/amd64 && \
-    make GOARCH=amd64 && \
-    mv hubble /tmp/hubble/linux/amd64
-
-RUN --mount=type=bind,readwrite,source=src/cilium,target=/go/src/github.com/cilium/cilium \
     make GOARCH=amd64 DESTDIR=/tmp/install/linux/amd64 PKG_BUILD=1 \
     install-bash-completion licenses-all && \
-    mv LICENSE.all /tmp/install/linux/amd64/LICENSE.all
+    mv LICENSE.all /tmp/install/linux/amd64/LICENSE.all && \
+    mkdir -p /tmp/hubble/linux/amd64 && \
+    cd hubble && \
+    make GOOS=linux GOARCH=amd64 && \
+    mv hubble /tmp/hubble/linux/amd64/hubble
 
 COPY src/cilium/images/cilium/init-container.sh \
      src/cilium/plugins/cilium-cni/install-plugin.sh \
@@ -199,16 +200,16 @@ COPY src/cilium/images/cilium/init-container.sh \
 FROM cilium-runtime
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
+RUN echo ". /etc/profile.d/bash_completion.sh" >> /etc/bash.bashrc
+
 ## When used within the Cilium container, Hubble CLI should target the
 ## local unix domain socket instead of Hubble Relay.
 ENV HUBBLE_SERVER=unix:///var/run/cilium/hubble.sock
 
-RUN echo ". /etc/profile.d/bash_completion.sh" >> /etc/bash.bashrc
+COPY --from=cilium-agent-builder /tmp/install/linux/amd64 /
 COPY --from=cilium-agent-builder /tmp/hubble/linux/amd64/hubble /usr/bin/hubble
-COPY --from=cilium-agent-builder /tmp/install/linux/amd64/ /
-
 RUN /usr/bin/hubble completion bash > /etc/bash_completion.d/hubble
-
 WORKDIR /home/cilium
+
 ENV INITSYSTEM="SYSTEMD"
 ENTRYPOINT ["/usr/bin/cilium-dbg"]
