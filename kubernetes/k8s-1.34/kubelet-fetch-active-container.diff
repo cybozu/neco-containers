@@ -1,0 +1,58 @@
+diff --git a/pkg/kubelet/container/runtime.go b/pkg/kubelet/container/runtime.go
+index a6e8fa9c880..d0e509fb8dd 100644
+--- a/pkg/kubelet/container/runtime.go
++++ b/pkg/kubelet/container/runtime.go
+@@ -424,6 +424,18 @@ func (podStatus *PodStatus) FindContainerStatusByName(containerName string) *Sta
+ 	return nil
+ }
+ 
++// FindActiveContainerStatusByName returns the status of a container in the
++// active (current) sandbox with the given name. Unlike FindContainerStatusByName,
++// this only searches ActiveContainerStatuses, avoiding matches from old sandboxes.
++func (podStatus *PodStatus) FindActiveContainerStatusByName(containerName string) *Status {
++	for _, containerStatus := range podStatus.ActiveContainerStatuses {
++		if containerStatus.Name == containerName {
++			return containerStatus
++		}
++	}
++	return nil
++}
++
+ // GetRunningContainerStatuses returns container status of all the running containers in a pod
+ func (podStatus *PodStatus) GetRunningContainerStatuses() []*Status {
+ 	runningContainerStatuses := []*Status{}
+diff --git a/pkg/kubelet/kuberuntime/kuberuntime_container.go b/pkg/kubelet/kuberuntime/kuberuntime_container.go
+index a1d9453f891..fa0af69c5d0 100644
+--- a/pkg/kubelet/kuberuntime/kuberuntime_container.go
++++ b/pkg/kubelet/kuberuntime/kuberuntime_container.go
+@@ -1024,9 +1024,13 @@ func (m *kubeGenericRuntimeManager) computeInitContainerActions(ctx context.Cont
+ 	// have been executed at some point in the past.  However, they could have been removed
+ 	// from the container runtime now, and if we proceed, it would appear as if they
+ 	// never ran and will re-execute improperly except for the restartable init containers.
++	//
++	// We use FindActiveContainerStatusByName to only consider containers in the
++	// active sandbox, avoiding false positives from old sandbox containers that
++	// may linger after a node reboot.
+ 	podHasInitialized := false
+ 	for _, container := range pod.Spec.Containers {
+-		status := podStatus.FindContainerStatusByName(container.Name)
++		status := podStatus.FindActiveContainerStatusByName(container.Name)
+ 		if status == nil {
+ 			continue
+ 		}
+@@ -1035,13 +1039,8 @@ func (m *kubeGenericRuntimeManager) computeInitContainerActions(ctx context.Cont
+ 			kubecontainer.ContainerStateRunning:
+ 			podHasInitialized = true
+ 		case kubecontainer.ContainerStateExited:
+-			// This is a workaround for the issue that the kubelet cannot
+-			// differentiate the container statuses of the previous podSandbox
+-			// from the current one.
+-			// If the node is rebooted, all containers will be in the exited
+-			// state and the kubelet will try to recreate a new podSandbox.
+-			// In this case, the kubelet should not mistakenly think that
+-			// the newly created podSandbox has been initialized.
++			// Exited in the active sandbox means the container ran after init.
++			podHasInitialized = true
+ 		default:
+ 			// Ignore other states
+ 		}
