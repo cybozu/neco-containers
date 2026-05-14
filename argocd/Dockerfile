@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.3.9
+ARG ARGOCD_VERSION=3.3.10
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
@@ -25,11 +25,11 @@ ADD --checksum=sha256:ace9fa104992ed0829642629c46ca7bd7fd6e76278cb96c958c4b387d2
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:5d72a6d6e343c76be782c48b6082f6739eaea63ff2dc3c93067ab5c0f659198b \
+ADD --checksum=sha256:798e0f26e96f3787b7e3536540bb273abdd0a1b0bc925fce78629d2188d50d8d \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
 # Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
-FROM ghcr.io/cybozu/ubuntu:24.04.20260422@sha256:eb1812859faf05ef7ae1320383c6e09356a44d00521d2c6204daddcb507a4231 AS builder
+FROM ghcr.io/cybozu/ubuntu:24.04.20260508@sha256:ab2735f6893fc167776587097de968c7d66c1cb052326d8cfeb3c4f8cd8bac00 AS builder
 WORKDIR /tmp
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -43,7 +43,7 @@ RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.ta
     tar xvf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.25.9.2_noble@sha256:0aca7f1b3326079d444b33478612421cd6b7b087f50e0a2bd0335173095a1b22 AS argocd-build
+FROM ghcr.io/cybozu/golang:1.26.3.1_noble@sha256:0da22bb6f9a876d774654892d411131272ae3dd14c530b6b4ad9598b0a74d1da AS argocd-build
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
@@ -81,7 +81,7 @@ RUN make argocd-all
 
 
 # Final image
-FROM ghcr.io/cybozu/ubuntu:24.04.20260422@sha256:eb1812859faf05ef7ae1320383c6e09356a44d00521d2c6204daddcb507a4231
+FROM ghcr.io/cybozu/ubuntu:24.04.20260508@sha256:ab2735f6893fc167776587097de968c7d66c1cb052326d8cfeb3c4f8cd8bac00
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \
