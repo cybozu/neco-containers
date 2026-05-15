@@ -1,0 +1,28 @@
+#!/bin/sh -e
+# tag_exists ghcr.io/<ORG>/<PACKAGE> <TAG>
+
+if [ $# -ne 2 ]; then
+    echo "Error: tag_exists needs two arguments" >&2
+    exit 1
+fi
+
+IMAGE="$1"
+TAG="$2"
+
+REGISTRY=$(echo "${IMAGE}" | cut -d'/' -f1)
+if [ "${REGISTRY}" != "ghcr.io" ]; then
+    echo "Error: unsupported registry '${REGISTRY}' (only 'ghcr.io' is allowed)" >&2
+    exit 1
+fi
+
+ORG=$(echo "${IMAGE}" | cut -d/ -f2)
+PACKAGE=$(echo "${IMAGE}" | cut -d/ -f3-)
+PACKAGE_ENC=$(echo "${PACKAGE}" | jq -Rr '@uri')
+if [ -z "${ORG}" ] || [ -z "${PACKAGE_ENC}" ]; then
+    echo "Error: invalid image format (expected: ghcr.io/<org>/<package>)" >&2
+    exit 1
+fi
+
+# output "true" or "false" by `jq any()`
+VERSIONS=$(gh api "/orgs/${ORG}/packages/container/${PACKAGE_ENC}/versions?per_page=100" --paginate --slurp)
+echo "${VERSIONS}" | jq --arg tag "$TAG" 'any((add // [])[].metadata.container.tags[]; . == $tag)'

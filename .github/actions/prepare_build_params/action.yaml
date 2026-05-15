@@ -73,9 +73,8 @@ runs:
         DIR=${{ steps.dir.outputs.dir }}
         IMAGE=${{ inputs.container-image }}
         TAG=$(cat ${DIR}/TAG)
-        FOUND=$(container-tag-exists ghcr.io/cybozu/${IMAGE} ${TAG})
-        # The stdout should be either "" or "found".
-        if [ "${FOUND}" = "" ]; then
+        FOUND=$(./tag_exists ghcr.io/cybozu/${IMAGE} ${TAG})
+        if [ "${FOUND}" = "false" ]; then
           echo "tag=ghcr.io/cybozu/${IMAGE}:${TAG}" >> $GITHUB_OUTPUT
 
           if [ -f ${DIR}/BRANCH ]; then
