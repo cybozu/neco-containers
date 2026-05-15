@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG ALLOY_VERSION=1.14.2
+ARG ALLOY_VERSION=1.16.1
 ARG SYSTEMD_VERSION=256
 
 WORKDIR /work
