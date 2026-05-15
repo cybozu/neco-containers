@@ -908,7 +908,9 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
    - `Makefile`
    - `e2e/Makefile`
    - `go.mod`
-2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
+   - `e2e/aqua.yaml`
+2. Run `aqua update-checksum -prune` in `e2e` if `e2e/aqua.yaml` is updated.
+3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## opentelemetry-collector
 

@@ -1,15 +1,9 @@
-GOARCH ?= $(shell go env GOARCH)
-OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-
-E2ETEST_K8S_VERSION  := 1.34.3
-KIND_VERSION := 0.31.0
+E2ETEST_K8S_VERSION := 1.35.1
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
-CILIUM_CLI_VERSION := 0.19.1
 
 PROJECT_DIR := $(CURDIR)/../
 BIN_DIR := $(PROJECT_DIR)/bin
 
-CURL := curl -sSLf
 KUBECTL := $(BIN_DIR)/kubectl
 
 KIND := $(BIN_DIR)/kind
@@ -21,7 +15,11 @@ CILIUM_CLI := $(BIN_DIR)/cilium
 IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:dev
 
 .PHONY: setup
-setup: $(KUBECTL) $(KIND) $(CILIUM_CLI)
+setup: | $(BIN_DIR)
+	aqua install
+	cp $$(aqua which kind) $(KIND)
+	cp $$(aqua which kubectl) $(KUBECTL)
+	cp $$(aqua which cilium) $(CILIUM_CLI)
 
 .PHONY: prepare
 prepare:
@@ -87,17 +85,6 @@ scrape-node:
 .PHONY: test
 test:
 	go test -v -race . -ginkgo.v -ginkgo.fail-fast
-
-$(KIND): $(BIN_DIR)
-	$(CURL) -o $(KIND) https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(OS)-$(GOARCH)
-	chmod a+x $(KIND)
-
-$(KUBECTL): $(BIN_DIR)
-	$(CURL) -o $(BIN_DIR)/kubectl https://dl.k8s.io/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(GOARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
-
-$(CILIUM_CLI): $(BIN_DIR)
-	$(CURL) https://github.com/cilium/cilium-cli/releases/download/v$(CILIUM_CLI_VERSION)/cilium-$(OS)-$(GOARCH).tar.gz | tar -xz -C $(BIN_DIR)
-	chmod a+x $@
 
 $(BIN_DIR):
 	mkdir -p $@
