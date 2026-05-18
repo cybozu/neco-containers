@@ -3,8 +3,8 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-# v3.6.10
-ARG ETCD_COMMIT=db8d13a5421fcbd1c5825a148735b80c7d36cd2d
+# v3.6.11
+ARG ETCD_COMMIT=ec166e2292a58365c90e96fcd206b3b74938d49d
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/etcd-io/etcd/archive/${ETCD_COMMIT}.tar.gz | \
