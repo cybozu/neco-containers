@@ -1,7 +1,7 @@
 # Refer to this Dockerfile: https://github.com/redis/docker-library-redis/blob/v8.2.5/debian/Dockerfile
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260508@sha256:88b59de9d9694fa247f2f9bee8abb13bdb0b5ae86451aae02df0701ecc5cf43b AS build
 
 ARG REDIS_VERSION=8.2.5
 ARG REDIS_DOWNLOAD_URL=https://github.com/redis/redis/archive/refs/tags/${REDIS_VERSION}.tar.gz
@@ -35,7 +35,7 @@ RUN mkdir -p /usr/src/redis \
     && BUILD_TLS=yes make -C /usr/src/redis PREFIX=/usr/local/redis install
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260508@sha256:ab2735f6893fc167776587097de968c7d66c1cb052326d8cfeb3c4f8cd8bac00
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 -r redis && \
