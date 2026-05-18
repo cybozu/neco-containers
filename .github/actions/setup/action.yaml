@@ -32,9 +32,6 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
         go-version-file: ${{ inputs.go-version-file }}
-    - name: Install container-tag-exists
-      shell: bash
-      run: go install github.com/Hsn723/container-tag-exists@v1.2.4
     - name: Setup aqua
       uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
       with:
