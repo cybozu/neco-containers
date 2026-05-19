@@ -1,0 +1,64 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_darwin_amd64",
+      "checksum": "B8A80A9F14CA4C0CD0FC2D351B28F740DA9E6A5B18385AC9F9D083360B5B504E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_darwin_arm64",
+      "checksum": "A8CD6507B06239F463A7642430CFD2D154882F150F6E30CDC0653E28DFC34216",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_linux_amd64",
+      "checksum": "BC98E15319ED0D515E3F9235287BA53CDC5535D576D24FD573978ECFE9AB92DC",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_linux_arm64",
+      "checksum": "8158B18EDD2D03B1A30D905CA91B032BC62262167BE8F206C27114F08823E27C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_windows_amd64.exe",
+      "checksum": "CB04E79DD9698A7BC821BBFDDDEC916A416D1409FDA79C927C509D37D00C9716",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/google/osv-scanner/v2.3.8/osv-scanner_windows_arm64.exe",
+      "checksum": "285D1FBCF2C69AB5EE38AE3A850AB46E83F32EF1CD5F3C4C9EB161CC493F6D52",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.1.3/pnpm-darwin-arm64.tar.gz",
+      "checksum": "C258310926CFAAA59B50296BC0DEFCA66A466799EB045D4F76FE3FC3C5E6565D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.1.3/pnpm-linux-arm64.tar.gz",
+      "checksum": "35676A3DACC7E325DD6AC90DB35FD425F17748EA8095C2EA6D47C2375A974FCD",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.1.3/pnpm-linux-x64.tar.gz",
+      "checksum": "8E5685C22BC05E8092ADB056BB3D848C3D7926A2C909ED028052098D59DB9E6E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.1.3/pnpm-win32-arm64.zip",
+      "checksum": "C4FFA99853BA8724D0526D5B52637AA6EC30F3D2AD958626EB08D10A31322BF1",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/pnpm/pnpm/v11.1.3/pnpm-win32-x64.zip",
+      "checksum": "46D42BA9D141605DFC65819A498B27971C4589C7EF139AD80C5E9DA7A5C34B06",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.513.1/registry.yaml",
+      "checksum": "2F2D35FCFD79012DD744CD867EDFEDED4954A9382191C35BB25D776C35DECF3A",
+      "algorithm": "sha256"
+    }
+  ]
+}

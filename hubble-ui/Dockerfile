@@ -1,12 +1,12 @@
-ARG NODE_VERSION=22.22.2
-ARG NODE_SHA=88fd1ce767091fd8d4a99fdb2356e98c819f93f3b1f8663853a2dee9b438068a
-ARG NGINX_VERSION=1.29.1
-ARG NJS_VERSION=0.9.1
+ARG NODE_VERSION=24.14.1
+ARG NODE_SHA=84d38715d449447117d05c3e71acd78daa49d5b1bfa8aacf610303920c3322be
+ARG NGINX_VERSION=1.29.8
+ARG NJS_VERSION=0.9.6
 ARG PKG_RELEASE=1~noble
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.25-noble AS backend-builder
+FROM ghcr.io/cybozu/golang:1.26-noble AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -22,15 +22,16 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.25-noble AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.26-noble AS frontend-builder
 ARG NODE_VERSION
 ARG NODE_SHA
+
+COPY .pnpm-bin /pnpm/bin
+ENV PATH=/pnpm/bin:$PATH
 
 WORKDIR /app
 COPY src/hubble-ui .
 COPY pnpm-lock.yaml .pnpmfile.cjs ./
-# pnpm binary is fetched and SHA256-verified on the host by `make pnpm-bin`.
-COPY --chmod=0755 .pnpm-bin/pnpm /usr/local/bin/pnpm
 
 # SHA256-pinned Node.js (avoids unauthenticated curl|bash from nodesource).
 RUN curl -fsSL -O https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz \

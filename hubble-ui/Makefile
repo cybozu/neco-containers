@@ -1,9 +1,8 @@
 HUBBLE_UI_REPO ?= https://github.com/cilium/hubble-ui.git
-HUBBLE_UI_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
+HUBBLE_UI_COMMIT_HASH ?= 47edb389de8870defe1bb511e931dbc164866bac
 NGINX_REPO ?= https://github.com/nginx/docker-nginx-unprivileged.git
-NGINX_COMMIT_HASH ?= 872c2c0617f10eecc31b7826168a759f24dc02d7
-PNPM_VERSION ?= 10.33.2
-PNPM_SHA ?= 39d7b6600239712bc9581ea219b17ffef46ba60998779cb717be2e068be029ef
+NGINX_COMMIT_HASH ?= c743d5145c69250f030934280b01b638d9d765ed
+PNPM_DIR ?= $(CURDIR)/.pnpm-bin
 PNPM_BIN ?= $(CURDIR)/.pnpm-bin/pnpm
 TAKUMI_GUARD_REGISTRY ?= https://npm.flatt.tech/
 
@@ -39,7 +38,7 @@ checkout-repo:
 
 .PHONY: checkout
 checkout:
-	@CHECKOUT_DIR=src/hubble-ui CHECKOUT_REPO=$(HUBBLE_UI_REPO) CHECKOUT_TARGET=$(HUBBLE_UI_TARGET) \
+	@CHECKOUT_DIR=src/hubble-ui CHECKOUT_REPO=$(HUBBLE_UI_REPO) CHECKOUT_TARGET=$(HUBBLE_UI_COMMIT_HASH) \
 	$(MAKE) --no-print-directory checkout-repo
 
 	@CHECKOUT_DIR=src/docker-nginx-unprivileged CHECKOUT_REPO=$(NGINX_REPO) CHECKOUT_TARGET=$(NGINX_COMMIT_HASH) \
@@ -47,7 +46,7 @@ checkout:
 
 .PHONY: clean
 clean:
-	rm -rf src .pnpm-bin
+	rm -rf src $(PNPM_DIR)
 
 .PHONY: build-backend
 build-backend:
@@ -55,23 +54,25 @@ build-backend:
 	docker build . --progress=plain --target backend -t $(BACKEND_IMAGE_TAG)
 
 .PHONY: build-frontend
-build-frontend: pnpm-bin
+build-frontend: $(PNPM_BIN)
 	docker build . --progress=plain --target frontend-builder -t $(FRONTEND_BUILDER_IMAGE_TAG)
 	docker build . --progress=plain --target frontend -t $(FRONTEND_IMAGE_TAG)
 
 .PHONY: pnpm-bin
-pnpm-bin:
-	@mkdir -p $(dir $(PNPM_BIN))
-	@echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c --status 2>/dev/null || ( \
-	   curl -fsSL -o $(PNPM_BIN) https://github.com/pnpm/pnpm/releases/download/v$(PNPM_VERSION)/pnpm-linux-x64 \
-	   && echo "$(PNPM_SHA)  $(PNPM_BIN)" | sha256sum -c - \
-	   && chmod +x $(PNPM_BIN) )
+pnpm-bin: $(PNPM_BIN)
+
+$(PNPM_BIN):
+	aqua install
+	mkdir -p $(PNPM_DIR)
+	cp -r $$(dirname $$(aqua which pnpm))/* $(PNPM_DIR)
 
 # Refuse to proceed unless pnpm is configured to fetch through Takumi Guard.
 .PHONY: check-takumi-guard
-check-takumi-guard: pnpm-bin
-	@[ "$$($(PNPM_BIN) config get registry)" = "$(TAKUMI_GUARD_REGISTRY)" ] || \
-	    { echo "ERROR: pnpm registry is not Takumi Guard ($(TAKUMI_GUARD_REGISTRY)). Setup: https://shisho.dev/docs/ja/t/guard/quickstart/npm/" >&2; exit 1; }
+check-takumi-guard: $(PNPM_BIN)
+	@if [ "$$($(PNPM_BIN) config get registry)" != "$(TAKUMI_GUARD_REGISTRY)" ]; then \
+	    echo "ERROR: pnpm registry is not Takumi Guard ($(TAKUMI_GUARD_REGISTRY)). Setup: https://shisho.dev/docs/ja/t/guard/quickstart/npm/" >&2; \
+		exit 1; \
+	fi
 
 # .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
 # time, so the lockfile pins every transitive dep and Dockerfile can run
@@ -90,6 +91,21 @@ import-lockfile: clean check-takumi-guard checkout
 	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
 
 .PHONY: verify-lockfile
-verify-lockfile: clean pnpm-bin checkout
+verify-lockfile: clean $(PNPM_BIN) checkout
+# https://google.github.io/osv-scanner/output/#return-codes
+	@result=$$(mktemp); \
+	osv-scanner scan source --lockfile=pnpm-lock.yaml --format=markdown > "$${result}"; \
+	rc=$$?; \
+	if [ "$${rc}" -ne 0 ] && [ "$${rc}" -ne 1 ]; then \
+		echo "unexpected error"; \
+		cat "$${result}"; \
+		exit "$${rc}"; \
+	fi; \
+	if grep -q MAL- "$${result}"; then \
+		echo '!! Possible malicious dependency. Please investigate the root cause.'; \
+		exit 1; \
+	fi; \
+	rm "$${result}"
+
 	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
 	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts
