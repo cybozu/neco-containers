@@ -103,6 +103,7 @@ verify-lockfile: clean $(PNPM_BIN) checkout
 	fi; \
 	if grep -q MAL- "$${result}"; then \
 		echo '!! Possible malicious dependency. Please investigate the root cause.'; \
+		cat "$${result}"; \
 		exit 1; \
 	fi; \
 	rm "$${result}"
