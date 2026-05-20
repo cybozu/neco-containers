@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 
 FROM scratch AS go-download
-ADD --checksum=sha256:031f088e5d955bab8657ede27ad4e3bc5b7c1ba281f05f245bcc304f327c987a \
-    https://dl.google.com/go/go1.26.1.linux-amd64.tar.gz /go.tar.gz
+ADD --checksum=sha256:2b2cfc7148493da5e73981bffbf3353af381d5f93e789c82c79aff64962eb556 \
+    https://dl.google.com/go/go1.26.3.linux-amd64.tar.gz /go.tar.gz
 
 FROM scratch AS placemat-download
-ADD --checksum=sha256:4c2660c1377c7860c31b5f0a6f89a1878e81c665c281a3ebdc4da8ccd60082ff \
-    https://github.com/cybozu-go/placemat/releases/download/v2.4.10/placemat2_2.4.10_amd64.deb /placemat2.deb
+ADD --checksum=sha256:eb32893ed824d8d009cd7214283c02b9652a460fa3a7184c47e7adbcc0f32cd2 \
+    https://github.com/cybozu-go/placemat/releases/download/v2.4.11/placemat2_2.4.11_amd64.deb /placemat2.deb
 
-FROM ghcr.io/cybozu-go/meows-runner:2.334.0-ubuntu22.04-meows0.22.2@sha256:9593b1cfa5856fffb518c09ff6a0d572701ab409c6010b751302bbd6bb74a9a6
+FROM ghcr.io/cybozu-go/meows-runner:2.334.0-ubuntu22.04-meows0.23.0@sha256:c591a34f3be0cb6a7c8955e285f9ea626150a8ddf1d14b7cb4d6f6fd6e1c006b
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
