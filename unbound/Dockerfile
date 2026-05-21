@@ -1,7 +1,7 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG UNBOUND_VERSION=1.24.2
-ARG UNBOUND_SHA256=44e7b53e008a6dcaec03032769a212b46ab5c23c105284aa05a4f3af78e59cdb
+ARG UNBOUND_VERSION=1.25.1
+ARG UNBOUND_SHA256=0fe8b6277b0959cfd17562debac0aa5f71e0b02dc4ffa9c60271c583edab586f
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
