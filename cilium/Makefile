@@ -1,6 +1,6 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
 CILIUM_UPSTREAM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
-CILIUM_TARGET ?= $(CILIUM_UPSTREAM_TARGET)-cybozu
+CILIUM_TARGET ?= 22ab699d4d19c14dc72bfa83c401abf4182a9c15
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= 3caa2c416a912dce00e641dd89201975be8c9ce8
 
@@ -65,7 +65,7 @@ build: checkout
 # The following command shows tools version of the upstream image.
 .PHONY: reference
 reference:
-	@IMAGE_TAG=quay.io/cilium/cilium:$(CILIUM_TARGET) \
+	@IMAGE_TAG=quay.io/cilium/cilium:$(CILIUM_UPSTREAM_TARGET) \
 	$(MAKE) --no-print-directory test
 
 .PHONY: test
