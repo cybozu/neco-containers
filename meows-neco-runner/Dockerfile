@@ -1,4 +1,5 @@
 ARG MEOWS_RUNNER_TAG=2.334.0-ubuntu22.04-meows0.23.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:c591a34f3be0cb6a7c8955e285f9ea626150a8ddf1d14b7cb4d6f6fd6e1c006b
 
 FROM ghcr.io/cybozu/golang:1.26.3.1_jammy@sha256:5286ca13634ae4217fe033c1564c5c4751e7f8979b81f017306db7a6a2544791 AS builder
 
@@ -11,7 +12,7 @@ ADD --checksum=sha256:${GRPCURL_SHA256} \
 RUN tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -ldflags "-X \"main.version=${GRPCURL_VERSION}\"" -o /go/bin/grpcurl ./cmd/grpcurl
 
-FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@sha256:9593b1cfa5856fffb518c09ff6a0d572701ab409c6010b751302bbd6bb74a9a6
+FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@${MEOWS_RUNNER_CHECKSUM}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
