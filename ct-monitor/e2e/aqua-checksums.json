@@ -1,0 +1,64 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-darwin-amd64",
+      "checksum": "4F0B6E3B88BDC66D922C08469F05EF507D4903DD236E6319199BB9C868EED274",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-darwin-arm64",
+      "checksum": "CEAF40DF1D1551C481FB50E3DEB5C3DEECAD5FD599DF5469626B70DDF52A1518",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-linux-amd64",
+      "checksum": "517AB7FC89DDEED5FA65ABF71530D90648D9638EF0C4CDE22C2C11F8097B8889",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-linux-arm64",
+      "checksum": "7EA2DE9D2D190022ED4A8A4E3AC0636C8A455E460B9A13CCF19F15D07F4F00EB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-windows-amd64",
+      "checksum": "A75FED2B6964D877461CC145B37E997AC0F59A63BD02A750134AC25378F78CE7",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/darwin/amd64/kubectl",
+      "checksum": "657AFBD0E653C4CE3AF1B5A645A4EABA282CF8EB2BCDA7191FF60866E50E4D7F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/darwin/arm64/kubectl",
+      "checksum": "E51367D2107D605F4EDD7C2FB25897B0C0695A7DE1A9F9D04CD6C9356B890B14",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/linux/amd64/kubectl",
+      "checksum": "AB60CA5F0FD60C1EB81B52909E67060E3BA0BD27E55A8AC147CBC2172FF14212",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/linux/arm64/kubectl",
+      "checksum": "46913A7AA0327F6CC2E1CC2775D53C4A2AF5E52F7FD8DACBFBFD098E757F19E9",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/windows/amd64/kubectl.exe",
+      "checksum": "5EF6E0B019CFEA5B0EFF55B576C0118F64C0758A8BCBF52587C7F454F302F7BC",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.34.3/bin/windows/arm64/kubectl.exe",
+      "checksum": "E261BDC56BE78CCD9A63CD6D7D49029DB41B9A7064CE3F0C82C41800CC809AA6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.492.0/registry.yaml",
+      "checksum": "7BD018BBFC66C2B6E69607418D806F21B8B0E8554A2C02709A547F756D2B7CE1",
+      "algorithm": "sha256"
+    }
+  ]
+}

@@ -1,24 +1,23 @@
-GOARCH ?= $(shell go env GOARCH)
-OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
-
-E2ETEST_K8S_VERSION  := 1.34.0
-KIND_VERSION := 0.30.0
+E2ETEST_K8S_VERSION := 1.34.0
+E2ETEST_K8S_IMAGE   := kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
 
 PROJECT_DIR := $(CURDIR)/../
 BIN_DIR := $(PROJECT_DIR)/bin
 
-CURL := curl -sSLf
 KUBECTL := $(BIN_DIR)/kubectl
 
 KIND := $(BIN_DIR)/kind
 KIND_CLUSTER_NAME := squid-exporter-cluster
 
 .PHONY: setup
-setup: bin_dir kubectl kind
+setup: | $(BIN_DIR)
+	aqua install
+	cp $$(aqua which kind) $(KIND)
+	cp $$(aqua which kubectl) $(KUBECTL)
 
 .PHONY: start
 start:
-	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=kindest/node:v$(E2ETEST_K8S_VERSION) --wait 1m
+	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --wait 1m
 	$(MAKE) -C ../ docker-build
 	$(KIND) load docker-image ghcr.io/cybozu/squid-exporter:dev --name=$(KIND_CLUSTER_NAME)
 
@@ -32,17 +31,5 @@ stop:
 	$(KIND) delete cluster --name=$(KIND_CLUSTER_NAME)
 	-docker image rm ghcr.io/cybozu/squid-exporter:dev
 
-.PHONY: kind
-kind: $(KIND)
-$(KIND): $(BIN_DIR)
-	$(CURL) -o $(KIND) https://github.com/kubernetes-sigs/kind/releases/download/v$(KIND_VERSION)/kind-$(OS)-$(GOARCH)
-	chmod a+x $(KIND)
-
-.PHONY: kubectl
-kubectl: $(KUBECTL)
-$(KUBECTL): $(BIN_DIR)
-	$(CURL) -o $(BIN_DIR)/kubectl https://dl.k8s.io/v$(E2ETEST_K8S_VERSION)/bin/$(OS)/$(GOARCH)/kubectl && chmod a+x $(BIN_DIR)/kubectl
-
-.PHONY: bin_dir
 $(BIN_DIR):
-	mkdir -p $(BIN_DIR)
+	mkdir -p $@

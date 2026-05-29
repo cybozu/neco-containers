@@ -1,4 +1,5 @@
 E2ETEST_K8S_VERSION := 1.35.1
+E2ETEST_K8S_IMAGE   := kindest/node:v1.35.1@sha256:05d7bcdefbda08b4e038f644c4df690cdac3fba8b06f8289f30e10026720a1ab
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
 
 PROJECT_DIR := $(CURDIR)/../
@@ -32,7 +33,7 @@ wait-for-workloads:
 
 .PHONY: start
 start:
-	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=kindest/node:v$(E2ETEST_K8S_VERSION) --config=$(KIND_CONFIG)
+	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --config=$(KIND_CONFIG)
 	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait
 
 .PHONY: stop

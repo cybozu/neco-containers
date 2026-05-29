@@ -1,0 +1,12 @@
+---
+# aqua - Declarative CLI Version Manager
+# https://aquaproj.github.io/
+checksum:
+  enabled: true
+  require_checksum: true
+registries:
+- type: standard
+  ref: v4.492.0
+packages:
+- name: kubernetes-sigs/kind@v0.30.0
+- name: kubernetes/kubectl@v1.34.3
