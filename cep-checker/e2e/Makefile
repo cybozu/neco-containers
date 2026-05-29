@@ -2,7 +2,7 @@ GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 E2ETEST_K8S_VERSION   := 1.34.3
-E2ETEST_K8S_IMAGE     := kindest/node:v1.34.3@sha256:babda82416d417f720a4d6dbd35deec5263af2a6c164c81c08cde0044c2b9f78
+E2ETEST_K8S_IMAGE     := kindest/node:v1.34.3@sha256:08497ee19eace7b4b5348db5c6a1591d7752b164530a36f855cb0f2bdcbadd48
 KIND_VERSION          := 0.30.0
 CILIUM_VERSION        := 1.16.19
 CILIUM_CLI_VERSION    := 0.19.2

@@ -2,6 +2,7 @@ GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 E2ETEST_K8S_VERSION  := 1.34.0
+E2ETEST_K8S_IMAGE    := kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
 KIND_VERSION := 0.30.0
 
 PROJECT_DIR := $(CURDIR)/../
@@ -18,7 +19,7 @@ setup: bin_dir kubectl kind
 
 .PHONY: start
 start:
-	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=kindest/node:v$(E2ETEST_K8S_VERSION) --wait 1m
+	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --wait 1m
 	$(MAKE) -C ../ docker-build
 	$(KIND) load docker-image ghcr.io/cybozu/squid-exporter:dev --name=$(KIND_CLUSTER_NAME)
 

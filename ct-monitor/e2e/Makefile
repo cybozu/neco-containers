@@ -2,6 +2,7 @@ GOARCH ?= $(shell go env GOARCH)
 OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
 
 E2ETEST_K8S_VERSION := 1.34.3
+E2ETEST_K8S_IMAGE   := kindest/node:v1.34.3@sha256:08497ee19eace7b4b5348db5c6a1591d7752b164530a36f855cb0f2bdcbadd48
 KIND_VERSION := 0.30.0
 CERT_MANAGER_VERSION := 1.19.4
 CERT_MANAGER_CRDS_SHA256 := 0e09c26d64fbdb56f2ea95b5b2350991980a184a9ce9a09d3a9a207594ce38b0
@@ -32,7 +33,7 @@ setup: bin_dir kubectl kind
 
 .PHONY: start
 start:
-	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=kindest/node:v$(E2ETEST_K8S_VERSION) --wait 1m
+	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --wait 1m
 	$(CURL) -o $(BIN_DIR)/cert-manager.crds.yaml https://github.com/cert-manager/cert-manager/releases/download/v$(CERT_MANAGER_VERSION)/cert-manager.crds.yaml
 	echo "$(CERT_MANAGER_CRDS_SHA256)  $(BIN_DIR)/cert-manager.crds.yaml" | sha256sum --check
 	$(KUBECTL) apply -f $(BIN_DIR)/cert-manager.crds.yaml
