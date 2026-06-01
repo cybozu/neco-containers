@@ -3,7 +3,8 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
 
-ARG K8S_VERSION=1.34.4
+# v1.34.8
+ARG K8S_COMMIT=1f328c5e9dd683d0c5e69f3d7d58f8371278dec2
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
@@ -12,14 +13,15 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /go/src/k8s.io/ && \
-    curl -sSLf https://github.com/kubernetes/kubernetes/archive/v${K8S_VERSION}.tar.gz | \
+    curl -sSLf https://github.com/kubernetes/kubernetes/archive/${K8S_COMMIT}.tar.gz | \
     tar zxf - -C /go/src/k8s.io/ && \
-    mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
+    mv /go/src/k8s.io/kubernetes-${K8S_COMMIT} /go/src/k8s.io/kubernetes
 
-COPY kubelet-fetch-active-container.diff /work/
+# TODO: Re-enable the patch once the initial deployment without it is confirmed.
+# COPY kubelet-fetch-active-container.diff /work/
 
 WORKDIR /go/src/k8s.io/kubernetes
-RUN patch -p1 < /work/kubelet-fetch-active-container.diff
+# RUN patch -p1 < /work/kubelet-fetch-active-container.diff
 RUN make all WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
