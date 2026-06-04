@@ -6,6 +6,7 @@ ARG ARGOCD_VERSION=3.4.3
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
 ARG HELM_VERSION=3.19.4
+ARG GIT_LFS_VERSION=3.7.1
 ARG NODE_VERSION=24.16.0
 
 FROM scratch AS kustomize-download
@@ -17,6 +18,11 @@ FROM scratch AS helm-download
 ARG HELM_VERSION
 ADD --checksum=sha256:759c656fbd9c11e6a47784ecbeac6ad1eb16a9e76d202e51163ab78504848862 \
     https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz /helm.tar.gz
+
+FROM scratch AS git-lfs-download
+ARG GIT_LFS_VERSION
+ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5a5ec08 \
+    https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-amd64-v${GIT_LFS_VERSION}.tar.gz /git-lfs.tar.gz
 
 FROM scratch AS node-download
 ARG NODE_VERSION
@@ -43,6 +49,10 @@ RUN --mount=type=bind,from=kustomize-download,source=/kustomize.tar.gz,target=/t
 # Install helm
 RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.tar.gz \
     tar xvf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
+
+# Install git-lfs
+RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/git-lfs.tar.gz \
+    tar xvf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.26.4.1_noble@sha256:add9d704d4b75df2c51328615be89b61a3e71e4833321aa02c3f325a30d3eb8f AS argocd-build
@@ -93,16 +103,16 @@ RUN groupadd -g 10000 argocd && \
     apt-get install -y --no-install-recommends \
         connect-proxy \
         git \
-        git-lfs \
         gpg \
         gpg-agent \
         openssh-client \
         tini && \
     apt-get clean && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/*
 
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
 COPY --from=builder /usr/local/bin/helm /usr/local/bin/helm
+COPY --from=builder /usr/local/bin/git-lfs /usr/local/bin/git-lfs
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/bin/
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
@@ -114,6 +124,12 @@ RUN mkdir -p tls && \
     mkdir -p gpg/keys && \
     chown argocd gpg/keys && \
     chmod 0700 gpg/keys
+
+# Disable gRPC service config lookups via DNS TXT records to prevent excessive
+# DNS queries for _grpc_config.<hostname> which can cause timeouts in dual-stack
+# environments. This can be overridden via argocd-cmd-params-cm ConfigMap.
+# See https://github.com/argoproj/argo-cd/issues/24991
+ENV GRPC_ENABLE_TXT_SERVICE_CONFIG=false
 
 RUN ln -s /usr/local/bin/argocd /usr/local/bin/argocd-server && \
     ln -s /usr/local/bin/argocd /usr/local/bin/argocd-repo-server && \
