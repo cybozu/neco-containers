@@ -1,11 +1,11 @@
-# Refer to this Dockerfile: https://github.com/redis/docker-library-redis/blob/v8.2.5/debian/Dockerfile
+# Refer to this Dockerfile: https://github.com/redis/docker-library-redis/blob/v8.2.7/debian/Dockerfile
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260604@sha256:2b6f938e5831d2f205a6651d4f6226b2e76e2145678a9d41f3d81989a6fbd953 AS build
 
-ARG REDIS_VERSION=8.2.6
+ARG REDIS_VERSION=8.2.7
 ARG REDIS_DOWNLOAD_URL=https://github.com/redis/redis/archive/refs/tags/${REDIS_VERSION}.tar.gz
-ARG REDIS_DOWNLOAD_SHA=9d64fda8816d2b99d5d2019642a05e95552c56b8cc18d58efaa1e3b8b4dcf4ad
+ARG REDIS_DOWNLOAD_SHA=4b5b129565569a1564cf0196e17deff23298980e81deced3266cda58180d6506
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
