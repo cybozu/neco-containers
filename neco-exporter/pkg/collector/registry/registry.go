@@ -4,6 +4,7 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/cert"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/ciliumid"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/mock"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/networkfence"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/bpf"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
@@ -16,6 +17,7 @@ func init() {
 		cert.NewCollector(),
 		ciliumid.NewCollector(),
 		mock.NewCollector(),
+		networkfence.NewCollector(),
 
 		// scope: node
 		bpf.NewCollector(),

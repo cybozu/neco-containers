@@ -15,6 +15,9 @@ CILIUM_CLI := $(BIN_DIR)/cilium
 
 IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:dev
 
+# CSI_ADDONS_VERSION should be updated with csi-addons-controller version. See `csi-addons-controller/BRANCH` .
+CSI_ADDONS_VERSION := v0.14.0
+
 .PHONY: setup
 setup: | $(BIN_DIR)
 	aqua install
@@ -56,6 +59,7 @@ install-pilot:
 install: install-pilot
 	$(MAKE) -C ../ IMAGE_TAG=$(IMAGE_TAG) docker-build
 	$(KIND) load docker-image $(IMAGE_TAG) --name=$(KIND_CLUSTER_NAME)
+	$(KUBECTL) apply -f testdata/csi-addons-crds.yaml
 	$(KUBECTL) apply -f testdata/namespace.yaml
 	$(KUBECTL) apply -f testdata/serviceaccount.yaml
 	$(KUBECTL) apply -f testdata/role.yaml
@@ -64,6 +68,11 @@ install: install-pilot
 	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
 	$(MAKE) --no-print-directory wait-for-workloads
+
+.PHONY: update-csi-addons-crd
+update-csi-addons-crd:
+	curl -sSL https://raw.githubusercontent.com/csi-addons/kubernetes-csi-addons/$(CSI_ADDONS_VERSION)/deploy/controller/crds.yaml \
+		-o testdata/csi-addons-crds.yaml
 
 .PHONY: uninstall
 uninstall:

@@ -31,6 +31,7 @@ func runTest() {
 	// test cluster collectors
 	Context("cert", testCertCollector)
 	Context("ciliumid", testCiliumIDCollector)
+	Context("networkfence", testNetworkFenceCollector)
 
 	// test node collectors
 	Context("bpf", testBPFCollector)

@@ -19,5 +19,5 @@ spec:
           name: exporter
           args:
             - --scope=cluster
-            - --collectors=cert,ciliumid,mock
+            - --collectors=cert,ciliumid,mock,networkfence
             - --interval=10s
