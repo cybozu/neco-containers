@@ -194,6 +194,7 @@ jobs:
               container-image: "pause"
             - dir: "./pomerium"
               container-image: "pomerium"
+              request-scan: "true"
             - dir: "./prometheus-adapter"
               container-image: "prometheus-adapter"
             - dir: "./prometheus-config-reloader"
