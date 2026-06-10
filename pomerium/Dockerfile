@@ -5,8 +5,8 @@
 ARG NODE_VERSION=22.22.3
 
 FROM scratch AS source
-ARG POMERIUM_VERSION=0.32.7
-ARG POMERIUM_CHECKSUM=7a3fd6d8b3b1ff49645a82da1a83a6713afb1b631cf45bb2dab56eeb0c2dfaeb
+ARG POMERIUM_VERSION=0.32.8
+ARG POMERIUM_CHECKSUM=68201d9a20c751cf1fe60582af21f642cb8b8aefaddf031750c541e97889b019
 ADD --checksum=sha256:${POMERIUM_CHECKSUM} \
     https://github.com/pomerium/pomerium/archive/v${POMERIUM_VERSION}.tar.gz /pomerium.tar.gz
 
