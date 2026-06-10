@@ -1,12 +1,12 @@
 # syntax=docker/dockerfile:1
 
 FROM scratch AS source
-ARG POMERIUM_VERSION=0.32.4
-ARG POMERIUM_CHECKSUM=bd529ef1ce0793331d74dca674fffe7492f2baf3c09ed5952ca96ffd5bc31b3c
+ARG POMERIUM_VERSION=0.32.7
+ARG POMERIUM_CHECKSUM=7a3fd6d8b3b1ff49645a82da1a83a6713afb1b631cf45bb2dab56eeb0c2dfaeb
 ADD --checksum=sha256:${POMERIUM_CHECKSUM} \
     https://github.com/pomerium/pomerium/archive/v${POMERIUM_VERSION}.tar.gz /pomerium.tar.gz
 
-FROM ghcr.io/cybozu/golang:1.25-noble@sha256:fde615f5be28b80b6a90b3b3bc8276093e7644b1832cbf7fb4ce03b0a703de33 AS build
+FROM ghcr.io/cybozu/golang:1.25.11.1_noble@sha256:cdfa4c5b7ceb83fe059fb193182d7fc72bf0a3375dd5d9a00ff9d9dc7f5a857d AS build
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -30,7 +30,7 @@ RUN go mod download
 RUN make build-go NAME=pomerium
 RUN touch /config.yaml
 
-FROM ghcr.io/cybozu/ubuntu:24.04@sha256:ab2735f6893fc167776587097de968c7d66c1cb052326d8cfeb3c4f8cd8bac00
+FROM ghcr.io/cybozu/ubuntu:24.04.20260604@sha256:c7c519ae7504df61e01495635ebda9c8698f2d221cd3fcf6e9500ad97b9d2421
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 WORKDIR /pomerium
