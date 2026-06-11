@@ -8,7 +8,7 @@ FROM scratch AS placemat-download
 ADD --checksum=sha256:eb32893ed824d8d009cd7214283c02b9652a460fa3a7184c47e7adbcc0f32cd2 \
     https://github.com/cybozu-go/placemat/releases/download/v2.4.11/placemat2_2.4.11_amd64.deb /placemat2.deb
 
-FROM ghcr.io/cybozu-go/meows-runner:2.334.0-ubuntu22.04-meows0.24.0@sha256:bb11e4c0b433f8650a36071c60ebf833da5667f45f477bba40f18ef78001bae8
+FROM ghcr.io/cybozu-go/meows-runner:2.335.1-ubuntu22.04-meows0.24.0@sha256:05e48e903c980cfbb825b846cf498df720b1a25015177af8c71236d0c50af603
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
