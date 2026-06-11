@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG GRAFANA_VERSION=12.4.3+security-02
+ARG GRAFANA_VERSION=12.4.4
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
