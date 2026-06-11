@@ -11,3 +11,4 @@ packages:
 - name: kubernetes-sigs/kind@v0.31.0
 - name: kubernetes/kubectl@v1.35.1
 - name: cilium/cilium-cli@v0.19.2
+- name: mikefarah/yq@v4.53.3

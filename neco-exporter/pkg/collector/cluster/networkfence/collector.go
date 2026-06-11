@@ -13,10 +13,24 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/manager"
 )
 
-var networkFenceListGVK = schema.GroupVersionKind{
-	Group:   "csiaddons.openshift.io",
-	Version: "v1alpha1",
-	Kind:    "NetworkFenceList",
+func newNetworkFence() *unstructured.Unstructured {
+	u := &unstructured.Unstructured{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "csiaddons.openshift.io",
+		Version: "v1alpha1",
+		Kind:    "NetworkFence",
+	})
+	return u
+}
+
+func newNetworkFenceList() *unstructured.UnstructuredList {
+	u := &unstructured.UnstructuredList{}
+	u.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "csiaddons.openshift.io",
+		Version: "v1alpha1",
+		Kind:    "NetworkFenceList",
+	})
+	return u
 }
 
 type networkFenceCollector struct {
@@ -47,12 +61,7 @@ func (c *networkFenceCollector) Setup(ctx context.Context) error {
 		return err
 	}
 	// Register the informer before mgr.Start() so that WaitForCacheSync covers it.
-	obj := &unstructured.Unstructured{}
-	obj.SetGroupVersionKind(schema.GroupVersionKind{
-		Group:   "csiaddons.openshift.io",
-		Version: "v1alpha1",
-		Kind:    "NetworkFence",
-	})
+	obj := newNetworkFence()
 	if _, err := mgr.GetCache().GetInformer(ctx, obj); err != nil {
 		return err
 	}
@@ -61,8 +70,7 @@ func (c *networkFenceCollector) Setup(ctx context.Context) error {
 }
 
 func (c *networkFenceCollector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
-	list := &unstructured.UnstructuredList{}
-	list.SetGroupVersionKind(networkFenceListGVK)
+	list := newNetworkFenceList()
 	if err := c.client.List(ctx, list); err != nil {
 		return nil, err
 	}
@@ -71,9 +79,10 @@ func (c *networkFenceCollector) Collect(ctx context.Context) ([]*exporter.Metric
 	for _, obj := range list.Items {
 		name := obj.GetName()
 
-		driver, ok, err := unstructured.NestedString(obj.Object, "spec", "driver")
-		if err != nil || !ok {
-			slog.WarnContext(ctx, "spec.driver missing or invalid in NetworkFence", slog.String("name", name), slog.Any("error", err))
+		// spec.driver is optional in CRD validation.
+		driver, _, err := unstructured.NestedString(obj.Object, "spec", "driver")
+		if err != nil {
+			slog.WarnContext(ctx, "spec.driver invalid in NetworkFence", slog.String("name", name), slog.Any("error", err))
 			continue
 		}
 

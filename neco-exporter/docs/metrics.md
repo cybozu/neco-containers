@@ -7,6 +7,7 @@ Each collector's scope should match `--scope` to use.
 | Collector                 | Scope     | Description                         |
 | ------------------------- | --------- | ----------------------------------- |
 | [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
+| [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
 | [`ciliumid`](#ciliumid)               | `cluster` | Count CiliumIdentity resources      |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
 | [`collector`](#collector)             | (both)    | neco-exporter and collectors status |
@@ -46,6 +47,16 @@ It appears only for Kubernetes Secrets not maintained by cert-manager.
 | `namespace` | Namespace of Secret |
 | `name`      | Name of Secret      |
 
+## ciliumid
+
+### `ciliumid_identity_count`
+
+Number of `CiliumIdentity` resources for the namespace.
+
+| Label       | Description           |
+| ----------- | --------------------- |
+| `namespace` | Namespace of Identity |
+
 ## networkfence
 
 ### `networkfence_info`
@@ -58,16 +69,6 @@ Information about `NetworkFence` resources.
 | `driver`      | CSI driver name                              |
 | `fence_state` | Fence state (`Fenced`/`Unfenced`)            |
 | `result`      | Operation result (e.g. `Succeeded`/`Failed`) |
-
-## ciliumid
-
-### `ciliumid_identity_count`
-
-Number of `CiliumIdentity` resources for the namespace.
-
-| Label       | Description           |
-| ----------- | --------------------- |
-| `namespace` | Namespace of Identity |
 
 ## collector
 

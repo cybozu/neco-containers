@@ -13,6 +13,8 @@ KIND_CONFIG := testdata/kind.yaml
 
 CILIUM_CLI := $(BIN_DIR)/cilium
 
+YQ := $(BIN_DIR)/yq
+
 IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:dev
 
 # CSI_ADDONS_VERSION should be updated with csi-addons-controller version. See `csi-addons-controller/BRANCH` .
@@ -24,6 +26,7 @@ setup: | $(BIN_DIR)
 	cp $$(aqua which kind) $(KIND)
 	cp $$(aqua which kubectl) $(KUBECTL)
 	cp $$(aqua which cilium) $(CILIUM_CLI)
+	cp $$(aqua which yq) $(YQ)
 
 .PHONY: prepare
 prepare:
@@ -69,10 +72,12 @@ install: install-pilot
 	$(KUBECTL) apply -f testdata/service.yaml
 	$(MAKE) --no-print-directory wait-for-workloads
 
+# Extract only the NetworkFence CRD; the neco-exporter only watches NetworkFence resources.
 .PHONY: update-csi-addons-crd
 update-csi-addons-crd:
 	curl -sSL https://raw.githubusercontent.com/csi-addons/kubernetes-csi-addons/$(CSI_ADDONS_VERSION)/deploy/controller/crds.yaml \
-		-o testdata/csi-addons-crds.yaml
+		| $(YQ) 'select(.metadata.name == "networkfences.csiaddons.openshift.io")' \
+		> testdata/csi-addons-crds.yaml
 
 .PHONY: uninstall
 uninstall:
