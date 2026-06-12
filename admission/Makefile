@@ -5,11 +5,12 @@ ARGOCD_COMMIT_HASH := 1801122b4391cad4961301f787006dc9a88c2dd3
 # Grafana Operator v5.18.0
 GRAFANA_OPERATOR_COMMIT_HASH := de1156accb9c4529cbdb536a054b9c4bb5ee759d
 
-ENVTEST_K8S_VERSION = 1.35.0
+ENVTEST_K8S_VERSION := 1.35.0
+ENVTEST_USE := setup-envtest use -p env $(ENVTEST_K8S_VERSION)
 
 # Set the shell used to bash for better error handling.
-SHELL = /bin/bash
-.SHELLFLAGS = -e -o pipefail -c
+SHELL := /bin/bash
+.SHELLFLAGS := -e -o pipefail -c
 
 .PHONY: all
 all: build
@@ -24,16 +25,12 @@ crds:
 # Run tests, and set up envtest if not done already.
 .PHONY: test
 test: crds simple-test setup
-	{ \
-	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
-	ENABLE_PODCPUREQUESTREDUCE_MUTATION=true go test ./... -coverprofile cover.out ; \
-	}
+	source <($(ENVTEST_USE)) && \
+		ENABLE_PODCPUREQUESTREDUCE_MUTATION=true go test ./... -coverprofile cover.out
 	# TEST_PERMISSIVE test and NO_HTTPPROXY_MUTATION test can run at the same time
 	# because they do not affect each other.
-	{ \
-	source <($(SETUP_ENVTEST) use -p env $(ENVTEST_K8S_VERSION)) && \
-	TEST_PERMISSIVE=true NO_HTTPPROXY_MUTATION=true go test -v -count 1 ./... ; \
-	}
+	source <($(ENVTEST_USE)) && \
+		TEST_PERMISSIVE=true NO_HTTPPROXY_MUTATION=true go test -v -count 1 ./...
 
 .PHONY: simple-test
 simple-test: setup
