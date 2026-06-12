@@ -1,9 +1,11 @@
 CONTROLLER_TOOLS_VERSION = 0.20.1
 KUSTOMIZE_VERSION = 5.8.1
-CONTOUR_VERSION = 1.33.5
+# Contour v1.33.5
+CONTOUR_COMMIT_HASH := 2713ad0e0ebd5d192a53803cef4c1c3a69692b1c
 # Argo CD v3.4.3
-ARGOCD_COMMIT_HASH = 1801122b4391cad4961301f787006dc9a88c2dd3
-GRAFANA_OPERATOR_VERSION = 5.18.0
+ARGOCD_COMMIT_HASH := 1801122b4391cad4961301f787006dc9a88c2dd3
+# Grafana Operator v5.18.0
+GRAFANA_OPERATOR_COMMIT_HASH := de1156accb9c4529cbdb536a054b9c4bb5ee759d
 ENVTEST_K8S_VERSION = 1.35.0
 
 # Specify envtest branch according to controller-runtime version
@@ -20,9 +22,9 @@ all: build
 .PHONY: crds
 crds:
 	mkdir -p config/crd/bases
-	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/v$(CONTOUR_VERSION)/examples/contour/01-crds.yaml
+	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/$(CONTOUR_COMMIT_HASH)/examples/contour/01-crds.yaml
 	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/$(ARGOCD_COMMIT_HASH)/manifests/crds/application-crd.yaml
-	curl -fsL -o config/crd/bases/grafana-operator.yaml https://github.com/grafana/grafana-operator/raw/v$(GRAFANA_OPERATOR_VERSION)/deploy/kustomize/base/crds.yaml
+	curl -fsL -o config/crd/bases/grafana-operator.yaml https://raw.githubusercontent.com/grafana/grafana-operator/$(GRAFANA_OPERATOR_COMMIT_HASH)/deploy/kustomize/base/crds.yaml
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
