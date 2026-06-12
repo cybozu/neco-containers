@@ -101,3 +101,19 @@ jobs:
 
           PR_TITLE="Update Go versions to ${LATEST_VERSIONS}"
           gh pr create --title "${PR_TITLE}" --body-file ./update-body.txt
+
+  slack-notification-on-failure:
+    needs:
+      - update-go-versions
+    timeout-minutes: 10
+    runs-on: ubuntu-slim
+    if: ${{ always() && contains(needs.*.result, 'failure') }}
+    steps:
+      - name: Slack Notification on Failure
+        uses: rtCamp/action-slack-notify@e31e87e03dd19038e411e38ae27cbad084a90661 # v2.3.3
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }} # Notifies #pdx-ci
+          SLACK_TITLE: GitHub Actions Failure
+          SLACK_USERNAME: CI Bot
+          SLACK_COLOR: danger
+          SLACK_MESSAGE: 'Update Go Versions failed!'
