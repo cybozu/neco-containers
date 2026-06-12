@@ -41,26 +41,6 @@
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.8.1/kustomize_v5.8.1_darwin_amd64.tar.gz",
-      "checksum": "EE7CF0C1E3592AA7BB66BA82B359933A95E7F2E0B36E5F53ED0A4535B017F2F8",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.8.1/kustomize_v5.8.1_darwin_arm64.tar.gz",
-      "checksum": "8886F8A78474E608CC81234F729FDA188A9767DA23E28925802F00ECE2BAB288",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.8.1/kustomize_v5.8.1_linux_amd64.tar.gz",
-      "checksum": "029A7F0F4E1932C52A0476CF02A0FD855C0BB85694B82C338FC648DCB53A819D",
-      "algorithm": "sha256"
-    },
-    {
-      "id": "github_release/github.com/kubernetes-sigs/kustomize/kustomize/v5.8.1/kustomize_v5.8.1_linux_arm64.tar.gz",
-      "checksum": "0953EA3E476F66D6DDFCD911D750F5167B9365AA9491B2326398E289FEF2C142",
-      "algorithm": "sha256"
-    },
-    {
       "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.486.0/registry.yaml",
       "checksum": "C37EB2C6D865B586E781B2410FC7EC52F699EF8FC482410E6A9167152EDA330F",
       "algorithm": "sha256"

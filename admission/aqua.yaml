@@ -12,7 +12,6 @@ registries:
 - type: standard
   ref: v4.486.0 # renovate: depName=aquaproj/aqua-registry
 packages:
-- name: kubernetes-sigs/kustomize@kustomize/v5.8.1
 - name: kubernetes-sigs/controller-tools/controller-gen@v0.20.1
 # align with controller-runtime version in go.mod
 - name: kubernetes-sigs/controller-runtime/setup-envtest@v0.23.3
