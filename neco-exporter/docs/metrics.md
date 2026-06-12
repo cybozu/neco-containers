@@ -6,9 +6,11 @@ Each collector's scope should match `--scope` to use.
 
 | Collector                 | Scope     | Description                         |
 | ------------------------- | --------- | ----------------------------------- |
-| [`bpf`](#bpf)             | `node`    | Measure BPF Program performance     |
-| [`ciliumid`](#ciliumid)   | `cluster` | Count CiliumIdentity resources      |
-| [`collector`](#collector) | (both)    | neco-exporter and collectors status |
+| [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
+| [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
+| [`ciliumid`](#ciliumid)               | `cluster` | Count CiliumIdentity resources      |
+| [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
+| [`collector`](#collector)             | (both)    | neco-exporter and collectors status |
 
 ## bpf
 
@@ -54,6 +56,19 @@ Number of `CiliumIdentity` resources for the namespace.
 | Label       | Description           |
 | ----------- | --------------------- |
 | `namespace` | Namespace of Identity |
+
+## networkfence
+
+### `networkfence_info`
+
+Information about `NetworkFence` resources.
+
+| Label         | Description                                  |
+| ------------- | -------------------------------------------- |
+| `name`        | Name of NetworkFence                         |
+| `driver`      | CSI driver name                              |
+| `fence_state` | Fence state (`Fenced`/`Unfenced`)            |
+| `result`      | Operation result (e.g. `Succeeded`/`Failed`) |
 
 ## collector
 
