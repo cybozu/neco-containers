@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG HUBBLE_SHA=400168bfe4e94b11bc6246787e51fb905b8d24ab
+ARG HUBBLE_SHA=39037bdd6cb6acb02a241dde33b5ffcf0e8471e2
 
 COPY TAG /
 
