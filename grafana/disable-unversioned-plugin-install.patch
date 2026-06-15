@@ -1,8 +1,8 @@
 diff --git a/pkg/services/pluginsintegration/plugininstaller/service.go b/pkg/services/pluginsintegration/plugininstaller/service.go
-index 7232703820c..16ec8fed66b 100644
+index 32189b5bd6d..2ee7e56f09f 100644
 --- a/pkg/services/pluginsintegration/plugininstaller/service.go
 +++ b/pkg/services/pluginsintegration/plugininstaller/service.go
-@@ -124,6 +124,9 @@ func (s *Service) installPlugins(ctx context.Context, pluginsToInstall []setting
+@@ -120,6 +120,9 @@ func (s *Service) installPlugins(ctx context.Context, pluginsToInstall []setting
  		}
  
  		s.log.Info("Installing plugin", "pluginId", installPlugin.ID, "version", installPlugin.Version)
@@ -13,10 +13,10 @@ index 7232703820c..16ec8fed66b 100644
  		ctx = repo.WithRequestOrigin(ctx, "preinstall")
  		compatOpts := plugins.NewAddOpts(s.cfg.BuildVersion, runtime.GOOS, runtime.GOARCH, installPlugin.URL)
 diff --git a/pkg/setting/setting_plugins.go b/pkg/setting/setting_plugins.go
-index 0080f61d0a4..4ac0e97c72f 100644
+index 2140c465c51..e642cd7483d 100644
 --- a/pkg/setting/setting_plugins.go
 +++ b/pkg/setting/setting_plugins.go
-@@ -34,13 +34,7 @@ func extractPluginSettings(sections []*ini.Section) PluginSettings {
+@@ -32,14 +32,7 @@ func extractPluginSettings(sections []*ini.Section) config.PluginSettings {
  }
  
  var (
@@ -26,6 +26,7 @@ index 0080f61d0a4..4ac0e97c72f 100644
 -		"grafana-pyroscope-app":        {ID: "grafana-pyroscope-app"},
 -		"grafana-exploretraces-app":    {ID: "grafana-exploretraces-app"},
 -		"grafana-metricsdrilldown-app": {ID: "grafana-metricsdrilldown-app"},
+-		"elasticsearch":                {ID: "elasticsearch"},
 -	}
 +	defaultPreinstallPlugins = map[string]InstallPlugin{}
  )

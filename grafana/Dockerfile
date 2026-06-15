@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG GRAFANA_VERSION=12.4.4
+ARG GRAFANA_VERSION=13.0.2
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
@@ -60,6 +60,7 @@ RUN mkdir -p "$GF_PATHS_HOME/.aws" && \
              "$GF_PATHS_PROVISIONING/alerting" \
              "$GF_PATHS_LOGS" \
              "$GF_PATHS_PLUGINS" \
+             "$GF_PATHS_HOME/data/plugins-bundled" \
              "$GF_PATHS_DATA" && \
     cp "conf/sample.ini" "$GF_PATHS_CONFIG" && \
     cp "conf/ldap.toml" /etc/grafana/ldap.toml && \
