@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
 
-ARG BIRD_VERSION=3.1.4
+ARG BIRD_VERSION=3.3.1
 WORKDIR /work
 
 RUN apt-get update \
