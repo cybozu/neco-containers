@@ -13,6 +13,7 @@ jobs:
     env:
       UBUNTU_VERSIONS: "22.04 24.04"
       GO_MAJOR_VERSIONS: "1.25 1.26"
+      GO_ARCHES: "amd64 arm64"
     permissions:
       # write permission is required for "git push".
       contents: write
@@ -22,10 +23,12 @@ jobs:
         id: check-updates
         run: |
           NEED_UPDATE=0
+          GO_VERSIONS_JSON_PATH=/tmp/go-versions.json
           touch ./update-body.txt
 
           # Get latest stable Go versions
-          GO_STABLE_VERSIONS=$(curl -sSLf 'https://go.dev/dl/?mode=json&include=all' | jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "")] | unique | .[]')
+          curl -sSLf -o "${GO_VERSIONS_JSON_PATH}" 'https://go.dev/dl/?mode=json&include=all'
+          GO_STABLE_VERSIONS=$(jq -r '[.[] | select(.stable == true) | .version | sub("^go"; "")] | unique | .[]' "${GO_VERSIONS_JSON_PATH}")
           if [[ -z "${GO_STABLE_VERSIONS}" ]]; then
             echo "::error:: Failed to fetch stable Go versions"
             exit 1
@@ -45,12 +48,24 @@ jobs:
             fi
 
             local current_version
-            current_version=$(grep 'ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
+            current_version=$(grep '^ARG GO_VERSION=' "${dockerfile_path}" | cut -d= -f2)
 
             if [[ "${current_version}" != "${latest_version}" ]]; then
+              # Update "Go version"
+              sed -i "s/^ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
+              # Update "sha256 checksum" for each architecture
+              local arch sha256
+              for arch in ${GO_ARCHES}; do
+                sha256=$(jq -r \
+                  ".[] | select(.version == \"go${latest_version}\") | .files[] | select(.arch == \"${arch}\" and .os == \"linux\" and .kind == \"archive\") | .sha256" \
+                  "${GO_VERSIONS_JSON_PATH}")
+                if [[ -z "${sha256}" ]]; then
+                  echo "::error:: Failed to get sha256 for go:${latest_version} arch:${arch}"
+                  exit 1
+                fi
+                sed -i "s/^ARG GO_${arch^^}_SHA256=.*/ARG GO_${arch^^}_SHA256=${sha256}/" "${dockerfile_path}"
+              done
               NEED_UPDATE=1
-              # Update Dockerfile
-              sed -i "s/ARG GO_VERSION=.*/ARG GO_VERSION=${latest_version}/" "${dockerfile_path}"
               # Update TAG file
               echo "${latest_version}.1_${codename}" > "${tag_path}"
 

@@ -1,12 +1,19 @@
 # syntax=docker/dockerfile:1
+ARG GO_VERSION=1.26.4
+ARG GO_AMD64_SHA256=1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f
+ARG GO_ARM64_SHA256=ef758ae7c6cf9267c9c0ef080b8965f453d89ab2d25d9eb22de4405925238768
 
 FROM scratch AS go-dist-amd64
-ADD --checksum=sha256:1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f \
-    https://dl.google.com/go/go1.26.4.linux-amd64.tar.gz /go.tar.gz
+ARG GO_VERSION
+ARG GO_AMD64_SHA256
+ADD --checksum=sha256:${GO_AMD64_SHA256} \
+    https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz /go.tar.gz
 
 FROM scratch AS go-dist-arm64
-ADD --checksum=sha256:ef758ae7c6cf9267c9c0ef080b8965f453d89ab2d25d9eb22de4405925238768 \
-    https://dl.google.com/go/go1.26.4.linux-arm64.tar.gz /go.tar.gz
+ARG GO_VERSION
+ARG GO_ARM64_SHA256
+ADD --checksum=sha256:${GO_ARM64_SHA256} \
+    https://dl.google.com/go/go${GO_VERSION}.linux-arm64.tar.gz /go.tar.gz
 
 FROM go-dist-${TARGETARCH} AS go-dist
 
