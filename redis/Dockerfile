@@ -37,6 +37,7 @@ RUN mkdir -p /usr/src/redis \
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04.20260508@sha256:ab2735f6893fc167776587097de968c7d66c1cb052326d8cfeb3c4f8cd8bac00
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+LABEL org.opencontainers.image.licenses="AGPL-3.0-only"
 
 RUN groupadd -g 10000 -r redis && \
     useradd -r -u 10000 -g redis redis && \
@@ -53,6 +54,7 @@ COPY --from=build /usr/src/redis/deps/hdr_histogram/LICENSE.txt /usr/local/redis
 COPY --from=build /usr/src/redis/deps/hiredis/COPYING /usr/local/redis/licenses/COPYING-hiredis
 COPY --from=build /usr/src/redis/deps/jemalloc/COPYING /usr/local/redis/licenses/COPYING-jemalloc
 COPY --from=build /usr/src/redis/deps/lua/COPYRIGHT /usr/local/redis/licenses/LICENSE-lua
+COPY COPYING /usr/local/redis/COPYING
 
 ENV PATH=/usr/local/redis/bin:"$PATH"
 

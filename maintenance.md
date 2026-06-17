@@ -1041,6 +1041,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
    - v7.0.x: <https://github.com/docker-library/redis/blob/master/7.0/Dockerfile>
 3. Update `REDIS_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
+5. Update `README.md`, `COPYING` and the container LABEL in terms of license if necessary.
 
 ## registry
 
