@@ -84,6 +84,7 @@ func (ce *cephExecuter) start(ctx context.Context) {
 }
 
 func (ce *cephExecuter) update() {
+	logger.Info("starting update", "rule", ce.rule.name)
 	values := make(map[string][]metricValue)
 
 	defer func() {
