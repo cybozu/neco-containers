@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: sbomreports-github-syncer
+  namespace: trivy-system
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sbomreports-github-syncer
+  namespace: trivy-system
+data:
+  GITHUB_OWNER: owner_name
+  GITHUB_REPO: repo_name
+  GITHUB_BRANCH: sbomreports-github-syncer
+  GITHUB_PATH_PREFIX: sbomreports
+  CLUSTER_NAME: cluster_name
+  DELETE_MISSING: "true"
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: sbomreports-github-syncer
+rules:
+  - apiGroups: ["aquasecurity.github.io"]
+    resources: ["sbomreports"]
+    verbs: ["get", "list"]
+  - apiGroups: [""]
+    resources: ["namespaces"]
+    verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: sbomreports-github-syncer
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: sbomreports-github-syncer
+subjects:
+  - kind: ServiceAccount
+    name: sbomreports-github-syncer
+    namespace: trivy-system
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sbomreports-github-syncer
+  namespace: trivy-system
+spec:
+  schedule: "17 * * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 1
+      template:
+        spec:
+          serviceAccountName: sbomreports-github-syncer
+          restartPolicy: Never
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 65532
+            runAsGroup: 65532
+            fsGroup: 65532
+            seccompProfile:
+              type: RuntimeDefault
+          containers:
+            - name: sync
+              image: ghcr.io/ystkfujii/playground_supply-chain-guard/sbomreports-github-syncer:dev
+              imagePullPolicy: IfNotPresent
+              args: ["sync"]
+              securityContext:
+                allowPrivilegeEscalation: false
+                readOnlyRootFilesystem: true
+                capabilities:
+                  drop: ["ALL"]
+              envFrom:
+                - configMapRef:
+                    name: sbomreports-github-syncer
+              env:
+                - name: GITHUB_TOKEN
+                  valueFrom:
+                    secretKeyRef:
+                      name: sbomreports-github-syncer
+                      key: github-token
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 64Mi
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
