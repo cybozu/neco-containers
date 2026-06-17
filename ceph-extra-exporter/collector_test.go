@@ -23,7 +23,7 @@ func TestCephCollector(t *testing.T) {
 	}
 
 	ce := newExecuter(&rule)
-	ce.update()
+	ce.update(t.Context())
 	cc := newCollector(ce, "ceph_extra")
 
 	testcases := []struct {

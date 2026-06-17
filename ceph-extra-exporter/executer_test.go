@@ -87,7 +87,7 @@ func TestCephExecuterUpdate(t *testing.T) {
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			ce := newExecuter(&tc.rule)
-			ce.update()
+			ce.update(t.Context())
 
 			assert.Equal(t, tc.expectedMetricValue, ce.metricValues)
 			assert.Subset(t, ce.failedCounter, tc.expectedFailedCount)

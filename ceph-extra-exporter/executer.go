@@ -14,6 +14,7 @@ import (
 )
 
 const executionInterval time.Duration = 300 * time.Second
+const commandTimeout time.Duration = 60 * time.Second
 
 type metric struct {
 	metricType prometheus.ValueType
@@ -69,7 +70,7 @@ func newExecuter(rule *rule) *cephExecuter {
 }
 
 func (ce *cephExecuter) start(ctx context.Context) {
-	ce.update()
+	ce.update(ctx)
 
 	ticker := time.NewTicker(executionInterval)
 	for {
@@ -78,12 +79,12 @@ func (ce *cephExecuter) start(ctx context.Context) {
 			ticker.Stop()
 			return
 		case <-ticker.C:
-			ce.update()
+			ce.update(ctx)
 		}
 	}
 }
 
-func (ce *cephExecuter) update() {
+func (ce *cephExecuter) update(ctx context.Context) {
 	logger.Info("starting update", "rule", ce.rule.name)
 	values := make(map[string][]metricValue)
 
@@ -93,7 +94,7 @@ func (ce *cephExecuter) update() {
 		ce.metricValues = values
 	}()
 
-	jsonBytes, err := executeCommand(ce.rule.command, nil)
+	jsonBytes, err := executeCommand(ctx, ce.rule.command, nil)
 	if err != nil {
 		logger.Warn("command execution failed", "command", ce.rule.command)
 		ce.failedCounter["command"] += 1
@@ -101,7 +102,7 @@ func (ce *cephExecuter) update() {
 	}
 
 	for name, metric := range ce.rule.metrics {
-		result, err := executeCommand([]string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
+		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
 		if err != nil {
 			logger.Warn("jq command failed", "filter", metric.jqFilter)
 			ce.failedCounter["jq"] += 1
@@ -118,8 +119,11 @@ func (ce *cephExecuter) update() {
 	}
 }
 
-func executeCommand(command []string, input io.Reader) ([]byte, error) {
-	cmd := exec.Command(command[0], command[1:]...)
+func executeCommand(ctx context.Context, command []string, input io.Reader) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
