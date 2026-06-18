@@ -6,315 +6,33 @@ on:
       - "main"
 jobs:
   prepare_matrix:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     outputs:
       jobs: ${{ steps.prepare-matrix.outputs.jobs }}
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: ./.github/actions/prepare_matrix
-        id: prepare-matrix
-        with:
-          matrix: |
-            - dir: "./admission"
-              container-image: "neco-admission"
-              make-targets: "check-generate test"
-            - dir: "./alertmanager"
-              container-image: "alertmanager"
-            - dir: "./alloy"
-              container-image: "alloy"
-            - dir: "./argo-rollouts"
-              container-image: "argo-rollouts"
-            - dir: "./argocd"
-              container-image: "argocd"
-            - dir: "./argocd-image-updater"
-              container-image: "argocd-image-updater"
-              request-scan: "false"
-            - dir: "./bird"
-              container-image: "bird"
-            - dir: "./blackbox_exporter"
-              container-image: "blackbox_exporter"
-            - dir: "./bmc-reverse-proxy"
-              container-image: "bmc-reverse-proxy"
-              make-targets: "setup check-generate test"
-            - dir: "./bmc-log-collector"
-              container-image: "bmc-log-collector"
-              make-targets: "check-generate test"
-            - dir: "./bpf-map-pressure-exporter"
-              container-image: "bpf-map-pressure-exporter"
-              make-targets: "check-generate test"
-            - dir: "./bpftrace"
-              container-image: "bpftrace"
-              make-targets: "checkout"
-              make-post-targets: "test"
-            - dir: "./bucket-provisioner-light"
-              container-image: "bucket-provisioner-light"
-              make-targets: "test"
-            - dir: "./cadvisor"
-              container-image: "cadvisor"
-            - dir: "./cephcsi"
-              container-image: "cephcsi"
-              request-scan: "false"
-            - dir: "./cep-checker"
-              container-image: "cep-checker"
-              make-targets: "check-generate test"
-            - dir: "./ct-monitor"
-              container-image: "ct-monitor"
-              make-targets: "test"
-            - dir: "ceph-csi-operator"
-              container-image: "ceph-csi-operator"
-            - dir: "./ceph-extra-exporter"
-              container-image: "ceph-extra-exporter"
-              make-targets: "check-generate test"
-            - dir: "./cert-manager"
-              container-image: "cert-manager"
-            - dir: "./chrony"
-              container-image: "chrony"
-            - dir: "./cilium-certgen"
-              container-image: "cilium-certgen"
-              request-scan: "false"
-            - dir: "./cilium-operator-generic"
-              container-image: "cilium-operator-generic"
-              request-scan: "false"
-            - dir: "./contour"
-              container-image: "contour"
-            - dir: "./coredns"
-              container-image: "coredns"
-            - dir: "csi-addons-controller"
-              container-image: "csi-addons-controller"
-            - dir: "csi-addons-sidecar"
-              container-image: "csi-addons-sidecar"
-            - dir: "csi-attacher"
-              container-image: "csi-attacher"
-            - dir: "csi-node-driver-registrar"
-              container-image: "csi-node-driver-registrar"
-            - dir: "csi-provisioner"
-              container-image: "csi-provisioner"
-            - dir: "csi-resizer"
-              container-image: "csi-resizer"
-            - dir: "csi-snapshotter"
-              container-image: "csi-snapshotter"
-            - dir: "./dex"
-              container-image: "dex"
-            - dir: "./etcd"
-              container-image: "etcd"
-            - dir: "./external-dns"
-              container-image: "external-dns"
-            - dir: "./fluent-bit"
-              container-image: "fluent-bit"
-            - dir: "./gitleaks"
-              container-image: "gitleaks"
-            - dir: "./golang-all/golang-1.25-jammy"
-              container-image: "golang"
-              platforms: "linux/amd64,linux/arm64"
-              load: "false"
-              request-scan: "true"
-            - dir: "./golang-all/golang-1.26-jammy"
-              container-image: "golang"
-              platforms: "linux/amd64,linux/arm64"
-              load: "false"
-              request-scan: "true"
-            - dir: "./golang-all/golang-1.25-noble"
-              container-image: "golang"
-              platforms: "linux/amd64,linux/arm64"
-              load: "false"
-              request-scan: "true"
-            - dir: "./golang-all/golang-1.26-noble"
-              container-image: "golang"
-              platforms: "linux/amd64,linux/arm64"
-              load: "false"
-              request-scan: "true"
-            - dir: "./grafana"
-              container-image: "grafana"
-            - dir: "./grafana-operator"
-              container-image: "grafana-operator"
-            - dir: "./haproxy"
-              container-image: "haproxy"
-            - dir: "./kube-metrics-adapter"
-              container-image: "kube-metrics-adapter"
-            - dir: "./kube-state-metrics"
-              container-image: "kube-state-metrics"
-            - dir: "./kube-storage-version-migrator"
-              container-image: "storage-version-migration-initializer"
-              target: "initializer"
-            - dir: "./kube-storage-version-migrator"
-              container-image: "storage-version-migration-migrator"
-              target: "migrator"
-            - dir: "./kube-storage-version-migrator"
-              container-image: "storage-version-migration-trigger"
-              target: "trigger"
-            - dir: "./kubernetes/k8s-1.33"
-              container-image: "kubernetes"
-            - dir: "./kubernetes/k8s-1.34"
-              container-image: "kubernetes"
-            - dir: "./kubernetes/k8s-1.35"
-              container-image: "kubernetes"
-            - dir: "./local-pv-provisioner"
-              container-image: "local-pv-provisioner"
-              make-targets: "check-generate test ci-e2e-test"
-            - dir: "./loki"
-              container-image: "loki"
-            - dir: "./machines-endpoints"
-              container-image: "machines-endpoints"
-              make-targets: "setup check-generate test"
-            - dir: "./memcached"
-              container-image: "memcached"
-            - dir: "./memcached-exporter"
-              container-image: "memcached-exporter"
-            - dir: "./meows-dctest-runner"
-              container-image: "meows-dctest-runner"
-              request-scan: "true"
-            - dir: "./meows-neco-runner"
-              container-image: "meows-neco-runner"
-              request-scan: "true"
-            - dir: "./neco-exporter"
-              container-image: "neco-exporter"
-              make-targets: "check-generate e2e-prepare test"
-              make-post-targets: "sanity-check"
-            - dir: "./opentelemetry-collector"
-              container-image: "opentelemetry-collector"
-            - dir: "./hubble"
-              container-image: "hubble"
-            - dir: "./hubble-relay"
-              container-image: "hubble-relay"
-              make-post-targets: "cilium-checkout cilium-test-e2e-setup cilium-test-e2e-upgrade-inotify test-e2e"
-              request-scan: "false"
-            - dir: "./hubble-ui"
-              container-image: "hubble-ui-frontend"
-              make-targets: "checkout verify-lockfile"
-              request-scan: "true"
-              target: "frontend"
-            - dir: "./hubble-ui"
-              container-image: "hubble-ui-backend"
-              make-targets: "checkout"
-              request-scan: "true"
-              target: "backend"
-            - dir: "./pause"
-              container-image: "pause"
-            - dir: "./pomerium"
-              container-image: "pomerium"
-              request-scan: "true"
-            - dir: "./prometheus-adapter"
-              container-image: "prometheus-adapter"
-            - dir: "./prometheus-config-reloader"
-              container-image: "prometheus-config-reloader"
-            - dir: "./promtail"
-              container-image: "promtail"
-            - dir: "./pushgateway"
-              container-image: "pushgateway"
-            - dir: "./pyroscope"
-              container-image: "pyroscope"
-              make-targets: "checkout"
-              make-post-targets: "test"
-            - dir: "./redis"
-              container-image: "redis"
-            - dir: "./registry"
-              container-image: "registry"
-            - dir: "./rook"
-              container-image: "rook"
-            - dir: "./sealed-secrets"
-              container-image: "sealed-secrets"
-            - dir: "./s3gw"
-              container-image: "s3gw"
-              make-targets: "setup check-generate test"
-            - dir: "./serf"
-              container-image: "serf"
-            - dir: "./stakater-reloader"
-              container-image: "stakater-reloader"
-            - dir: "./spegel"
-              container-image: "spegel"
-            - dir: "./spiffe-csi-driver"
-              container-image: "spiffe-csi-driver"
-            - dir: "./spire-agent"
-              container-image: "spire-agent"
-            - dir: "./spire-server"
-              container-image: "spire-server"
-            - dir: "./spire-controller-manager"
-              container-image: "spire-controller-manager"
-            - dir: "./spiffe-test"
-              container-image: "spiffe-test-server"
-              target: "server"
-              make-targets: "check"
-            - dir: "./spiffe-test"
-              container-image: "spiffe-test-client"
-              target: "client"
-              make-targets: "check"
-            - dir: "./squid"
-              container-image: "squid"
-              target: "squid"
-            - dir: "./squid"
-              container-image: "squid-dev"
-              target: "squid-dev"
-            - dir: "./squid-exporter"
-              container-image: "squid-exporter"
-              make-targets: "check-generate test"
-            - dir: "./tcp-keepalive"
-              container-image: "tcp-keepalive"
-              make-targets: "check-diff test"
-            - dir: "./teleport-node"
-              container-image: "teleport-node"
-            - dir: "./tempo"
-              container-image: "tempo"
-            - dir: "./testhttpd"
-              container-image: "testhttpd"
-              platforms: "linux/amd64,linux/arm64"
-              load: "false"
-              make-targets: "setup check-generate test"
-            - dir: "./trivy-operator"
-              container-image: "trivy-operator"
-            - dir: "./trust-manager"
-              container-image: "trust-manager"
-            - dir: "./trust-packages"
-              container-image: "trust-packages"
-              make-targets: "download-certificates"
-            - dir: "./unbound"
-              container-image: "unbound"
-              make-targets: "check-generate"
-              make-post-targets: "validate"
-            - dir: "./unbound_exporter"
-              container-image: "unbound_exporter"
-            - dir: "./vault"
-              container-image: "vault"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmagent"
-              target: "vmagent"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmalert"
-              target: "vmalert"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmbackup"
-              target: "vmbackup"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmctl"
-              target: "vmctl"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vminsert"
-              target: "vminsert"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmrestore"
-              target: "vmrestore"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmselect"
-              target: "vmselect"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmsingle"
-              target: "vmsingle"
-            - dir: "./victoriametrics"
-              container-image: "victoriametrics-vmstorage"
-              target: "vmstorage"
-            - dir: "./victoriametrics-operator"
-              container-image: "victoriametrics-operator"
-              target: "operator"
-            - dir: "./victoriametrics-operator"
-              container-image: "victoriametrics-config-reloader"
-              target: "config-reloader"
+      # Build targets are defined in .github/build-targets.yaml and filtered to
+      # the images whose files changed in the PR by the generate_matrix script.
+      - id: prepare-matrix
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            export PR=$(jq -r '.pull_request.number' "${GITHUB_EVENT_PATH}")
+          else
+            export PR=$(gh pr list --state merged --json number,mergeCommit | jq ".[] | select(.mergeCommit != null and .mergeCommit.oid == \"${GITHUB_SHA}\") | .number")
+          fi
+          ./generate_matrix
+          echo "jobs=$(cat .github/outputs/__matrix.json)" >> "$GITHUB_OUTPUT"
+
   build_container:
     needs: prepare_matrix
     strategy:
       matrix:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.job.runner || 'ubuntu-24.04' }}
     permissions:
       contents: read
       packages: write
@@ -325,8 +43,8 @@ jobs:
       - name: Setup build environment
         uses: ./.github/actions/setup
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          go-version: ${{ env.go-version }}
+          # A matrix entry may override the Go version via the "go-version" field.
+          go-version: ${{ matrix.job.go-version || env.go-version }}
       - name: Disk cleanup
         run: |
           # These code are copied from the following code:
@@ -341,15 +59,13 @@ jobs:
       - name: Build container image
         uses: ./.github/actions/build_push
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
+          push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           dir: ${{ matrix.job.dir }}
-          container-image: ${{ matrix.job.container-image }}
+          tags: ${{ join(matrix.job.tags, ',') }}
           platforms: ${{ matrix.job.platforms }}
           load: ${{ matrix.job.load }}
           make-targets: ${{ matrix.job.make-targets }}
           make-post-targets: ${{ matrix.job.make-post-targets }}
-          request-scan: ${{ matrix.job.request-scan }}
           target: ${{ matrix.job.target }}
 
   build_envoy:
@@ -362,11 +78,10 @@ jobs:
       - name: Build container image
         uses: ./.github/actions/build_envoy
         with:
+          push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           clang_archive_sha: 54ec30358afcc9fb8aa74307db3046f5187f9fb89fb37064cdde906e062ebf36
           envoy_commit_sha: f2a676793ef8c5ea9d1df9e1e806826c8f1fd51e
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
 
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04
@@ -378,29 +93,4 @@ jobs:
     - name: Build ceph image
       uses: ./.github/actions/build_ceph
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-
-  build_cilium:
-    runs-on: neco-containers-ubuntu-22.04
-    permissions:
-      contents: read
-      packages: write
-    env:
-      go-version: "1.23.3"
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Setup build environment
-        uses: ./.github/actions/setup
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          go-version: ${{ env.go-version }}
-      - name: Build container image
-        uses: ./.github/actions/build_push
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          yamory_token: ${{ secrets.YAMORY_ACCESS_TOKEN }}
-          dir: cilium
-          container-image: cilium
-          make-targets: "checkout status test-e2e-setup test-e2e-upgrade-inotify"
-          make-post-targets: "test test-e2e"
-          request-scan: "true"
+        push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}

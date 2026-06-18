@@ -1,24 +1,29 @@
 name: "Build ceph"
 description: "Build ceph"
 inputs:
-  github_token:
-    description: "GitHub Token"
+  push:
+    description: >-
+      whether to push the built image (caller-controlled; 'true' to push).
+      Note that the image will NOT be pushed if the tag has already existed
+      on the registry, even if this field is set to 'true'.
     required: true
 runs:
   using: composite
   steps:
+    - name: Prepare
+      shell: bash
+      id: prepare
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        PLAN=$(./build_decision ".github/actions/build_ceph/target.yaml" "ceph")
+        echo "plan=${PLAN}" >> "$GITHUB_OUTPUT"
     - name: Setup build environment
       uses: ./.github/actions/setup
       with:
-        github_token: ${{ inputs.github_token }}
-    - id: prepare
-      name: Prepare build parameters
-      uses: ./.github/actions/prepare_build_params
-      with:
-        container-image: ceph
-        github_token: ${{ inputs.github_token }}
+        platforms: ${{ fromJSON(steps.prepare.outputs.plan).platforms }}
     - name: Build
-      if: ${{ steps.prepare.outputs.build }}
+      if: fromJSON(steps.prepare.outputs.plan).build
       shell: bash
       run: |
         TAG_CONTENT=$(cat TAG)
@@ -29,14 +34,12 @@ runs:
         VERSION=$(echo "${TAG_CONTENT}" | cut -d '.' -f1-3)
         sudo ./build.sh ${VERSION}
         sudo mv src/workspace .
-      working-directory: ceph
+      working-directory: ${{ fromJSON(steps.prepare.outputs.plan).dir }}
     - name: Build and push
-      if: ${{ steps.prepare.outputs.build }}
+      if: fromJSON(steps.prepare.outputs.plan).build
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
       with:
-        context: ceph
-        platforms: "linux/amd64"
-        provenance: false
-        push: ${{ steps.prepare.outputs.docker_push }}
-        # Input comma-separated tags: <tag>,<branch1>,<branch2>,...
-        tags: ${{ steps.prepare.outputs.tag }}${{ steps.prepare.outputs.branch && format(',{0}', steps.prepare.outputs.branch) }}
+        context: ${{ fromJSON(steps.prepare.outputs.plan).dir }}
+        platforms: ${{ fromJSON(steps.prepare.outputs.plan).platforms }}
+        push: ${{ inputs.push == 'true' }}
+        tags: ${{ join(fromJSON(steps.prepare.outputs.plan).tags, ',') }}
