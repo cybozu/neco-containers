@@ -4,6 +4,13 @@ on:
   push:
     branches:
       - "main"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Cancel in-progress runs for the workflow for pull requests.
+  # For pushes to main, in-progress runs should NOT be cancelled since pushing container images should not be cancelled.
+  cancel-in-progress: ${{ github.event_name != 'push' && github.ref_name != 'main' }}
+
 jobs:
   prepare_matrix:
     runs-on: ubuntu-slim
