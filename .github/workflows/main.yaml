@@ -307,6 +307,11 @@ jobs:
             - dir: "./victoriametrics-operator"
               container-image: "victoriametrics-config-reloader"
               target: "config-reloader"
+            - dir: "./victoriametrics-datasource"
+              container-image: "victoriametrics-datasource"
+            - dir: "./websocket-keepalive"
+              container-image: "websocket-keepalive"
+              make-targets: "check-diff test"
   build_container:
     needs: prepare_matrix
     strategy:
