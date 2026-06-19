@@ -53,6 +53,7 @@ jobs:
           # A matrix entry may override the Go version via the "go-version" field.
           go-version: ${{ matrix.job.go-version || env.go-version }}
       - name: Disk cleanup
+        if: ${{ matrix.job.disk-cleanup == 'true' }}
         run: |
           # These code are copied from the following code:
           # https://github.com/shiguredo-webrtc-build/webrtc-build/blob/5a821e430b496bbff74cf45bab058ab4ac340c2c/.github/workflows/build.yml#L138-L147

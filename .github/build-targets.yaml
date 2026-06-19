@@ -15,6 +15,7 @@
 #   make-post-targets: make targets run after docker build
 #   runner           : runs-on label (default: ubuntu-24.04)
 #   go-version       : Go toolchain version (default: build_container job default)
+#   disk-cleanup     : perform disk cleanup before build (default: false)
 
 - dir: "./admission"
   container-image: "neco-admission"
@@ -101,6 +102,7 @@
 - dir: "./ceph-extra-exporter"
   container-image: "ceph-extra-exporter"
   make-targets: "check-generate test"
+  disk-cleanup: true
   scan:
     enabled: true
 - dir: "./cert-manager"
