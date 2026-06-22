@@ -32,7 +32,7 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        PLAN=$(./build_decision ".github/actions/build_envoy/target.yaml" "envoy")
+        PLAN=$(./build_decision ".github/actions/build_envoy/target.yaml" "envoy" "envoy")
         echo "plan=${PLAN}" >> "$GITHUB_OUTPUT"
         echo "build=$(echo "${PLAN}" | jq -r '.build')" >> "$GITHUB_OUTPUT"
     - name: Setup build environment

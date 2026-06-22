@@ -16,7 +16,7 @@ runs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        PLAN=$(./build_decision ".github/actions/build_ceph/target.yaml" "ceph")
+        PLAN=$(./build_decision ".github/actions/build_ceph/target.yaml" "ceph" "ceph")
         echo "plan=${PLAN}" >> "$GITHUB_OUTPUT"
     - name: Setup build environment
       uses: ./.github/actions/setup

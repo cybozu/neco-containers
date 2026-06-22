@@ -1,9 +1,10 @@
 #!/bin/bash -e
 # build_decision: compute per-image build facts for one container image.
 #
-# Usage: build_decision MATRIX_FILE IMAGE
+# Usage: build_decision MATRIX_FILE IMAGE DIR
 #   MATRIX_FILE  : path to the build targets YAML file
 #   IMAGE        : image name (pushed to ghcr.io/cybozu/<IMAGE>)
+#   DIR          : directory containing the Dockerfile for this image
 #
 # Env:
 #   GITHUB_TOKEN   : token used by ./tag_exists
@@ -30,15 +31,24 @@
 
 MATRIX_FILE="$1"
 IMAGE_NAME="$2"
+DIR="$3"
 
 if [ ! -f "${MATRIX_FILE}" ]; then
   echo "Error: MATRIX_FILE '${MATRIX_FILE}' does not exist or is not a file" >&2
   exit 1
 fi
 
-ENTRY=$(yq -o=json e "." "${MATRIX_FILE}" | jq -r --arg image "${IMAGE_NAME}" '.[] | select(."container-image" == $image)')
-if [ -z "${ENTRY}" ]; then
+# multiple entries may match the image name. (i.e. golang, kubernetes, etc)
+ENTRY_LIST=$(yq -o=json e "." "${MATRIX_FILE}" | jq -r --arg image "${IMAGE_NAME}" '.[] | select(."container-image" == $image)')
+if [ -z "${ENTRY_LIST}" ]; then
   echo "Error: IMAGE '${IMAGE_NAME}' not found in MATRIX_FILE '${MATRIX_FILE}'" >&2
+  exit 1
+fi
+
+# Choose the one that matches the DIR
+ENTRY=$(echo "${ENTRY_LIST}" | jq -r --arg dir "${DIR}" 'select(.dir == $dir)')
+if [ -z "${ENTRY}" ]; then
+  echo "Error: No entry found for IMAGE '${IMAGE_NAME}' with DIR '${DIR}' in MATRIX_FILE '${MATRIX_FILE}'" >&2
   exit 1
 fi
 

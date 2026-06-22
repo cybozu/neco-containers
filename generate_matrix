@@ -20,7 +20,7 @@ for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do
     CONTAINER_NAME=$(echo "${ENTRY}" | jq -r '."container-image"')
     echo "Checking ${CONTAINER_NAME}..."
     if grep -F $(realpath "${CONTAINER_DIR}")'/' .github/outputs/__diff.txt > /dev/null; then
-        PLAN=$(./build_decision "${MATRIX_FILE}" "${CONTAINER_NAME}")
+        PLAN=$(./build_decision "${MATRIX_FILE}" "${CONTAINER_NAME}" "${CONTAINER_DIR}")
         if [ "$(echo "${PLAN}" | jq -r '.build')" = "true" ]; then
             OUTPUT_MATRIX="$(jq -nc '[inputs] | flatten' <(echo "${OUTPUT_MATRIX}") <(echo "[${PLAN}]"))"
             echo '  build'
