@@ -1,0 +1,7 @@
+# This file follows the schema of .github/build-targets.yaml
+
+- dir: envoy
+  container-image: envoy
+  platforms: "linux/amd64"
+  scan:
+    enabled: true

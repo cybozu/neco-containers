@@ -1,0 +1,46 @@
+#!/bin/bash -e
+# tags_gen: Generate tags for the container image based on the TAG and BRANCH files in the container directory.
+#
+# Usage: tags_gen DIR IMAGE_NAME
+#   DIR        : The directory containing the container image's TAG and BRANCH files.
+#   IMAGE_NAME : The container image name (e.g., ghcr.io/cybozu/<IMAGE_NAME>).
+#
+# Prints a single JSON object to stdout describing the facts:
+#   {
+#      image: <IMAGE_NAME>, # e.g. "ghcr.io/cybozu/<IMAGE_NAME>"
+#      tag: <TAG>, # primary version tag (from TAG file)
+#      tags: [<TAG>, ...], # list of tags to build (first is the primary version tag, others are BRANCH tags)
+#   }
+
+DIR="$1"
+IMAGE_NAME="$2"
+
+if [ ! -d "${DIR}" ]; then
+  echo "Error: DIR '${DIR}' does not exist or is not a directory" >&2
+  exit 1
+fi
+
+# Build the tag list. Tags are only set when the version is not yet present in
+# ghcr; an existing tag means there is nothing new to build.
+#
+# IMPORTANT: `tags` is ordered and its FIRST element is special — it is the
+# primary version tag (ghcr.io/cybozu/<IMAGE_NAME>:<TAG>). Any further elements are
+# BRANCH tags (e.g. a floating "2.45" tag). Consumers that need a single image
+# reference (docker run in a test, or IMAGE_TAG for make post-targets) take
+# tags[0]; docker/build-push-action receives the whole list. So the primary tag
+# MUST stay first.
+TAG_VALUE=$(cat "${DIR}/TAG")
+IMAGE="ghcr.io/cybozu/${IMAGE_NAME}"
+# Primary version tag first.
+TAGS=$(jq -nc --arg t "${IMAGE}:${TAG_VALUE}" '[$t]')
+if [ -f "${DIR}/BRANCH" ]; then
+  BRANCH=$(tr '\n' ' ' < "${DIR}/BRANCH")
+  for b in $BRANCH; do
+    TAGS=$(echo "${TAGS}" | jq -c --arg t "${IMAGE}:${b}" '. + [$t]')
+  done
+fi
+
+jq -nc --argjson tags "${TAGS}" \
+  --arg image "${IMAGE}" \
+  --arg tag "${TAG_VALUE}" \
+  '{image: $image, tag: $tag, tags: $tags}'

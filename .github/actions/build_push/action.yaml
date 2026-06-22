@@ -1,99 +1,82 @@
 name: "Build and push"
 description: "build and push container image"
 
+# The build matrix only contains buildable entries (the generate_matrix script
+# already decided there is a new tag to build), so the build/test steps always
+# run. Whether to PUSH is decided by the caller and passed via the `push` input
+# (e.g. callers set it false for pull requests); this action does not inspect
+# the workflow event itself.
+
 inputs:
   dir:
-    description: "working direcotry"
-    required: false
-    default: ""
-  container-image:
-    description: "container image"
+    description: "build context directory"
     required: true
-  github_token:
-    description: "GitHub Token"
+  tags:
+    description: >-
+      comma-separated tags passed to docker/build-push-action. The first tag is
+      the primary version tag and is exposed to make post-targets as IMAGE_TAG.
     required: true
-  yamory_token:
-    description: "Yamory Access Token"
+  push:
+    description: >-
+      whether to push the built image (caller-controlled; 'true' to push).
     required: true
   platforms:
     description: "Target platforms"
-    required: false
-    default: ""
+    required: true
   load:
     description: "Load built image to local docker daemon"
-    required: false
-    default: ""
+    required: true
   make-targets:
     description: "make targets before building docker image"
-    required: false
-    default: ""
+    required: true
   make-post-targets:
-    description: "make targets after building docker image"
-    required: false
-    default: ""
-  request-scan:
-    description: "Request image scanning (true, false, or auto)"
-    required: false
-    default: "auto"
+    description: "make targets run after docker build"
+    required: true
   target:
     description: "Target stage to build"
-    required: false
-    default: ""
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout
-      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - id: prepare
-      name: Prepare build parameters
-      uses: ./.github/actions/prepare_build_params
-      with:
-        dir: ${{ inputs.dir }}
-        container-image: ${{ inputs.container-image }}
-        platforms: ${{ inputs.platforms }}
-        load: ${{ inputs.load }}
-        target: ${{ inputs.target }}
-        request-scan: ${{ inputs.request-scan }}
-        github_token: ${{ inputs.github_token }}
     - name: Make pre-targets
-      if: ${{ inputs.make-targets != '' && steps.prepare.outputs.build }}
+      if: ${{ inputs.make-targets != '' }}
       shell: bash
       run: |
         for i in ${{ inputs.make-targets }}; do
           echo "Executing make $i..."
           make -C ${{ inputs.dir }} $i
         done
+
     - name: Build
-      if: ${{ steps.prepare.outputs.build }}
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
       with:
         context: ${{ inputs.dir }}
-        platforms: ${{ steps.prepare.outputs.platforms }}
-        load: ${{ steps.prepare.outputs.load }}
-        provenance: false
+        platforms: ${{ inputs.platforms }}
+        load: ${{ inputs.load }}
         push: false
-        # Input comma-separated tags: <tag>,<branch1>,<branch2>,...
-        tags: ${{ steps.prepare.outputs.tag }}${{ steps.prepare.outputs.branch && format(',{0}', steps.prepare.outputs.branch) }}
+        tags: ${{ inputs.tags }}
         target: ${{ inputs.target }}
+
     - name: Make post-targets
-      if: ${{ inputs.make-post-targets != '' && steps.prepare.outputs.build }}
+      if: ${{ inputs.make-post-targets != '' }}
       shell: bash
-      env:
-        IMAGE_TAG: ${{ steps.prepare.outputs.tag }}
       run: |
+        # The first tag is the primary version tag (see tags_gen).
+        IMAGE_TAG="${{ inputs.tags }}"
+        IMAGE_TAG="${IMAGE_TAG%%,*}"
+        export IMAGE_TAG
         for i in ${{ inputs.make-post-targets }}; do
-          echo "Executing make $i..."
+          echo "Executing make $i (IMAGE_TAG=${IMAGE_TAG})..."
           make -C ${{ inputs.dir }} $i
         done
+
     - name: Push
-      if: ${{ steps.prepare.outputs.push }}
+      if: ${{ inputs.push == 'true' }}
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
       with:
         context: ${{ inputs.dir }}
-        platforms: ${{ steps.prepare.outputs.platforms }}
-        provenance: false
-        push: ${{ steps.prepare.outputs.docker_push }}
-        # Input comma-separated tags: <tag>,<branch1>,<branch2>,...
-        tags: ${{ steps.prepare.outputs.tag }}${{ steps.prepare.outputs.branch && format(',{0}', steps.prepare.outputs.branch) }}
+        platforms: ${{ inputs.platforms }}
+        push: true
+        tags: ${{ inputs.tags }}
         target: ${{ inputs.target }}

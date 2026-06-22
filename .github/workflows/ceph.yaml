@@ -19,4 +19,5 @@ jobs:
     - name: Build ceph image
       uses: ./.github/actions/build_ceph
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        # Manual rebuild of a past version: always push.
+        push: true

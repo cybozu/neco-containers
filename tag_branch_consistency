@@ -1,14 +1,14 @@
 #!/bin/sh -e
 
 if [ $# -eq 0 ]; then
-    echo "Usage: tag_branch_consistency DIR"
+    echo "Usage: tag_branch_consistency DIR" >&2
     exit 1
 fi
 
 DIR="$1"
 
 if [ ! -f ${DIR}/BRANCH ]; then
-    echo "Skip because BRANCH not found"
+    echo "Skip because BRANCH not found" >&2
     exit 0
 fi
 
@@ -18,12 +18,12 @@ SKIP_BRANCHES="${DIR}/NO_TAG_BRANCH_CONSISTENCY"
 
 for b in $BRANCH; do
   if [ -e "${SKIP_BRANCHES}" ] && grep -x "${b}" "${SKIP_BRANCHES}"; then
-      echo "Skipped consistency check for BRANCH: ${b} (listed in ${SKIP_BRANCHES})"
+      echo "Skipped consistency check for BRANCH: ${b} (listed in ${SKIP_BRANCHES})" >&2
       continue
   fi
 
   if [ ${TAG} != $(echo ${b}$(echo ${TAG} | sed -e s/${b}//)) ]; then
-      echo "TAG: ${TAG} and BRANCH: ${b} diverge"
+      echo "TAG: ${TAG} and BRANCH: ${b} diverge" >&2
       exit 1
   fi
 done

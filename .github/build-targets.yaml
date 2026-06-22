@@ -1,0 +1,525 @@
+# Build targets for the "main" workflow.
+#
+# Each entry defines one container image build job. The list is consumed by
+# the generate_matrix script, which filters it down to images whose files
+# changed in the PR, then dispatches each entry to the build_container job.
+#
+# Fields:
+#   dir              : REQUIRED. build context directory
+#   container-image  : REQUIRED. image name (pushed to ghcr.io/cybozu/<name>)
+#   scan.enabled     : REQUIRED. true / false
+#   platforms        : build platforms (default: linux/amd64)
+#   load             : load image into local docker daemon (default: false)
+#   target           : Dockerfile target stage
+#   make-targets     : make targets run before docker build
+#   make-post-targets: make targets run after docker build
+#   runner           : runs-on label (default: ubuntu-24.04)
+#   go-version       : Go toolchain version (default: build_container job default)
+#   disk-cleanup     : perform disk cleanup before build (default: false)
+
+- dir: "./admission"
+  container-image: "neco-admission"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
+- dir: "./alertmanager"
+  container-image: "alertmanager"
+  scan:
+    enabled: true
+- dir: "./alloy"
+  container-image: "alloy"
+  scan:
+    enabled: true
+- dir: "./argo-rollouts"
+  container-image: "argo-rollouts"
+  scan:
+    enabled: true
+- dir: "./argocd"
+  container-image: "argocd"
+  scan:
+    enabled: true
+- dir: "./argocd-image-updater"
+  container-image: "argocd-image-updater"
+  scan:
+    enabled: true
+- dir: "./bird"
+  container-image: "bird"
+  scan:
+    enabled: true
+- dir: "./blackbox_exporter"
+  container-image: "blackbox_exporter"
+  scan:
+    enabled: true
+- dir: "./bmc-log-collector"
+  container-image: "bmc-log-collector"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
+- dir: "./bmc-reverse-proxy"
+  container-image: "bmc-reverse-proxy"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: false
+- dir: "./bpf-map-pressure-exporter"
+  container-image: "bpf-map-pressure-exporter"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
+- dir: "./bpftrace"
+  container-image: "bpftrace"
+  make-targets: "checkout"
+  make-post-targets: "test"
+  load: true
+  scan:
+    enabled: true
+- dir: "./bucket-provisioner-light"
+  container-image: "bucket-provisioner-light"
+  make-targets: "test"
+  scan:
+    enabled: false
+- dir: "./cadvisor"
+  container-image: "cadvisor"
+  scan:
+    enabled: false
+- dir: "./cephcsi"
+  container-image: "cephcsi"
+  scan:
+    enabled: false
+- dir: "./cep-checker"
+  container-image: "cep-checker"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
+- dir: "./ct-monitor"
+  container-image: "ct-monitor"
+  make-targets: "test"
+  scan:
+    enabled: false
+- dir: "ceph-csi-operator"
+  container-image: "ceph-csi-operator"
+  scan:
+    enabled: true
+- dir: "./ceph-extra-exporter"
+  container-image: "ceph-extra-exporter"
+  make-targets: "check-generate test"
+  disk-cleanup: true
+  scan:
+    enabled: true
+- dir: "./cert-manager"
+  container-image: "cert-manager"
+  scan:
+    enabled: true
+- dir: "./chrony"
+  container-image: "chrony"
+  scan:
+    enabled: true
+- dir: "./cilium"
+  container-image: "cilium"
+  runner: "neco-containers-ubuntu-22.04"
+  go-version: "1.23.3"
+  make-targets: "checkout status test-e2e-setup test-e2e-upgrade-inotify"
+  make-post-targets: "test test-e2e"
+  load: true
+  scan:
+    enabled: true
+- dir: "./cilium-certgen"
+  container-image: "cilium-certgen"
+  scan:
+    enabled: false
+- dir: "./cilium-operator-generic"
+  container-image: "cilium-operator-generic"
+  scan:
+    enabled: false
+- dir: "./contour"
+  container-image: "contour"
+  scan:
+    enabled: false
+- dir: "./coredns"
+  container-image: "coredns"
+  scan:
+    enabled: true
+- dir: "csi-addons-controller"
+  container-image: "csi-addons-controller"
+  scan:
+    enabled: true
+- dir: "csi-addons-sidecar"
+  container-image: "csi-addons-sidecar"
+  scan:
+    enabled: true
+- dir: "csi-attacher"
+  container-image: "csi-attacher"
+  scan:
+    enabled: true
+- dir: "csi-node-driver-registrar"
+  container-image: "csi-node-driver-registrar"
+  scan:
+    enabled: true
+- dir: "csi-provisioner"
+  container-image: "csi-provisioner"
+  scan:
+    enabled: true
+- dir: "csi-resizer"
+  container-image: "csi-resizer"
+  scan:
+    enabled: true
+- dir: "csi-snapshotter"
+  container-image: "csi-snapshotter"
+  scan:
+    enabled: true
+- dir: "./dex"
+  container-image: "dex"
+  scan:
+    enabled: true
+- dir: "./etcd"
+  container-image: "etcd"
+  scan:
+    enabled: true
+- dir: "./external-dns"
+  container-image: "external-dns"
+  scan:
+    enabled: true
+- dir: "./fluent-bit"
+  container-image: "fluent-bit"
+  scan:
+    enabled: true
+- dir: "./gitleaks"
+  container-image: "gitleaks"
+  scan:
+    enabled: false
+- dir: "./golang-all/golang-1.25-jammy"
+  container-image: "golang"
+  platforms: "linux/amd64,linux/arm64"
+  scan:
+    enabled: true
+- dir: "./golang-all/golang-1.26-jammy"
+  container-image: "golang"
+  platforms: "linux/amd64,linux/arm64"
+  scan:
+    enabled: true
+- dir: "./golang-all/golang-1.25-noble"
+  container-image: "golang"
+  platforms: "linux/amd64,linux/arm64"
+  scan:
+    enabled: true
+- dir: "./golang-all/golang-1.26-noble"
+  container-image: "golang"
+  platforms: "linux/amd64,linux/arm64"
+  scan:
+    enabled: true
+- dir: "./grafana"
+  container-image: "grafana"
+  scan:
+    enabled: true
+- dir: "./grafana-operator"
+  container-image: "grafana-operator"
+  scan:
+    enabled: true
+- dir: "./haproxy"
+  container-image: "haproxy"
+  scan:
+    enabled: true
+- dir: "./kube-metrics-adapter"
+  container-image: "kube-metrics-adapter"
+  scan:
+    enabled: false
+- dir: "./kube-state-metrics"
+  container-image: "kube-state-metrics"
+  scan:
+    enabled: false
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-initializer"
+  target: "initializer"
+  scan:
+    enabled: false
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-migrator"
+  target: "migrator"
+  scan:
+    enabled: false
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-trigger"
+  target: "trigger"
+  scan:
+    enabled: false
+- dir: "./kubernetes/k8s-1.33"
+  container-image: "kubernetes"
+  scan:
+    enabled: false
+- dir: "./kubernetes/k8s-1.34"
+  container-image: "kubernetes"
+  scan:
+    enabled: false
+- dir: "./kubernetes/k8s-1.35"
+  container-image: "kubernetes"
+  scan:
+    enabled: false
+- dir: "./local-pv-provisioner"
+  container-image: "local-pv-provisioner"
+  make-targets: "check-generate test ci-e2e-test"
+  scan:
+    enabled: false
+- dir: "./loki"
+  container-image: "loki"
+  scan:
+    enabled: true
+- dir: "./machines-endpoints"
+  container-image: "machines-endpoints"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: false
+- dir: "./memcached"
+  container-image: "memcached"
+  scan:
+    enabled: true
+- dir: "./memcached-exporter"
+  container-image: "memcached-exporter"
+  scan:
+    enabled: false
+- dir: "./meows-dctest-runner"
+  container-image: "meows-dctest-runner"
+  scan:
+    enabled: true
+- dir: "./meows-neco-runner"
+  container-image: "meows-neco-runner"
+  scan:
+    enabled: true
+- dir: "./neco-exporter"
+  container-image: "neco-exporter"
+  make-targets: "check-generate e2e-prepare test"
+  make-post-targets: "sanity-check"
+  load: true
+  scan:
+    enabled: false
+- dir: "./opentelemetry-collector"
+  container-image: "opentelemetry-collector"
+  scan:
+    enabled: true
+- dir: "./hubble"
+  container-image: "hubble"
+  scan:
+    enabled: false
+- dir: "./hubble-relay"
+  container-image: "hubble-relay"
+  make-post-targets: "cilium-checkout cilium-test-e2e-setup cilium-test-e2e-upgrade-inotify test-e2e"
+  load: true
+  scan:
+    enabled: false
+- dir: "./hubble-ui"
+  container-image: "hubble-ui-frontend"
+  make-targets: "checkout verify-lockfile"
+  target: "frontend"
+  scan:
+    enabled: true
+- dir: "./hubble-ui"
+  container-image: "hubble-ui-backend"
+  make-targets: "checkout"
+  target: "backend"
+  scan:
+    enabled: true
+- dir: "./pause"
+  container-image: "pause"
+  scan:
+    enabled: false
+- dir: "./pomerium"
+  container-image: "pomerium"
+  scan:
+    enabled: true
+- dir: "./prometheus-adapter"
+  container-image: "prometheus-adapter"
+  scan:
+    enabled: false
+- dir: "./prometheus-config-reloader"
+  container-image: "prometheus-config-reloader"
+  scan:
+    enabled: true
+- dir: "./promtail"
+  container-image: "promtail"
+  scan:
+    enabled: true
+- dir: "./pushgateway"
+  container-image: "pushgateway"
+  scan:
+    enabled: false
+- dir: "./pyroscope"
+  container-image: "pyroscope"
+  make-targets: "checkout"
+  make-post-targets: "test"
+  scan:
+    enabled: true
+- dir: "./redis"
+  container-image: "redis"
+  scan:
+    enabled: true
+- dir: "./registry"
+  container-image: "registry"
+  scan:
+    enabled: true
+- dir: "./rook"
+  container-image: "rook"
+  scan:
+    enabled: true
+- dir: "./sealed-secrets"
+  container-image: "sealed-secrets"
+  scan:
+    enabled: false
+- dir: "./s3gw"
+  container-image: "s3gw"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: false
+- dir: "./serf"
+  container-image: "serf"
+  scan:
+    enabled: true
+- dir: "./stakater-reloader"
+  container-image: "stakater-reloader"
+  scan:
+    enabled: false
+- dir: "./spegel"
+  container-image: "spegel"
+  scan:
+    enabled: false
+- dir: "./spiffe-csi-driver"
+  container-image: "spiffe-csi-driver"
+  scan:
+    enabled: false
+- dir: "./spire-agent"
+  container-image: "spire-agent"
+  scan:
+    enabled: false
+- dir: "./spire-server"
+  container-image: "spire-server"
+  scan:
+    enabled: false
+- dir: "./spire-controller-manager"
+  container-image: "spire-controller-manager"
+  scan:
+    enabled: false
+- dir: "./spiffe-test"
+  container-image: "spiffe-test-server"
+  target: "server"
+  make-targets: "check"
+  scan:
+    enabled: false
+- dir: "./spiffe-test"
+  container-image: "spiffe-test-client"
+  target: "client"
+  make-targets: "check"
+  scan:
+    enabled: false
+- dir: "./squid"
+  container-image: "squid"
+  target: "squid"
+  scan:
+    enabled: false
+- dir: "./squid"
+  container-image: "squid-dev"
+  target: "squid-dev"
+  scan:
+    enabled: true
+- dir: "./squid-exporter"
+  container-image: "squid-exporter"
+  make-targets: "check-generate test"
+  scan:
+    enabled: true
+- dir: "./tcp-keepalive"
+  container-image: "tcp-keepalive"
+  make-targets: "check-diff test"
+  scan:
+    enabled: true
+- dir: "./teleport-node"
+  container-image: "teleport-node"
+  scan:
+    enabled: true
+- dir: "./tempo"
+  container-image: "tempo"
+  scan:
+    enabled: true
+- dir: "./testhttpd"
+  container-image: "testhttpd"
+  platforms: "linux/amd64,linux/arm64"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: true
+- dir: "./trivy-operator"
+  container-image: "trivy-operator"
+  scan:
+    enabled: true
+- dir: "./trust-manager"
+  container-image: "trust-manager"
+  scan:
+    enabled: false
+- dir: "./trust-packages"
+  container-image: "trust-packages"
+  make-targets: "download-certificates"
+  scan:
+    enabled: false
+- dir: "./unbound"
+  container-image: "unbound"
+  make-targets: "check-generate"
+  make-post-targets: "validate"
+  scan:
+    enabled: true
+- dir: "./unbound_exporter"
+  container-image: "unbound_exporter"
+  scan:
+    enabled: false
+- dir: "./vault"
+  container-image: "vault"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmagent"
+  target: "vmagent"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmalert"
+  target: "vmalert"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmbackup"
+  target: "vmbackup"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmctl"
+  target: "vmctl"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vminsert"
+  target: "vminsert"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmrestore"
+  target: "vmrestore"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmselect"
+  target: "vmselect"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmsingle"
+  target: "vmsingle"
+  scan:
+    enabled: true
+- dir: "./victoriametrics"
+  container-image: "victoriametrics-vmstorage"
+  target: "vmstorage"
+  scan:
+    enabled: true
+- dir: "./victoriametrics-operator"
+  container-image: "victoriametrics-operator"
+  target: "operator"
+  scan:
+    enabled: false
+- dir: "./victoriametrics-operator"
+  container-image: "victoriametrics-config-reloader"
+  target: "config-reloader"
+  scan:
+    enabled: false

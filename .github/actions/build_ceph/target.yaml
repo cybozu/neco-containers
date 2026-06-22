@@ -1,0 +1,7 @@
+# This file follows the schema of .github/build-targets.yaml
+
+- dir: ceph
+  container-image: ceph
+  platforms: "linux/amd64"
+  scan:
+    enabled: false

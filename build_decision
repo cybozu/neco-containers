@@ -1,0 +1,123 @@
+#!/bin/bash -e
+# build_decision: compute per-image build facts for one container image.
+#
+# Usage: build_decision MATRIX_FILE IMAGE DIR
+#   MATRIX_FILE  : path to the build targets YAML file
+#   IMAGE        : image name (pushed to ghcr.io/cybozu/<IMAGE>)
+#   DIR          : directory containing the Dockerfile for this image
+#
+# Env:
+#   GITHUB_TOKEN   : token used by ./tag_exists
+#   SKIP_TAG_CHECK : if set to "true", skip the tag existence check and always build (for testing/debugging)
+#
+# Prints a single JSON object to stdout describing the facts:
+#   {
+#      build: true|false,  # whether to build (true if the version tag is not yet present)
+#      tags: [<TAG>, ...], # list of tags to build (first is the primary version tag, others are BRANCH tags)
+#      platforms: <PLATFORMS>, # build platforms (default: linux/amd64)
+#      load: true|false, # whether to load the image into the local docker daemon (default: false)
+#      scan: {
+#       enabled: true|false, # whether scanning is requested for this image
+#       image: <SCAN_IMAGE> # the image name without the tag to scan
+#       tag: <TAG> # the image tag to scan
+#      }
+#   }
+#
+# Note: whether to actually PUSH (and scan) is NOT decided here. Pushing is
+# purely a function of the workflow event (pull requests never push), so it is
+# gated in the workflow YAML, not per image. This script only reports per-image
+# facts: is there a new tag to build, the tags, platforms, load, and whether
+# scanning is requested.
+
+MATRIX_FILE="$1"
+IMAGE_NAME="$2"
+DIR="$3"
+
+if [ ! -f "${MATRIX_FILE}" ]; then
+  echo "Error: MATRIX_FILE '${MATRIX_FILE}' does not exist or is not a file" >&2
+  exit 1
+fi
+
+# multiple entries may match the image name. (i.e. golang, kubernetes, etc)
+ENTRY_LIST=$(yq -o=json e "." "${MATRIX_FILE}" | jq -r --arg image "${IMAGE_NAME}" '.[] | select(."container-image" == $image)')
+if [ -z "${ENTRY_LIST}" ]; then
+  echo "Error: IMAGE '${IMAGE_NAME}' not found in MATRIX_FILE '${MATRIX_FILE}'" >&2
+  exit 1
+fi
+
+# Choose the one that matches the DIR
+ENTRY=$(echo "${ENTRY_LIST}" | jq -r --arg dir "${DIR}" 'select(.dir == $dir)')
+if [ -z "${ENTRY}" ]; then
+  echo "Error: No entry found for IMAGE '${IMAGE_NAME}' with DIR '${DIR}' in MATRIX_FILE '${MATRIX_FILE}'" >&2
+  exit 1
+fi
+
+# === Validate required fields ===
+
+DIR=$(echo "${ENTRY}" | jq -r '.dir')
+if [ ! -d "${DIR}" ]; then
+  echo "Error: DIR '${DIR}' does not exist or is not a directory" >&2
+  exit 1
+fi
+
+SCAN_IN=$(echo "${ENTRY}" | jq -r '.scan')
+SCAN_ENABLED=$(echo "${SCAN_IN}" | jq -r '.enabled')
+if [ "${SCAN_ENABLED}" != "true" ] && [ "${SCAN_ENABLED}" != "false" ]; then
+  echo "Error: scan.enabled is not set for IMAGE '${IMAGE_NAME}' in MATRIX_FILE '${MATRIX_FILE}'" >&2
+  echo "'${SCAN_ENABLED}'" >&2
+  exit 1
+fi
+
+# === Fill optional fields with defaults. ===
+
+PLATFORMS_IN=$(echo "${ENTRY}" | jq -r '.platforms // ""')
+if [ -z "${PLATFORMS_IN}" ]; then
+  PLATFORMS="linux/amd64"
+else
+  PLATFORMS="${PLATFORMS_IN}"
+fi
+
+LOAD_IN=$(echo "${ENTRY}" | jq -r '.load // ""')
+if [ "${LOAD_IN}" = "true" ]; then
+  LOAD=true
+else
+  LOAD=false
+fi
+
+# Validate BRANCH/TAG consistency.
+./tag_branch_consistency "${DIR}" >&2
+
+IMAGE_INFO=$(./tags_gen "${DIR}" "${IMAGE_NAME}")
+PRIMARY_IMAGE=$(echo "${IMAGE_INFO}" | jq -r '.image')
+PRIMARY_TAG=$(echo "${IMAGE_INFO}" | jq -r '.tag')
+
+BUILD=false
+if [ "${SKIP_TAG_CHECK}" = "true" ]; then
+  echo "SKIP_TAG_CHECK is true; skipping tag existence check and building anyway" >&2
+  BUILD=true
+else
+  FOUND=$(./tag_exists "${PRIMARY_IMAGE}" "${PRIMARY_TAG}")
+  if [ "${FOUND}" = "false" ]; then
+    BUILD=true
+  fi
+fi
+
+# image to scan is the primary version tag (if scanning is enabled)
+SCAN_JSON=$(jq -nc \
+  --argjson orig "${SCAN_IN}" \
+  --arg image "${PRIMARY_IMAGE}" \
+  --arg tag "${PRIMARY_TAG}" \
+  '$orig + {image: $image, tag: $tag}')
+
+# Emit the facts as a single JSON object.
+PLAN=$(jq -nc \
+  --argjson build "${BUILD}" \
+  --argjson tags "$(echo "${IMAGE_INFO}" | jq -r '.tags')" \
+  --arg platforms "${PLATFORMS}" \
+  --argjson load "${LOAD}" \
+  --argjson scan "${SCAN_JSON}" \
+  '{build: $build, tags: $tags, platforms: $platforms, load: $load, scan: $scan}')
+
+# Merge the plan with the original entry (preserving all original fields, and adding/updating build, tags, platforms, load, scan).
+jq -nc --argjson entry "${ENTRY}" --argjson plan "${PLAN}" '$entry * $plan'
+

@@ -10,27 +10,36 @@ inputs:
   envoy_commit_sha:
     description: "envoy commit sha"
     required: true
-  github_token:
-    description: "GitHub Token"
+  push:
+    description: >-
+      whether to push the built image (caller-controlled; 'true' to push).
+      Note that the image will NOT be pushed if the tag has already existed 
+      on the registry, even if this field is set to 'true'.
     required: true
-  yamory_token:
-    description: "Yamory Access Token"
-    required: true
+
+outputs:
+  changed:
+    description: >-
+      whether the image has been built and pushed (true) or not (false).
+    value: ${{ steps.prepare.outputs.build }}
 
 runs:
   using: "composite"
   steps:
+    - name: Prepare
+      id: prepare
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        PLAN=$(./build_decision ".github/actions/build_envoy/target.yaml" "envoy" "envoy")
+        echo "plan=${PLAN}" >> "$GITHUB_OUTPUT"
+        echo "build=$(echo "${PLAN}" | jq -r '.build')" >> "$GITHUB_OUTPUT"
     - name: Setup build environment
       uses: ./.github/actions/setup
       with:
-        github_token: ${{ inputs.github_token }}
+        platforms: "linux/amd64"
         go-version-file: "./envoy/go.mod"
-    - id: prepare
-      name: Prepare build parameters
-      uses: ./.github/actions/prepare_build_params
-      with:
-        container-image: envoy
-        github_token: ${{ inputs.github_token }}
     - name: Prepare VERSION
       shell: bash
       run: |
@@ -38,12 +47,12 @@ runs:
         VERSION=$(echo $TAG | cut -d \. -f 1,2,3)
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
     - name: Test
-      if: ${{ steps.prepare.outputs.build }}
+      if: steps.prepare.outputs.build == 'true'
       shell: bash
       working-directory: envoy
       run: make test
     - name: Build
-      if: ${{ steps.prepare.outputs.build }}
+      if: steps.prepare.outputs.build == 'true'
       shell: bash
       working-directory: envoy
       run: |
@@ -98,7 +107,7 @@ runs:
         # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#release-builds
         bazel --bazelrc=/dev/null build --jobs=auto -c opt //source/exe:envoy-static.stripped --config=libc++
     - name: Move files
-      if: ${{ steps.prepare.outputs.build }}
+      if: steps.prepare.outputs.build == 'true'
       shell: bash
       working-directory: envoy
       run: |
@@ -107,17 +116,17 @@ runs:
         mv src/envoy/LICENSE workspace/
         mv src/envoy/distribution/docker/docker-entrypoint.sh workspace/
     - name: Build and push
-      if: ${{ steps.prepare.outputs.build }}
+      if: steps.prepare.outputs.build == 'true'
       uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
       with:
         context: envoy
         platforms: "linux/amd64"
-        provenance: false
-        push: ${{ steps.prepare.outputs.docker_push }}
-        # Input comma-separated tags: <tag>,<branch1>,<branch2>,...
-        tags: ${{ steps.prepare.outputs.tag }}${{ steps.prepare.outputs.branch && format(',{0}', steps.prepare.outputs.branch) }}
+        push: ${{ inputs.push == 'true' }}
+        tags: ${{ join(fromJSON(steps.prepare.outputs.plan).tags, ',') }}
         load: true
     - name: Test image
-      if: ${{ steps.prepare.outputs.build }}
+      if: steps.prepare.outputs.build == 'true'
       shell: bash
-      run: docker run --rm ${{ steps.prepare.outputs.tag }} envoy --version
+      env:
+        IMAGE: ${{ fromJSON(steps.prepare.outputs.plan).tags[0] }}
+      run: docker run --rm --pull=never "$IMAGE" envoy --version
