@@ -26,30 +26,37 @@
   container-image: "alertmanager"
   scan:
     enabled: true
+    team: neco
 - dir: "./alloy"
   container-image: "alloy"
   scan:
     enabled: true
+    team: neco
 - dir: "./argo-rollouts"
   container-image: "argo-rollouts"
   scan:
     enabled: true
+    team: neco
 - dir: "./argocd"
   container-image: "argocd"
   scan:
     enabled: true
+    team: neco
 - dir: "./argocd-image-updater"
   container-image: "argocd-image-updater"
   scan:
     enabled: true
+    team: neco
 - dir: "./bird"
   container-image: "bird"
   scan:
     enabled: true
+    team: neco
 - dir: "./blackbox_exporter"
   container-image: "blackbox_exporter"
   scan:
     enabled: true
+    team: neco
 - dir: "./bmc-log-collector"
   container-image: "bmc-log-collector"
   make-targets: "check-generate test"
@@ -72,6 +79,7 @@
   load: true
   scan:
     enabled: true
+    team: neco
 - dir: "./bucket-provisioner-light"
   container-image: "bucket-provisioner-light"
   make-targets: "test"
@@ -99,20 +107,24 @@
   container-image: "ceph-csi-operator"
   scan:
     enabled: true
+    team: neco
 - dir: "./ceph-extra-exporter"
   container-image: "ceph-extra-exporter"
   make-targets: "check-generate test"
   disk-cleanup: true
   scan:
     enabled: true
+    team: neco
 - dir: "./cert-manager"
   container-image: "cert-manager"
   scan:
     enabled: true
+    team: neco
 - dir: "./chrony"
   container-image: "chrony"
   scan:
     enabled: true
+    team: neco
 - dir: "./cilium"
   container-image: "cilium"
   runner: "neco-containers-ubuntu-22.04"
@@ -122,6 +134,7 @@
   load: true
   scan:
     enabled: true
+    team: neco
 - dir: "./cilium-certgen"
   container-image: "cilium-certgen"
   scan:
@@ -138,50 +151,62 @@
   container-image: "coredns"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-addons-controller"
   container-image: "csi-addons-controller"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-addons-sidecar"
   container-image: "csi-addons-sidecar"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-attacher"
   container-image: "csi-attacher"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-node-driver-registrar"
   container-image: "csi-node-driver-registrar"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-provisioner"
   container-image: "csi-provisioner"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-resizer"
   container-image: "csi-resizer"
   scan:
     enabled: true
+    team: neco
 - dir: "csi-snapshotter"
   container-image: "csi-snapshotter"
   scan:
     enabled: true
+    team: neco
 - dir: "./dex"
   container-image: "dex"
   scan:
     enabled: true
+    team: neco
 - dir: "./etcd"
   container-image: "etcd"
   scan:
     enabled: true
+    team: neco
 - dir: "./external-dns"
   container-image: "external-dns"
   scan:
     enabled: true
+    team: neco
 - dir: "./fluent-bit"
   container-image: "fluent-bit"
   scan:
     enabled: true
+    team: neco
 - dir: "./gitleaks"
   container-image: "gitleaks"
   scan:
@@ -191,33 +216,40 @@
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
+    team: neco
 - dir: "./golang-all/golang-1.26-jammy"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
+    team: neco
 - dir: "./golang-all/golang-1.25-noble"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
+    team: neco
 - dir: "./golang-all/golang-1.26-noble"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
+    team: neco
 - dir: "./grafana"
   container-image: "grafana"
   scan:
     enabled: true
+    team: neco
 - dir: "./grafana-operator"
   container-image: "grafana-operator"
   scan:
     enabled: true
+    team: neco
 - dir: "./haproxy"
   container-image: "haproxy"
   scan:
     enabled: true
+    team: neco
 - dir: "./kube-metrics-adapter"
   container-image: "kube-metrics-adapter"
   scan:
@@ -262,6 +294,7 @@
   container-image: "loki"
   scan:
     enabled: true
+    team: neco
 - dir: "./machines-endpoints"
   container-image: "machines-endpoints"
   make-targets: "setup check-generate test"
@@ -271,6 +304,7 @@
   container-image: "memcached"
   scan:
     enabled: true
+    team: neco
 - dir: "./memcached-exporter"
   container-image: "memcached-exporter"
   scan:
@@ -279,10 +313,12 @@
   container-image: "meows-dctest-runner"
   scan:
     enabled: true
+    team: neco
 - dir: "./meows-neco-runner"
   container-image: "meows-neco-runner"
   scan:
     enabled: true
+    team: neco
 - dir: "./neco-exporter"
   container-image: "neco-exporter"
   make-targets: "check-generate e2e-prepare test"
@@ -294,6 +330,7 @@
   container-image: "opentelemetry-collector"
   scan:
     enabled: true
+    team: neco
 - dir: "./hubble"
   container-image: "hubble"
   scan:
@@ -303,19 +340,22 @@
   make-post-targets: "cilium-checkout cilium-test-e2e-setup cilium-test-e2e-upgrade-inotify test-e2e"
   load: true
   scan:
-    enabled: false
+    enabled: true
+    team: neco
 - dir: "./hubble-ui"
   container-image: "hubble-ui-frontend"
   make-targets: "checkout verify-lockfile"
   target: "frontend"
   scan:
     enabled: true
+    team: neco
 - dir: "./hubble-ui"
   container-image: "hubble-ui-backend"
   make-targets: "checkout"
   target: "backend"
   scan:
     enabled: true
+    team: neco
 - dir: "./pause"
   container-image: "pause"
   scan:
@@ -324,18 +364,22 @@
   container-image: "pomerium"
   scan:
     enabled: true
+    team: neco
 - dir: "./prometheus-adapter"
   container-image: "prometheus-adapter"
   scan:
     enabled: false
+    team: neco
 - dir: "./prometheus-config-reloader"
   container-image: "prometheus-config-reloader"
   scan:
     enabled: true
+    team: neco
 - dir: "./promtail"
   container-image: "promtail"
   scan:
     enabled: true
+    team: neco
 - dir: "./pushgateway"
   container-image: "pushgateway"
   scan:
@@ -346,18 +390,22 @@
   make-post-targets: "test"
   scan:
     enabled: true
+    team: neco
 - dir: "./redis"
   container-image: "redis"
   scan:
     enabled: true
+    team: neco
 - dir: "./registry"
   container-image: "registry"
   scan:
     enabled: true
+    team: neco
 - dir: "./rook"
   container-image: "rook"
   scan:
     enabled: true
+    team: neco
 - dir: "./sealed-secrets"
   container-image: "sealed-secrets"
   scan:
@@ -371,6 +419,7 @@
   container-image: "serf"
   scan:
     enabled: true
+    team: neco
 - dir: "./stakater-reloader"
   container-image: "stakater-reloader"
   scan:
@@ -417,34 +466,41 @@
   target: "squid-dev"
   scan:
     enabled: true
+    team: neco
 - dir: "./squid-exporter"
   container-image: "squid-exporter"
   make-targets: "check-generate test"
   scan:
     enabled: true
+    team: neco
 - dir: "./tcp-keepalive"
   container-image: "tcp-keepalive"
   make-targets: "check-diff test"
   scan:
     enabled: true
+    team: neco
 - dir: "./teleport-node"
   container-image: "teleport-node"
   scan:
     enabled: true
+    team: neco
 - dir: "./tempo"
   container-image: "tempo"
   scan:
     enabled: true
+    team: neco
 - dir: "./testhttpd"
   container-image: "testhttpd"
   platforms: "linux/amd64,linux/arm64"
   make-targets: "setup check-generate test"
   scan:
     enabled: true
+    team: neco
 - dir: "./trivy-operator"
   container-image: "trivy-operator"
   scan:
     enabled: true
+    team: neco
 - dir: "./trust-manager"
   container-image: "trust-manager"
   scan:
@@ -460,6 +516,7 @@
   make-post-targets: "validate"
   scan:
     enabled: true
+    team: neco
 - dir: "./unbound_exporter"
   container-image: "unbound_exporter"
   scan:
@@ -468,51 +525,61 @@
   container-image: "vault"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmagent"
   target: "vmagent"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmalert"
   target: "vmalert"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmbackup"
   target: "vmbackup"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmctl"
   target: "vmctl"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vminsert"
   target: "vminsert"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmrestore"
   target: "vmrestore"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmselect"
   target: "vmselect"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmsingle"
   target: "vmsingle"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics"
   container-image: "victoriametrics-vmstorage"
   target: "vmstorage"
   scan:
     enabled: true
+    team: neco
 - dir: "./victoriametrics-operator"
   container-image: "victoriametrics-operator"
   target: "operator"

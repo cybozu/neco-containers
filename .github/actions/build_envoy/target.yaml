@@ -5,3 +5,4 @@
   platforms: "linux/amd64"
   scan:
     enabled: true
+    team: neco

@@ -36,6 +36,7 @@ jobs:
 
   build_container:
     needs: prepare_matrix
+    if: ${{ needs.prepare_matrix.outputs.jobs != '[]' }}
     strategy:
       matrix:
         job: ${{ fromJson(needs.prepare_matrix.outputs.jobs) }}
@@ -76,6 +77,43 @@ jobs:
           make-post-targets: ${{ matrix.job.make-post-targets }}
           target: ${{ matrix.job.target }}
 
+  prepare_scan_matrix:
+    needs:
+    - prepare_matrix
+    runs-on: ubuntu-slim
+    outputs:
+      jobs: ${{ steps.prepare-scan-matrix.outputs.jobs }}
+    permissions: {}
+    steps:
+      - id: prepare-scan-matrix
+        env:
+          JOBS: ${{ needs.prepare_matrix.outputs.jobs }}
+        run: |
+          # Filter the build matrix for images that have scanning enabled.
+          SCAN_JOBS=$(echo "$JOBS" | jq '[.[] | select(.scan.enabled) | .scan]')
+          echo "$SCAN_JOBS" | jq .
+          echo "jobs=$SCAN_JOBS" >> "$GITHUB_OUTPUT"
+
+  scan_image:
+    uses: ./.github/workflows/scan.yaml
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && needs.prepare_scan_matrix.outputs.jobs != '[]' }}
+    permissions:
+      contents: read
+      packages: read
+    needs:
+    - prepare_scan_matrix
+    - build_container
+    strategy:
+      matrix:
+        scan: ${{ fromJson(needs.prepare_scan_matrix.outputs.jobs) }}
+    with:
+      image: ${{ matrix.scan.image }}
+      tag: ${{ matrix.scan.tag }}
+      image-identifier: ${{ matrix.scan.identifier }}
+      image-is-public: ${{ matrix.scan.is_public }}
+    secrets:
+      yamory-token: ${{ secrets[format('YAMORY_TOKEN_TEAM_{0}', matrix.scan.team)] }}
+
   build_envoy:
     runs-on: neco-containers-ubuntu-22.04
     permissions:
@@ -90,6 +128,21 @@ jobs:
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           clang_archive_sha: 54ec30358afcc9fb8aa74307db3046f5187f9fb89fb37064cdde906e062ebf36
           envoy_commit_sha: f2a676793ef8c5ea9d1df9e1e806826c8f1fd51e
+
+  scan_envoy_image:
+    uses: ./.github/workflows/scan.yaml
+    needs: build_envoy
+    if: ${{ github.event_name == 'push' && github.ref_name == 'main' && needs.build_envoy.outputs.changed == 'true' }}
+    permissions:
+      contents: read
+      packages: read
+    with:
+      image: ${{ needs.build_envoy.outputs.image }}
+      tag: ${{ needs.build_envoy.outputs.tag }}
+      image-identifier: ${{ needs.build_envoy.outputs.image-identifier }}
+      image-is-public: true
+    secrets:
+      yamory-token: ${{ secrets.YAMORY_TOKEN_TEAM_NECO }}
 
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04

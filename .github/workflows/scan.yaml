@@ -1,0 +1,58 @@
+name: Scan image
+on:
+  workflow_call:
+    inputs:
+      image:
+        type: string
+        description: "Image to scan (e.g., 'ghcr.io/cybozu/golang')"
+        required: true
+      tag:
+        type: string
+        description: "Image tag to scan (e.g., 'v1.25.11.2_noble')"
+        required: true
+      image-identifier:
+        type: string
+        description: "Image identifier to scan (e.g., 'ghcr.io/cybozu/golang:1.25-noble')"
+        required: true
+      image-is-public:
+        type: boolean
+        description: "Whether the image is used in public accessible environment"
+        required: false
+        default: false
+    secrets:
+      yamory-token:
+        description: "Yamory token for authentication"
+        required: true
+jobs:
+  scan_image:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Check Yamory Access Token
+        env:
+          YAMORY_ACCESS_TOKEN: ${{ secrets.yamory-token }}
+        run: |
+          if [[ -z "${YAMORY_ACCESS_TOKEN}" ]]; then
+            echo "::error:: YAMORY_ACCESS_TOKEN is not set"
+            exit 1
+          fi
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: ./.github/actions/setup-cosign
+      - uses: ./.github/actions/setup-trivy
+      - uses: ./.github/actions/setup-yamory-scripts
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ github.token }}
+      - name: Scan image
+        env:
+          YAMORY_ACCESS_TOKEN: ${{ secrets.yamory-token }}
+          YAMORY_IMAGE_NAME: ${{ inputs.image }}:${{ inputs.tag }}
+          YAMORY_IMAGE_IDENTIFIER: ${{ inputs.image-identifier }}
+          YAMORY_OPEN_CONTAINER: ${{ inputs.image-is-public }}
+        run: |
+          yamory-image-scan
