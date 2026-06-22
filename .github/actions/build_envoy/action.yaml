@@ -129,4 +129,4 @@ runs:
       shell: bash
       env:
         IMAGE: ${{ fromJSON(steps.prepare.outputs.plan).tags[0] }}
-      run: docker run --rm "$IMAGE:$TAG" envoy --version
+      run: docker run --rm --pull=never "$IMAGE" envoy --version
