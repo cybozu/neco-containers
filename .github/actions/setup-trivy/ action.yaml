@@ -1,0 +1,61 @@
+name: Setup Trivy
+description: Setup Trivy for scanning container images
+inputs:
+  trivy-version:
+    default: "0.70.0"
+runs:
+  using: composite
+  steps:
+    - env:
+        TRIVY_VERSION: "${{ inputs.trivy-version }}"
+      run: |
+        set -x
+        TRIVY_RELEASE_URL="https://cli.yamory.io/trivy/${TRIVY_VERSION}"
+        TRIVY_TAR="trivy_${TRIVY_VERSION}_Linux-64bit.tar.gz"
+        ARTIFACT="/tmp/${TRIVY_TAR}"
+
+        echo "::group::Download artifacts"
+        wget -O "${ARTIFACT}" "${TRIVY_RELEASE_URL}/${TRIVY_TAR}"
+        wget -O "${ARTIFACT}.sigstore.json" "${TRIVY_RELEASE_URL}/${TRIVY_TAR}.sigstore.json"
+        echo "::endgroup::"
+
+        echo "::group::Check signature"
+        # https://docs.yamory.io/35d9ca090120803f8b51d6a50d6ce3e0#block-36b9ca0901208085a6fbdea3fafdc0f5
+        cosign verify-blob \
+          --bundle "${ARTIFACT}.sigstore.json" \
+          --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+          --certificate-identity "https://github.com/aquasecurity/trivy/.github/workflows/reusable-release.yaml@refs/tags/v${TRIVY_VERSION}" \
+          "${ARTIFACT}"
+        echo "::endgroup::"
+
+        # https://docs.yamory.io/35d9ca090120803f8b51d6a50d6ce3e0#block-36b9ca090120808ca7fef8760e2b106c
+        echo "::group::Check Provenance"
+        DIGEST=$(sha256sum "${ARTIFACT}" | cut -d' ' -f1)
+        curl -L "https://api.github.com/repos/aquasecurity/trivy/attestations/sha256:$DIGEST" | \
+        jq -r '.attestations[] | select(.initiator == "user") | .bundle' > bundle.json
+        cosign verify-blob-attestation \
+          --bundle bundle.json \
+          --new-bundle-format \
+          --certificate-identity "https://github.com/aquasecurity/trivy/.github/workflows/reusable-release.yaml@refs/tags/v${TRIVY_VERSION}" \
+          --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
+          "${ARTIFACT}"
+        echo "::endgroup::"
+
+        echo "::group::Check the commit is signed"
+        SOURCE_HASH=`cat bundle.json | \
+          jq -r '.dsseEnvelope.payload' | base64 -d | \
+          jq -r '.predicate.buildDefinition.resolvedDependencies[] | select(.uri | startswith("git+https://github.com/aquasecurity/trivy@refs/tags/")) | .digest.gitCommit'`
+        echo ${SOURCE_HASH}
+        curl -s -H "Accept: application/vnd.github+json" \
+          "https://api.github.com/repos/aquasecurity/trivy/commits/${SOURCE_HASH}" | \
+          jq '.commit.verification'
+        echo "::endgroup::"
+
+        echo "::group::Install trivy"
+        tar -xzf "${ARTIFACT}" -C /tmp
+        chmod +x /tmp/trivy
+        mv /tmp/trivy /usr/local/bin/
+        rm -f "${ARTIFACT}" "${ARTIFACT}.sigstore.json" bundle.json /tmp/trivy
+        trivy --version
+        echo "::endgroup::"
+      shell: bash
