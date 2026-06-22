@@ -23,6 +23,14 @@ if [ -z "${ORG}" ] || [ -z "${PACKAGE_ENC}" ]; then
     exit 1
 fi
 
+# For the first push of a new container, the package does not exist (404).
+HTTP_STATUS=$(gh api -i "/orgs/${ORG}/packages/container/${PACKAGE_ENC}" 2>/dev/null | head -n 1 | awk '{print $2}')
+if [ "${HTTP_STATUS}" = "404" ]; then
+    echo "Info: package '${PACKAGE}' does not exist. This is expected for the first push of a new container." >&2
+    echo "false"
+    exit 0
+fi
+
 # output "true" or "false" by `jq any()`
 VERSIONS=$(gh api "/orgs/${ORG}/packages/container/${PACKAGE_ENC}/versions?per_page=100" --paginate --slurp)
 echo "${VERSIONS}" | jq --arg tag "$TAG" 'any((add // [])[].metadata.container.tags[]; . == $tag)'

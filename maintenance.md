@@ -98,6 +98,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [teleport-node](#teleport-node)
 - [tempo](#tempo)
 - [testhttpd](#testhttpd)
+- [trivy-operator](#trivy-operator)
 - [trust-manager](#trust-manager)
 - [trust-packages](#trust-packages)
 - [unbound](#unbound)
@@ -1249,6 +1250,21 @@ Only the base image and module dependency should be updated.
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `BRANCH` and `TAG` files.
+
+## trivy-operator
+
+![No Need Update](./no_need_update.svg)
+
+> [!NOTE]
+> Currently used only in PoC, so regular updates are not required.
+> Reconsider the update policy when this image is used in production.
+
+1. Check [releases](https://github.com/aquasecurity/trivy-operator/releases) for changes.
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+    - `https://github.com/aquasecurity/trivy-operator/blob/vX.Y.Z/build/trivy-operator/Dockerfile`
+3. Update version variables in `Dockerfile`.
+    - Update `TRIVY_OPERATOR_VERSION` and checksum.
+4. Update `TAG` file.
 
 ## trust-manager
 
