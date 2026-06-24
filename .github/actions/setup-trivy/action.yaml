@@ -46,9 +46,13 @@ runs:
           jq -r '.dsseEnvelope.payload' | base64 -d | \
           jq -r '.predicate.buildDefinition.resolvedDependencies[] | select(.uri | startswith("git+https://github.com/aquasecurity/trivy@refs/tags/")) | .digest.gitCommit'`
         echo ${SOURCE_HASH}
-        curl -s -H "Accept: application/vnd.github+json" \
+        COMMIT_SIGN=$(curl -s -H "Accept: application/vnd.github+json" \
           "https://api.github.com/repos/aquasecurity/trivy/commits/${SOURCE_HASH}" | \
-          jq '.commit.verification'
+          jq '.commit.verification')
+        if [ "$(echo ${COMMIT_SIGN} | jq -r '.verified')" != "true" ]; then
+          echo "The commit is not signed"
+          exit 1
+        fi
         echo "::endgroup::"
 
         echo "::group::Install trivy"
