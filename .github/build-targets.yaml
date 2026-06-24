@@ -382,7 +382,6 @@
   container-image: "prometheus-adapter"
   scan:
     enabled: false
-    team: neco
 - dir: "./prometheus-config-reloader"
   container-image: "prometheus-config-reloader"
   scan:
