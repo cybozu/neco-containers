@@ -27,7 +27,7 @@ outputs:
   image-identifier:
     description: "Built image identifier"
     value: ${{ steps.prepare.outputs.image-identifier }}
-  changed :
+  changed: 
     description: >-
       whether the image has been built and pushed (true) or not (false).
     value: ${{ steps.prepare.outputs.build }}
