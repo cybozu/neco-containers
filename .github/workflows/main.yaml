@@ -89,7 +89,7 @@ jobs:
           push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           clang_archive_path: https://github.com/llvm/llvm-project/releases/download/llvmorg-18.1.8/clang+llvm-18.1.8-x86_64-linux-gnu-ubuntu-18.04.tar.xz
           clang_archive_sha: 54ec30358afcc9fb8aa74307db3046f5187f9fb89fb37064cdde906e062ebf36
-          envoy_commit_sha: f2a676793ef8c5ea9d1df9e1e806826c8f1fd51e
+          envoy_commit_sha: adb998f2875986005be294d10231a9c9a497e30d
 
   build_ceph:
     runs-on: neco-containers-ubuntu-22.04
