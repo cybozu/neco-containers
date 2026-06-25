@@ -60,15 +60,36 @@ if [ ! -d "${DIR}" ]; then
   exit 1
 fi
 
+# Validate BRANCH/TAG consistency.
+./tag_branch_consistency "${DIR}" >&2
+
+IMAGE_INFO=$(./tags_gen "${DIR}" "${IMAGE_NAME}")
+PRIMARY_IMAGE=$(echo "${IMAGE_INFO}" | jq -r '.image')
+PRIMARY_TAG=$(echo "${IMAGE_INFO}" | jq -r '.tag')
+
 SCAN_IN=$(echo "${ENTRY}" | jq -r '.scan')
 SCAN_ENABLED=$(echo "${SCAN_IN}" | jq -r '.enabled')
 if [ "${SCAN_ENABLED}" != "true" ] && [ "${SCAN_ENABLED}" != "false" ]; then
   echo "Error: scan.enabled is not set for IMAGE '${IMAGE_NAME}' in MATRIX_FILE '${MATRIX_FILE}'" >&2
   echo "'${SCAN_ENABLED}'" >&2
   exit 1
+elif [ "${SCAN_ENABLED}" = "true" ]; then
+  SCAN_TEAM=$(echo "${SCAN_IN}" | jq -r '.team // empty')
+  if [ -z "${SCAN_TEAM}" ]; then
+    echo "Error: scan.team is not set for IMAGE '${IMAGE_NAME}' in MATRIX_FILE '${MATRIX_FILE}'" >&2
+    exit 1
+  fi
 fi
 
 # === Fill optional fields with defaults. ===
+
+if [ "${SCAN_ENABLED}" = "true" ]; then
+  # Normalize team name to uppercase
+  SCAN_IN=$(echo "${SCAN_IN}" | jq -c '.team |= ascii_upcase')
+
+  # Fill identifier and is_public fields with defaults if not set.
+  SCAN_IN=$(echo "${SCAN_IN}" | jq -c --arg image "${PRIMARY_IMAGE}" '.is_public //= false | .identifier //= $image')
+fi
 
 PLATFORMS_IN=$(echo "${ENTRY}" | jq -r '.platforms // ""')
 if [ -z "${PLATFORMS_IN}" ]; then
@@ -83,13 +104,6 @@ if [ "${LOAD_IN}" = "true" ]; then
 else
   LOAD=false
 fi
-
-# Validate BRANCH/TAG consistency.
-./tag_branch_consistency "${DIR}" >&2
-
-IMAGE_INFO=$(./tags_gen "${DIR}" "${IMAGE_NAME}")
-PRIMARY_IMAGE=$(echo "${IMAGE_INFO}" | jq -r '.image')
-PRIMARY_TAG=$(echo "${IMAGE_INFO}" | jq -r '.tag')
 
 BUILD=false
 if [ "${SKIP_TAG_CHECK}" = "true" ]; then

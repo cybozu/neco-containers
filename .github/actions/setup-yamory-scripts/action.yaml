@@ -1,0 +1,25 @@
+name: Setup yamory scripts
+description: "This action sets up yamory scripts for container scanning."
+runs:
+  using: composite
+  steps:
+    - name: Setup yamory scripts
+      shell: bash
+      run: |
+        TMP_DIR=$(mktemp -d)
+
+        echo "::group::Download yamory scripts"
+        curl -o "${TMP_DIR}/image_scan.sh" -sSf -L https://mw-receiver.yamory.io/image/script/trivy
+        # https://docs.yamory.io/8305180d94ba4a5299304ec6429dc582
+        curl -o "${TMP_DIR}/image_scan_sha512sum.txt" -sSf -L https://cli.yamory.io/yamory-image-scan-scripts/image_scan_sha512sum.txt
+        echo "::endgroup::"
+
+        echo "::group::Verify checksum"
+        cd "${TMP_DIR}" && sha512sum -c image_scan_sha512sum.txt
+        echo "::endgroup::"
+
+        echo "::group::Install yamory scripts"
+        chmod +x "${TMP_DIR}/image_scan.sh"
+        mv "${TMP_DIR}/image_scan.sh" /usr/local/bin/yamory-image-scan
+        rm -rf "${TMP_DIR}"
+        echo "::endgroup::"

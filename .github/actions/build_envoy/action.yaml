@@ -18,7 +18,16 @@ inputs:
     required: true
 
 outputs:
-  changed:
+  image:
+    description: "Built image name"
+    value: ${{ steps.prepare.outputs.image }}
+  tag:
+    description: "Built image tag"
+    value: ${{ steps.prepare.outputs.tag }}
+  image-identifier:
+    description: "Built image identifier"
+    value: ${{ steps.prepare.outputs.image-identifier }}
+  changed: 
     description: >-
       whether the image has been built and pushed (true) or not (false).
     value: ${{ steps.prepare.outputs.build }}
@@ -35,6 +44,9 @@ runs:
         PLAN=$(./build_decision ".github/actions/build_envoy/target.yaml" "envoy" "envoy")
         echo "plan=${PLAN}" >> "$GITHUB_OUTPUT"
         echo "build=$(echo "${PLAN}" | jq -r '.build')" >> "$GITHUB_OUTPUT"
+        echo "image=$(echo "${PLAN}" | jq -r '.scan.image')" >> "$GITHUB_OUTPUT"
+        echo "tag=$(echo "${PLAN}" | jq -r '.scan.tag')" >> "$GITHUB_OUTPUT"
+        echo "image-identifier=$(echo "${PLAN}" | jq -r '.scan.identifier')" >> "$GITHUB_OUTPUT"
     - name: Setup build environment
       uses: ./.github/actions/setup
       with:

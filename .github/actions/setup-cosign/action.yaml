@@ -1,0 +1,20 @@
+name: Setup cosign
+description: "This action installs cosign CLI using fixed version cosign-installer action."
+runs:
+  using: composite
+  steps:
+    # cosign-installer requires envsubst command to be installed.
+    # However, it does not exist in ubuntu-slim runner.
+    # ref: https://github.com/sigstore/cosign-installer/issues/222
+    - name: Install envsubst used in cosign-installer action
+      shell: bash
+      run: |
+        if ! command -v envsubst &>/dev/null; then
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            gettext-base
+        fi
+    - uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003  # v4.1.1
+    - run: |
+        cosign version
+      shell: bash
