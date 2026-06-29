@@ -90,7 +90,7 @@ jobs:
           JOBS: ${{ needs.prepare_matrix.outputs.jobs }}
         run: |
           # Filter the build matrix for images that have scanning enabled.
-          SCAN_JOBS=$(echo "$JOBS" | jq '[.[] | select(.scan.enabled) | .scan]')
+          SCAN_JOBS=$(echo "$JOBS" | jq -c '[.[] | select(.scan.enabled) | .scan]')
           echo "$SCAN_JOBS" | jq .
           echo "jobs=$SCAN_JOBS" >> "$GITHUB_OUTPUT"
 
