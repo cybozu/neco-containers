@@ -183,6 +183,27 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /validate-namespace-deletion
+  failurePolicy: Fail
+  name: vnamespacedeletion.kb.io
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - DELETE
+    resources:
+    - namespaces
+  sideEffects: None
+  timeoutSeconds: 10
+- admissionReviewVersions:
+  - v1
+  - v1beta1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /validate-pod
   failurePolicy: Fail
   name: vpod.kb.io
