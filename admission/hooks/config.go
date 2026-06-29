@@ -2,8 +2,9 @@ package hooks
 
 // Config is a config for neco-admission
 type Config struct {
-	ArgoCDApplicationValidatorConfig ArgoCDApplicationValidatorConfig `json:"ArgoCDApplicationValidator"`
-	HTTPProxyMutatorConfig           HTTPProxyMutatorConfig           `json:"HTTPProxyMutatorConfig"`
+	ArgoCDApplicationValidatorConfig    ArgoCDApplicationValidatorConfig    `json:"ArgoCDApplicationValidator"`
+	HTTPProxyMutatorConfig              HTTPProxyMutatorConfig              `json:"HTTPProxyMutatorConfig"`
+	NamespaceDeletionValidatorConfig    NamespaceDeletionValidatorConfig    `json:"NamespaceDeletionValidator"`
 }
 
 // ArgoCDApplicationValidatorConfig is a config for application validator
@@ -30,4 +31,14 @@ type HTTPProxyPolicy struct {
 type HTTPProxyIPFilterPolicy struct {
 	Source string `json:"source"`
 	Cidr   string `json:"cidr"`
+}
+
+type NamespaceDeletionValidatorConfig struct {
+	ProtectedResources []NamespaceDeletionProtectedResource `json:"protectedResources"`
+}
+
+type NamespaceDeletionProtectedResource struct {
+	Group   string `json:"group"`
+	Version string `json:"version"`
+	Kind    string `json:"kind"`
 }
