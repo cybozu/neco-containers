@@ -1,10 +1,10 @@
 # kubernetes container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-# v1.34.8
-ARG K8S_COMMIT=1f328c5e9dd683d0c5e69f3d7d58f8371278dec2
+# v1.34.9
+ARG K8S_COMMIT=ad7c7374b74c04d07ea041d367ecb1a526bdf758
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
