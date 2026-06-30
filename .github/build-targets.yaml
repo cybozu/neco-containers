@@ -205,6 +205,26 @@
   scan:
     enabled: true
     team: neco
+- dir: "./falco"
+  container-image: "falco"
+  scan:
+    enabled: true
+    team: neco
+- dir: "./falco-artifact-operator"
+  container-image: "falco-artifact-operator"
+  scan:
+    enabled: true
+    team: neco
+- dir: "./falco-k8s-metacollector"
+  container-image: "falco-k8s-metacollector"
+  scan:
+    enabled: true
+    team: neco
+- dir: "./falco-operator"
+  container-image: "falco-operator"
+  scan:
+    enabled: true
+    team: neco
 - dir: "./fluent-bit"
   container-image: "fluent-bit"
   scan:

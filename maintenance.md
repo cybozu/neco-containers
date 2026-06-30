@@ -50,6 +50,10 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [envoy](#envoy)
 - [etcd](#etcd)
 - [external-dns](#external-dns)
+- [falco](#falco)
+- [falco-artifact-operator](#falco-artifact-operator)
+- [falco-k8s-metacollector](#falco-k8s-metacollector)
+- [falco-operator](#falco-operator)
 - [fluent-bit](#fluent-bit)
 - [gitleaks](#gitleaks)
 - [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
@@ -624,6 +628,58 @@ This section applies to the following containers. These containers are maintaine
 3. Update `EXTERNALDNS_VERSION` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `TAG` file.
+
+## falco
+
+![No Need Update](./no_need_update.svg)
+
+Used as a PoC, so regular updates are not required.
+
+1. Check the [release page](https://github.com/falcosecurity/falco/releases).
+2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/falcosecurity/falco/blob/X.Y.Z/docker/falco/Dockerfile`
+3. Update `FALCO_VERSION` and `FALCO_COMMIT` in `Dockerfile`. Update `BPFTOOL_COMMIT` if needed.
+4. Update `TAG` file.
+
+## falco-artifact-operator
+
+![No Need Update](./no_need_update.svg)
+
+Used as a PoC, so regular updates are not required.
+
+This image builds the artifact operator (`./cmd/artifact`) from the `falcosecurity/falco-operator` repository.
+
+1. Check the [release page](https://github.com/falcosecurity/falco-operator/releases).
+2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/build/Dockerfile`
+   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/Makefile`
+3. Update `FALCO_OPERATOR_COMMIT` in `Dockerfile`.
+4. Update `TAG` file.
+
+## falco-k8s-metacollector
+
+![No Need Update](./no_need_update.svg)
+
+Used as a PoC, so regular updates are not required.
+
+1. Check the [release page](https://github.com/falcosecurity/k8s-metacollector/releases).
+2. Update `K8S_METACOLLECTOR_COMMIT` in `Dockerfile`.
+3. Update `TAG` file.
+
+## falco-operator
+
+![No Need Update](./no_need_update.svg)
+
+Used as a PoC, so regular updates are not required.
+
+This image builds the instance operator (`./cmd/instance`) from the `falcosecurity/falco-operator` repository.
+
+1. Check the [release page](https://github.com/falcosecurity/falco-operator/releases).
+2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/build/Dockerfile`
+   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/Makefile`
+3. Update `FALCO_OPERATOR_COMMIT` in `Dockerfile`.
+4. Update `TAG` file.
 
 ## fluent-bit
 
