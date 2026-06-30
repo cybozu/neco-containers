@@ -210,11 +210,6 @@
   scan:
     enabled: true
     team: neco
-- dir: "./falco-artifact-operator"
-  container-image: "falco-artifact-operator"
-  scan:
-    enabled: true
-    team: neco
 - dir: "./falco-k8s-metacollector"
   container-image: "falco-k8s-metacollector"
   scan:
