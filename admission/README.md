@@ -113,7 +113,7 @@ NamespaceDeletionValidator validates Namespace deletion requests.
 
 It denies deleting a Namespace if any configured protected resource in the Namespace has the annotation `admission.cybozu.com/prevent: delete`.
 
-The resource kinds checked by this validator can be configured with `NamespaceDeletionValidator.protectedResources`.
+The resource kinds checked by this validator can be configured with `NamespaceDeletionValidator.protectedResources`. Ensure the webhook has `list` permission for these resources; otherwise deletion will be rejected due to `failurePolicy=Fail`.
 
 ## Docker images
 
