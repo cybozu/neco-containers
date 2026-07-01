@@ -79,7 +79,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [pomerium](#pomerium)
 - [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
-- [promtail](#promtail)
 - [pushgateway](#pushgateway)
 - [pyroscope](#pyroscope)
 - [redis](#redis)
@@ -905,9 +904,6 @@ To add a new minor version:
 3. Update `LOKI_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
 
-> [!Note]
-> Keep the version of [promtail](#promtail) the same as that of loki.
-
 ## machines-endpoints
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -1040,18 +1036,6 @@ This is used as a sidecar of Alloy Pod now.
 
 1. Check the latest release of `prometheus-operator`
 2. Update version variable in `Dockerfile`.
-3. Update `TAG` file.
-
-## promtail
-
-![Regular Update](./regular_update.svg)
-
-Promtail contains two versions, one for promtail and the other for libsystemd.
-The promtail version should be the same with [loki](#loki).
-The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://www.flatcar.org/releases).
-
-1. Update `LOKI_VERSION` in `Dockerfile`.
-2. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 3. Update `TAG` file.
 
 ## pushgateway
