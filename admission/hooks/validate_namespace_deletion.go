@@ -28,10 +28,10 @@ type namespaceDeletionValidator struct {
 // `admission.cybozu.com/prevent: delete`.
 func NewNamespaceDeletionValidator(c client.Client, dec admission.Decoder, config *NamespaceDeletionValidatorConfig, logger logr.Logger) http.Handler {
 	v := &namespaceDeletionValidator{
-		client: c, 
-		decoder: dec, 
-		config: config, 
-		logger: logger,
+		client:  c,
+		decoder: dec,
+		config:  config,
+		logger:  logger,
 	}
 	for _, r := range config.ProtectedResources {
 		v.logger.Info("protected resource configured", "group", r.Group, "version", r.Version, "kind", r.Kind)
