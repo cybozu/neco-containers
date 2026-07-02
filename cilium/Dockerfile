@@ -10,7 +10,7 @@
 #
 # ref: https://docs.cilium.io/en/stable/contributing/development/images/
 
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.24-noble
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26-noble
 ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
 ARG DESTDIR=/tmp/install/linux/amd64
 
@@ -32,25 +32,34 @@ RUN /tmp/install-deps.sh
 # -------------------------------------------------------------------------------------
 # https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-llvm
-COPY src/image-tools/images/llvm/checkout-llvm.sh /tmp/checkout-llvm.sh
-COPY src/image-tools/images/llvm/build-llvm-native.sh /tmp/build-llvm-native.sh
 
-RUN /tmp/checkout-llvm.sh
-RUN /tmp/build-llvm-native.sh
-RUN cp /out/linux/amd64/bin/* /usr/local/bin/
+ARG LLVM_VERSION="llvmorg-19.1.7"
+ADD https://github.com/llvm/llvm-project/archive/${LLVM_VERSION}.tar.gz /tmp/llvm.tar.gz
+WORKDIR /src/llvm
+RUN tar -xf /tmp/llvm.tar.gz --strip-components=1 --directory /src/llvm
+
+WORKDIR /src/llvm/llvm/build
+COPY src/image-tools/images/llvm/build-llvm.sh /tmp/build-llvm.sh
+RUN /tmp/build-llvm.sh
+
+RUN cp /out/bin/* /usr/local/bin/
 
 # ----------------------------------------------------------------------------------------
 # https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-bpftool
-COPY src/image-tools/images/bpftool/checkout-linux.sh /tmp/checkout-linux.sh
-COPY src/image-tools/images/bpftool/build-bpftool-native.sh /tmp/build-bpftool-native.sh
 
-RUN /tmp/checkout-linux.sh
-RUN /tmp/build-bpftool-native.sh
+ARG BPFTOOL_VERSION="v7.4.0"
+WORKDIR /bpftool
+RUN git clone --recurse-submodules --branch "${BPFTOOL_VERSION}" https://github.com/libbpf/bpftool.git /bpftool
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends libelf1 \
-    && apt-get purge --auto-remove -y
+RUN \
+    # From Ubuntu 24.04 builder image, libzstd must be added at the end of LIBS and LIBS_BOOTSTRAP to compile statically
+    # See https://github.com/libbpf/bpftool/issues/152
+    sed -i "s/\(LIBS = \$(LIBBPF) -lelf -lz\)/\1 -lzstd/; s/\(LIBS_BOOTSTRAP = \$(LIBBPF_BOOTSTRAP) -lelf -lz\)/\1 -lzstd/" /bpftool/src/Makefile \
+    && make -C src EXTRA_CFLAGS=--static BPFTOOL_VERSION="${BPFTOOL_VERSION#v}" -j "$(nproc)" \
+    && strip /bpftool/src/bpftool \
+    && mkdir -p /out/bin \
+    && mv /bpftool/src/bpftool /out/bin/
 
 # -----------------------------------------------------------------------------------
 # https://github.com/cilium/image-tools/blob/master/images/iptables/Dockerfile (AS .)
@@ -65,7 +74,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends debian-archive-keyring apt-src ca-certificates && \
     echo "deb-src [check-valid-until=no signed-by=/usr/share/keyrings/debian-archive-bullseye-automatic.gpg] https://snapshot.debian.org/archive/debian/${SNAPSHOT_DATE}/ bookworm main" > /etc/apt/sources.list.d/iptables-snapshot.list && \
     apt-get update && \
-    apt-src -b install iptables=${IPTABLES_VERSION} && \
+    apt-src -b install iptables="${IPTABLES_VERSION}" && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
@@ -103,7 +112,7 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/runtime,target=/go/src/
     ./iptables-wrapper-installer.sh --no-sanity-check
 
 COPY --from=cilium-llvm /usr/local/bin/clang /usr/local/bin/llc /usr/local/bin/
-COPY --from=cilium-bpftool /out/linux/amd64/bin/bpftool /usr/local/bin/
+COPY --from=cilium-bpftool /out/bin/bpftool /usr/local/bin/
 COPY --from=gops-cni-builder /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=gops-cni-builder /out/linux/amd64/bin/gops /bin/gops
 
@@ -134,7 +143,8 @@ RUN apt-get update && \
       gcc \
       git \
       libc6-dev \
-      make && \
+      make \
+      ccache && \
     apt-get purge --auto-remove && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
@@ -147,7 +157,7 @@ ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
 ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
-RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@v1.26.3
+RUN GOARCH=${TARGETARCH} CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@v1.26.3
 
 WORKDIR /go/src/github.com/cilium/cilium/images/builder
 RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/github.com/cilium/cilium/images/builder \

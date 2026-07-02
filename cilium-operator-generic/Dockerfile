@@ -1,5 +1,5 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.24-noble
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26-noble
 ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
 
 # Stage1: build
