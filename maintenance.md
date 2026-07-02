@@ -1097,7 +1097,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - <https://github.com/docker/distribution/blob/master/Dockerfile>
-3. Update `REGISTRY_COMMIT` in `Dockerfile`.
+3. Update `DISTRIBUTION_VERSION` and `DISTRIBUTION_TARBALL_SHA256` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
 ## rook
