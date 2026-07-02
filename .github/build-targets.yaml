@@ -409,11 +409,6 @@
   scan:
     enabled: true
     team: neco
-- dir: "./promtail"
-  container-image: "promtail"
-  scan:
-    enabled: true
-    team: neco
 - dir: "./pushgateway"
   container-image: "pushgateway"
   scan:
