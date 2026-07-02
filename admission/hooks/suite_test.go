@@ -43,6 +43,7 @@ var (
 	grafanaDashboardValidateWebhookPath            = "/validate-grafana-integreatly-org-grafanadashboard"
 	deleteValidateWebhookPath                      = "/validate-delete"
 	preventDeleteValidateWebhookPath               = "/validate-preventdelete"
+	namespaceDeletionValidateWebhookPath           = "/validate-namespace-deletion"
 	deploymentReplicaCountValidateWebhookPath      = "/validate-deployment-replica-count"
 	deploymentReplicaCountScaleValidateWebhookPath = "/validate-scale-deployment-replica-count"
 	podCPURequestReduceWebhookPath                 = "/mutate-pod-cpu-request-reduce"
@@ -148,6 +149,7 @@ var _ = BeforeSuite(func() {
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
+	wh.Register(namespaceDeletionValidateWebhookPath, NewNamespaceDeletionValidator(mgr.GetClient(), dec, namespaceDeletionValidatorConfig, logf.Log.WithName("namespace-deletion-validator")))
 	wh.Register(deploymentReplicaCountValidateWebhookPath, NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
 	wh.Register(deploymentReplicaCountScaleValidateWebhookPath, NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
 

@@ -107,6 +107,14 @@ This validating webhook ensures the GrafanaDashboard resource's `spec.plugins` i
 
 The purpose of this validator is to avoid installing any plugins to production Grafana by tenants.
 
+## NamespaceDeletionValidator
+
+NamespaceDeletionValidator validates Namespace deletion requests.
+
+It denies deleting a Namespace if any configured protected resource in the Namespace has the annotation `admission.cybozu.com/prevent: delete`.
+
+The resource kinds checked by this validator can be configured with `NamespaceDeletionValidator.protectedResources`. Ensure the webhook has `list` permission for these resources; otherwise deletion will be rejected due to `failurePolicy=Fail`.
+
 ## Docker images
 
 Docker images are available on [ghcr.io](https://github.com/cybozu/neco-containers/pkgs/container/neco-admission)

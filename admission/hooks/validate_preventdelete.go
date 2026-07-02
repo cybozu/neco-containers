@@ -18,7 +18,7 @@ type preventDeleteValidator struct {
 }
 
 // NewPreventDeleteValidator creates a webhook handler to validate DELETE requests
-// only for resources annotated with `prevent: delete`.
+// only for resources annotated with `admission.cybozu.com/prevent: delete`.
 func NewPreventDeleteValidator(c client.Client, dec admission.Decoder) http.Handler {
 	return &webhook.Admission{Handler: &preventDeleteValidator{c, dec}}
 }
@@ -35,7 +35,7 @@ func (v *preventDeleteValidator) Handle(ctx context.Context, req admission.Reque
 		return admission.Allowed("topolvm-controller service account is allowed to delete PVCs")
 	}
 
-	if obj.GetAnnotations()[annotatePrefix+"prevent"] == "delete" {
+	if obj.GetAnnotations()[annPreventKey] == annPreventValueDelete {
 		return admission.Denied(obj.GetName() + " is protected from deletion")
 	}
 
