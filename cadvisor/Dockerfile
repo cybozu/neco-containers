@@ -1,16 +1,23 @@
 # cadvisor container
 
-# Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+# Stage0: download source archive
+FROM scratch AS source
 
-ARG CADVISOR_COMMIT=7cbdee9260c4292d5d27d00416ce8a7dc1dc12a0
+ARG CADVISOR_VERSION=v0.57.0
+ARG CADVISOR_TARBALL_SHA256=2f700ada18220d6da193e6ecf2d35a52b84e4c38bc20aa08b2e5e3a17f68d1f5
+
+ADD --checksum=sha256:${CADVISOR_TARBALL_SHA256} \
+    https://github.com/google/cadvisor/archive/${CADVISOR_VERSION}.tar.gz \
+    /cadvisor.tar.gz
+
+# Stage1: build from source
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 WORKDIR /go/src/github.com/google/cadvisor
-RUN curl -fsSL -o cadvisor.tar.gz "https://github.com/google/cadvisor/archive/${CADVISOR_COMMIT}.tar.gz" \
-    && tar -x -z --strip-components 1 -f cadvisor.tar.gz \
-    && rm -f cadvisor.tar.gz \
+COPY --from=source /cadvisor.tar.gz cadvisor.tar.gz
+RUN tar -x -z --strip-components 1 -f cadvisor.tar.gz \
     && cd cmd \
     && CGO_ENABLED=0 go build -tags netgo -ldflags="-w -s" -o cadvisor .
 
