@@ -442,7 +442,7 @@
     enabled: false
 - dir: "./s3gw"
   container-image: "s3gw"
-  make-targets: "setup check-generate test"
+  make-targets: "check-generate test"
   scan:
     enabled: false
 - dir: "./serf"
