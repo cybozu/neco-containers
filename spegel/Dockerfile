@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.25-noble AS builder
-ARG SPEGEL_COMMIT=6f02215fa3fc1d3bbdb11fa62dfa7c07dbe3b7c2
+FROM ghcr.io/cybozu/golang:1.26-noble AS builder
+ARG SPEGEL_COMMIT=53483664231780f113ac434e82960677993bc0b7
 
 WORKDIR /work/spegel
 
