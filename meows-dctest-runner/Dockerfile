@@ -8,15 +8,21 @@ FROM scratch AS placemat-download
 ADD --checksum=sha256:9f5aa812d00d4fa47dad391e99a85793d6e3b7f7b7b375743d0a56cb8e275186 \
     https://github.com/cybozu-go/placemat/releases/download/v2.5.1/placemat2_2.5.1_amd64.deb /placemat2.deb
 
+FROM scratch AS aqua-installer-download
+ADD --checksum=sha256:451028d56959cc738564885b1dbebc2691ea038ffde04e2472e4d486a3591146 \
+    https://raw.githubusercontent.com/aquaproj/aqua-installer/v4.0.5/aqua-installer /aqua-installer
+
 FROM ghcr.io/cybozu-go/meows-runner:2.335.1-ubuntu22.04-meows0.24.1@sha256:221f8ff2e85d3e8ee0533a3bebd209ed24ab93889aca6408ef64ac9bbae0b0c1
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 
+ARG AQUA_VERSION=v2.60.1
+
 ENV HOME=/home/actions
 ENV GOPATH=${HOME}/go
 ENV GOBIN=${GOPATH}/bin
-ENV PATH=${GOBIN}:/usr/local/go/bin:${PATH}
+ENV PATH=/usr/local/aquaproj-aqua/bin:${HOME}/.local/share/aquaproj-aqua/bin:${GOBIN}:/usr/local/go/bin:${PATH}
 ENV NECO_DIR=${GOPATH}/src/github.com/cybozu-go/neco
 ENV NECO_APPS_DIR=${GOPATH}/src/github.com/cybozu-private/neco-apps
 
@@ -76,5 +82,11 @@ RUN --mount=type=bind,from=placemat-download,source=/placemat2.deb,target=/tmp/p
     && mkdir -p /opt/hostedtoolcache \
     && chown -R actions:actions /opt/hostedtoolcache \
     && chown -R actions:actions ${HOME}
+
+# /home/actions is where a separate volume will be mounted, 
+# so install aqua itself under /usr/local/aquaproj-aqua instead.
+RUN --mount=type=bind,from=aqua-installer-download,source=/aqua-installer,target=/tmp/aqua-installer,rw \
+    chmod +x /tmp/aqua-installer \
+    && AQUA_ROOT_DIR=/usr/local/aquaproj-aqua /tmp/aqua-installer -v ${AQUA_VERSION}
 
 USER actions
