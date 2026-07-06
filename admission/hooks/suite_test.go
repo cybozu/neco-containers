@@ -149,7 +149,11 @@ var _ = BeforeSuite(func() {
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))
-	wh.Register(namespaceDeletionValidateWebhookPath, NewNamespaceDeletionValidator(mgr.GetClient(), dec, namespaceDeletionValidatorConfig, logf.Log.WithName("namespace-deletion-validator")))
+
+	ndv, err := NewNamespaceDeletionValidator(mgr.GetClient(), dec, mgr.GetRESTMapper(), namespaceDeletionValidatorConfig, logf.Log.WithName("namespace-deletion-validator"))
+	Expect(err).NotTo(HaveOccurred())
+
+	wh.Register(namespaceDeletionValidateWebhookPath, ndv)
 	wh.Register(deploymentReplicaCountValidateWebhookPath, NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
 	wh.Register(deploymentReplicaCountScaleValidateWebhookPath, NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
 

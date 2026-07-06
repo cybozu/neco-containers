@@ -60,7 +60,12 @@ func run(addr string, port int, conf *hooks.Config) error {
 	wh.Register("/validate-preventdelete", hooks.NewPreventDeleteValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-deployment-replica-count", hooks.NewDeploymentReplicaCountValidator(mgr.GetClient(), dec))
 	wh.Register("/validate-scale-deployment-replica-count", hooks.NewDeploymentReplicaCountScaleValidator(mgr.GetClient(), dec))
-	wh.Register("/validate-namespace-deletion", hooks.NewNamespaceDeletionValidator(mgr.GetClient(), dec, &conf.NamespaceDeletionValidatorConfig, ctrl.Log.WithName("namespace-deletion-validator")))
+
+	ndv, err := hooks.NewNamespaceDeletionValidator(mgr.GetClient(), dec, mgr.GetRESTMapper(), &conf.NamespaceDeletionValidatorConfig, ctrl.Log.WithName("namespace-deletion-validator"))
+	if err != nil {
+		return err
+	}
+	wh.Register("/validate-namespace-deletion", ndv)
 
 	// +kubebuilder:scaffold:builder
 

@@ -9,8 +9,8 @@ import (
 
 var namespaceDeletionValidatorConfig = &NamespaceDeletionValidatorConfig{
 	ProtectedResources: []NamespaceDeletionProtectedResource{
-		{Group: "", Version: "v1", Kind: "PersistentVolumeClaim"},
-		{Group: "", Version: "v1", Kind: "Service"},
+		{Group: "", Version: "v1", Resource: "persistentvolumeclaims"},
+		{Group: "", Version: "v1", Resource: "services"},
 	},
 }
 

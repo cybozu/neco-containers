@@ -38,7 +38,7 @@ type NamespaceDeletionValidatorConfig struct {
 }
 
 type NamespaceDeletionProtectedResource struct {
-	Group   string `json:"group"`
-	Version string `json:"version"`
-	Kind    string `json:"kind"`
+	Group    string `json:"group"`
+	Version  string `json:"version"`
+	Resource string `json:"resource"`
 }
