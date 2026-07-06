@@ -1,7 +1,7 @@
 sealed-secrets
 ==============
 
-This directory provides a Dockerfile to build a Docker container for [sealed-secrets](https://github.com/bitnami-labs/sealed-secrets).
+This directory provides a Dockerfile to build a Docker container for [sealed-secrets](https://github.com/bitnami/sealed-secrets).
 
 Docker images
 -------------
