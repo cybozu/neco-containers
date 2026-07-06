@@ -1,5 +1,5 @@
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
-ARG GITLEAKSS_COMMIT=6eaad039603a4de39fddd1cf5f727391efe9974e
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ARG GITLEAKSS_COMMIT=83d9cd684c87d95d656c1458ef04895a7f1cbd8e # 8.30.1
 
 WORKDIR /work/gitleaks
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
