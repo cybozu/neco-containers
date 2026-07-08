@@ -3,8 +3,8 @@
 # Stage0: download source archive
 FROM scratch AS source
 
-ARG CADVISOR_VERSION=v0.57.0
-ARG CADVISOR_TARBALL_SHA256=2f700ada18220d6da193e6ecf2d35a52b84e4c38bc20aa08b2e5e3a17f68d1f5
+ARG CADVISOR_VERSION=v0.60.3
+ARG CADVISOR_TARBALL_SHA256=4d43907f4f8d87bd4c59f3c829ca2724283f52ec67e671142c6246e66be15393
 
 ADD --checksum=sha256:${CADVISOR_TARBALL_SHA256} \
     https://github.com/google/cadvisor/archive/${CADVISOR_VERSION}.tar.gz \
