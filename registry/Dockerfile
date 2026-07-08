@@ -19,11 +19,11 @@ ARG DISTRIBUTION_VERSION
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY --from=source /distribution.tar.gz distribution.tar.gz
-RUN mkdir -p /go/src/github.com/docker/ \
-    && tar zxf distribution.tar.gz -C /go/src/github.com/docker/ \
-    && mv /go/src/github.com/docker/distribution-${DISTRIBUTION_VERSION} /go/src/github.com/docker/distribution
+RUN mkdir -p /go/src/github.com/distribution/ \
+    && tar zxf distribution.tar.gz -C /go/src/github.com/distribution/ \
+    && mv /go/src/github.com/distribution/distribution-${DISTRIBUTION_VERSION} /go/src/github.com/distribution/distribution
 
-WORKDIR /go/src/github.com/docker/distribution/
+WORKDIR /go/src/github.com/distribution/distribution/
 
 RUN CGO_ENABLED=0 make clean binaries VERSION=${DISTRIBUTION_VERSION} REVISION=""
 
@@ -35,9 +35,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     jq && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /go/src/github.com/docker/distribution/bin/registry /bin/registry
-COPY --from=build /go/src/github.com/docker/distribution/LICENSE /usr/local/distribution/LICENSE
-COPY --from=build /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/distribution/config.yml
+COPY --from=build /go/src/github.com/distribution/distribution/bin/registry /bin/registry
+COPY --from=build /go/src/github.com/distribution/distribution/LICENSE /usr/local/distribution/LICENSE
+COPY --from=build /go/src/github.com/distribution/distribution/cmd/registry/config-dev.yml /etc/distribution/config.yml
 
 USER 10000:10000
 VOLUME ["/var/lib/registry"]
