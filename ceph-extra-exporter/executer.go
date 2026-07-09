@@ -55,17 +55,19 @@ func (mv *metricValue) UnmarshalJSON(b []byte) error {
 }
 
 type cephExecuter struct {
-	rule          *rule
-	metricValues  map[string][]metricValue
-	mutex         sync.RWMutex
-	failedCounter map[string]int
+	rule            *rule
+	metricValues    map[string][]metricValue
+	mutex           sync.RWMutex
+	failedCounter   map[string]int
+	lastSuccessTime time.Time
 }
 
 func newExecuter(rule *rule) *cephExecuter {
 	return &cephExecuter{
-		rule:          rule,
-		metricValues:  make(map[string][]metricValue),
-		failedCounter: map[string]int{"command": 0, "jq": 0, "parse": 0},
+		rule:            rule,
+		metricValues:    make(map[string][]metricValue),
+		failedCounter:   map[string]int{"command": 0, "jq": 0, "parse": 0},
+		lastSuccessTime: time.Now(),
 	}
 }
 
@@ -84,6 +86,12 @@ func (ce *cephExecuter) start(ctx context.Context) {
 	}
 }
 
+func (ce *cephExecuter) timeSinceLastSuccess() time.Duration {
+	ce.mutex.RLock()
+	defer ce.mutex.RUnlock()
+	return time.Since(ce.lastSuccessTime)
+}
+
 func (ce *cephExecuter) update(ctx context.Context) {
 	logger.Info("starting update", "rule", ce.rule.name)
 	values := make(map[string][]metricValue)
@@ -100,6 +108,10 @@ func (ce *cephExecuter) update(ctx context.Context) {
 		ce.failedCounter["command"] += 1
 		return
 	}
+
+	ce.mutex.Lock()
+	ce.lastSuccessTime = time.Now()
+	ce.mutex.Unlock()
 
 	for name, metric := range ce.rule.metrics {
 		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))

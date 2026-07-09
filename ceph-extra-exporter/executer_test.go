@@ -9,9 +9,10 @@ import (
 
 func TestCephExecuterUpdate(t *testing.T) {
 	testcases := map[string]struct {
-		rule                rule
-		expectedMetricValue map[string][]metricValue
-		expectedFailedCount map[string]int
+		rule                   rule
+		expectedMetricValue    map[string][]metricValue
+		expectedFailedCount    map[string]int
+		expectedCommandSuccess bool
 	}{
 		"happy path": {
 			rule: rule{
@@ -36,7 +37,8 @@ func TestCephExecuterUpdate(t *testing.T) {
 					{value: 2, labelValues: []string{"key2"}},
 				},
 			},
-			expectedFailedCount: map[string]int{},
+			expectedFailedCount:    map[string]int{},
+			expectedCommandSuccess: true,
 		},
 		"command execution failed": {
 			rule: rule{
@@ -47,6 +49,7 @@ func TestCephExecuterUpdate(t *testing.T) {
 			expectedFailedCount: map[string]int{
 				"command": 1,
 			},
+			expectedCommandSuccess: false,
 		},
 		"invalid jq filter": {
 			rule: rule{
@@ -81,16 +84,23 @@ func TestCephExecuterUpdate(t *testing.T) {
 				"jq":    1,
 				"parse": 2,
 			},
+			expectedCommandSuccess: true,
 		},
 	}
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
 			ce := newExecuter(&tc.rule)
+			initialSuccessTime := ce.lastSuccessTime
 			ce.update(t.Context())
 
 			assert.Equal(t, tc.expectedMetricValue, ce.metricValues)
 			assert.Subset(t, ce.failedCounter, tc.expectedFailedCount)
+			if tc.expectedCommandSuccess {
+				assert.True(t, ce.lastSuccessTime.After(initialSuccessTime))
+			} else {
+				assert.Equal(t, initialSuccessTime, ce.lastSuccessTime)
+			}
 		})
 	}
 }

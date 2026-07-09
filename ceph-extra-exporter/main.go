@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -78,28 +79,39 @@ func init() {
 	prometheus.MustRegister(buildInfo)
 }
 
-func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
+func startServer(rules []rule, port uint, doesRunRGWAdmin bool, healthCheckThreshold time.Duration) error {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
 		cancel()
 		wg.Wait()
 	}()
+	executers := []*cephExecuter{}
 	for i := 0; i < len(rules); i++ {
 		if !doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
 			continue
 		}
+		executer := newExecuter(&rules[i])
+		prometheus.MustRegister(newCollector(executer, "ceph_extra"))
+		executers = append(executers, executer)
 		wg.Add(1)
-		go func(r *rule) {
-			executer := newExecuter(r)
-			prometheus.MustRegister(newCollector(executer, "ceph_extra"))
+		go func() {
 			executer.start(ctx)
 			wg.Done()
-		}(&rules[i])
+		}()
 	}
 
 	mux := http.NewServeMux()
 	mux.Handle("/v1/health", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		for _, executer := range executers {
+			elapsed := executer.timeSinceLastSuccess()
+			if elapsed > healthCheckThreshold {
+				logger.Warn("health check failed", "rule", executer.rule.name, "elapsed", elapsed.String())
+				rw.WriteHeader(http.StatusServiceUnavailable)
+				fmt.Fprintf(rw, "rule %q has not succeeded for %s\n", executer.rule.name, elapsed)
+				return
+			}
+		}
 		rw.WriteHeader(http.StatusOK)
 	}))
 	mux.Handle("/v1/metrics", promhttp.Handler())
@@ -120,8 +132,9 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 func main() {
 	port := flag.Uint("port", 8080, "port number")
 	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	healthCheckThreshold := flag.Duration("health-check-threshold", 2*executionInterval+commandTimeout, "how long a worker can go without a successful command execution before /v1/health reports unhealthy")
 	flag.Parse()
-	if err := startServer(rules, *port, *doesRunRGWAdmin); err != nil {
+	if err := startServer(rules, *port, *doesRunRGWAdmin, *healthCheckThreshold); err != nil {
 		os.Exit(1)
 	}
 }
