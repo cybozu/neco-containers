@@ -1,5 +1,5 @@
-E2ETEST_K8S_VERSION := 1.34.0
-E2ETEST_K8S_IMAGE   := kindest/node:v1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
+E2ETEST_K8S_VERSION := 1.34.8
+E2ETEST_K8S_IMAGE   := kindest/node:v1.34.8@sha256:02722c2dedddcfc00febf5d27fbeb9b7b2c14294c82109ff4a85d89ac9ba3256
 
 PROJECT_DIR := $(CURDIR)/../
 BIN_DIR := $(PROJECT_DIR)/bin
@@ -17,7 +17,7 @@ setup: | $(BIN_DIR)
 
 .PHONY: start
 start:
-	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --wait 1m
+	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --config=kind-config.yaml --wait 1m
 	$(MAKE) -C ../ docker-build
 	$(KIND) load docker-image ghcr.io/cybozu/squid-exporter:dev --name=$(KIND_CLUSTER_NAME)
 
