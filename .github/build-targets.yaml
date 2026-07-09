@@ -39,17 +39,17 @@
   container-image: "argo-rollouts"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./argocd"
   container-image: "argocd"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./argocd-image-updater"
   container-image: "argocd-image-updater"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./bird"
   container-image: "bird"
   scan:
@@ -194,7 +194,7 @@
   container-image: "dex"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./etcd"
   container-image: "etcd"
   scan:
@@ -241,28 +241,28 @@
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
-    team: neco
+    team: pdx
     identifier: "ghcr.io/cybozu/golang:1.25-jammy"
 - dir: "./golang-all/golang-1.26-jammy"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
-    team: neco
+    team: pdx
     identifier: "ghcr.io/cybozu/golang:1.26-jammy"
 - dir: "./golang-all/golang-1.25-noble"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
-    team: neco
+    team: pdx
     identifier: "ghcr.io/cybozu/golang:1.25-noble"
 - dir: "./golang-all/golang-1.26-noble"
   container-image: "golang"
   platforms: "linux/amd64,linux/arm64"
   scan:
     enabled: true
-    team: neco
+    team: pdx
     identifier: "ghcr.io/cybozu/golang:1.26-noble"
 - dir: "./grafana"
   container-image: "grafana"
@@ -348,12 +348,12 @@
   container-image: "meows-dctest-runner"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./meows-neco-runner"
   container-image: "meows-neco-runner"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./neco-exporter"
   container-image: "neco-exporter"
   make-targets: "check-generate e2e-prepare test"
@@ -399,7 +399,8 @@
   container-image: "pomerium"
   scan:
     enabled: true
-    team: neco
+    team: pdx
+    is_public: true
 - dir: "./prometheus-adapter"
   container-image: "prometheus-adapter"
   scan:
@@ -425,7 +426,7 @@
   container-image: "redis"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./registry"
   container-image: "registry"
   scan:
@@ -513,7 +514,7 @@
   container-image: "teleport-node"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./tempo"
   container-image: "tempo"
   scan:
@@ -530,7 +531,7 @@
   container-image: "trivy-operator"
   scan:
     enabled: true
-    team: neco
+    team: pdx
 - dir: "./trust-manager"
   container-image: "trust-manager"
   scan:
