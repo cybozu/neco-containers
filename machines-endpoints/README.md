@@ -1,11 +1,12 @@
 machines-endpoints container
 ============================
 
-`machines-endpoints` is a one-shot program to create/update Kubernetes Endpoints, EndpointSlice and ConfigMap objects based on the information in [sabakan](https://github.com/cybozu-go/sabakan) on bootservers.
+`machines-endpoints` is a one-shot program to create/update Kubernetes EndpointSlice and ConfigMap objects based on the information in [sabakan](https://github.com/cybozu-go/sabakan) on bootservers.
 
-The Endpoints/EndpointSlice objects managed by this program are provided for [Prometheus](https://prometheus.io/) to discover services on host machines.
-* The host machines listed by this program include spare machines and boot servers.
+The EndpointSlice objects managed by this program are provided for [Prometheus](https://prometheus.io/) to discover services on host machines.
+* The host machines listed by this program include boot servers and old-style spare machines.
     Such machines are not registered in Kubernetes as Nodes, and they cannot be scraped with `node` role in `<kubernetes_sd_config>` configuration.
+    Note that recent versions of CKE configure spare machines as Kubernetes Nodes.
 * Retired machines are not listed because they never provide metrics.
 
 The ConfigMap object is provided for [BMC reverse proxy](https://github.com/cybozu/neco-containers/tree/main/bmc-reverse-proxy) to resolve BMC hostnames to IP addresses.
@@ -25,13 +26,11 @@ Usage
    kubectl apply -n NAMESPACE -f machines-endpoints.yaml
    ```
 
-3. Check `prometheus-node-targets` endpoints, `bootserver-etcd-metrics` endpoints, and `bmc-reverse-proxy` configmap.
+3. Check `prometheus-node-targets-0` EndpointSlice, `bootserver-etcd-metrics-0` EndpointSlice, and `bmc-reverse-proxy` ConfigMap.
 
    ```console
-   kubectl get endpoints -n NAMESPACE prometheus-node-targets
-   kubectl get endpointslice -n NAMESPACE prometheus-node-targets
-   kubectl get endpoints -n NAMESPACE bootserver-etcd-metrics
-   kubectl get endpointslice -n NAMESPACE bootserver-etcd-metrics
+   kubectl get endpointslice -n NAMESPACE prometheus-node-targets-0
+   kubectl get endpointslice -n NAMESPACE bootserver-etcd-metrics-0
    kubectl get configmap -n NAMESPACE bmc-reverse-proxy
    ```
  
