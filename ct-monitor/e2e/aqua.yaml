@@ -8,5 +8,5 @@ registries:
 - type: standard
   ref: v4.492.0
 packages:
-- name: kubernetes-sigs/kind@v0.30.0
-- name: kubernetes/kubectl@v1.34.3
+- name: kubernetes-sigs/kind@v0.32.0
+- name: kubernetes/kubectl@v1.34.8
