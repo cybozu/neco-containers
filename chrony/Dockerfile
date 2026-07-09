@@ -1,7 +1,7 @@
 # chrony container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260709@sha256:139cb9a6a1e020636de498e78cd528ca5a8cffa7cf48af30031cac4e44c69363 AS build
 ENV CHRONY_VERSION=4.8
 ENV CHRONY_HASH=33ea8eb2a4daeaa506e8fcafd5d6d89027ed6f2f0609645c6f149b560d301706
 
@@ -22,7 +22,7 @@ RUN ./configure --exec-prefix=/usr/local/chrony --with-pidfile=/run/chrony/chron
 
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260709@sha256:f91f1884f5b8dbe44e224306b5dc7bfd4d420f5c73aea1d32a71c6474361fb0f
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
