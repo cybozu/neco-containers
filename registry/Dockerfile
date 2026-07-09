@@ -1,31 +1,19 @@
 # Registry container image
 
-ARG DISTRIBUTION_VERSION=3.1.1
-
-# Stage0: download source archive
-FROM scratch AS source
-
-ARG DISTRIBUTION_VERSION
-ARG DISTRIBUTION_TARBALL_SHA256=419183e8c1426b5d625732cf6846a2d48ad8e898a1659d7bec7171b7d156673e
-
-ADD --checksum=sha256:${DISTRIBUTION_TARBALL_SHA256} \
-    https://github.com/distribution/distribution/archive/v${DISTRIBUTION_VERSION}.tar.gz \
-    /distribution.tar.gz
-
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG DISTRIBUTION_VERSION
+ARG REGISTRY_COMMIT=9a8d98b679740cd514aa7e7d84d23d442a5ef54c
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-COPY --from=source /distribution.tar.gz distribution.tar.gz
 RUN mkdir -p /go/src/github.com/distribution/ \
-    && tar zxf distribution.tar.gz -C /go/src/github.com/distribution/ \
-    && mv /go/src/github.com/distribution/distribution-${DISTRIBUTION_VERSION} /go/src/github.com/distribution/distribution
+    && curl -sSLf https://github.com/distribution/distribution/archive/${REGISTRY_COMMIT}.tar.gz | \
+    tar zxf - -C /go/src/github.com/distribution/ \
+    && mv /go/src/github.com/distribution/distribution-${REGISTRY_COMMIT} /go/src/github.com/distribution/distribution
 
 WORKDIR /go/src/github.com/distribution/distribution/
 
-RUN CGO_ENABLED=0 make clean binaries VERSION=${DISTRIBUTION_VERSION} REVISION=""
+RUN CGO_ENABLED=0 make clean binaries
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
