@@ -431,9 +431,10 @@ gitGraph
    2. Create and checkout a new branch named `vX.Y.Z-neco` from the tag named `vX.Y.Z`.
    3. Cherry-pick the commit included patches and create a new tag named `vX.Y.Z-neco.1`.
    4. Push it.
-3. Update `CERT_MANAGER_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
+3. Update base images in `Dockerfile`.
+4. Update `CERT_MANAGER_SHA` in `Dockerfile`.
+5. Update image tag in `README.md`.
+6. Update `BRANCH` and `TAG` files.
 
 ## chrony
 
