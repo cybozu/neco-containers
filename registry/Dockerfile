@@ -13,7 +13,7 @@ ADD --checksum=sha256:${DISTRIBUTION_TARBALL_SHA256} \
     /distribution.tar.gz
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG DISTRIBUTION_VERSION
 
