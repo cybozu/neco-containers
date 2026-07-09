@@ -56,6 +56,10 @@ func (v *namespaceDeletionValidator) Handle(ctx context.Context, req admission.R
 		}
 		gvk, err := v.mapper.KindFor(gvr)
 		if err != nil {
+			if meta.IsNoMatchError(err) {
+				v.logger.Info("resource is not registered, skipping validation", "resource", gvr.String())
+				continue
+			}
 			return admission.Errored(
 				http.StatusInternalServerError,
 				fmt.Errorf("failed to resolve resource %s/%s/%s: %w", r.Group, r.Version, r.Resource, err),
@@ -92,6 +96,10 @@ func (v *namespaceDeletionValidator) validate() error {
 
 		gvk, err := v.mapper.KindFor(gvr)
 		if err != nil {
+			if meta.IsNoMatchError(err) {
+				v.logger.Info("resource is not registered, skipping validation", "resource", gvr.String())
+				continue
+			}
 			return fmt.Errorf("failed to resolve resource %s: %w", gvr.String(), err)
 		}
 
