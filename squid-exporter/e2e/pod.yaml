@@ -6,6 +6,14 @@ spec:
   containers:
   - name: squid
     image: ghcr.io/cybozu/squid:7
+    readinessProbe:
+      tcpSocket:
+        port: 3128
+      periodSeconds: 1
   - name: squid-exporter
     image: ghcr.io/cybozu/squid-exporter:dev
     imagePullPolicy: Never
+    readinessProbe:
+      tcpSocket:
+        port: 9100
+      periodSeconds: 1

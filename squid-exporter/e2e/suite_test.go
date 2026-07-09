@@ -53,10 +53,12 @@ var _ = Describe("squid-exporter e2e test", func() {
 			if err != nil {
 				return err
 			}
-			if pod.Status.Phase != corev1.PodRunning {
-				return fmt.Errorf("pod is not ready yet")
+			for _, cond := range pod.Status.Conditions {
+				if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+					return nil
+				}
 			}
-			return nil
+			return fmt.Errorf("pod is not ready yet")
 		}).Should(Succeed())
 
 		By("checking number of counters and metrics")
