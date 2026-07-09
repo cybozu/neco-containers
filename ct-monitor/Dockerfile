@@ -1,5 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG VERSION=0.6.5
+ARG VERSION=0.6.9
 COPY plugin/ /work/plugin/
 RUN CGO_ENABLED=0 go install github.com/Hsn723/ct-monitor@v${VERSION} \
     && mkdir -p /etc/ct-monitor /var/log/ct-monitor /plugins /tmp \
