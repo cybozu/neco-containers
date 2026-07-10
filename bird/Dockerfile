@@ -1,9 +1,10 @@
 # BIRD container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260710@sha256:e779b8941433835b11adf9140f12bb5486168486592063339bacf4cc8ab4ef65 AS build
+ENV BIRD_HASH=5b275f0f91c063bd0369a2996982f8f578736eb9b4b5c0fb62a275ec663f74df
 
-ARG BIRD_VERSION=3.3.1
+ARG BIRD_VERSION=3.2.2
 WORKDIR /work
 
 RUN apt-get update \
@@ -15,8 +16,9 @@ RUN apt-get update \
        libssh-dev \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -sSLf -O https://bird.nic.cz/download/bird-${BIRD_VERSION}.tar.gz && \
-    tar xzf bird-${BIRD_VERSION}.tar.gz
+RUN curl -fsSL https://bird.nic.cz/download/bird-${BIRD_VERSION}.tar.gz -o bird-${BIRD_VERSION}.tar.gz \
+    && echo "${BIRD_HASH} bird-${BIRD_VERSION}.tar.gz" | sha256sum -c - \
+    && tar xzf bird-${BIRD_VERSION}.tar.gz
 
 WORKDIR /work/bird-${BIRD_VERSION}
 
@@ -32,7 +34,7 @@ COPY bird-copyright /usr/local/bird/copyright
 
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260710@sha256:3f0d95a6fd61317a3eb6ea9e47391aacd7f4129f12a7092e20729e16157ab83b
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
