@@ -1,14 +1,16 @@
 # trust-manager container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26.5.2_noble@sha256:419e350acc85bb2603c45e15e12c3238a1ec765cb58f5eb14ef7adf8bea9748f AS build
+ENV TRUST_MANAGER_HASH=c1ba3525637adc858a8addb24b87be4d0189a77c0e532734d9aeac41b3351f71
 
 COPY TAG /
 WORKDIR /workspace
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && curl -fsSL https://github.com/cert-manager/trust-manager/archive/v${VERSION}.tar.gz | \
-    tar --strip-components=1 -xzf -
+RUN VERSION=$(cut -d \. -f1-3 < /TAG ) \
+    && curl -fsSL https://github.com/cert-manager/trust-manager/archive/v${VERSION}.tar.gz -o /tmp/trust-manager.tar.gz \
+    && echo "${TRUST_MANAGER_HASH} /tmp/trust-manager.tar.gz" | sha256sum -c - \
+    && tar zxf /tmp/trust-manager.tar.gz --strip-components=1 -C /workspace/
 
 # Parameters retrieved from:
 # $ make ko-config-manager
