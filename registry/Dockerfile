@@ -1,19 +1,19 @@
 # Registry container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG REGISTRY_COMMIT=708f8d6b060248fe7192294dd5440320ffc86da0
+ARG REGISTRY_COMMIT=9a8d98b679740cd514aa7e7d84d23d442a5ef54c
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN mkdir -p /go/src/github.com/docker/ \
+RUN mkdir -p /go/src/github.com/distribution/ \
     && curl -sSLf https://github.com/distribution/distribution/archive/${REGISTRY_COMMIT}.tar.gz | \
-    tar zxf - -C /go/src/github.com/docker/ \
-    && mv /go/src/github.com/docker/distribution-${REGISTRY_COMMIT} /go/src/github.com/docker/distribution
+    tar zxf - -C /go/src/github.com/distribution/ \
+    && mv /go/src/github.com/distribution/distribution-${REGISTRY_COMMIT} /go/src/github.com/distribution/distribution
 
-WORKDIR /go/src/github.com/docker/distribution/
+WORKDIR /go/src/github.com/distribution/distribution/
 
-RUN CGO_ENABLED=0 make clean binaries VERSION=${REGISTRY_VERSION} REVISION=""
+RUN CGO_ENABLED=0 make clean binaries
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
@@ -23,9 +23,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     jq && \
     rm -rf /var/lib/apt/lists/*
 
-COPY --from=build /go/src/github.com/docker/distribution/bin/registry /bin/registry
-COPY --from=build /go/src/github.com/docker/distribution/LICENSE /usr/local/distribution/LICENSE
-COPY --from=build /go/src/github.com/docker/distribution/cmd/registry/config-dev.yml /etc/distribution/config.yml
+COPY --from=build /go/src/github.com/distribution/distribution/bin/registry /bin/registry
+COPY --from=build /go/src/github.com/distribution/distribution/LICENSE /usr/local/distribution/LICENSE
+COPY --from=build /go/src/github.com/distribution/distribution/cmd/registry/config-dev.yml /etc/distribution/config.yml
 
 USER 10000:10000
 VOLUME ["/var/lib/registry"]
