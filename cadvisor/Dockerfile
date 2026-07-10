@@ -1,9 +1,9 @@
 # cadvisor container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG CADVISOR_COMMIT=7cbdee9260c4292d5d27d00416ce8a7dc1dc12a0
+ARG CADVISOR_COMMIT=9c3903ca474779a5f5f9c7b3af9868c566a85f4e
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
