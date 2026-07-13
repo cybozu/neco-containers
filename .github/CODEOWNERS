@@ -2,21 +2,21 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 #
 # Teams:
-#   Neco (default): @cybozu-private/neco
-#   Kubernetes基盤: @cybozu-private/neco-infrastructure
-#   Kubernetesネットワーク: @cybozu-private/neco-network
-#   PDX         : @cybozu-private/pdx
-#   DAP         : @cybozu-private/landsat
-#   CSA         : @cybozu-private/csa
+#   @cybozu-private/neco
+#   @cybozu-private/neco-infrastructure
+#   @cybozu-private/neco-network
+#   @cybozu-private/pdx
+#   @cybozu-private/landsat
+#   @cybozu-private/csa
 #
-# 記法メモ:
-#   - 通常はディレクトリごとに担当チームを指定する
-#     例) /admission/   @cybozu-private/neco-infrastructure
+# Usage:
+#   - Assign an owning team per top-level directory.
+#     e.g.) /admission/   @cybozu-private/neco-infrastructure
 
 # Neco is the owner of all
 * @cybozu-private/neco
 
-# ---- Kubernetes基盤 (@cybozu-private/neco-infrastructure) ----
+# ---- Neco Infrastructure Team (@cybozu-private/neco-infrastructure) ----
 /admission/                       @cybozu-private/neco-infrastructure
 /bmc-log-collector/               @cybozu-private/neco-infrastructure
 /bmc-reverse-proxy/               @cybozu-private/neco-infrastructure
@@ -42,7 +42,7 @@
 /testhttpd/                       @cybozu-private/neco-infrastructure
 /vault/                           @cybozu-private/neco-infrastructure
 
-# ---- Kubernetesネットワーク (@cybozu-private/neco-network) ----
+# ---- Neco Network Team (@cybozu-private/neco-network) ----
 /bird/                            @cybozu-private/neco-network
 /bpf-map-pressure-exporter/       @cybozu-private/neco-network
 /bpftrace/                        @cybozu-private/neco-network
