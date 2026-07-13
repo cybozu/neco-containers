@@ -1,0 +1,123 @@
+# CODEOWNERS
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# Teams:
+#   Neco (default): @cybozu-private/neco
+#   Kubernetes基盤: @cybozu-private/neco-infrastructure
+#   Kubernetesネットワーク: @cybozu-private/neco-network
+#   PDX         : @cybozu-private/pdx
+#   DAP         : @cybozu-private/landsat
+#   CSA         : @cybozu-private/csa
+#
+# 記法メモ:
+#   - 通常はディレクトリごとに担当チームを指定する
+#     例) /admission/   @cybozu-private/neco-infrastructure
+
+# Neco is the owner of all
+* @cybozu-private/neco
+
+# ---- Kubernetes基盤 (@cybozu-private/neco-infrastructure) ----
+/admission/                       @cybozu-private/neco-infrastructure
+/bmc-log-collector/               @cybozu-private/neco-infrastructure
+/bmc-reverse-proxy/               @cybozu-private/neco-infrastructure
+/cadvisor/                        @cybozu-private/neco-infrastructure
+/coredns/                         @cybozu-private/neco-infrastructure
+/etcd/                            @cybozu-private/neco-infrastructure
+/falco/                           @cybozu-private/neco-infrastructure
+/falco-k8s-metacollector/         @cybozu-private/neco-infrastructure
+/falco-operator/                  @cybozu-private/neco-infrastructure
+/gitleaks/                        @cybozu-private/neco-infrastructure
+/kube-metrics-adapter/            @cybozu-private/neco-infrastructure
+/kubernetes/                      @cybozu-private/neco-infrastructure
+/kube-state-metrics/              @cybozu-private/neco-infrastructure
+/kube-storage-version-migrator/   @cybozu-private/neco-infrastructure
+/machines-endpoints/              @cybozu-private/neco-infrastructure
+/pause/                           @cybozu-private/neco-infrastructure
+/prometheus-adapter/              @cybozu-private/neco-infrastructure
+/registry/                        @cybozu-private/neco-infrastructure
+/s3gw/                            @cybozu-private/neco-infrastructure
+/sealed-secrets/                  @cybozu-private/neco-infrastructure
+/serf/                            @cybozu-private/neco-infrastructure
+/spegel/                          @cybozu-private/neco-infrastructure
+/testhttpd/                       @cybozu-private/neco-infrastructure
+/vault/                           @cybozu-private/neco-infrastructure
+
+# ---- Kubernetesネットワーク (@cybozu-private/neco-network) ----
+/bird/                            @cybozu-private/neco-network
+/bpf-map-pressure-exporter/       @cybozu-private/neco-network
+/bpftrace/                        @cybozu-private/neco-network
+/cep-checker/                     @cybozu-private/neco-network
+/cert-manager/                    @cybozu-private/neco-network
+/chrony/                          @cybozu-private/neco-network
+/cilium/                          @cybozu-private/neco-network
+/cilium-certgen/                  @cybozu-private/neco-network
+/cilium-operator-generic/         @cybozu-private/neco-network
+/contour/                         @cybozu-private/neco-network
+/ct-monitor/                      @cybozu-private/neco-network
+/envoy/                           @cybozu-private/neco-network
+/external-dns/                    @cybozu-private/neco-network
+/hubble/                          @cybozu-private/neco-network
+/hubble-relay/                    @cybozu-private/neco-network
+/hubble-ui/                       @cybozu-private/neco-network
+/neco-exporter/                   @cybozu-private/neco-network
+/spiffe-csi-driver/               @cybozu-private/neco-network
+/spiffe-test/                     @cybozu-private/neco-network
+/spire-agent/                     @cybozu-private/neco-network
+/spire-controller-manager/        @cybozu-private/neco-network
+/spire-server/                    @cybozu-private/neco-network
+/squid/                           @cybozu-private/neco-network
+/squid-exporter/                  @cybozu-private/neco-network
+/stakater-reloader/               @cybozu-private/neco-network
+/tcp-keepalive/                   @cybozu-private/neco-network
+/trust-manager/                   @cybozu-private/neco-network
+/trust-packages/                  @cybozu-private/neco-network
+/unbound/                         @cybozu-private/neco-network
+/unbound_exporter/                @cybozu-private/neco-network
+
+# ---- PDX (@cybozu-private/pdx) ----
+/argocd/                          @cybozu-private/pdx
+/argocd-image-updater/            @cybozu-private/pdx
+/argo-rollouts/                   @cybozu-private/pdx
+/dex/                             @cybozu-private/pdx
+/golang-all/                      @cybozu-private/pdx
+/haproxy/                         @cybozu-private/pdx
+/meows-dctest-runner/             @cybozu-private/pdx
+/meows-neco-runner/               @cybozu-private/pdx
+/pomerium/                        @cybozu-private/pdx
+/redis/                           @cybozu-private/pdx
+/teleport-node/                   @cybozu-private/pdx
+/trivy-operator/                  @cybozu-private/pdx
+
+# ---- DAP (@cybozu-private/landsat) ----
+/alertmanager/                    @cybozu-private/landsat
+/alloy/                           @cybozu-private/landsat
+/blackbox_exporter/               @cybozu-private/landsat
+/fluent-bit/                      @cybozu-private/landsat
+/grafana/                         @cybozu-private/landsat
+/grafana-operator/                @cybozu-private/landsat
+/loki/                            @cybozu-private/landsat
+/memcached/                       @cybozu-private/landsat
+/memcached-exporter/              @cybozu-private/landsat
+/opentelemetry-collector/         @cybozu-private/landsat
+/prometheus-config-reloader/      @cybozu-private/landsat
+/pushgateway/                     @cybozu-private/landsat
+/pyroscope/                       @cybozu-private/landsat
+/tempo/                           @cybozu-private/landsat
+/victoriametrics/                 @cybozu-private/landsat
+/victoriametrics-operator/        @cybozu-private/landsat
+
+# ---- CSA (@cybozu-private/csa) ----
+/bucket-provisioner-light/        @cybozu-private/csa
+/ceph/                            @cybozu-private/csa
+/cephcsi/                         @cybozu-private/csa
+/ceph-csi-operator/               @cybozu-private/csa
+/ceph-extra-exporter/             @cybozu-private/csa
+/csi-addons-controller/           @cybozu-private/csa
+/csi-addons-sidecar/              @cybozu-private/csa
+/csi-attacher/                    @cybozu-private/csa
+/csi-node-driver-registrar/       @cybozu-private/csa
+/csi-provisioner/                 @cybozu-private/csa
+/csi-resizer/                     @cybozu-private/csa
+/csi-snapshotter/                 @cybozu-private/csa
+/local-pv-provisioner/            @cybozu-private/csa
+/rook/                            @cybozu-private/csa

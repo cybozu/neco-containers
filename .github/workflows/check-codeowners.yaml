@@ -1,0 +1,35 @@
+name: check-codeowners
+
+on:
+  pull_request:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  check:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Ensure every top-level directory has a CODEOWNERS entry
+        run: |
+          set -euo pipefail
+          missing=()
+          for d in */; do
+            name="${d%/}"
+            if ! grep -qE "^/${name}/" .github/CODEOWNERS; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            {
+              echo "::error::The following top-level directories are missing from .github/CODEOWNERS:"
+              printf ' - %s\n' "${missing[@]}"
+              echo
+              echo "Add an owner entry, e.g.:"
+              echo "  /<dir>/  @cybozu-private/<team>"
+            } >&2
+            exit 1
+          fi
