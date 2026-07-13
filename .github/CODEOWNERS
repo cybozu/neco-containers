@@ -78,6 +78,7 @@
 /argocd/                          @cybozu-private/pdx
 /argocd-image-updater/            @cybozu-private/pdx
 /argo-rollouts/                   @cybozu-private/pdx
+/bucket-provisioner-light/        @cybozu-private/pdx
 /dex/                             @cybozu-private/pdx
 /golang-all/                      @cybozu-private/pdx
 /haproxy/                         @cybozu-private/pdx
@@ -107,7 +108,6 @@
 /victoriametrics-operator/        @cybozu-private/landsat
 
 # ---- CSA (@cybozu-private/csa) ----
-/bucket-provisioner-light/        @cybozu-private/csa
 /ceph/                            @cybozu-private/csa
 /cephcsi/                         @cybozu-private/csa
 /ceph-csi-operator/               @cybozu-private/csa
