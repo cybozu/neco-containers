@@ -15,6 +15,12 @@ Built images can be pulled from [ghcr.io/cybozu][ghcr].
 Subdirectories in this repository have `TAG` and `BRANCH` files
 in addition to files to build Docker images.
 
+Each directory that contains a `Dockerfile` must also have a
+`build-targets.yaml` alongside it. This file declares the build entries
+(image name, scan settings, platforms, etc.) for that Dockerfile, and
+its enclosing directory is used as the build context. See the header of
+[`generate_matrix`](./generate_matrix) for the full list of fields.
+
 These will be used by GitHub Actions to tag the built images.
 GitHub Actions does the following each time commits are pushed to a branch.
 
