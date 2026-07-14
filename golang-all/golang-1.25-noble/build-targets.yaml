@@ -1,0 +1,6 @@
+- container-image: "golang"
+  platforms: "linux/amd64,linux/arm64"
+  scan:
+    enabled: true
+    team: pdx
+    identifier: "ghcr.io/cybozu/golang:1.25-noble"

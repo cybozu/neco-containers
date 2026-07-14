@@ -1,0 +1,5 @@
+- container-image: "kubernetes"
+  scan:
+    enabled: true
+    team: neco
+    identifier: "ghcr.io/cybozu/kubernetes:1.35"

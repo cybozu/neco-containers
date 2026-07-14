@@ -2,16 +2,14 @@
 
 # Build targets for the "main" workflow.
 #
-# Each top-level directory owns a build-targets.yaml that groups its build
-# entries. Each entry defines one container image build job. The entries are
-# consumed by this script, which filters them down to images whose files
-# changed in the PR, then dispatches each entry to the build_container job.
+# Each build-targets.yaml sits alongside the Dockerfile it builds and groups
+# one or more build entries for that directory. Each entry defines one
+# container image build job. The entries are consumed by this script, which
+# filters them down to images whose files changed in the PR, then dispatches
+# each entry to the build_container job. The build context directory is
+# always the directory that encloses the build-targets.yaml.
 #
 # Fields:
-#   dir              : build context directory. Defaults to the enclosing
-#                      top-level directory (i.e., "./<enclosing>"), so this
-#                      field is only needed when an entry targets a
-#                      sub-directory such as "./kubernetes/k8s-1.33".
 #   container-image  : REQUIRED. image name (pushed to ghcr.io/cybozu/<name>)
 #   scan.enabled     : REQUIRED. true / false
 #   scan.team        : REQUIRED if scan.enabled is true. Yamory team name for the image
@@ -38,14 +36,14 @@ echo "Changed Files:"
 cat .github/outputs/__diff.txt | jq -n --raw-input '[inputs]' | yq -P
 
 # Merge per-directory build target files into a single matrix file that
-# build_decision can consume. For each source file, fill in the "dir" field
-# with the enclosing top-level directory when it is omitted.
+# build_decision can consume. For each source file, set the "dir" field to
+# the directory that encloses it (the build context).
 MATRIX_FILE=".github/outputs/__build_targets.yaml"
 : > "${MATRIX_FILE}"
-for f in */build-targets.yaml; do
-    d="${f%/build-targets.yaml}"
-    yq ".[] |= (.dir = (.dir // \"./${d}\"))" "$f" >> "${MATRIX_FILE}"
-done
+while IFS= read -r f; do
+    d="$(dirname "${f#./}")"
+    yq ".[] |= (.dir = \"./${d}\")" "$f" >> "${MATRIX_FILE}"
+done < <(find . -mindepth 2 -maxdepth 3 -name build-targets.yaml -not -path './.github/*' -not -path './.git/*' | sort)
 JSON_MATRIX="$(yq -ojson '.' "${MATRIX_FILE}")"
 OUTPUT_MATRIX='[]'
 for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do
