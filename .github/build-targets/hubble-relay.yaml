@@ -1,0 +1,7 @@
+- dir: "./hubble-relay"
+  container-image: "hubble-relay"
+  make-post-targets: "cilium-checkout cilium-test-e2e-setup cilium-test-e2e-upgrade-inotify test-e2e"
+  load: true
+  scan:
+    enabled: true
+    team: neco

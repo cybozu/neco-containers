@@ -1,0 +1,5 @@
+- dir: "csi-attacher"
+  container-image: "csi-attacher"
+  scan:
+    enabled: true
+    team: neco

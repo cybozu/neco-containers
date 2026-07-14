@@ -1,0 +1,4 @@
+- dir: "./pause"
+  container-image: "pause"
+  scan:
+    enabled: false

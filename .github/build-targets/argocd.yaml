@@ -1,0 +1,5 @@
+- dir: "./argocd"
+  container-image: "argocd"
+  scan:
+    enabled: true
+    team: pdx

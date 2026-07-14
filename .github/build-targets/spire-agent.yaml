@@ -1,0 +1,4 @@
+- dir: "./spire-agent"
+  container-image: "spire-agent"
+  scan:
+    enabled: false

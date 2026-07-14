@@ -1,0 +1,5 @@
+- dir: "csi-node-driver-registrar"
+  container-image: "csi-node-driver-registrar"
+  scan:
+    enabled: true
+    team: neco

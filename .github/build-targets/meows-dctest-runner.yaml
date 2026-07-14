@@ -1,0 +1,5 @@
+- dir: "./meows-dctest-runner"
+  container-image: "meows-dctest-runner"
+  scan:
+    enabled: true
+    team: pdx

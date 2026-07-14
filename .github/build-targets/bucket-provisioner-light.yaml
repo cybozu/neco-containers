@@ -1,0 +1,5 @@
+- dir: "./bucket-provisioner-light"
+  container-image: "bucket-provisioner-light"
+  make-targets: "test"
+  scan:
+    enabled: false

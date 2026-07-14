@@ -1,0 +1,5 @@
+- dir: "./machines-endpoints"
+  container-image: "machines-endpoints"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: false

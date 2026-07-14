@@ -1,0 +1,5 @@
+- dir: "./cep-checker"
+  container-image: "cep-checker"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false

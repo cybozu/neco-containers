@@ -1,0 +1,5 @@
+- dir: "./etcd"
+  container-image: "etcd"
+  scan:
+    enabled: true
+    team: neco

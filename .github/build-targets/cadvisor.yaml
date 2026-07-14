@@ -1,0 +1,4 @@
+- dir: "./cadvisor"
+  container-image: "cadvisor"
+  scan:
+    enabled: false

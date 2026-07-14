@@ -1,0 +1,5 @@
+- dir: "./trust-packages"
+  container-image: "trust-packages"
+  make-targets: "download-certificates"
+  scan:
+    enabled: false

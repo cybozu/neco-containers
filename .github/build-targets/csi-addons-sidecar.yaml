@@ -1,0 +1,5 @@
+- dir: "csi-addons-sidecar"
+  container-image: "csi-addons-sidecar"
+  scan:
+    enabled: true
+    team: neco

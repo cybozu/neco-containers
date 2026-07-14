@@ -1,0 +1,4 @@
+- dir: "./cephcsi"
+  container-image: "cephcsi"
+  scan:
+    enabled: false

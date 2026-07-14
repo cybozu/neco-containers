@@ -1,0 +1,4 @@
+- dir: "./pushgateway"
+  container-image: "pushgateway"
+  scan:
+    enabled: false

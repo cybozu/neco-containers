@@ -1,0 +1,5 @@
+- dir: "./bmc-log-collector"
+  container-image: "bmc-log-collector"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false

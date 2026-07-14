@@ -1,0 +1,5 @@
+- dir: "./grafana"
+  container-image: "grafana"
+  scan:
+    enabled: true
+    team: neco

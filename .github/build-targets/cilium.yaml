@@ -1,0 +1,10 @@
+- dir: "./cilium"
+  container-image: "cilium"
+  runner: "neco-containers-ubuntu-22.04"
+  go-version: "1.23.3"
+  make-targets: "checkout status test-e2e-setup test-e2e-upgrade-inotify"
+  make-post-targets: "test test-e2e"
+  load: true
+  scan:
+    enabled: true
+    team: neco

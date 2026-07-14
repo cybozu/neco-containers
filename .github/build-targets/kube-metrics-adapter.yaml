@@ -1,0 +1,4 @@
+- dir: "./kube-metrics-adapter"
+  container-image: "kube-metrics-adapter"
+  scan:
+    enabled: false

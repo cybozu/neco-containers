@@ -1,0 +1,5 @@
+- dir: "./external-dns"
+  container-image: "external-dns"
+  scan:
+    enabled: true
+    team: neco

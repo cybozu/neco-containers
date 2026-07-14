@@ -1,0 +1,5 @@
+- dir: "./ct-monitor"
+  container-image: "ct-monitor"
+  make-targets: "test"
+  scan:
+    enabled: false

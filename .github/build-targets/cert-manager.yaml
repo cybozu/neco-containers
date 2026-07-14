@@ -1,0 +1,5 @@
+- dir: "./cert-manager"
+  container-image: "cert-manager"
+  scan:
+    enabled: true
+    team: neco

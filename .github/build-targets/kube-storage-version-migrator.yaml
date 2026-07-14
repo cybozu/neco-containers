@@ -1,0 +1,15 @@
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-initializer"
+  target: "initializer"
+  scan:
+    enabled: false
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-migrator"
+  target: "migrator"
+  scan:
+    enabled: false
+- dir: "./kube-storage-version-migrator"
+  container-image: "storage-version-migration-trigger"
+  target: "trigger"
+  scan:
+    enabled: false

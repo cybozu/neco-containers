@@ -1,0 +1,5 @@
+- dir: "./rook"
+  container-image: "rook"
+  scan:
+    enabled: true
+    team: neco

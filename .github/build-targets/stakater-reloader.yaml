@@ -1,0 +1,4 @@
+- dir: "./stakater-reloader"
+  container-image: "stakater-reloader"
+  scan:
+    enabled: false

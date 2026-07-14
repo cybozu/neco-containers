@@ -1,0 +1,4 @@
+- dir: "./memcached-exporter"
+  container-image: "memcached-exporter"
+  scan:
+    enabled: false

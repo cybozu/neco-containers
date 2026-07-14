@@ -1,0 +1,12 @@
+- dir: "./falco-operator"
+  container-image: "falco-operator"
+  target: "falco-operator"
+  scan:
+    enabled: true
+    team: neco
+- dir: "./falco-operator"
+  container-image: "falco-artifact-operator"
+  target: "falco-artifact-operator"
+  scan:
+    enabled: true
+    team: neco
