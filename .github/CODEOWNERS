@@ -2,122 +2,120 @@
 # https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 #
 # Teams:
-#   @cybozu-private/neco
-#   @cybozu-private/neco-infrastructure
-#   @cybozu-private/neco-network
-#   @cybozu-private/pdx
-#   @cybozu-private/landsat
-#   @cybozu-private/csa
+#   @cybozu/neco
+#   @cybozu/pdx
+#   @cybozu/landsat
+#   @cybozu/csa
 #
 # Usage:
 #   - Assign an owning team per top-level directory.
-#     e.g.) /admission/   @cybozu-private/neco-infrastructure
+#     e.g.) /admission/   @cybozu/neco
 
 # Default fallback: Neco owns any path not matched by a more specific rule below.
-* @cybozu-private/neco
+* @cybozu/neco
 
-# ---- Neco Infrastructure Team (@cybozu-private/neco-infrastructure) ----
-/admission/                       @cybozu-private/neco-infrastructure
-/bmc-log-collector/               @cybozu-private/neco-infrastructure
-/bmc-reverse-proxy/               @cybozu-private/neco-infrastructure
-/cadvisor/                        @cybozu-private/neco-infrastructure
-/coredns/                         @cybozu-private/neco-infrastructure
-/etcd/                            @cybozu-private/neco-infrastructure
-/falco/                           @cybozu-private/neco-infrastructure
-/falco-k8s-metacollector/         @cybozu-private/neco-infrastructure
-/falco-operator/                  @cybozu-private/neco-infrastructure
-/gitleaks/                        @cybozu-private/neco-infrastructure
-/kube-metrics-adapter/            @cybozu-private/neco-infrastructure
-/kubernetes/                      @cybozu-private/neco-infrastructure
-/kube-state-metrics/              @cybozu-private/neco-infrastructure
-/kube-storage-version-migrator/   @cybozu-private/neco-infrastructure
-/machines-endpoints/              @cybozu-private/neco-infrastructure
-/pause/                           @cybozu-private/neco-infrastructure
-/prometheus-adapter/              @cybozu-private/neco-infrastructure
-/registry/                        @cybozu-private/neco-infrastructure
-/s3gw/                            @cybozu-private/neco-infrastructure
-/sealed-secrets/                  @cybozu-private/neco-infrastructure
-/serf/                            @cybozu-private/neco-infrastructure
-/spegel/                          @cybozu-private/neco-infrastructure
-/testhttpd/                       @cybozu-private/neco-infrastructure
-/vault/                           @cybozu-private/neco-infrastructure
+# ---- Neco Infrastructure (@cybozu/neco) ----
+/admission/                       @cybozu/neco
+/bmc-log-collector/               @cybozu/neco
+/bmc-reverse-proxy/               @cybozu/neco
+/cadvisor/                        @cybozu/neco
+/coredns/                         @cybozu/neco
+/etcd/                            @cybozu/neco
+/falco/                           @cybozu/neco
+/falco-k8s-metacollector/         @cybozu/neco
+/falco-operator/                  @cybozu/neco
+/gitleaks/                        @cybozu/neco
+/kube-metrics-adapter/            @cybozu/neco
+/kubernetes/                      @cybozu/neco
+/kube-state-metrics/              @cybozu/neco
+/kube-storage-version-migrator/   @cybozu/neco
+/machines-endpoints/              @cybozu/neco
+/pause/                           @cybozu/neco
+/prometheus-adapter/              @cybozu/neco
+/registry/                        @cybozu/neco
+/s3gw/                            @cybozu/neco
+/sealed-secrets/                  @cybozu/neco
+/serf/                            @cybozu/neco
+/spegel/                          @cybozu/neco
+/testhttpd/                       @cybozu/neco
+/vault/                           @cybozu/neco
 
-# ---- Neco Network Team (@cybozu-private/neco-network) ----
-/bird/                            @cybozu-private/neco-network
-/bpf-map-pressure-exporter/       @cybozu-private/neco-network
-/bpftrace/                        @cybozu-private/neco-network
-/cep-checker/                     @cybozu-private/neco-network
-/cert-manager/                    @cybozu-private/neco-network
-/chrony/                          @cybozu-private/neco-network
-/cilium/                          @cybozu-private/neco-network
-/cilium-certgen/                  @cybozu-private/neco-network
-/cilium-operator-generic/         @cybozu-private/neco-network
-/contour/                         @cybozu-private/neco-network
-/ct-monitor/                      @cybozu-private/neco-network
-/envoy/                           @cybozu-private/neco-network
-/external-dns/                    @cybozu-private/neco-network
-/hubble/                          @cybozu-private/neco-network
-/hubble-relay/                    @cybozu-private/neco-network
-/hubble-ui/                       @cybozu-private/neco-network
-/neco-exporter/                   @cybozu-private/neco-network
-/spiffe-csi-driver/               @cybozu-private/neco-network
-/spiffe-test/                     @cybozu-private/neco-network
-/spire-agent/                     @cybozu-private/neco-network
-/spire-controller-manager/        @cybozu-private/neco-network
-/spire-server/                    @cybozu-private/neco-network
-/squid/                           @cybozu-private/neco-network
-/squid-exporter/                  @cybozu-private/neco-network
-/stakater-reloader/               @cybozu-private/neco-network
-/tcp-keepalive/                   @cybozu-private/neco-network
-/trust-manager/                   @cybozu-private/neco-network
-/trust-packages/                  @cybozu-private/neco-network
-/unbound/                         @cybozu-private/neco-network
-/unbound_exporter/                @cybozu-private/neco-network
+# ---- Neco Network (@cybozu/neco) ----
+/bird/                            @cybozu/neco
+/bpf-map-pressure-exporter/       @cybozu/neco
+/bpftrace/                        @cybozu/neco
+/cep-checker/                     @cybozu/neco
+/cert-manager/                    @cybozu/neco
+/chrony/                          @cybozu/neco
+/cilium/                          @cybozu/neco
+/cilium-certgen/                  @cybozu/neco
+/cilium-operator-generic/         @cybozu/neco
+/contour/                         @cybozu/neco
+/ct-monitor/                      @cybozu/neco
+/envoy/                           @cybozu/neco
+/external-dns/                    @cybozu/neco
+/hubble/                          @cybozu/neco
+/hubble-relay/                    @cybozu/neco
+/hubble-ui/                       @cybozu/neco
+/neco-exporter/                   @cybozu/neco
+/spiffe-csi-driver/               @cybozu/neco
+/spiffe-test/                     @cybozu/neco
+/spire-agent/                     @cybozu/neco
+/spire-controller-manager/        @cybozu/neco
+/spire-server/                    @cybozu/neco
+/squid/                           @cybozu/neco
+/squid-exporter/                  @cybozu/neco
+/stakater-reloader/               @cybozu/neco
+/tcp-keepalive/                   @cybozu/neco
+/trust-manager/                   @cybozu/neco
+/trust-packages/                  @cybozu/neco
+/unbound/                         @cybozu/neco
+/unbound_exporter/                @cybozu/neco
 
-# ---- PDX (@cybozu-private/pdx) ----
-/argocd/                          @cybozu-private/pdx
-/argocd-image-updater/            @cybozu-private/pdx
-/argo-rollouts/                   @cybozu-private/pdx
-/bucket-provisioner-light/        @cybozu-private/pdx
-/dex/                             @cybozu-private/pdx
-/golang-all/                      @cybozu-private/pdx
-/haproxy/                         @cybozu-private/pdx
-/meows-dctest-runner/             @cybozu-private/pdx
-/meows-neco-runner/               @cybozu-private/pdx
-/pomerium/                        @cybozu-private/pdx
-/redis/                           @cybozu-private/pdx
-/teleport-node/                   @cybozu-private/pdx
-/trivy-operator/                  @cybozu-private/pdx
+# ---- PDX (@cybozu/pdx) ----
+/argocd/                          @cybozu/pdx
+/argocd-image-updater/            @cybozu/pdx
+/argo-rollouts/                   @cybozu/pdx
+/bucket-provisioner-light/        @cybozu/pdx
+/dex/                             @cybozu/pdx
+/golang-all/                      @cybozu/pdx
+/haproxy/                         @cybozu/pdx
+/meows-dctest-runner/             @cybozu/pdx
+/meows-neco-runner/               @cybozu/pdx
+/pomerium/                        @cybozu/pdx
+/redis/                           @cybozu/pdx
+/teleport-node/                   @cybozu/pdx
+/trivy-operator/                  @cybozu/pdx
 
-# ---- DAP (@cybozu-private/landsat) ----
-/alertmanager/                    @cybozu-private/landsat
-/alloy/                           @cybozu-private/landsat
-/blackbox_exporter/               @cybozu-private/landsat
-/fluent-bit/                      @cybozu-private/landsat
-/grafana/                         @cybozu-private/landsat
-/grafana-operator/                @cybozu-private/landsat
-/loki/                            @cybozu-private/landsat
-/memcached/                       @cybozu-private/landsat
-/memcached-exporter/              @cybozu-private/landsat
-/opentelemetry-collector/         @cybozu-private/landsat
-/prometheus-config-reloader/      @cybozu-private/landsat
-/pushgateway/                     @cybozu-private/landsat
-/pyroscope/                       @cybozu-private/landsat
-/tempo/                           @cybozu-private/landsat
-/victoriametrics/                 @cybozu-private/landsat
-/victoriametrics-operator/        @cybozu-private/landsat
+# ---- DAP (@cybozu/landsat) ----
+/alertmanager/                    @cybozu/landsat
+/alloy/                           @cybozu/landsat
+/blackbox_exporter/               @cybozu/landsat
+/fluent-bit/                      @cybozu/landsat
+/grafana/                         @cybozu/landsat
+/grafana-operator/                @cybozu/landsat
+/loki/                            @cybozu/landsat
+/memcached/                       @cybozu/landsat
+/memcached-exporter/              @cybozu/landsat
+/opentelemetry-collector/         @cybozu/landsat
+/prometheus-config-reloader/      @cybozu/landsat
+/pushgateway/                     @cybozu/landsat
+/pyroscope/                       @cybozu/landsat
+/tempo/                           @cybozu/landsat
+/victoriametrics/                 @cybozu/landsat
+/victoriametrics-operator/        @cybozu/landsat
 
-# ---- CSA (@cybozu-private/csa) ----
-/ceph/                            @cybozu-private/csa
-/cephcsi/                         @cybozu-private/csa
-/ceph-csi-operator/               @cybozu-private/csa
-/ceph-extra-exporter/             @cybozu-private/csa
-/csi-addons-controller/           @cybozu-private/csa
-/csi-addons-sidecar/              @cybozu-private/csa
-/csi-attacher/                    @cybozu-private/csa
-/csi-node-driver-registrar/       @cybozu-private/csa
-/csi-provisioner/                 @cybozu-private/csa
-/csi-resizer/                     @cybozu-private/csa
-/csi-snapshotter/                 @cybozu-private/csa
-/local-pv-provisioner/            @cybozu-private/csa
-/rook/                            @cybozu-private/csa
+# ---- CSA (@cybozu/csa) ----
+/ceph/                            @cybozu/csa
+/cephcsi/                         @cybozu/csa
+/ceph-csi-operator/               @cybozu/csa
+/ceph-extra-exporter/             @cybozu/csa
+/csi-addons-controller/           @cybozu/csa
+/csi-addons-sidecar/              @cybozu/csa
+/csi-attacher/                    @cybozu/csa
+/csi-node-driver-registrar/       @cybozu/csa
+/csi-provisioner/                 @cybozu/csa
+/csi-resizer/                     @cybozu/csa
+/csi-snapshotter/                 @cybozu/csa
+/local-pv-provisioner/            @cybozu/csa
+/rook/                            @cybozu/csa
