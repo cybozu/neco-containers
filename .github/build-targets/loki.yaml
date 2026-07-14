@@ -1,5 +1,0 @@
-- dir: "./loki"
-  container-image: "loki"
-  scan:
-    enabled: true
-    team: neco

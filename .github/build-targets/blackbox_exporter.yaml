@@ -1,5 +1,0 @@
-- dir: "./blackbox_exporter"
-  container-image: "blackbox_exporter"
-  scan:
-    enabled: true
-    team: neco

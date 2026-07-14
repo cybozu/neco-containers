@@ -1,5 +1,0 @@
-- dir: "csi-resizer"
-  container-image: "csi-resizer"
-  scan:
-    enabled: true
-    team: neco

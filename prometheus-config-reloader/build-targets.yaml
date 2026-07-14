@@ -1,0 +1,4 @@
+- container-image: "prometheus-config-reloader"
+  scan:
+    enabled: true
+    team: neco

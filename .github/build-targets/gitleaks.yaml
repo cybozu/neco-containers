@@ -1,4 +1,0 @@
-- dir: "./gitleaks"
-  container-image: "gitleaks"
-  scan:
-    enabled: false

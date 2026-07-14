@@ -1,0 +1,4 @@
+- container-image: "csi-snapshotter"
+  scan:
+    enabled: true
+    team: neco

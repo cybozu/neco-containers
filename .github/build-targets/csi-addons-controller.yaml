@@ -1,5 +1,0 @@
-- dir: "csi-addons-controller"
-  container-image: "csi-addons-controller"
-  scan:
-    enabled: true
-    team: neco

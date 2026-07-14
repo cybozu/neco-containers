@@ -1,0 +1,4 @@
+- container-image: "local-pv-provisioner"
+  make-targets: "check-generate test ci-e2e-test"
+  scan:
+    enabled: false

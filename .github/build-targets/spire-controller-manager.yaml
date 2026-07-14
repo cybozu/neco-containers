@@ -1,4 +1,0 @@
-- dir: "./spire-controller-manager"
-  container-image: "spire-controller-manager"
-  scan:
-    enabled: false

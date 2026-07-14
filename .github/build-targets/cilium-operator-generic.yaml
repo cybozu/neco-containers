@@ -1,4 +1,0 @@
-- dir: "./cilium-operator-generic"
-  container-image: "cilium-operator-generic"
-  scan:
-    enabled: false

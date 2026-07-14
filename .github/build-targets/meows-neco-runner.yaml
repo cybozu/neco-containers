@@ -1,5 +1,0 @@
-- dir: "./meows-neco-runner"
-  container-image: "meows-neco-runner"
-  scan:
-    enabled: true
-    team: pdx

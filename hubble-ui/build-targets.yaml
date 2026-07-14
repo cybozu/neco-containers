@@ -1,0 +1,12 @@
+- container-image: "hubble-ui-frontend"
+  make-targets: "checkout verify-lockfile"
+  target: "frontend"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "hubble-ui-backend"
+  make-targets: "checkout"
+  target: "backend"
+  scan:
+    enabled: true
+    team: neco

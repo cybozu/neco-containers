@@ -1,0 +1,4 @@
+- container-image: "argo-rollouts"
+  scan:
+    enabled: true
+    team: pdx

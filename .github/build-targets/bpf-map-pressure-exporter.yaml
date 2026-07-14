@@ -1,5 +1,0 @@
-- dir: "./bpf-map-pressure-exporter"
-  container-image: "bpf-map-pressure-exporter"
-  make-targets: "check-generate test"
-  scan:
-    enabled: false

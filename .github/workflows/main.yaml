@@ -20,9 +20,9 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      # Build targets are defined under .github/build-targets/ (one YAML file
-      # per top-level directory) and filtered to the images whose files changed
-      # in the PR by the generate_matrix script.
+      # Build targets are defined in each top-level directory's
+      # build-targets.yaml and filtered to the images whose files changed in
+      # the PR by the generate_matrix script.
       - id: prepare-matrix
         env:
           GH_TOKEN: ${{ github.token }}

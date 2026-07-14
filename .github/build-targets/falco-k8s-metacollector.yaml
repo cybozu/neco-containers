@@ -1,5 +1,0 @@
-- dir: "./falco-k8s-metacollector"
-  container-image: "falco-k8s-metacollector"
-  scan:
-    enabled: true
-    team: neco

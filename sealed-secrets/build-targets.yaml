@@ -1,0 +1,3 @@
+- container-image: "sealed-secrets"
+  scan:
+    enabled: false

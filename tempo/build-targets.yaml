@@ -1,0 +1,4 @@
+- container-image: "tempo"
+  scan:
+    enabled: true
+    team: neco

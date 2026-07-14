@@ -1,4 +1,0 @@
-- dir: "./spiffe-csi-driver"
-  container-image: "spiffe-csi-driver"
-  scan:
-    enabled: false

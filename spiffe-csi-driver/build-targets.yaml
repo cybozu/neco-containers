@@ -1,0 +1,3 @@
+- container-image: "spiffe-csi-driver"
+  scan:
+    enabled: false

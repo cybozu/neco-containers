@@ -1,5 +1,0 @@
-- dir: "./teleport-node"
-  container-image: "teleport-node"
-  scan:
-    enabled: true
-    team: pdx

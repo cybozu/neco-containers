@@ -1,5 +1,0 @@
-- dir: "./grafana-operator"
-  container-image: "grafana-operator"
-  scan:
-    enabled: true
-    team: neco

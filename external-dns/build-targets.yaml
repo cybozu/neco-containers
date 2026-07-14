@@ -1,0 +1,4 @@
+- container-image: "external-dns"
+  scan:
+    enabled: true
+    team: neco

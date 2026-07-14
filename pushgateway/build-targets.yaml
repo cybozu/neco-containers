@@ -1,0 +1,3 @@
+- container-image: "pushgateway"
+  scan:
+    enabled: false

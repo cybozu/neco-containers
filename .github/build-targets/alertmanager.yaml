@@ -1,5 +1,0 @@
-- dir: "./alertmanager"
-  container-image: "alertmanager"
-  scan:
-    enabled: true
-    team: neco

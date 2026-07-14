@@ -1,0 +1,5 @@
+- container-image: "squid-exporter"
+  make-targets: "check-generate test"
+  scan:
+    enabled: true
+    team: neco

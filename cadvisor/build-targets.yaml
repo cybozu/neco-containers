@@ -1,0 +1,3 @@
+- container-image: "cadvisor"
+  scan:
+    enabled: false

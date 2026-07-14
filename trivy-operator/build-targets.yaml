@@ -1,0 +1,4 @@
+- container-image: "trivy-operator"
+  scan:
+    enabled: true
+    team: pdx

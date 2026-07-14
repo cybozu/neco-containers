@@ -1,6 +1,0 @@
-- dir: "./tcp-keepalive"
-  container-image: "tcp-keepalive"
-  make-targets: "check-diff test"
-  scan:
-    enabled: true
-    team: neco

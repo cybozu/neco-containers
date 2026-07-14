@@ -1,8 +1,0 @@
-- dir: "./bpftrace"
-  container-image: "bpftrace"
-  make-targets: "checkout"
-  make-post-targets: "test"
-  load: true
-  scan:
-    enabled: true
-    team: neco

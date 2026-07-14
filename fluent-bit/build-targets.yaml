@@ -1,0 +1,4 @@
+- container-image: "fluent-bit"
+  scan:
+    enabled: true
+    team: neco

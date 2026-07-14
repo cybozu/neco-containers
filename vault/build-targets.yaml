@@ -1,0 +1,4 @@
+- container-image: "vault"
+  scan:
+    enabled: true
+    team: neco

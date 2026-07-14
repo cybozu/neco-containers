@@ -1,0 +1,10 @@
+- container-image: "spiffe-test-server"
+  target: "server"
+  make-targets: "check"
+  scan:
+    enabled: false
+- container-image: "spiffe-test-client"
+  target: "client"
+  make-targets: "check"
+  scan:
+    enabled: false

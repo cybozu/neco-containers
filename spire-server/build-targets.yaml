@@ -1,0 +1,3 @@
+- container-image: "spire-server"
+  scan:
+    enabled: false

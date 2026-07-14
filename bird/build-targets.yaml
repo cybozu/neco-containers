@@ -1,0 +1,4 @@
+- container-image: "bird"
+  scan:
+    enabled: true
+    team: neco

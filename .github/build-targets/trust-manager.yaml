@@ -1,4 +1,0 @@
-- dir: "./trust-manager"
-  container-image: "trust-manager"
-  scan:
-    enabled: false

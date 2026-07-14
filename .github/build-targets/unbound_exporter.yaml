@@ -1,4 +1,0 @@
-- dir: "./unbound_exporter"
-  container-image: "unbound_exporter"
-  scan:
-    enabled: false

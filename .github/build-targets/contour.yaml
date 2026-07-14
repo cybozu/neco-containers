@@ -1,4 +1,0 @@
-- dir: "./contour"
-  container-image: "contour"
-  scan:
-    enabled: false

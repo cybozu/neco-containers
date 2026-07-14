@@ -1,5 +1,0 @@
-- dir: "./argocd-image-updater"
-  container-image: "argocd-image-updater"
-  scan:
-    enabled: true
-    team: pdx

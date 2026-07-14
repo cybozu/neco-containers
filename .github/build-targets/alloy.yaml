@@ -1,5 +1,0 @@
-- dir: "./alloy"
-  container-image: "alloy"
-  scan:
-    enabled: true
-    team: neco

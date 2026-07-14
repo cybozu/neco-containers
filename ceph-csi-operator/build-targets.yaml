@@ -1,0 +1,4 @@
+- container-image: "ceph-csi-operator"
+  scan:
+    enabled: true
+    team: neco

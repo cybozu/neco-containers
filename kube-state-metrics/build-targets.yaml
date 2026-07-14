@@ -1,0 +1,3 @@
+- container-image: "kube-state-metrics"
+  scan:
+    enabled: false

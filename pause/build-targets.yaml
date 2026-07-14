@@ -1,0 +1,3 @@
+- container-image: "pause"
+  scan:
+    enabled: false

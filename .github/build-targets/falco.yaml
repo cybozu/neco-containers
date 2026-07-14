@@ -1,5 +1,0 @@
-- dir: "./falco"
-  container-image: "falco"
-  scan:
-    enabled: true
-    team: neco

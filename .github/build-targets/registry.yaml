@@ -1,5 +1,0 @@
-- dir: "./registry"
-  container-image: "registry"
-  scan:
-    enabled: true
-    team: neco

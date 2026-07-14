@@ -1,5 +1,0 @@
-- dir: "./admission"
-  container-image: "neco-admission"
-  make-targets: "check-generate test"
-  scan:
-    enabled: false

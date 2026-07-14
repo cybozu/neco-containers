@@ -1,5 +1,0 @@
-- dir: "csi-provisioner"
-  container-image: "csi-provisioner"
-  scan:
-    enabled: true
-    team: neco

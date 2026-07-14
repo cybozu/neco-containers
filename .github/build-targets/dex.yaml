@@ -1,5 +1,0 @@
-- dir: "./dex"
-  container-image: "dex"
-  scan:
-    enabled: true
-    team: pdx

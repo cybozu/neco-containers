@@ -1,4 +1,0 @@
-- dir: "./cilium-certgen"
-  container-image: "cilium-certgen"
-  scan:
-    enabled: false

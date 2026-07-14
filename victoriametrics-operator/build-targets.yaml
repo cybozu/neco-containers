@@ -1,0 +1,8 @@
+- container-image: "victoriametrics-operator"
+  target: "operator"
+  scan:
+    enabled: false
+- container-image: "victoriametrics-config-reloader"
+  target: "config-reloader"
+  scan:
+    enabled: false

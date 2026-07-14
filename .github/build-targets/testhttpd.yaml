@@ -1,7 +1,0 @@
-- dir: "./testhttpd"
-  container-image: "testhttpd"
-  platforms: "linux/amd64,linux/arm64"
-  make-targets: "check-generate test"
-  scan:
-    enabled: true
-    team: neco

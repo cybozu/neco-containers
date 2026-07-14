@@ -1,4 +1,0 @@
-- dir: "./kube-state-metrics"
-  container-image: "kube-state-metrics"
-  scan:
-    enabled: false

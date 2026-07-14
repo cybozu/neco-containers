@@ -1,4 +1,0 @@
-- dir: "./prometheus-adapter"
-  container-image: "prometheus-adapter"
-  scan:
-    enabled: false

@@ -2,14 +2,16 @@
 
 # Build targets for the "main" workflow.
 #
-# Each YAML file under .github/build-targets/ groups the build entries for one
-# top-level directory. Each entry defines one container image build job. The
-# entries are consumed by this script, which filters them down to images whose
-# files changed in the PR, then dispatches each entry to the build_container
-# job.
+# Each top-level directory owns a build-targets.yaml that groups its build
+# entries. Each entry defines one container image build job. The entries are
+# consumed by this script, which filters them down to images whose files
+# changed in the PR, then dispatches each entry to the build_container job.
 #
 # Fields:
-#   dir              : REQUIRED. build context directory
+#   dir              : build context directory. Defaults to the enclosing
+#                      top-level directory (i.e., "./<enclosing>"), so this
+#                      field is only needed when an entry targets a
+#                      sub-directory such as "./kubernetes/k8s-1.33".
 #   container-image  : REQUIRED. image name (pushed to ghcr.io/cybozu/<name>)
 #   scan.enabled     : REQUIRED. true / false
 #   scan.team        : REQUIRED if scan.enabled is true. Yamory team name for the image
@@ -36,10 +38,14 @@ echo "Changed Files:"
 cat .github/outputs/__diff.txt | jq -n --raw-input '[inputs]' | yq -P
 
 # Merge per-directory build target files into a single matrix file that
-# build_decision can consume.
-MATRIX_DIR="${MATRIX_DIR:-.github/build-targets}"
+# build_decision can consume. For each source file, fill in the "dir" field
+# with the enclosing top-level directory when it is omitted.
 MATRIX_FILE=".github/outputs/__build_targets.yaml"
-yq -o=yaml ea '[.[]] | flatten' "${MATRIX_DIR}"/*.yaml > "${MATRIX_FILE}"
+: > "${MATRIX_FILE}"
+for f in */build-targets.yaml; do
+    d="${f%/build-targets.yaml}"
+    yq ".[] |= (.dir = (.dir // \"./${d}\"))" "$f" >> "${MATRIX_FILE}"
+done
 JSON_MATRIX="$(yq -ojson '.' "${MATRIX_FILE}")"
 OUTPUT_MATRIX='[]'
 for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do

@@ -1,4 +1,0 @@
-- dir: "./spegel"
-  container-image: "spegel"
-  scan:
-    enabled: false
