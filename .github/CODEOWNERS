@@ -13,7 +13,7 @@
 #   - Assign an owning team per top-level directory.
 #     e.g.) /admission/   @cybozu-private/neco-infrastructure
 
-# Neco is the owner of all
+# Default fallback: Neco owns any path not matched by a more specific rule below.
 * @cybozu-private/neco
 
 # ---- Neco Infrastructure Team (@cybozu-private/neco-infrastructure) ----
