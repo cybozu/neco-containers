@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG RELOADER_SHA=cff4592fbdc942aba17d205860818e8ce45e6696
+ARG RELOADER_SHA=430c1efb706b45c41b72f99abdffaa7d5df61620
 
 COPY TAG /
 WORKDIR /workspace
