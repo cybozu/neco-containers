@@ -6,6 +6,7 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/mock"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/networkfence"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/bpf"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/kubeletconfig"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
@@ -21,6 +22,7 @@ func init() {
 
 		// scope: node
 		bpf.NewCollector(),
+		kubeletconfig.NewCollector(),
 	}
 }
 

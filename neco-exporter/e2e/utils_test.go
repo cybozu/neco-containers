@@ -119,3 +119,9 @@ func scrapeClusterNonLeader(g Gomega) []byte {
 func scrapeNode(g Gomega) []byte {
 	return scrape(g, "neco-node-exporter.neco-exporter.svc")
 }
+
+func getNodeName(g Gomega) string {
+	nodes := kubectlGetSafe[corev1.NodeList](g, "node")
+	g.Expect(nodes.Items).To(HaveLen(1))
+	return nodes.Items[0].Name
+}

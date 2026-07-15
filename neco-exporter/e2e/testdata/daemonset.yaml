@@ -20,11 +20,19 @@ spec:
           name: exporter
           args:
             - --scope=node
-            - --collectors=bpf
+            - --collectors=bpf,kubelet
             - --interval=10s
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
             - name: cilium-socket
               mountPath: /var/run/cilium
+            - name: kubelet-config
+              mountPath: /var/lib/kubelet/config.yaml
+              readOnly: true
           securityContext:
             capabilities:
               add:
@@ -37,3 +45,7 @@ spec:
         - name: cilium-socket
           hostPath:
             path: /var/run/cilium
+        - name: kubelet-config
+          hostPath:
+            path: /var/lib/kubelet/config.yaml
+            type: File

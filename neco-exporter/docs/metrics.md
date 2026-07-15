@@ -9,6 +9,7 @@ Each collector's scope should match `--scope` to use.
 | [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
 | [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
 | [`ciliumid`](#ciliumid)               | `cluster` | Count CiliumIdentity resources      |
+| [`kubelet`](#kubelet)                 | `node`    | Report kubelet's systemReserved cpu/memory |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
 | [`collector`](#collector)             | (both)    | neco-exporter and collectors status |
 
@@ -56,6 +57,20 @@ Number of `CiliumIdentity` resources for the namespace.
 | Label       | Description           |
 | ----------- | --------------------- |
 | `namespace` | Namespace of Identity |
+
+## kubelet
+
+### `kubelet_system_reserved`
+
+CPU and memory reserved via kubelet's `systemReserved` config (as opposed to
+`kubeReserved`, which this collector does not report), read once at startup.
+Labeled the same way as `kube_node_status_allocatable`.
+
+| Label      | Description                                  |
+| ---------- | --------------------------------------------- |
+| `node`     | Node name (from the `NODE_NAME` env var)      |
+| `resource` | Reserved resource (`cpu` or `memory`)         |
+| `unit`     | Unit of `resource` (`core` or `byte`)         |
 
 ## networkfence
 
