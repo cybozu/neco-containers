@@ -1,6 +1,7 @@
 - container-image: "unbound"
   make-targets: "check-generate"
   make-post-targets: "validate"
+  load: true
   scan:
     enabled: true
     team: neco
