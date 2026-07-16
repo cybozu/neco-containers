@@ -1,0 +1,3 @@
+- container-image: "spegel"
+  scan:
+    enabled: false

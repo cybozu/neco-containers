@@ -1,0 +1,3 @@
+- container-image: "prometheus-adapter"
+  scan:
+    enabled: false

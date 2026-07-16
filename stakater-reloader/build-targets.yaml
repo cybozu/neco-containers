@@ -1,0 +1,3 @@
+- container-image: "stakater-reloader"
+  scan:
+    enabled: false

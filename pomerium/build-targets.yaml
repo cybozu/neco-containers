@@ -1,0 +1,5 @@
+- container-image: "pomerium"
+  scan:
+    enabled: true
+    team: pdx
+    is_public: true

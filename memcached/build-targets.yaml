@@ -1,0 +1,4 @@
+- container-image: "memcached"
+  scan:
+    enabled: true
+    team: neco

@@ -1,0 +1,45 @@
+- container-image: "victoriametrics-vmagent"
+  target: "vmagent"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmalert"
+  target: "vmalert"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmbackup"
+  target: "vmbackup"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmctl"
+  target: "vmctl"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vminsert"
+  target: "vminsert"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmrestore"
+  target: "vmrestore"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmselect"
+  target: "vmselect"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmsingle"
+  target: "vmsingle"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "victoriametrics-vmstorage"
+  target: "vmstorage"
+  scan:
+    enabled: true
+    team: neco

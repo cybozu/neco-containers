@@ -1,0 +1,3 @@
+- container-image: "cephcsi"
+  scan:
+    enabled: false

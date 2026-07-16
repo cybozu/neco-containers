@@ -1,0 +1,9 @@
+- container-image: "squid"
+  target: "squid"
+  scan:
+    enabled: false
+- container-image: "squid-dev"
+  target: "squid-dev"
+  scan:
+    enabled: true
+    team: neco

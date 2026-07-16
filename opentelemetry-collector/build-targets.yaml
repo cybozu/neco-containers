@@ -1,0 +1,4 @@
+- container-image: "opentelemetry-collector"
+  scan:
+    enabled: true
+    team: neco

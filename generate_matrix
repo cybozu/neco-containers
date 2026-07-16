@@ -1,5 +1,29 @@
 #!/bin/bash -e
 
+# Build targets for the "main" workflow.
+#
+# Each build-targets.yaml sits alongside the Dockerfile it builds and groups
+# one or more build entries for that directory. Each entry defines one
+# container image build job. The entries are consumed by this script, which
+# filters them down to images whose files changed in the PR, then dispatches
+# each entry to the build_container job. The build context directory is
+# always the directory that encloses the build-targets.yaml.
+#
+# Fields:
+#   container-image  : REQUIRED. image name (pushed to ghcr.io/cybozu/<name>)
+#   scan.enabled     : REQUIRED. true / false
+#   scan.team        : REQUIRED if scan.enabled is true. Yamory team name for the image
+#   scan.identifier  : Yamory image identifier (e.g., ghcr.io/cybozu/golang:1.25-noble) (default: ghcr.io/cybozu/<container-image>)
+#   scan.is_public   : true / false. Whether the image is used in public accessible environment (default: false)
+#   platforms        : build platforms (default: linux/amd64)
+#   load             : load image into local docker daemon (default: false)
+#   target           : Dockerfile target stage
+#   make-targets     : make targets run before docker build
+#   make-post-targets: make targets run after docker build
+#   runner           : runs-on label (default: ubuntu-24.04)
+#   go-version       : Go toolchain version (default: build_container job default)
+#   disk-cleanup     : perform disk cleanup before build (default: false)
+
 if [ -z "${PR}" ]; then
     echo 'Please supply ${PR}.'
     exit 1
@@ -11,7 +35,15 @@ gh pr view "${PR}" --json files | jq -r '.files[].path' | egrep -v '[.]md$' | xa
 echo "Changed Files:"
 cat .github/outputs/__diff.txt | jq -n --raw-input '[inputs]' | yq -P
 
-MATRIX_FILE="${MATRIX_FILE:-.github/build-targets.yaml}"
+# Merge per-directory build target files into a single matrix file that
+# build_decision can consume. For each source file, set the "dir" field to
+# the directory that encloses it (the build context).
+MATRIX_FILE=".github/outputs/__build_targets.yaml"
+: > "${MATRIX_FILE}"
+while IFS= read -r f; do
+    d="$(dirname "${f#./}")"
+    yq ".[] |= (.dir = \"./${d}\")" "$f" >> "${MATRIX_FILE}"
+done < <(find . -mindepth 2 -maxdepth 3 -name build-targets.yaml -not -path './.github/*' -not -path './.git/*' | sort)
 JSON_MATRIX="$(yq -ojson '.' "${MATRIX_FILE}")"
 OUTPUT_MATRIX='[]'
 for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do

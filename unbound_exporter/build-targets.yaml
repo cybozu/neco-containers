@@ -1,0 +1,3 @@
+- container-image: "unbound_exporter"
+  scan:
+    enabled: false

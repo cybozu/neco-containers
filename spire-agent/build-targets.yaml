@@ -1,0 +1,3 @@
+- container-image: "spire-agent"
+  scan:
+    enabled: false

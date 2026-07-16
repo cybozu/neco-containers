@@ -1,0 +1,4 @@
+- container-image: "coredns"
+  scan:
+    enabled: true
+    team: neco

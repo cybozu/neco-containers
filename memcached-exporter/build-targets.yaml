@@ -1,0 +1,3 @@
+- container-image: "memcached-exporter"
+  scan:
+    enabled: false

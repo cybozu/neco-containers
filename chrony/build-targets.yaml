@@ -1,0 +1,4 @@
+- container-image: "chrony"
+  scan:
+    enabled: true
+    team: neco

@@ -1,0 +1,4 @@
+- container-image: "bmc-reverse-proxy"
+  make-targets: "setup check-generate test"
+  scan:
+    enabled: false

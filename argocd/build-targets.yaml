@@ -1,0 +1,4 @@
+- container-image: "argocd"
+  scan:
+    enabled: true
+    team: pdx

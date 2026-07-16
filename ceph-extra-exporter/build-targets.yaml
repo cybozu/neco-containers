@@ -1,0 +1,6 @@
+- container-image: "ceph-extra-exporter"
+  make-targets: "check-generate test"
+  disk-cleanup: true
+  scan:
+    enabled: true
+    team: neco

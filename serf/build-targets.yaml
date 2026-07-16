@@ -1,0 +1,4 @@
+- container-image: "serf"
+  scan:
+    enabled: true
+    team: neco

@@ -1,4 +1,4 @@
-# This file follows the schema of .github/build-targets.yaml
+# This file follows the schema documented at the top of generate_matrix.
 
 - dir: envoy
   container-image: envoy

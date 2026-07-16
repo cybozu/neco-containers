@@ -1,0 +1,4 @@
+- container-image: "s3gw"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
