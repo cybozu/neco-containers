@@ -478,6 +478,9 @@ func main() {
 		log.ErrorExit(err)
 	}
 
+	// sort machines not to generate almost-identical-but-differ-in-order objects, which cause frequent updates
+	slices.SortFunc(machines, func(a, b Machine) int { return strings.Compare(a.Spec.Serial, b.Spec.Serial) })
+
 	ctx := context.Background()
 
 	if *flgMonitoringEndpoints {
