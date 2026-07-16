@@ -1,9 +1,9 @@
 module github.com/neco-containers/tcp-keepalive
 
-go 1.26.1
+go 1.26.5
 
 require (
-	github.com/VictoriaMetrics/metrics v1.41.1
+	github.com/VictoriaMetrics/metrics v1.43.1
 	github.com/spf13/cobra v1.10.2
 )
 
