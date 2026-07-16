@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+ARG MEOWS_RUNNER_TAG=2.335.1-ubuntu22.04-meows0.25.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:a79c4c7ae033e964af29abe5a79014c1d6b7d4d98928b84fb97e43ffe337eb27
+
 FROM scratch AS go-download
 ADD --checksum=sha256:1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f \
     https://dl.google.com/go/go1.26.4.linux-amd64.tar.gz /go.tar.gz
@@ -12,7 +15,7 @@ FROM scratch AS aqua-installer-download
 ADD --checksum=sha256:451028d56959cc738564885b1dbebc2691ea038ffde04e2472e4d486a3591146 \
     https://raw.githubusercontent.com/aquaproj/aqua-installer/v4.0.5/aqua-installer /aqua-installer
 
-FROM ghcr.io/cybozu-go/meows-runner:2.335.1-ubuntu22.04-meows0.24.1@sha256:221f8ff2e85d3e8ee0533a3bebd209ed24ab93889aca6408ef64ac9bbae0b0c1
+FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@${MEOWS_RUNNER_CHECKSUM}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
