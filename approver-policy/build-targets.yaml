@@ -1,0 +1,3 @@
+- container-image: "approver-policy"
+  scan:
+    enabled: false
