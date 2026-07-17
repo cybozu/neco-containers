@@ -6,7 +6,31 @@ inputs:
 runs:
   using: composite
   steps:
-    - env:
+    - name: Install s2d, snappy compatible unarchiver
+      env:
+        S2_VERSION: "v1.19.0"
+        S2_CHECKSUM: "60ea3520edd8be159f03624cbfa2ecf3d4c8f01c5597175102ef783560174444"
+      shell: bash
+      run: |
+        set -x
+        S2_RELEASE_URL="https://github.com/klauspost/compress/releases/download/${S2_VERSION}"
+        S2_DEB="s2_package__linux_amd64.deb"
+        ARTIFACT="/tmp/${S2_DEB}"
+        echo "::group::Download artifacts"
+        wget -O "${ARTIFACT}" "${S2_RELEASE_URL}/${S2_DEB}"
+        echo "::endgroup::"
+
+        echo "::group::Check checksum"
+        echo "${S2_CHECKSUM}  ${ARTIFACT}" | sha256sum -c -
+        echo "::endgroup::"
+
+        echo "::group::Install s2"
+        sudo apt-get install -y "${ARTIFACT}"
+        rm -f "${ARTIFACT}"
+        s2d -help
+        echo "::endgroup::"
+    - name: Install Trivy
+      env:
         TRIVY_VERSION: "${{ inputs.trivy-version }}"
       run: |
         set -x
@@ -31,8 +55,9 @@ runs:
         # https://docs.yamory.io/35d9ca090120803f8b51d6a50d6ce3e0#block-36b9ca090120808ca7fef8760e2b106c
         echo "::group::Check Provenance"
         DIGEST=$(sha256sum "${ARTIFACT}" | cut -d' ' -f1)
-        curl -L "https://api.github.com/repos/aquasecurity/trivy/attestations/sha256:$DIGEST" | \
-        jq -r '.attestations[] | select(.initiator == "user") | .bundle' > bundle.json
+        BUNDLE_URL=$(curl -L "https://api.github.com/repos/aquasecurity/trivy/attestations/sha256:$DIGEST" | \
+          jq -r '.attestations[] | select(.initiator == "user") | .bundle_url')
+        s2d -o bundle.json -block "${BUNDLE_URL}"
         cosign verify-blob-attestation \
           --bundle bundle.json \
           --new-bundle-format \
