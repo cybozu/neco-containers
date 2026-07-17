@@ -1,88 +1,88 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-darwin-amd64.tar.gz",
-      "checksum": "8B8C694129D6F9CCEAC0543AF3934CF30A1DE828A72C18B68D4BC7FC668C8C35",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-darwin-amd64.tar.gz",
+      "checksum": "CB39418709054FBC903719F555BDFE719EF67B1E6298EBB4F812864F6BAE29FA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-darwin-arm64.tar.gz",
-      "checksum": "C1254BD1F94711804A1276F2F2F56297A615A8A6FA4F6BA077EA895E997E16BB",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-darwin-arm64.tar.gz",
+      "checksum": "363E6F050EAF64F8DD648806EBD3E371BCDC8EF4A5AEBE7301CCE4C2F28463CA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-linux-amd64.tar.gz",
-      "checksum": "AA25CD2542614051573008ED18ADB7D697FD78E4B0345DB83D1650CDAF4492DE",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-linux-amd64.tar.gz",
+      "checksum": "65AE7592AB873ACC0B242B8E679E0A0A856255E34FDD0082E7B048B6285A9842",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-linux-arm64.tar.gz",
-      "checksum": "205AD0EBA18A105E4542A5FF41FEA74929F8CB4AF831D35C0FAC591BFE48BBF1",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-linux-arm64.tar.gz",
+      "checksum": "FE8140AAAA561B7D59D8C0E7EEF169C298B2D558924934C95AAB8BB81382296F",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-windows-amd64.zip",
-      "checksum": "6BE7BC367537ADD0EEC1078F2E9A0C8192926B1FA2CBC486E64D2773000E9217",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-windows-amd64.zip",
+      "checksum": "035BB0BBD0B1782F77908B080F99C735D82AF8F993A54EC29950D4D17B0F3D7C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/cilium/cilium-cli/v0.19.2/cilium-windows-arm64.zip",
-      "checksum": "F08EAA9E63F076D9F9C5C82078E67B61DD16B8DBA6D7DD42EAC51A6225C7C674",
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.6/cilium-windows-arm64.zip",
+      "checksum": "408F6B9D768B4D71E7923D2DF4CDD9DAB66A5D7C6101586427E08A935D780E5C",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-darwin-amd64",
-      "checksum": "4F0B6E3B88BDC66D922C08469F05EF507D4903DD236E6319199BB9C868EED274",
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.32.0/kind-darwin-amd64",
+      "checksum": "295AC6D0D634C9819C9907DF45E3017D1F13166BD13C3404C45E79F7FAA47498",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-darwin-arm64",
-      "checksum": "CEAF40DF1D1551C481FB50E3DEB5C3DEECAD5FD599DF5469626B70DDF52A1518",
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.32.0/kind-darwin-arm64",
+      "checksum": "DCA67911095A110C2B5C36E26DF6CAC860C602033E456C0DB47BE498CDEF1EBB",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-linux-amd64",
-      "checksum": "517AB7FC89DDEED5FA65ABF71530D90648D9638EF0C4CDE22C2C11F8097B8889",
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.32.0/kind-linux-amd64",
+      "checksum": "50030DE23CF40A18505F20426F6A8506BEDF13C6E509244BD1FA9463721B0F54",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-linux-arm64",
-      "checksum": "7EA2DE9D2D190022ED4A8A4E3AC0636C8A455E460B9A13CCF19F15D07F4F00EB",
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.32.0/kind-linux-arm64",
+      "checksum": "B92CD615E97585DE8DDADE28ED5CD7FEB4248D717C233EEA5B03C37298900F5D",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/kubernetes-sigs/kind/v0.30.0/kind-windows-amd64",
-      "checksum": "A75FED2B6964D877461CC145B37E997AC0F59A63BD02A750134AC25378F78CE7",
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.32.0/kind-windows-amd64",
+      "checksum": "0BCB2D1CFEDC1912D664014DB716937E8A0E843E91C6807B4DB2025DBC8989FA",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/darwin/amd64/kubectl",
-      "checksum": "657AFBD0E653C4CE3AF1B5A645A4EABA282CF8EB2BCDA7191FF60866E50E4D7F",
+      "id": "http/dl.k8s.io/v1.34.8/bin/darwin/amd64/kubectl",
+      "checksum": "149BE66A64B26C59A7BF5037A895B8ECB244D8224D84F533584457355A44520B",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/darwin/arm64/kubectl",
-      "checksum": "E51367D2107D605F4EDD7C2FB25897B0C0695A7DE1A9F9D04CD6C9356B890B14",
+      "id": "http/dl.k8s.io/v1.34.8/bin/darwin/arm64/kubectl",
+      "checksum": "173E101C8F9F195EA16771A1262313EA4C916D4D517F72902B0AFD57F61C1917",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/linux/amd64/kubectl",
-      "checksum": "AB60CA5F0FD60C1EB81B52909E67060E3BA0BD27E55A8AC147CBC2172FF14212",
+      "id": "http/dl.k8s.io/v1.34.8/bin/linux/amd64/kubectl",
+      "checksum": "F6249132865C13ABE3C9DD5038F5DA65849CB86EEE1608C001831504E481AA8C",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/linux/arm64/kubectl",
-      "checksum": "46913A7AA0327F6CC2E1CC2775D53C4A2AF5E52F7FD8DACBFBFD098E757F19E9",
+      "id": "http/dl.k8s.io/v1.34.8/bin/linux/arm64/kubectl",
+      "checksum": "4C9FE1F717738950C638C38056130A8DB5075E6413AE36D8687221A240CDF88B",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/windows/amd64/kubectl.exe",
-      "checksum": "5EF6E0B019CFEA5B0EFF55B576C0118F64C0758A8BCBF52587C7F454F302F7BC",
+      "id": "http/dl.k8s.io/v1.34.8/bin/windows/amd64/kubectl.exe",
+      "checksum": "35BC3CB7050F6D39436E6C486C65E2D2D6198988B10C5E76B58B8C929373A7FA",
       "algorithm": "sha256"
     },
     {
-      "id": "http/dl.k8s.io/v1.34.3/bin/windows/arm64/kubectl.exe",
-      "checksum": "E261BDC56BE78CCD9A63CD6D7D49029DB41B9A7064CE3F0C82C41800CC809AA6",
+      "id": "http/dl.k8s.io/v1.34.8/bin/windows/arm64/kubectl.exe",
+      "checksum": "3AFB87074B0FCD743D8B7FA37C0A35D566DA5AE9A7C7FB05AB3E3C5143675CB0",
       "algorithm": "sha256"
     },
     {
