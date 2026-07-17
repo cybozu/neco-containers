@@ -1,12 +1,14 @@
 package e2e
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/gomega"
@@ -118,4 +120,27 @@ func scrapeClusterNonLeader(g Gomega) []byte {
 
 func scrapeNode(g Gomega) []byte {
 	return scrape(g, "neco-node-exporter.neco-exporter.svc")
+}
+
+func getNodeName(g Gomega) string {
+	nodes := kubectlGetSafe[corev1.NodeList](g, "node")
+	g.Expect(nodes.Items).To(HaveLen(1))
+	return nodes.Items[0].Name
+}
+
+// findMetricValue scans Prometheus exposition text for a line starting with prefix
+// (a metric name plus its label set) and returns the trailing sample value.
+func findMetricValue(g Gomega, output []byte, prefix string) (float64, bool) {
+	reader := bufio.NewScanner(bytes.NewReader(output))
+	for reader.Scan() {
+		line := reader.Text()
+		if !strings.HasPrefix(line, prefix) {
+			continue
+		}
+		value := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+		v, err := strconv.ParseFloat(value, 64)
+		g.Expect(err).NotTo(HaveOccurred(), "failed to parse metric value from line: %s", line)
+		return v, true
+	}
+	return 0, false
 }

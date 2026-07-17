@@ -4,3 +4,9 @@ networking:
   disableDefaultCNI: true
 nodes:
   - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: KubeletConfiguration
+        systemReserved:
+          cpu: "250m"
+          memory: "512Mi"
