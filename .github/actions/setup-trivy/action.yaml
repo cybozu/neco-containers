@@ -36,6 +36,7 @@ runs:
         cosign verify-blob-attestation \
           --bundle bundle.json \
           --new-bundle-format \
+          --type slsaprovenance1 \
           --certificate-identity "https://github.com/aquasecurity/trivy/.github/workflows/reusable-release.yaml@refs/tags/v${TRIVY_VERSION}" \
           --certificate-oidc-issuer 'https://token.actions.githubusercontent.com' \
           "${ARTIFACT}"
