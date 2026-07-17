@@ -1,32 +1,11 @@
 package e2e
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
-	"strconv"
-	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
-
-// findMetricValue scans Prometheus exposition text for a line starting with prefix
-// (a metric name plus its label set) and returns the trailing sample value.
-func findMetricValue(g Gomega, output []byte, prefix string) (float64, bool) {
-	reader := bufio.NewScanner(bytes.NewReader(output))
-	for reader.Scan() {
-		line := reader.Text()
-		if !strings.HasPrefix(line, prefix) {
-			continue
-		}
-		value := strings.TrimSpace(strings.TrimPrefix(line, prefix))
-		v, err := strconv.ParseFloat(value, 64)
-		g.Expect(err).NotTo(HaveOccurred(), "failed to parse metric value from line: %s", line)
-		return v, true
-	}
-	return 0, false
-}
 
 func testKubeletConfigCollector() {
 	It("should report reserved system cpu and memory", func() {
