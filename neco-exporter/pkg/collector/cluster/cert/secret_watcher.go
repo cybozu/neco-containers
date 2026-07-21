@@ -88,10 +88,10 @@ func (w *secretWatcher) setupWithManager(ctx context.Context, mgr ctrl.Manager) 
 			w.update(ctx, s, deleted)
 		}
 	}
-	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
+	_, err = informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc:    func(obj any) { handler(obj, false) },
 		UpdateFunc: func(oldObj, newObj any) { handler(newObj, false) },
 		DeleteFunc: func(obj any) { handler(obj, true) },
 	}, time.Hour)
-	return nil
+	return err
 }

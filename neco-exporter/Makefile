@@ -16,11 +16,9 @@ e2e-prepare:
 	$(MAKE) -C e2e prepare
 
 .PHONY: test
-test: staticcheck custom-checker
+test:
 	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	$(STATICCHECK) ./...
-	test -z "$$($(CUSTOM_CHECKER) -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
+	golangci-lint run
 
 	$(MAKE) -C e2e setup
 	$(MAKE) -C e2e start
