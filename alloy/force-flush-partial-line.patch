@@ -1,8 +1,8 @@
 diff --git a/internal/component/loki/process/stages/cri.go b/internal/component/loki/process/stages/cri.go
-index 2cb82cd0c..5c67e2d99 100644
+index 63b5f2f..ac2330d 100644
 --- a/internal/component/loki/process/stages/cri.go
 +++ b/internal/component/loki/process/stages/cri.go
-@@ -19,9 +19,10 @@ import (
+@@ -18,9 +18,10 @@ import (
  // CRIConfig is an empty struct that is used to enable a pre-defined pipeline
  // for decoding entries that are using the CRI logging format.
  type CRIConfig struct {
@@ -16,7 +16,7 @@ index 2cb82cd0c..5c67e2d99 100644
  }
  
  var (
-@@ -34,6 +35,7 @@ var DefaultCRIConfig = CRIConfig{
+@@ -33,6 +34,7 @@ var DefaultCRIConfig = CRIConfig{
  	MaxPartialLines:            100,
  	MaxPartialLineSize:         0,
  	MaxPartialLineSizeTruncate: false,
@@ -24,7 +24,7 @@ index 2cb82cd0c..5c67e2d99 100644
  }
  
  // SetToDefault implements syntax.Defaulter.
-@@ -46,6 +48,9 @@ func (args *CRIConfig) Validate() error {
+@@ -45,6 +47,9 @@ func (args *CRIConfig) Validate() error {
  	if args.MaxPartialLines <= 0 {
  		return fmt.Errorf("max_partial_lines must be greater than 0")
  	}
@@ -34,7 +34,7 @@ index 2cb82cd0c..5c67e2d99 100644
  
  	return nil
  }
-@@ -96,7 +101,7 @@ const (
+@@ -95,7 +100,7 @@ const (
  )
  
  func (c *cri) Run(in chan Entry) chan Entry {
@@ -43,7 +43,7 @@ index 2cb82cd0c..5c67e2d99 100644
  		parsed, ok := crip.ParseCRI(e.Line)
  		if !ok {
  			return []Entry{e}, false
-@@ -171,6 +176,23 @@ func (c *cri) Run(in chan Entry) chan Entry {
+@@ -170,6 +175,23 @@ func (c *cri) Run(in chan Entry) chan Entry {
  		}
  
  		return []Entry{e}, false
@@ -55,7 +55,7 @@ index 2cb82cd0c..5c67e2d99 100644
 +		fingerprints := make([]model.Fingerprint, 0)
 +		for k, v := range c.partialLines {
 +			if v.Timestamp.Before(threshold) {
-+				level.Warn(c.logger).Log("msg", "cri stage: flushing partial line due to max age", "labels", v.Labels)
++				c.logger.Warn("flushing partial line due to max age", "labels", v.Labels)
 +				entries = append(entries, v)
 +				fingerprints = append(fingerprints, k)
 +			}
@@ -68,18 +68,18 @@ index 2cb82cd0c..5c67e2d99 100644
  }
  
 diff --git a/internal/component/loki/process/stages/pipeline.go b/internal/component/loki/process/stages/pipeline.go
-index 4229cf38d..16e85bafc 100644
+index 38532f4..2629b84 100644
 --- a/internal/component/loki/process/stages/pipeline.go
 +++ b/internal/component/loki/process/stages/pipeline.go
-@@ -4,6 +4,7 @@ import (
- 	"context"
+@@ -5,6 +5,7 @@ import (
  	"fmt"
+ 	"log/slog"
  	"sync"
 +	"time"
  
- 	"github.com/go-kit/log"
  	"github.com/prometheus/client_golang/prometheus"
-@@ -170,3 +171,36 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
+ 
+@@ -185,3 +186,36 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
  
  	return out
  }
