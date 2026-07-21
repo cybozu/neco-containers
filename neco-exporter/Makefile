@@ -1,9 +1,8 @@
 IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:$(shell cat TAG)
 
 .PHONY: check-generate
-check-generate: goimports
+check-generate:
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-exporter .
 	git diff --exit-code --name-only
 
 .PHONY build:
@@ -17,7 +16,6 @@ e2e-prepare:
 
 .PHONY: test
 test:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
 	golangci-lint run
 
 	$(MAKE) -C e2e setup

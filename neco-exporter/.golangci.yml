@@ -4,6 +4,7 @@ linters:
     - depguard
     - ginkgolinter
     - govet
+    - modernize
     - staticcheck
   settings:
     depguard:
@@ -18,6 +19,7 @@ linters:
               desc: log must not be used
 formatters:
   enable:
+    - gofumpt
     - goimports
   settings:
     goimports:
