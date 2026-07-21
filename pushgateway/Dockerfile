@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG PUSHGATEWAY_VERSION=1.11.2
+ARG PUSHGATEWAY_VERSION=1.11.3
 
 # Workaround https://github.com/ksonnet/ksonnet/issues/298#issuecomment-360531855
 ENV USER=root
