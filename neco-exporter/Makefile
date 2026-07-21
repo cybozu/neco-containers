@@ -5,6 +5,11 @@ check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
+.PHONY: lint
+lint:
+	aqua install
+	golangci-lint run
+
 .PHONY build:
 build:
 	mkdir -p bin
@@ -16,8 +21,6 @@ e2e-prepare:
 
 .PHONY: test
 test:
-	golangci-lint run
-
 	$(MAKE) -C e2e setup
 	$(MAKE) -C e2e start
 	$(MAKE) -C e2e install

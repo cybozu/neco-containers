@@ -1,5 +1,5 @@
 - container-image: "neco-exporter"
-  make-targets: "check-generate e2e-prepare test"
+  make-targets: "lint check-generate e2e-prepare test"
   make-post-targets: "sanity-check"
   load: true
   scan:
