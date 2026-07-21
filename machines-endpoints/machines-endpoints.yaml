@@ -11,13 +11,16 @@ rules:
   - apiGroups: [""]
     resources:
       - services
-      - endpoints
       - configmaps
     verbs: ["get", "update", "create"]
+  - apiGroups: [""]
+    resources:
+      - endpoints
+    verbs: ["get", "delete"]
   - apiGroups: ["discovery.k8s.io"]
     resources:
       - endpointslices
-    verbs: ["get", "update", "create"]
+    verbs: ["get", "list", "update", "create", "delete"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
     verbs: ["use"]
@@ -97,7 +100,7 @@ spec:
         spec:
           containers:
             - name: machines-endpoints
-              image: ghcr.io/cybozu/machines-endpoints:0.9.10
+              image: ghcr.io/cybozu/machines-endpoints:1.0.0
               imagePullPolicy: IfNotPresent
               args:
                 - --monitoring-endpoints

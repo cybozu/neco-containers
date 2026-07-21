@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"path"
 	"reflect"
+	"slices"
 	"strings"
 	"time"
 
@@ -28,6 +29,10 @@ import (
 )
 
 const (
+	// EndpointSlice
+	defaultMaxEndpointsPerSlice = 100
+	labelManagedByValue         = "machines-endpoints.cybozu.io"
+
 	// node-exporter
 	targetEndpointsName     = "prometheus-node-targets"
 	nodeExporterPortName    = "http-node-exporter"
@@ -66,6 +71,7 @@ query search {
 `
 
 var (
+	flgMaxEndpointsPerSlice     = pflag.Int("max-endpoints-per-slice", defaultMaxEndpointsPerSlice, "maximum number of endpoints per EndpointSlice")
 	flgMonitoringEndpoints      = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
 	flgBMCReverseProxyConfigMap = pflag.Bool("bmc-reverse-proxy-configmap", false, "generate ConfigMap for BMC reverse proxy")
 	flgBMCLogCollectorConfigMap = pflag.Bool("bmc-log-collector-configmap", false, "generate ConfigMap for BMC log collector")
@@ -98,7 +104,7 @@ type member struct {
 
 type client struct {
 	http       *http.Client
-	k8s        *kubernetes.Clientset
+	k8s        kubernetes.Interface
 	kubeConfig clientcmd.ClientConfig
 	serf       *serfclient.RPCClient
 }
@@ -176,7 +182,7 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 	return nil, err
 }
 
-func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, target, portName string, port int32) error {
+func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, maxEndpoints int, target, portName string, port int32) error {
 	ns, _, err := c.kubeConfig.Namespace()
 	if err != nil {
 		return err
@@ -206,62 +212,91 @@ func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, t
 		return err
 	}
 
-	// Create or update Endpoints
-	subset := corev1.EndpointSubset{
-		Addresses: make([]corev1.EndpointAddress, len(targetIPs)),
-		Ports: []corev1.EndpointPort{
-			{Port: port, Name: portName},
-		},
-	}
-	for i, ip := range targetIPs {
-		subset.Addresses[i].IP = ip.String()
-	}
-	ep := &corev1.Endpoints{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: target,
-			Labels: map[string]string{
-				"endpointslice.kubernetes.io/skip-mirror": "true",
+	// Create or update EndpointSlice(s)
+	endpointSliceInterface := c.k8s.DiscoveryV1().EndpointSlices(ns)
+	sliceIndex := 0
+	sliceNames := []string{}
+	for chunkedIPs := range slices.Chunk(targetIPs, maxEndpoints) {
+		endpoints := make([]discoveryv1.Endpoint, len(chunkedIPs))
+		for i, ip := range chunkedIPs {
+			endpoints[i].Addresses = []string{ip.String()}
+		}
+
+		sliceName := fmt.Sprintf("%s-%d", target, sliceIndex)
+		endpointSlice := &discoveryv1.EndpointSlice{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: sliceName,
+				Labels: map[string]string{
+					discoveryv1.LabelManagedBy:   labelManagedByValue,
+					discoveryv1.LabelServiceName: target,
+				},
 			},
-		},
-		Subsets: []corev1.EndpointSubset{subset},
+			AddressType: discoveryv1.AddressTypeIPv4,
+			Endpoints:   endpoints,
+			Ports: []discoveryv1.EndpointPort{
+				{
+					Name: &portName,
+					Port: &port,
+				},
+			},
+		}
+
+		_, err = endpointSliceInterface.Update(ctx, endpointSlice, metav1.UpdateOptions{})
+		if k8serrors.IsNotFound(err) {
+			_, err = endpointSliceInterface.Create(ctx, endpointSlice, metav1.CreateOptions{})
+		}
+		if err != nil {
+			return err
+		}
+
+		sliceIndex++
+		sliceNames = append(sliceNames, sliceName)
 	}
-	endpointInterface := c.k8s.CoreV1().Endpoints(ns)
-	_, err = endpointInterface.Update(ctx, ep, metav1.UpdateOptions{})
-	if k8serrors.IsNotFound(err) {
-		_, err = endpointInterface.Create(ctx, ep, metav1.CreateOptions{})
-	}
+
+	// Delete unnecessary EndpointSlice(s)
+	sliceList, err := endpointSliceInterface.List(ctx, metav1.ListOptions{
+		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", discoveryv1.LabelManagedBy, labelManagedByValue, discoveryv1.LabelServiceName, target),
+	})
 	if err != nil {
 		return err
 	}
 
-	// Create or update EndpointSlice
-	endpoints := make([]discoveryv1.Endpoint, len(targetIPs))
-	for i, ip := range targetIPs {
-		endpoints[i] = discoveryv1.Endpoint{Addresses: []string{ip.String()}}
+	for _, slice := range sliceList.Items {
+		if slices.Contains(sliceNames, slice.Name) {
+			continue
+		}
+		err := endpointSliceInterface.Delete(ctx, slice.Name, metav1.DeleteOptions{})
+		if err != nil && !k8serrors.IsNotFound(err) {
+			return err
+		}
 	}
-	endpointSlice := &discoveryv1.EndpointSlice{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: target,
-			Labels: map[string]string{
-				"endpointslice.kubernetes.io/managed-by": "machines-endpoints.cybozu.com",
-				"kubernetes.io/service-name":             target,
-			},
-		},
-		AddressType: discoveryv1.AddressTypeIPv4,
-		Endpoints:   endpoints,
-		Ports: []discoveryv1.EndpointPort{
-			{
-				Name: &portName,
-				Port: &port,
-			},
-		},
+
+	// TODO remove transitive code
+	// Delete Endpoints; Endpoints API is deprecated
+	endpointInterface := c.k8s.CoreV1().Endpoints(ns)
+	_, err = endpointInterface.Get(ctx, target, metav1.GetOptions{})
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return err
+	} else if err == nil {
+		err := endpointInterface.Delete(ctx, target, metav1.DeleteOptions{})
+		if err != nil && !k8serrors.IsNotFound(err) {
+			return err
+		}
 	}
-	endpointSliceInterface := c.k8s.DiscoveryV1().EndpointSlices(ns)
-	_, err = endpointSliceInterface.Update(ctx, endpointSlice, metav1.UpdateOptions{})
-	if k8serrors.IsNotFound(err) {
-		_, err = endpointSliceInterface.Create(ctx, endpointSlice, metav1.CreateOptions{})
+
+	// TODO remove transitive code
+	// Delete EndpointSlice with old name
+	_, err = endpointSliceInterface.Get(ctx, target, metav1.GetOptions{})
+	if err != nil && !k8serrors.IsNotFound(err) {
+		return err
+	} else if err == nil {
+		err := endpointSliceInterface.Delete(ctx, target, metav1.DeleteOptions{})
+		if err != nil && !k8serrors.IsNotFound(err) {
+			return err
+		}
 	}
-	return err
+
+	return nil
 }
 
 func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine) error {
@@ -443,6 +478,9 @@ func main() {
 		log.ErrorExit(err)
 	}
 
+	// sort machines not to generate almost-identical-but-differ-in-order objects, which cause frequent updates
+	slices.SortFunc(machines, func(a, b Machine) int { return strings.Compare(a.Spec.Serial, b.Spec.Serial) })
+
 	ctx := context.Background()
 
 	if *flgMonitoringEndpoints {
@@ -462,14 +500,19 @@ func main() {
 			}
 		}
 
+		maxEndpointsPerSlice := *flgMaxEndpointsPerSlice
+		if maxEndpointsPerSlice <= 0 || maxEndpointsPerSlice > 1000 {
+			log.ErrorExit(fmt.Errorf("max-endpoints-per-slice %d is out of range", maxEndpointsPerSlice))
+		}
+
 		// create etcd metrics endpoints on boot servers
-		err = client.updateTargetEndpoints(ctx, currentBootservers, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
+		err = client.updateTargetEndpoints(ctx, currentBootservers, maxEndpointsPerSlice, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
 		if err != nil {
 			log.ErrorExit(err)
 		}
 
 		// create node-exporter endpoints on all servers
-		err = client.updateTargetEndpoints(ctx, machineIPs, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
+		err = client.updateTargetEndpoints(ctx, machineIPs, maxEndpointsPerSlice, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
 		if err != nil {
 			log.ErrorExit(err)
 		}
