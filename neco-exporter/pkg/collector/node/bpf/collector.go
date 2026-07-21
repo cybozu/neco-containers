@@ -51,7 +51,6 @@ func (c *bpfCollector) collectProgramMetrics(
 	id ebpf.ProgramID,
 	tcxMeta map[ebpf.ProgramID]TCXMetadata, endpointMeta map[uint32]*models.Endpoint,
 ) ([]*exporter.Metric, error) {
-
 	prog, err := ebpf.NewProgramFromID(id)
 	switch {
 	case errors.Is(err, fs.ErrNotExist):
@@ -60,7 +59,9 @@ func (c *bpfCollector) collectProgramMetrics(
 	case err != nil:
 		return nil, fmt.Errorf("failed to open BPF Program: %w", err)
 	}
-	defer prog.Close()
+	defer func() {
+		_ = prog.Close()
+	}()
 
 	// omit metrics for programs without execution
 	stats, err := prog.Stats()

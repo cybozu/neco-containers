@@ -1,10 +1,14 @@
 IMAGE_TAG ?= ghcr.io/cybozu/neco-exporter:$(shell cat TAG)
 
 .PHONY: check-generate
-check-generate: goimports
+check-generate:
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/neco-exporter .
 	git diff --exit-code --name-only
+
+.PHONY: lint
+lint:
+	aqua install
+	golangci-lint run
 
 .PHONY build:
 build:
@@ -16,12 +20,7 @@ e2e-prepare:
 	$(MAKE) -C e2e prepare
 
 .PHONY: test
-test: staticcheck custom-checker
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	$(STATICCHECK) ./...
-	test -z "$$($(CUSTOM_CHECKER) -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
-
+test:
 	$(MAKE) -C e2e setup
 	$(MAKE) -C e2e start
 	$(MAKE) -C e2e install

@@ -129,10 +129,11 @@ func (w *identityWatcher) setupWithManager(ctx context.Context, mgr ctrl.Manager
 	if err != nil {
 		return err
 	}
-	informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
+
+	_, err = informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
 		AddFunc:    handler,
 		UpdateFunc: func(oldObj, newObj any) { handler(newObj) },
 		DeleteFunc: handler,
 	}, time.Hour)
-	return nil
+	return err
 }
