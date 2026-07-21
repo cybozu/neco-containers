@@ -11,9 +11,7 @@ import (
 	"github.com/cybozu-go/well"
 )
 
-var (
-	flagListen = flag.String("listen", ":8000", "Listen address and port")
-)
+var flagListen = flag.String("listen", ":8000", "Listen address and port")
 
 func main() {
 	flag.Parse()
@@ -24,14 +22,14 @@ func main() {
 			d, err := time.ParseDuration(s)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				io.WriteString(w, "Please specify valid time")
+				_, _ = io.WriteString(w, "Please specify valid time")
 				return
 			}
 			time.Sleep(d)
-			io.WriteString(w, fmt.Sprintf("Hello after sleeping %s", s))
+			_, _ = io.WriteString(w, fmt.Sprintf("Hello after sleeping %s", s))
 			return
 		}
-		io.WriteString(w, "Hello")
+		_, _ = io.WriteString(w, "Hello")
 	})
 	s := &well.HTTPServer{
 		Server: &http.Server{
@@ -39,7 +37,7 @@ func main() {
 			Handler: mux,
 		},
 	}
-	log.Info("Start listening", map[string]interface{}{
+	_ = log.Info("Start listening", map[string]any{
 		log.FnHTTPHost: *flagListen,
 	})
 
