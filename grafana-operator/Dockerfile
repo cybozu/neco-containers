@@ -2,7 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG VERSION=5.22.2
+ARG VERSION=5.24.0
 
 # After https://github.com/grafana/grafana-operator/issues/1678 is resolved,
 # this patch will not be needed.
