@@ -20,8 +20,10 @@ var clientCmd = &cobra.Command{
 	Run:   runClient,
 }
 
-var clientCfg = &client.Config{}
-var clientMetricsCfg = &metrics.Config{}
+var (
+	clientCfg        = &client.Config{}
+	clientMetricsCfg = &metrics.Config{}
+)
 
 func init() {
 	rootCmd.AddCommand(clientCmd)
