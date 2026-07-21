@@ -1,20 +1,20 @@
 SUDO = sudo
 
 .PHONY: all
-all: check-generate test
+all: lint check-generate test
 
 .PHONY: check-generate
-check-generate: goimports
+check-generate:
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/bpf-map-pressure-exporter .
 	git diff --exit-code --name-only
 
+.PHONY: lint
+lint:
+	aqua install
+	golangci-lint run
+
 .PHONY: test
-test: staticcheck custom-checker
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	$(STATICCHECK) ./...
-	test -z "$$($(CUSTOM_CHECKER) -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
+test:
 	go test -c ./...
 	$(SUDO) ./bpf-map-pressure-exporter.test -test.v
 	rm -f ./bpf-map-pressure-exporter.test

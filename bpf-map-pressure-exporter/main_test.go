@@ -36,7 +36,9 @@ func TestServer(t *testing.T) {
 bpf_map_pressure{map_id="1",map_name="cilium_test_1"} 0.1
 bpf_map_pressure{map_id="2",map_name="cilium_test_2"} 0.2
 `
-	go startServer(fetcher, port)
+	go func() {
+		_ = startServer(fetcher, port)
+	}()
 	assert.EventuallyWithT(t, func(c *assert.CollectT) {
 		err := testutil.ScrapeAndCompare(
 			fmt.Sprintf("http://localhost:%d/metrics", port),

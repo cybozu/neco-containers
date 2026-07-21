@@ -58,9 +58,9 @@ func setupTestMaps(t *testing.T) (mapIds []uint32) {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() {
-		m1.Close()
-		m2.Close()
-		m3.Close()
+		_ = m1.Close()
+		_ = m2.Close()
+		_ = m3.Close()
 	})
 
 	return mapIds

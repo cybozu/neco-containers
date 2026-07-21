@@ -32,7 +32,7 @@ func startServer(fetcher IBpfMapPressureFetcher, port uint) error {
 	}
 
 	if err := server.ListenAndServe(); err != nil {
-		_ = logger.Critical("failed to ListenAndServe", map[string]interface{}{log.FnError: err})
+		_ = logger.Critical("failed to ListenAndServe", map[string]any{log.FnError: err})
 		return err
 	}
 	return nil
@@ -45,7 +45,7 @@ func main() {
 
 	config, err := loadConfig(*configPath)
 	if err != nil {
-		_ = logger.Critical("failed to load config", map[string]interface{}{log.FnError: err})
+		_ = logger.Critical("failed to load config", map[string]any{log.FnError: err})
 		os.Exit(1)
 	}
 	fetcher := newFetcher(config.MapNames, config.FetchInterval)
