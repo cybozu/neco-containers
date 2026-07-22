@@ -3,8 +3,6 @@ include ../tool.mk
 SERVER_IMAGE ?= ghcr.io/cybozu/spiffe-test-server:$(shell cat TAG)
 CLIENT_IMAGE ?= ghcr.io/cybozu/spiffe-test-client:$(shell cat TAG)
 
-GO_IMPORTS_OPTS := -w -local github.com/cybozu/neco-containers/spiffe-test
-
 # Protocol Buffers
 .PHONY: proto
 proto: buf
@@ -15,22 +13,17 @@ proto-lint: buf
 	$(BUF) lint
 
 # Testing and linting
-.PHONY: vet
-vet:
-	go vet -v ./...
-
 .PHONY: mod
 mod:
 	go mod tidy
 
 .PHONY: fmt
-fmt: gofumpt goimports
-	$(GOFUMPT) -l -w .
-	$(GOIMPORTS) $(GO_IMPORTS_OPTS) .
+fmt:
+	aqua install
+	golangci-lint run --fix
 
 .PHONY: test
-test: staticcheck
-	$(STATICCHECK) ./...
+test:
 	go test -v -race ./...
 
 .PHONY: check-diff
@@ -38,7 +31,7 @@ check-diff: mod fmt proto-lint proto
 	git diff --exit-code --name-only
 
 .PHONY: check
-check: vet check-diff test
+check: check-diff test
 
 # Build Go binaries
 .PHONY: build
