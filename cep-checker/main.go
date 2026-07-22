@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
 	"os"
 	"strings"
@@ -58,7 +59,6 @@ func init() {
 }
 
 func cmdMain(cmd *cobra.Command, args []string) {
-
 	ticker := time.NewTicker(cfg.interval)
 
 	config, err := config.GetConfig()
@@ -68,8 +68,16 @@ func cmdMain(cmd *cobra.Command, args []string) {
 	}
 
 	scheme := runtime.NewScheme()
-	ciliumv2.AddToScheme(scheme)
-	corev1.AddToScheme(scheme)
+	if err := ciliumv2.AddToScheme(scheme); err != nil {
+		log.Error("failed to add Cilium scheme", slog.Any("error", err))
+		os.Exit(1)
+	}
+
+	if err := corev1.AddToScheme(scheme); err != nil {
+		log.Error("failed to add corev1 scheme", slog.Any("error", err))
+		os.Exit(1)
+	}
+
 	client, err := client.New(config, client.Options{Scheme: scheme})
 	if err != nil {
 		log.Error("failed to create k8s client", slog.Any("error", err))
@@ -83,7 +91,6 @@ func cmdMain(cmd *cobra.Command, args []string) {
 	})
 
 	go func() {
-
 		for {
 			<-ticker.C
 
@@ -106,9 +113,7 @@ func cmdMain(cmd *cobra.Command, args []string) {
 				metrics.UnregisterMetric(target)
 				delete(missingResourceNameToKind, k)
 			}
-			for k, v := range newMissings {
-				missingResourceNameToKind[k] = v
-			}
+			maps.Copy(missingResourceNameToKind, newMissings)
 		}
 	}()
 
@@ -172,7 +177,6 @@ func checkAll(ctx context.Context, client client.Client) (map[string]string, err
 // Check checks the consistency for given key(namespace/name).
 // If there is the inconsistency(which one is missing), output a log and create a metric.
 func check(ctx context.Context, c client.Client, key string) (string, error) {
-
 	podExist := false
 	cepExist := false
 

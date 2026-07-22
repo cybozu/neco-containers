@@ -8,6 +8,7 @@ registries:
 - type: standard
   ref: v4.492.0
 packages:
+- name: cilium/cilium-cli@v0.19.6
+- name: golangci/golangci-lint@v2.12.2
 - name: kubernetes-sigs/kind@v0.32.0
 - name: kubernetes/kubectl@v1.34.8
-- name: cilium/cilium-cli@v0.19.6
