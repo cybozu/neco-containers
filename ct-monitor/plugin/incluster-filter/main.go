@@ -77,11 +77,11 @@ func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]s
 
 	fingerprints := make(map[string]struct{})
 	for _, item := range list.Items {
-		spec, ok := item.Object["spec"].(map[string]interface{})
+		spec, ok := item.Object["spec"].(map[string]any)
 		if !ok {
 			continue
 		}
-		issuerRef, ok := spec["issuerRef"].(map[string]interface{})
+		issuerRef, ok := spec["issuerRef"].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -94,7 +94,7 @@ func (f *inclusterFilter) clusterFingerprints(ctx context.Context) (map[string]s
 			continue
 		}
 
-		status, ok := item.Object["status"].(map[string]interface{})
+		status, ok := item.Object["status"].(map[string]any)
 		if !ok {
 			continue
 		}

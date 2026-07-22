@@ -9,9 +9,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var (
-	runE2E = os.Getenv("RUN_E2E") != ""
-)
+var runE2E = os.Getenv("RUN_E2E") != ""
 
 func TestE2e(t *testing.T) {
 	if !runE2E {

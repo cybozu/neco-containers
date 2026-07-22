@@ -1,5 +1,11 @@
 include ../tool.mk
 
+.PHONY: lint
+lint:
+	aqua install
+	golangci-lint run
+	cd plugin/incluster-filter; golangci-lint run
+
 .PHONY: test
 test:
 	$(MAKE) -C e2e setup
