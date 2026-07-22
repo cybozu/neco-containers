@@ -24,4 +24,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/cybozu/neco-containers/neco-exporter
+        - github.com/cybozu/neco-containers/bpf-map-pressure-exporter
