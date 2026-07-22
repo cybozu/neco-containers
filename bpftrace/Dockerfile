@@ -1,5 +1,5 @@
 # ==================== bpftrace-builder image ====================
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260722@sha256:81e4a13eba446f8d72011f2b692ec74a2e3e2c0a69dd97cba5baa93445b1dcb6 AS builder
 
 # https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu
 # Added: libcurl4-openssl-dev and libedit-dev
@@ -98,7 +98,7 @@ RUN cp src/stdlib/include/linux/bpf.h /usr/include/linux/bpf.h && \
 
 # ==================== bpftrace image ====================
 # We cannot use ghcr.io/cybozu/ubuntu-debug, because it has libbpf1 installed
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260722@sha256:ab3a1ec8b7d1bf2242e397afd44ead2ae2169e90698b2148eed1ffd5e304b63a
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ENV PATH=/opt/bin:"$PATH"
