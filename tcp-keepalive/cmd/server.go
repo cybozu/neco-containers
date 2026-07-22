@@ -20,8 +20,10 @@ var serverCmd = &cobra.Command{
 	Run:   runServer,
 }
 
-var serverCfg = &server.Config{}
-var serverMetricsCfg = &metrics.Config{}
+var (
+	serverCfg        = &server.Config{}
+	serverMetricsCfg = &metrics.Config{}
+)
 
 func init() {
 	rootCmd.AddCommand(serverCmd)

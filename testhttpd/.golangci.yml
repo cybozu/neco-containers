@@ -1,0 +1,27 @@
+version: "2"
+linters:
+  enable:
+    - depguard
+    - ginkgolinter
+    - govet
+    - modernize
+    - staticcheck
+  settings:
+    depguard:
+      rules:
+        restricted-packages:
+          files:
+            - $all
+          deny:
+            - pkg: html/template$
+              desc: html/template must not be used
+            - pkg: log$
+              desc: log must not be used
+formatters:
+  enable:
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/cybozu/neco-containers/testhttpd

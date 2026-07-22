@@ -74,10 +74,10 @@ func (f *bpfMapPressureFetcher) GetMetrics() []bpfMapPressure {
 
 func createBuffer(structSize int, elemNum int) (typ reflect.Type, buf any) {
 	fields := []reflect.StructField{}
-	for i := 0; i < structSize; i++ {
+	for i := range structSize {
 		fields = append(fields, reflect.StructField{
 			Name: fmt.Sprintf("Field%d", i),
-			Type: reflect.TypeOf(uint8(0)),
+			Type: reflect.TypeFor[uint8](),
 		})
 	}
 	typ = reflect.StructOf(fields)
@@ -104,7 +104,7 @@ func calcMapPressure(id ebpf.MapID, m *ebpf.Map, minfo *ebpf.MapInfo) bpfMapPres
 			if errors.Is(err, ebpf.ErrKeyNotExist) {
 				break
 			}
-			_ = logger.Warn("failed to execute BatchLookup", map[string]interface{}{
+			_ = logger.Warn("failed to execute BatchLookup", map[string]any{
 				"id":        id,
 				log.FnError: err,
 			})
@@ -133,7 +133,7 @@ func (f *bpfMapPressureFetcher) fetch() []bpfMapPressure {
 			break
 		}
 		if err != nil {
-			_ = logger.Warn("failed to get next map id", map[string]interface{}{
+			_ = logger.Warn("failed to get next map id", map[string]any{
 				"id":        id,
 				log.FnError: err,
 			})
@@ -141,7 +141,7 @@ func (f *bpfMapPressureFetcher) fetch() []bpfMapPressure {
 		}
 		m, err := ebpf.NewMapFromID(id)
 		if err != nil {
-			_ = logger.Warn("failed to get map", map[string]interface{}{
+			_ = logger.Warn("failed to get map", map[string]any{
 				"id":        id,
 				log.FnError: err,
 			})
@@ -149,7 +149,7 @@ func (f *bpfMapPressureFetcher) fetch() []bpfMapPressure {
 		}
 		minfo, err := m.Info()
 		if err != nil {
-			_ = logger.Warn("failed to get map info", map[string]interface{}{
+			_ = logger.Warn("failed to get map info", map[string]any{
 				"id":        id,
 				log.FnError: err,
 			})

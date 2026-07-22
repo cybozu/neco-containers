@@ -1,9 +1,5 @@
 GO=go
-GO_VET_OPTS=-v
 GO_TEST_OPTS=-v -race
-
-GO_FMT=gofmt
-GO_FMT_OPTS=-s -l
 
 DOCKER=docker
 DOCKER_FILE=./Dockerfile
@@ -13,27 +9,18 @@ DOCKER_CONTEXT=.
 
 include ../tool.mk
 
-.PHONY: fmt
-fmt:
-	$(GO_FMT) $(GO_FMT_OPTS) .
-
-.PHONY: vet
-vet:
-	$(GO) vet $(GO_VET_OPTS) ./...
-
 .PHONY: mod
 mod:
 	$(GO) mod tidy
 
 .PHONY: check-diff
-check-diff: mod fmt goimports
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/tcp-keepalive .
+check-diff: mod
+	aqua install
+	golangci-lint run
 	git diff --exit-code --name-only
 
 .PHONY: test
-test: vet staticcheck custom-checker
-	$(STATICCHECK) ./...
-	test -z "$$($(CUSTOM_CHECKER) -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
+test:
 	$(GO) test $(GO_TEST_OPTS) ./...
 
 .PHONY: build

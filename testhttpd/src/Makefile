@@ -11,13 +11,6 @@ check-generate:
 
 .PHONY: test
 test:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	go tool staticcheck ./...
-	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
+	aqua install
+	golangci-lint run
 	$(SUDO_GO) test -race -v ./...
-
-.PHONY: update-tool
-update-tool:
-	go get tool
-	go mod tidy
