@@ -9,11 +9,9 @@ all: check-generate test
 .PHONY: check-generate
 check-generate:
 	go mod tidy
+	golangci-lint run
 	git diff --exit-code --name-only
 
 .PHONY: test
-test: staticcheck
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	$(STATICCHECK) ./...
-	go vet ./...
+test:
 	$(SUDO_GO) test -race -v ./...

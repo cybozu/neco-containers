@@ -28,8 +28,8 @@ type monitor struct {
 	readyURL       string
 	httpURL        string
 	httpsAddr      string
-	httpActivated  atomicBool
-	httpsActivated atomicBool
+	httpActivated  atomic.Bool
+	httpsActivated atomic.Bool
 }
 
 func (m *monitor) Probe(ctx context.Context) error {
@@ -52,7 +52,9 @@ func (m *monitor) monitorReady(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to access readiness probe: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("envoy readiness endpoint returned non-OK with status %d", resp.StatusCode)
@@ -69,38 +71,40 @@ func (m *monitor) monitorHTTP(ctx context.Context) error {
 
 	resp, err := m.client.Do(req)
 	if err != nil {
-		if !m.httpActivated.get() {
+		if !m.httpActivated.Load() {
 			return nil
 		}
 		return fmt.Errorf("failed to access HTTP endpoint: %v", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 
 	// Status code is not checked.
 	// The current implementation of Envoy returns 404, but this can be changed.
-	m.httpActivated.set(true)
+	m.httpActivated.Store(true)
 	return nil
 }
 
 func (m *monitor) monitorHTTPS(ctx context.Context) error {
 	conn, err := net.DialTimeout("tcp", m.httpsAddr, m.timeout)
 	if err != nil {
-		if !m.httpsActivated.get() {
+		if !m.httpsActivated.Load() {
 			return nil
 		}
 		return fmt.Errorf("failed to connect to HTTPS endpoint: %v", err)
 	}
 
 	if conn != nil {
-		conn.Close()
+		_ = conn.Close()
 	}
-	m.httpsActivated.set(true)
+	m.httpsActivated.Store(true)
 	return nil
 }
 
 func (m *monitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if err := m.Probe(req.Context()); err != nil {
-		_ = log.Error("monitor failed", map[string]interface{}{
+		_ = log.Error("monitor failed", map[string]any{
 			log.FnError: err,
 		})
 		rw.WriteHeader(http.StatusBadGateway)
@@ -116,7 +120,7 @@ type livenessMonitor struct {
 
 func (m *livenessMonitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if err := m.Probe(req.Context()); err != nil {
-		_ = log.Error("liveness monitor failed", map[string]interface{}{
+		_ = log.Error("liveness monitor failed", map[string]any{
 			log.FnError: err,
 		})
 		rw.WriteHeader(http.StatusBadGateway)
@@ -132,7 +136,7 @@ type readinessMonitor struct {
 
 func (m *readinessMonitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) {
 	if err := m.Probe(req.Context()); err != nil {
-		_ = log.Error("readiness monitor failed", map[string]interface{}{
+		_ = log.Error("readiness monitor failed", map[string]any{
 			log.FnError: err,
 		})
 		rw.WriteHeader(http.StatusBadGateway)
@@ -140,22 +144,6 @@ func (m *readinessMonitor) ServeHTTP(rw http.ResponseWriter, req *http.Request) 
 	}
 
 	_ = log.Debug("readiness monitor succeeded", nil)
-}
-
-type atomicBool struct {
-	flag int32
-}
-
-func (b *atomicBool) set(flag bool) {
-	var val int32
-	if flag {
-		val = 1
-	}
-	atomic.StoreInt32(&b.flag, val)
-}
-
-func (b *atomicBool) get() bool {
-	return atomic.LoadInt32(&b.flag) != 0
 }
 
 var rootCmd = &cobra.Command{
