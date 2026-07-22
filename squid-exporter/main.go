@@ -57,5 +57,7 @@ func main() {
 		metrics.WritePrometheus(w, false)
 	})
 	fmt.Printf("Starting squid-exporter on port %d\n", config.MetricsPort)
-	http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.MetricsPort), nil)
+	if err := http.ListenAndServe(fmt.Sprintf("0.0.0.0:%d", config.MetricsPort), nil); err != nil {
+		logger.Error("failed to listen: %w", "err", err)
+	}
 }

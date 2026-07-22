@@ -52,7 +52,7 @@ func TestNewSquidClient(t *testing.T) {
 
 func TestGetGetCounters(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(r.URL.String()))
+		_, _ = w.Write([]byte(r.URL.String()))
 	}))
 	u, err := url.Parse(ts.URL)
 	if err != nil {
@@ -77,7 +77,7 @@ func TestGetGetCounters(t *testing.T) {
 
 func TestGetInfo(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(r.URL.String()))
+		_, _ = w.Write([]byte(r.URL.String()))
 	}))
 	u, err := url.Parse(ts.URL)
 	if err != nil {
@@ -102,7 +102,7 @@ func TestGetInfo(t *testing.T) {
 
 func TestGetServiceTimes(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(r.URL.String()))
+		_, _ = w.Write([]byte(r.URL.String()))
 	}))
 	u, err := url.Parse(ts.URL)
 	if err != nil {

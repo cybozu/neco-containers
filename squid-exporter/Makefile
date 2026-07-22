@@ -1,7 +1,8 @@
 .PHONY: check-generate
-check-generate: goimports
+check-generate:
+	aqua install
+	golangci-lint run
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/squid-exporter .
 	git diff --exit-code --name-only
 
 .PHONY build:

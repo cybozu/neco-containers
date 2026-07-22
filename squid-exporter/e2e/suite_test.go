@@ -15,9 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var (
-	runE2E = os.Getenv("RUN_E2E") != ""
-)
+var runE2E = os.Getenv("RUN_E2E") != ""
 
 func TestE2e(t *testing.T) {
 	if !runE2E {
@@ -37,7 +35,6 @@ var _ = AfterSuite(func() {
 
 var _ = Describe("squid-exporter e2e test", func() {
 	It("should be able to get metrics", func() {
-
 		By("creating resources from manifests")
 		_, err := kubectl(nil, "apply", "-f", "./pod.yaml")
 		Expect(err).NotTo(HaveOccurred())
@@ -118,9 +115,7 @@ var _ = Describe("squid-exporter e2e test", func() {
 		for reader.Scan() {
 			line := reader.Text()
 			if before, _, found := strings.Cut(line, " "); found {
-				if _, ok := expected[before]; ok {
-					delete(expected, before)
-				}
+				delete(expected, before)
 			}
 		}
 		Expect(expected).To(BeEmpty())
