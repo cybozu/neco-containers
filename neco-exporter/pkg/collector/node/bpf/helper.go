@@ -38,9 +38,7 @@ func CollectTCXMetadata() (map[ebpf.ProgramID]TCXMetadata, error) {
 	for it.Next() {
 		fn := func() error {
 			li := it.Take()
-			defer func() {
-				_ = li.Close()
-			}()
+			defer li.Close()
 
 			info, err := li.Info()
 			if err != nil {
@@ -99,9 +97,7 @@ func GetLongProgramName(info *ebpf.ProgramInfo) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer func() {
-		_ = handle.Close()
-	}()
+	defer handle.Close()
 
 	spec, err := handle.Spec(nil)
 	if err != nil {

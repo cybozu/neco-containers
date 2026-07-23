@@ -78,6 +78,7 @@ func (c *Client) Run(ctx context.Context) error {
 	for i := 0; i <= c.RetryNum; i++ {
 		retryCount.Set(uint64(i))
 
+		//nolint:nilerr
 		if ctx.Err() != nil {
 			return nil
 		}
