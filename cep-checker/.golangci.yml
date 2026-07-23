@@ -5,7 +5,15 @@ linters:
     - ginkgolinter
     - govet
     - modernize
+    - nilerr
     - staticcheck
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
   settings:
     depguard:
       rules:
@@ -21,6 +29,8 @@ formatters:
   enable:
     - gofumpt
     - goimports
+  exclusions:
+    generated: lax
   settings:
     goimports:
       local-prefixes:

@@ -13,9 +13,7 @@ import (
 )
 
 func ConvertSquidCounter(logger *slog.Logger, body io.ReadCloser) error {
-	defer func() {
-		_ = body.Close()
-	}()
+	defer body.Close()
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()
 	for scanner.Scan() {
@@ -36,9 +34,7 @@ func ConvertSquidCounter(logger *slog.Logger, body io.ReadCloser) error {
 }
 
 func ConvertSquidInfo(logger *slog.Logger, body io.ReadCloser) error {
-	defer func() {
-		_ = body.Close()
-	}()
+	defer body.Close()
 
 	fnFloat := func(name, value string) error {
 		counter := metrics.GetOrCreateFloatCounter(name)
@@ -134,9 +130,7 @@ func ConvertSquidInfo(logger *slog.Logger, body io.ReadCloser) error {
 }
 
 func ConvertSquidServiceTimes(logger *slog.Logger, body io.ReadCloser) error {
-	defer func() {
-		_ = body.Close()
-	}()
+	defer body.Close()
 
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()

@@ -52,9 +52,7 @@ func (m *monitor) monitorReady(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to access readiness probe: %v", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("envoy readiness endpoint returned non-OK with status %d", resp.StatusCode)
@@ -76,9 +74,7 @@ func (m *monitor) monitorHTTP(ctx context.Context) error {
 		}
 		return fmt.Errorf("failed to access HTTP endpoint: %v", err)
 	}
-	defer func() {
-		_ = resp.Body.Close()
-	}()
+	defer resp.Body.Close()
 
 	// Status code is not checked.
 	// The current implementation of Envoy returns 404, but this can be changed.
@@ -96,7 +92,7 @@ func (m *monitor) monitorHTTPS(ctx context.Context) error {
 	}
 
 	if conn != nil {
-		_ = conn.Close()
+		conn.Close()
 	}
 	m.httpsActivated.Store(true)
 	return nil

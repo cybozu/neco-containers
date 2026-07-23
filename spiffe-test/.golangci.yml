@@ -5,7 +5,15 @@ linters:
     - ginkgolinter
     - govet
     - modernize
+    - nilerr
     - staticcheck
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
   settings:
     depguard:
       rules:
@@ -17,17 +25,13 @@ linters:
               desc: html/template must not be used
             - pkg: log$
               desc: log must not be used
-  exclusions:
-    paths:
-      - '^gen/'
 formatters:
   enable:
     - gofumpt
     - goimports
+  exclusions:
+    generated: lax
   settings:
     goimports:
       local-prefixes:
         - github.com/cybozu/neco-containers/spiffe-test
-  exclusions:
-    paths:
-      - '^gen/'

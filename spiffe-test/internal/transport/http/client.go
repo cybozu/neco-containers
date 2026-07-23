@@ -63,7 +63,7 @@ func (c *Client) SayHello(ctx context.Context) (string, error) {
 	}
 	defer func() {
 		_, _ = io.Copy(io.Discard, resp.Body)
-		_ = resp.Body.Close()
+		resp.Body.Close()
 	}()
 
 	var helloResp HelloResponse

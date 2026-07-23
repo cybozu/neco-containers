@@ -23,7 +23,7 @@ func serverFail(t *testing.T, step string) *httptest.Server {
 					t.Error(err)
 					return
 				}
-				_ = c.Close()
+				c.Close()
 			} else {
 				_, _ = w.Write([]byte(""))
 			}
@@ -34,7 +34,7 @@ func serverFail(t *testing.T, step string) *httptest.Server {
 					t.Error(err)
 					return
 				}
-				_ = c.Close()
+				c.Close()
 
 			} else {
 				_, _ = w.Write([]byte(""))
@@ -46,7 +46,7 @@ func serverFail(t *testing.T, step string) *httptest.Server {
 					t.Error(err)
 					return
 				}
-				_ = c.Close()
+				c.Close()
 
 			} else {
 				_, _ = w.Write([]byte(""))
@@ -77,7 +77,7 @@ func captureOutput(f func() error) (string, error) {
 	os.Stdout = w
 	err := f()
 	os.Stdout = orig
-	_ = w.Close()
+	w.Close()
 	out, _ := io.ReadAll(r)
 	return string(out), err
 }
