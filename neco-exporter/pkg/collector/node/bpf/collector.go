@@ -59,9 +59,7 @@ func (c *bpfCollector) collectProgramMetrics(
 	case err != nil:
 		return nil, fmt.Errorf("failed to open BPF Program: %w", err)
 	}
-	defer func() {
-		_ = prog.Close()
-	}()
+	defer prog.Close()
 
 	// omit metrics for programs without execution
 	stats, err := prog.Stats()
