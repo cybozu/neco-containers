@@ -48,7 +48,7 @@ var _ = Describe("ct-monitor e2e test", func() {
 			podList := corev1.PodList{}
 			err = json.Unmarshal(res, &podList)
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(len(podList.Items)).To(Equal(1))
+			g.Expect(podList.Items).To(HaveLen(1))
 			return nil
 		}).Should(Succeed())
 

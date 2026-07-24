@@ -18,7 +18,8 @@ docker-build:
 	docker build -t ghcr.io/cybozu/cep-checker:dev .
 
 .PHONY: check-generate
-check-generate: goimports
+check-generate:
+	aqua install
 	go mod tidy
-	$(GOIMPORTS) -w -local github.com/cybozu/neco-containers/cep-checker .
+	golangci-lint run
 	git diff --exit-code --name-only

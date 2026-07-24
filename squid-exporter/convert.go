@@ -131,6 +131,7 @@ func ConvertSquidInfo(logger *slog.Logger, body io.ReadCloser) error {
 
 func ConvertSquidServiceTimes(logger *slog.Logger, body io.ReadCloser) error {
 	defer body.Close()
+
 	scanner := bufio.NewScanner(body)
 	scanner.Scan()
 	r := strings.NewReplacer(

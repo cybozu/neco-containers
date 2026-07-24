@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -14,58 +13,60 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func serverFail(step string) *httptest.Server {
+func serverFail(t *testing.T, step string) *httptest.Server {
 	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch step {
 		case "counters": // close connection to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/counters" {
 				c, _, err := w.(http.Hijacker).Hijack()
 				if err != nil {
-					log.Fatal(err)
+					t.Error(err)
+					return
 				}
 				c.Close()
 			} else {
-				w.Write([]byte(""))
+				_, _ = w.Write([]byte(""))
 			}
 		case "info": // close connection to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/info" {
 				c, _, err := w.(http.Hijacker).Hijack()
 				if err != nil {
-					log.Fatal(err)
+					t.Error(err)
+					return
 				}
 				c.Close()
 
 			} else {
-				w.Write([]byte(""))
+				_, _ = w.Write([]byte(""))
 			}
 		case "service_times": // close connection to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/service_times" {
 				c, _, err := w.(http.Hijacker).Hijack()
 				if err != nil {
-					log.Fatal(err)
+					t.Error(err)
+					return
 				}
 				c.Close()
 
 			} else {
-				w.Write([]byte(""))
+				_, _ = w.Write([]byte(""))
 			}
 		case "convert_counters": // return invalid data to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/counters" {
-				w.Write([]byte(`sample_time = 1701938593.739082 (Thu, 07 Dec 2023 08:43:13 GMT)
+				_, _ = w.Write([]byte(`sample_time = 1701938593.739082 (Thu, 07 Dec 2023 08:43:13 GMT)
 					client_http.requests = x`))
-
 			} else {
-				w.Write([]byte(""))
+				_, _ = w.Write([]byte(""))
 			}
 		case "convert_service_times": // return invalid data to simulate failure
 			if r.URL.Path == "/squid-internal-mgr/service_times" {
-				w.Write([]byte(`Service Time Percentiles            5 min    60 min:
+				_, _ = w.Write([]byte(`Service Time Percentiles            5 min    60 min:
 					Cache Misses:          5%   xxxxxxx  0.00000`))
 			} else {
-				w.Write([]byte(""))
+				_, _ = w.Write([]byte(""))
 			}
 		default:
-			w.Write([]byte(""))
+			_, _ = w.Write([]byte(""))
 		}
 	}))
 }
@@ -115,7 +116,7 @@ func TestRequestHandlerFail(t *testing.T) {
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			ts := serverFail(c.step)
+			ts := serverFail(t, c.step)
 			u, err := url.Parse(ts.URL)
 			if err != nil {
 				t.Fatal(err)

@@ -178,6 +178,7 @@ func runRequestLoop(ctx context.Context, opt *option, client transport.HelloClie
 
 		if err := prepareJWTIfNeeded(ctx, opt, client, workloadClient); err != nil {
 			if ctx.Err() != nil {
+				//nolint:nilerr
 				return nil
 			}
 			// Wait and continue to next iteration instead of making unauthenticated request

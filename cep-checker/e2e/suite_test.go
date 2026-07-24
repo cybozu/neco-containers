@@ -15,9 +15,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-var (
-	runE2E = os.Getenv("RUN_E2E") != ""
-)
+var runE2E = os.Getenv("RUN_E2E") != ""
 
 func TestE2e(t *testing.T) {
 	if !runE2E {
@@ -106,7 +104,7 @@ var _ = Describe("cep-checker e2e test", Ordered, func() {
 		By("checking metrics is not found")
 		res, err = kubectl(nil, "exec", "curl", "--", "curl", "-m", "1", "http://cep-checker-metrics.kube-system.svc:8080/metrics")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(len(res)).To(Equal(0))
+		Expect(res).To(BeEmpty())
 
 		By("deleting test's CEP manually")
 		_, err = kubectl(nil, "delete", "cep", "test", "-n", "test")
@@ -139,7 +137,7 @@ var _ = Describe("cep-checker e2e test", Ordered, func() {
 		Eventually(func(g Gomega) error {
 			res, err = kubectl(nil, "exec", "curl", "--", "curl", "-m", "1", "http://cep-checker-metrics.kube-system.svc:8080/metrics")
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(len(res)).To(Equal(0))
+			g.Expect(res).To(BeEmpty())
 			return nil
 		}).WithTimeout(time.Minute).Should(Succeed())
 	})
@@ -157,7 +155,7 @@ var _ = Describe("cep-checker e2e test", Ordered, func() {
 			pods := corev1.PodList{}
 			err = json.Unmarshal(res, &pods)
 			g.Expect(err).NotTo(HaveOccurred())
-			g.Expect(len(pods.Items)).To(Equal(1))
+			g.Expect(pods.Items).To(HaveLen(1))
 
 			pod := pods.Items[0]
 			if pod.Status.Phase != corev1.PodRunning {
@@ -172,12 +170,12 @@ var _ = Describe("cep-checker e2e test", Ordered, func() {
 		ceps := ciliumv2.CiliumEndpointList{}
 		err = json.Unmarshal(res, &ceps)
 		Expect(err).NotTo(HaveOccurred())
-		Expect(len(ceps.Items)).To(Equal(1))
+		Expect(ceps.Items).To(HaveLen(1))
 
 		By("checking metrics is not found")
 		res, err = kubectl(nil, "exec", "curl", "--", "curl", "-m", "1", "http://cep-checker-metrics.kube-system.svc:8080/metrics")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(len(res)).To(Equal(0))
+		Expect(res).To(BeEmpty())
 
 		By("deleting job pod's CEP manually")
 		_, err = kubectl(nil, "delete", "-n", "test", "cep", "-l", "job-name=test")
@@ -189,6 +187,6 @@ var _ = Describe("cep-checker e2e test", Ordered, func() {
 		By("checking metrics is not found")
 		res, err = kubectl(nil, "exec", "curl", "--", "curl", "-m", "1", "http://cep-checker-metrics.kube-system.svc:8080/metrics")
 		Expect(err).NotTo(HaveOccurred())
-		Expect(len(res)).To(Equal(0))
+		Expect(res).To(BeEmpty())
 	})
 })
