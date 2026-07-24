@@ -1,7 +1,7 @@
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260722@sha256:81e4a13eba446f8d72011f2b692ec74a2e3e2c0a69dd97cba5baa93445b1dcb6 AS build
 
-ARG UNBOUND_VERSION=1.25.1
-ARG UNBOUND_SHA256=0fe8b6277b0959cfd17562debac0aa5f71e0b02dc4ffa9c60271c583edab586f
+ARG UNBOUND_VERSION=1.25.2
+ARG UNBOUND_SHA256=0d92275c703d5f5f8baba3dab22117dd8c29b495588a5c229768ed6581566600
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
@@ -23,7 +23,7 @@ RUN mkdir -p /usr/local/unbound \
 RUN /usr/local/unbound/sbin/unbound-anchor -v || true
 RUN /usr/local/unbound/sbin/unbound-anchor -v
 
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20260722@sha256:ab3a1ec8b7d1bf2242e397afd44ead2ae2169e90698b2148eed1ffd5e304b63a
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
