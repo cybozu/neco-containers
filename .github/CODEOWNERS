@@ -41,6 +41,7 @@
 /vault/                           @cybozu/neco
 
 # ---- Neco Network (@cybozu/neco) ----
+/approver-policy/                 @cybozu/neco
 /bird/                            @cybozu/neco
 /bpf-map-pressure-exporter/       @cybozu/neco
 /bpftrace/                        @cybozu/neco

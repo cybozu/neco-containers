@@ -21,6 +21,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [admission (neco-admission)](#admission-neco-admission)
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
+- [approver-policy](#approver-policy)
 - [argo-rollouts](#argo-rollouts)
 - [argocd](#argocd)
 - [argocd-image-updater](#argocd-image-updater)
@@ -201,6 +202,15 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update `ALLOY_VERSION` in `Dockerfile`.
 4. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 5. Update `TAG` file.
+
+## approver-policy
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/cert-manager/approver-policy/releases).
+2. Update base image in `Dockerfile`.
+3. Update `APPROVER_POLICY_HASH` in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
 
 ## argo-rollouts
 
