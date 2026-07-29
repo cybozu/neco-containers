@@ -4,7 +4,7 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG TEMPO_SRCREPO=grafana/tempo
-ARG TEMPO_VERSION=2.10.3
+ARG TEMPO_VERSION=2.10.5
 
 WORKDIR /work
 RUN git clone --depth=1 -b v${TEMPO_VERSION} https://github.com/${TEMPO_SRCREPO}.git tempo

@@ -1,5 +1,5 @@
 diff --git a/internal/component/common/loki/client/shards.go b/internal/component/common/loki/client/shards.go
-index 524100ab9..a5818207e 100644
+index 72aeff5..9364daf 100644
 --- a/internal/component/common/loki/client/shards.go
 +++ b/internal/component/common/loki/client/shards.go
 @@ -7,6 +7,7 @@ import (
@@ -7,10 +7,10 @@ index 524100ab9..a5818207e 100644
  	"fmt"
  	"io"
 +	"math/rand"
+ 	"log/slog"
  	"net/http"
  	"strconv"
- 	"sync"
-@@ -328,12 +329,20 @@ func (s *shards) runShard(q *queue) {
+@@ -327,12 +328,20 @@ func (s *shards) runShard(q *queue) {
  	maxWaitCheckFrequency := max(s.cfg.BatchWait/10, minWaitCheckFrequency)
  
  	maxWaitCheck := time.NewTicker(maxWaitCheckFrequency)
@@ -31,7 +31,7 @@ index 524100ab9..a5818207e 100644
  	}()
  
  	var (
-@@ -358,6 +367,19 @@ func (s *shards) runShard(q *queue) {
+@@ -357,6 +366,19 @@ func (s *shards) runShard(q *queue) {
  			for _, b := range q.drain() {
  				s.sendBatch(b.TenantID, b.Batch, &protoBuffer, &snappyBuffer)
  			}
@@ -40,11 +40,11 @@ index 524100ab9..a5818207e 100644
 +			// To avoid this situation keeping on, reconnect to a randomly chosen distributor periodically.
 +			tp, ok := s.client.Transport.(*http.Transport)
 +			if !ok {
-+				level.Warn(s.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is not a http.Transport")
++				s.logger.Warn("cannot close idle connections to loki", "reason", "RoundTripper is not a http.Transport")
 +			} else if tp == nil {
-+				level.Warn(s.logger).Log("msg", "cannot close idle connections to loki", "reason", "RoundTripper is nil")
++				s.logger.Warn("cannot close idle connections to loki", "reason", "RoundTripper is nil")
 +			} else {
-+				level.Info(s.logger).Log("msg", "closing idle connections to loki")
++				s.logger.Info("closing idle connections to loki")
 +				tp.CloseIdleConnections()
 +			}
 +			periodicIdleClose.Reset(idleCloseInterval)
