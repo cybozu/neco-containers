@@ -4,15 +4,21 @@ all: check-generate test
 .PHONY: check-generate
 check-generate:
 	go mod tidy
+	cd tools && go mod tidy
 	git diff --exit-code --name-only
+
+.PHONY: lint
+lint:
+	go tool -modfile=tools/go.mod golangci-lint run ./... -vvv
+
+.PHONY: lint-fix
+lint-fix:
+	go tool -modfile=tools/go.mod golangci-lint run ./... -vvv --fix
 
 .PHONY: test
 test: clean
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	go tool staticcheck ./...
-	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
-	go tool ginkgo -v --race -p .
+	$(MAKE) lint
+	go tool -modfile=tools/go.mod ginkgo -v --race -p .
 
 .PHONY: clean
 clean:
