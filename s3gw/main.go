@@ -70,7 +70,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-	well.LogConfig{}.Apply()
+	if err := (well.LogConfig{}).Apply(); err != nil {
+		log.ErrorExit(err)
+	}
 
 	// names of envs which must not be empty
 	envNames := []string{

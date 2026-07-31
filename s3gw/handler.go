@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/transfermanager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/cybozu-go/log"
 )
 
 type credentialsProvider struct{}
@@ -77,8 +78,8 @@ func listHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	output, err := client.ListObjectsV2(req.Context(), input)
 	if err != nil {
-		res.WriteHeader(http.StatusBadRequest) // XXX we cannot determine appropriate status code
-		res.Write([]byte(err.Error()))
+		// XXX we cannot determine appropriate status code
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -93,12 +94,15 @@ func listHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	marshalled, err := json.Marshal(result)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		res.Write([]byte(err.Error()))
+		http.Error(res, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	res.Header().Set("Content-Length", fmt.Sprint(len(marshalled)))
-	res.Write(marshalled)
+	if _, err := res.Write(marshalled); err != nil {
+		log.Error("failed to write list response", map[string]any{
+			log.FnError: err,
+		})
+	}
 }
 
 func objectHandlerFunc(res http.ResponseWriter, req *http.Request) {
@@ -122,8 +126,8 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	output, err := client.GetObject(req.Context(), input)
 	if err != nil {
-		res.WriteHeader(http.StatusBadRequest) // XXX we cannot determine appropriate status code
-		res.Write([]byte(err.Error()))
+		// XXX we cannot determine appropriate status code
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -133,7 +137,12 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	if output.LastModified != nil {
 		res.Header().Set("Last-Modified", output.LastModified.UTC().Format(http.TimeFormat))
 	}
-	io.Copy(res, output.Body)
+
+	if _, err := io.Copy(res, output.Body); err != nil {
+		log.Error("failed to write object response", map[string]any{
+			log.FnError: err,
+		})
+	}
 }
 
 func objectPutHandlerFunc(res http.ResponseWriter, req *http.Request) {
@@ -147,8 +156,8 @@ func objectPutHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	_, err := tmClient.UploadObject(req.Context(), input)
 	if err != nil {
-		res.WriteHeader(http.StatusBadRequest) // XXX we cannot determine appropriate status code
-		res.Write([]byte(err.Error()))
+		// XXX we cannot determine appropriate status code
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 	res.WriteHeader(http.StatusOK)
@@ -162,8 +171,8 @@ func objectDeleteHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	_, err := client.DeleteObject(req.Context(), input)
 	if err != nil {
-		res.WriteHeader(http.StatusBadRequest) // XXX we cannot determine appropriate status code
-		res.Write([]byte(err.Error()))
+		// XXX we cannot determine appropriate status code
+		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
 	res.WriteHeader(http.StatusOK) // ?
