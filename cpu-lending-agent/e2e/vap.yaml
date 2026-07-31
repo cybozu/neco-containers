@@ -1,0 +1,34 @@
+# Guards against the quantity-suffix trap: "1000m" parses as 1 (a thousandth
+# of the intended value) and would otherwise be accepted silently. Any
+# preemptible-millicpu request below 100 milli-CPUs (0.1 core) is almost certainly
+# a notation mistake, so reject it at admission with an explanatory message.
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicy
+metadata:
+  name: cpu-lending-min-request
+spec:
+  failurePolicy: Fail
+  matchConstraints:
+    resourceRules:
+    - apiGroups: [""]
+      apiVersions: ["v1"]
+      operations: ["CREATE"]
+      resources: ["pods"]
+  validations:
+  - expression: >-
+      object.spec.containers.all(c,
+        !has(c.resources) || !has(c.resources.requests) ||
+        !('cpu-lending.cybozu.io/preemptible-millicpu' in c.resources.requests) ||
+        quantity(c.resources.requests['cpu-lending.cybozu.io/preemptible-millicpu']).asInteger() >= 100)
+    message: >-
+      cpu-lending.cybozu.io/preemptible-millicpu is denominated in milli-CPUs and
+      must be >= 100. Did you write "1000m" (which parses as 1) by mistake?
+      Write plain integers such as "1000" (= one lent CPU).
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingAdmissionPolicyBinding
+metadata:
+  name: cpu-lending-min-request
+spec:
+  policyName: cpu-lending-min-request
+  validationActions: [Deny]

@@ -1,0 +1,4 @@
+- container-image: "cpu-lending-agent"
+  make-targets: "check-generate test"
+  scan:
+    enabled: false
