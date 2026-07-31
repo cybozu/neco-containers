@@ -15,7 +15,6 @@ import (
 Test the behavior of accessing iDRAC internal web services
 */
 var _ = Describe("Access BMC", Ordered, func() {
-
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	username := "support"
 	password := basicAuthPassword
@@ -65,7 +64,7 @@ var _ = Describe("Access BMC", Ordered, func() {
 			byteJSON, httpStatusCode, err := requestToBmc(ctx, username, password, client, url)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(httpStatusCode).To(Equal(200))
-			Expect(len(byteJSON)).To(Equal(776))
+			Expect(byteJSON).To(HaveLen(776))
 		})
 
 		It("Abnormal access, not existing web server", func() {

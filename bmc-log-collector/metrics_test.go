@@ -14,8 +14,8 @@ import (
 )
 
 var _ = Describe("Get Metrics export", Ordered, func() {
-	var metricsPath = "/testmetrics1"
-	var metricsPort = ":28000"
+	metricsPath := "/testmetrics1"
+	metricsPort := ":28000"
 	BeforeAll(func() {
 		go func() {
 			metrics(metricsPath, metricsPort)
@@ -50,10 +50,10 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_failed_total Failed count of accessing BMC to get the system event log")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_failed_total Failed count of accessing BMC to get the system event log")).To(BeTrue())
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_failed_total counter")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_failed_total counter")).To(BeTrue())
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 failed", func() {
@@ -94,10 +94,10 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_success_total Succeeded count of accessing BMC to get the system event log")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_success_total Succeeded count of accessing BMC to get the system event log")).To(BeTrue())
 		})
 		It("verify TYPE line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_success_total counter")).To(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_success_total counter")).To(BeTrue())
 		})
 
 		It("iDRAC ABC123X 172.16.0.1 success", func() {
@@ -164,7 +164,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("after delete,  verify deleted line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "ABC123X")).NotTo(Equal(true))
+			Expect(searchMetricsComment(metricsLines, "ABC123X")).NotTo(BeTrue())
 		})
 	})
 })

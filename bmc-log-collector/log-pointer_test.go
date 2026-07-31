@@ -13,13 +13,13 @@ import (
 var _ = Describe("Get Machines List", Ordered, func() {
 	var ptr LastPointer
 	var err error
-	var testPointerDir = "testdata/pointers_get_machines"
-	var serialNormal = "ABCDEF"
-	var serialForDelete = "WITHDRAWED"
+	testPointerDir := "testdata/pointers_get_machines"
+	serialNormal := "ABCDEF"
+	serialForDelete := "WITHDRAWED"
 	var ml []Machine
 
 	BeforeAll(func() {
-		err := os.Mkdir(testPointerDir, 0766)
+		err := os.Mkdir(testPointerDir, 0o766)
 		Expect(err).NotTo(HaveOccurred())
 		os.Remove(path.Join(testPointerDir, serialNormal))
 		os.Remove(path.Join(testPointerDir, serialForDelete))

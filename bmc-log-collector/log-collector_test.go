@@ -22,19 +22,19 @@ Read the machines list and access iDRAC mock, and eliminate duplicated entry.
 var _ = Describe("gathering up logs", Ordered, func() {
 	var lc selCollector
 	var cl *http.Client
-	var testOutputDir = "testdata/output_log_collector"
-	var testPointerDir = "testdata/pointers_log_collector"
-	var serial = "683FPQ3"
-	var metricsPath = "/testmetrics2"
-	var metricsPort = ":29000"
+	testOutputDir := "testdata/output_log_collector"
+	testPointerDir := "testdata/pointers_log_collector"
+	serial := "683FPQ3"
+	metricsPath := "/testmetrics2"
+	metricsPort := ":29000"
 
 	// Start iDRAC Stub
 	BeforeAll(func(ctx SpecContext) {
 		os.Remove(path.Join(testOutputDir, serial))
 		os.Remove(path.Join(testPointerDir, serial))
-		err := os.MkdirAll(testOutputDir, 0755)
+		err := os.MkdirAll(testOutputDir, 0o755)
 		Expect(err).NotTo(HaveOccurred())
-		err = os.MkdirAll(testPointerDir, 0755)
+		err = os.MkdirAll(testPointerDir, 0o755)
 		Expect(err).NotTo(HaveOccurred())
 		GinkgoWriter.Println("Start iDRAC Stub")
 		bm1 := bmcMock{
@@ -164,7 +164,6 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			GinkgoWriter.Println("-------- id = ", string(result.Id))
 			Expect(result.Serial).To(Equal(serial))
 			Expect(result.Id).To(Equal("2"))
-
 		}, SpecTimeout(10*time.Second))
 
 		It("collect iDRAC log (run3)", func() {
