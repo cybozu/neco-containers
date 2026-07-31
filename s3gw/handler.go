@@ -19,11 +19,15 @@ func (credentialsProvider) Retrieve(ctx context.Context) (aws.Credentials, error
 	return awsCredentials, nil
 }
 
-var client *s3.Client
-var tmClient *transfermanager.Client
+var (
+	client   *s3.Client
+	tmClient *transfermanager.Client
+)
 
-const bucketPathPrefix = len("/bucket/")
-const partSize = 128 << 20 // 128MiB
+const (
+	bucketPathPrefix = len("/bucket/")
+	partSize         = 128 << 20 // 128MiB
+)
 
 // getHeaderOrNil gets header value or return nil if the key does not exist
 func getHeaderOrNil(header http.Header, key string) *string {
