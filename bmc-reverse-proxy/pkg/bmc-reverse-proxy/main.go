@@ -144,7 +144,9 @@ func getCertificate(helloInfo *tls.ClientHelloInfo) (*tls.Certificate, error) {
 }
 
 func main() {
-	well.LogConfig{}.Apply()
+	if err := (well.LogConfig{}).Apply(); err != nil {
+		log.ErrorExit(fmt.Errorf("failed to apply log config: %v", err))
+	}
 
 	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
 	configOverrides := &clientcmd.ConfigOverrides{}
