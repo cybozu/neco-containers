@@ -102,12 +102,12 @@ func makeTunnel(inner uint16, external uint16) error {
 		},
 	}
 
-	ln, err := net.Listen("tcp", server.Server.Addr)
+	ln, err := net.Listen("tcp", server.Addr)
 	if err != nil {
-		return fmt.Errorf("failed to listen on %q: %v", server.Server.Addr, err)
+		return fmt.Errorf("failed to listen on %q: %v", server.Addr, err)
 	}
 
-	tlsListener := tls.NewListener(ln, server.Server.TLSConfig)
+	tlsListener := tls.NewListener(ln, server.TLSConfig)
 	return server.Serve(tlsListener)
 }
 
