@@ -36,4 +36,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/cybozu-go/etcdpasswd
+        - github.com/cybozu/neco-containers/s3gw

@@ -19,8 +19,8 @@ linters:
           files:
             - $all
           deny:
-            - pkg: html/template$
-              desc: html/template must not be use
+            - pkg: ^html/template$
+              desc: html/template must not be used
 formatters:
   enable:
     - gofumpt

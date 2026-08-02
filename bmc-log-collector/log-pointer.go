@@ -19,7 +19,7 @@ type LastPointer struct {
 func checkAndCreatePointerFile(filePath string) error {
 	var lptr LastPointer
 
-	// If there is no the pointer file then create a new one.
+	// If the pointer file does not exist, create a new one.
 	_, err := os.Stat(filePath)
 	if !os.IsNotExist(err) {
 		return nil

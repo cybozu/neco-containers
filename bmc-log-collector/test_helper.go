@@ -135,7 +135,7 @@ func (l logTest) write(byteJson string, serial string) error {
 		return err
 	}
 	defer fd.Close()
-	_, err = fmt.Fprintln(fd, string(byteJson))
+	_, err = fmt.Fprintln(fd, byteJson)
 	if err != nil {
 		return err
 	}

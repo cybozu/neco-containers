@@ -19,9 +19,9 @@ linters:
           files:
             - $all
           deny:
-            - pkg: html/template$
+            - pkg: ^html/template$
               desc: html/template must not be used
-            - pkg: log$
+            - pkg: ^log$
               desc: log must not be used
     errcheck:
       exclude-functions:
