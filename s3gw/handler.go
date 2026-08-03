@@ -130,6 +130,13 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 		http.Error(res, err.Error(), http.StatusBadRequest)
 		return
 	}
+	defer func() {
+		if err := output.Body.Close(); err != nil {
+			log.Error("failed to close object response body", map[string]any{
+				log.FnError: err,
+			})
+		}
+	}()
 
 	setHeaderOrNil(res.Header(), "Content-Type", output.ContentType)
 	setHeaderOrNil(res.Header(), "ETag", output.ETag)
