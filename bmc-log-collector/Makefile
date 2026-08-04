@@ -1,24 +1,30 @@
+AQUA_POLICY_CONFIG := $(CURDIR)/aqua-policy.yaml
+export AQUA_POLICY_CONFIG
+
 .PHONY: all
 all: check-generate test
 
 .PHONY: check-generate
 check-generate:
 	go mod tidy
-	cd tools && go mod tidy
 	git diff --exit-code --name-only
 
 .PHONY: lint
-lint:
-	go tool -modfile=tools/go.mod golangci-lint run ./... -vvv
+lint: setup
+	golangci-lint run ./... -vvv
 
 .PHONY: lint-fix
-lint-fix:
-	go tool -modfile=tools/go.mod golangci-lint run ./... -vvv --fix
+lint-fix: setup
+	golangci-lint run ./... -vvv --fix
 
 .PHONY: test
 test: clean
 	$(MAKE) lint
-	go tool -modfile=tools/go.mod ginkgo -v --race -p .
+	ginkgo -v --race -p .
+
+.PHONY: setup
+setup:
+	aqua install -l
 
 .PHONY: clean
 clean:
