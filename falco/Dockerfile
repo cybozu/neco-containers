@@ -1,7 +1,7 @@
 FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
 
-ARG FALCO_VERSION=0.43.0
-ARG FALCO_COMMIT=cc4cf3d10234050e7ab48aeead23fe1f210121bc # 0.43.0
+ARG FALCO_VERSION=0.44.1
+ARG FALCO_COMMIT=f1ac5eb1a1c9da9f797f799121ab700263621443 # 0.44.1
 ARG BPFTOOL_COMMIT=134c34d987b1a301ffbbc22a51b31502befbeafe # v7.3.0
 
 # reference: https://github.com/falcosecurity/falco/blob/master/.github/workflows/reusable_build_packages.yaml
@@ -45,7 +45,6 @@ RUN cmake -B build -S . \
     -DFALCO_ETC_DIR=/etc/falco \
     -DMODERN_BPF_SKEL_DIR=/work/skeleton-build/skel_dir \
     -DBUILD_DRIVER=Off \
-    -DBUILD_BPF=Off \
     -DUSE_JEMALLOC=Off \
     -DUSE_MIMALLOC=Off \
     -DFALCO_VERSION=${FALCO_VERSION} \

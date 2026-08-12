@@ -1,6 +1,6 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG K8S_METACOLLECTOR_COMMIT=d0d27fb991d8cdfad29de28ffdb68cab75cc13a9 # v0.1.2
+ARG K8S_METACOLLECTOR_COMMIT=05e27f5b49d1a40da74453be5858d875e7ffda6c # v0.1.3
 
 WORKDIR /work/k8s-metacollector
 RUN curl -fsSL -o /tmp/k8s-metacollector-${K8S_METACOLLECTOR_COMMIT}.tar.gz https://github.com/falcosecurity/k8s-metacollector/archive/${K8S_METACOLLECTOR_COMMIT}.tar.gz && \
