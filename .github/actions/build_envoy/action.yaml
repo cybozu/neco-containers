@@ -1,12 +1,6 @@
 name: "Build Envoy"
 description: "Build Envoy"
 inputs:
-  clang_archive_path:
-    description: "clang archive path"
-    required: true
-  clang_archive_sha:
-    description: "clang archive sha"
-    required: true
   envoy_commit_sha:
     description: "envoy commit sha"
     required: true
@@ -87,14 +81,6 @@ runs:
         sudo apt-get update
         sudo apt-get install -y libtinfo5
 
-        # Extract clang+llvm
-        # Please update the archive path if supported compiler version is upgraded
-        # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#supported-compiler-versions
-        curl -o /tmp/clang.tar.xz -sLf ${{ inputs.clang_archive_path }}
-        echo "${{ inputs.clang_archive_sha }} /tmp/clang.tar.xz" | sha256sum -c -
-        mkdir llvm
-        tar -C llvm --strip-components=1 --no-same-owner -xf /tmp/clang.tar.xz
-
         # Clone Envoy repository
         git init envoy; cd envoy;
         git remote add origin https://github.com/envoyproxy/envoy
@@ -103,7 +89,6 @@ runs:
         git checkout --detach "${{ inputs.envoy_commit_sha }}"
         git log -n1 --oneline
 
-        bazel/setup_clang.sh $(pwd)/../llvm
         echo "build --config=clang" >> user.bazelrc
         # https://github.com/cybozu/neco-containers/pull/1119
         sed -i s/envoy_dependencies_extra\(\)/envoy_dependencies_extra\(ignore_root_user_error=True\)/ WORKSPACE
@@ -117,7 +102,7 @@ runs:
 
         # Compile Envoy
         # https://github.com/envoyproxy/envoy/blob/main/bazel/README.md#release-builds
-        bazel --bazelrc=/dev/null build --jobs=auto -c opt //source/exe:envoy-static.stripped --config=libc++
+        bazel --bazelrc=/dev/null build --jobs=auto -c opt --config=clang //source/exe:envoy-static.stripped
     - name: Move files
       if: steps.prepare.outputs.build == 'true'
       shell: bash
