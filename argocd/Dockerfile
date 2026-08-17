@@ -1,13 +1,14 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.4.3
+ARG ARGOCD_VERSION=3.5.1
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
-ARG HELM_VERSION=3.19.4
+ARG HELM_VERSION=4.2.1
 ARG GIT_LFS_VERSION=3.7.1
-ARG NODE_VERSION=24.16.0
+ARG NODE_VERSION=24.19.0
+ARG PNPM_VERSION=10.34.5
 
 FROM scratch AS kustomize-download
 ARG KUSTOMIZE_VERSION
@@ -16,7 +17,7 @@ ADD --checksum=sha256:ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c89
 
 FROM scratch AS helm-download
 ARG HELM_VERSION
-ADD --checksum=sha256:759c656fbd9c11e6a47784ecbeac6ad1eb16a9e76d202e51163ab78504848862 \
+ADD --checksum=sha256:479dca836e5b45e8bd222400c5591b0e3a647378f03ff96597180db97c17fdae \
     https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz /helm.tar.gz
 
 FROM scratch AS git-lfs-download
@@ -26,17 +27,22 @@ ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5
 
 FROM scratch AS node-download
 ARG NODE_VERSION
-ADD --checksum=sha256:2faf6a387e9b62b888e21c54f01249fb27537ffecf1842f29f4c919d0a59a0ff \
+ADD --checksum=sha256:f625d97cd707df4ff96254916fbc5ff014f09c09effe5a1e0ca8f6d41a8789d4 \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:4c14774e6107ab128546df8d891259ccd15ce738611b4a797e61d041ab2a2f29 \
+ADD --checksum=sha256:d2a97bfe71bd6135f1643ceaace39c40067ce1ebe1d1f44274516f3618eeff10 \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20260604@sha256:c7c519ae7504df61e01495635ebda9c8698f2d221cd3fcf6e9500ad97b9d2421 AS cybozu-ubuntu
+FROM scratch AS pnpm-download
+ARG PNPM_VERSION
+ADD --checksum=sha256:69a535476f407fb0f64427913c2b592ca2ed6bf93f92e2cb82a32349e31f36eb \
+    https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64 /pnpm
+
+FROM ghcr.io/cybozu/ubuntu:24.04.20260814@sha256:1d772c73f9277d7f7715e4e26a68facb5d5154378a744bfc59f5f2d01f3e8570 AS cybozu-ubuntu
     
-# Stage1: Initial Stage which pulls prepares build dependencies and CLI tooling we need for out final image
+# Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder
 WORKDIR /tmp
 
@@ -44,18 +50,18 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install kustomize
 RUN --mount=type=bind,from=kustomize-download,source=/kustomize.tar.gz,target=/tmp/kustomize.tar.gz \
-    tar xvf /tmp/kustomize.tar.gz -C /usr/local/bin
+    tar xf /tmp/kustomize.tar.gz -C /usr/local/bin
 
 # Install helm
 RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.tar.gz \
-    tar xvf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
+    tar xf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
 
 # Install git-lfs
 RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/git-lfs.tar.gz \
-    tar xvf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
+    tar xf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.26.4.1_noble@sha256:add9d704d4b75df2c51328615be89b61a3e71e4833321aa02c3f325a30d3eb8f AS argocd-build
+FROM ghcr.io/cybozu/golang:1.26.6.1_noble@sha256:fbb14a1408124f5a7fffd60fd0f1fe81ad6c852d2960202691651fa83b9027c1 AS argocd-build
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
@@ -65,28 +71,27 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 # Use stable version instead of unstable version upstream uses
 ARG NODE_VERSION
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
-    tar xvf /tmp/node.tar.gz -C /opt
+    tar xf /tmp/node.tar.gz -C /opt
 ENV PATH="/opt/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
 
-RUN apt-get update && apt-get install -y --no-install-recommends gpg
-# ref. https://classic.yarnpkg.com/lang/en/docs/install/#debian-stable
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor | tee /etc/apt/keyrings/yarn-archive-keyring.gpg > /dev/null && \
-    echo "deb [signed-by=/etc/apt/keyrings/yarn-archive-keyring.gpg] https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-RUN apt-get update && apt-get install -y --no-install-recommends yarn && \
-    apt-get clean && \
+RUN --mount=type=bind,from=pnpm-download,source=/pnpm,target=/tmp/pnpm \
+    install -m 0755 /tmp/pnpm /usr/local/bin/pnpm && \
+    pnpm config set -g minimumReleaseAge 1440
+
+RUN apt-get update && apt-get install -y --no-install-recommends gpg && \
     # Unlike upstream, do not remove /usr/share/doc/* to preserve license files
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 WORKDIR /go/src/github.com/argoproj/argo-cd
 RUN --mount=type=bind,from=argocd-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
-    tar zxf /tmp/src.tar.gz --strip-components=1 -C .
+    tar xf /tmp/src.tar.gz --strip-components=1 -C .
 
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
-RUN yarn install --frozen-lockfile
+RUN pnpm install --frozen-lockfile
 
 ENV ARGO_VERSION=${ARGOCD_VERSION}
-RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 yarn build
+RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 pnpm build
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
@@ -108,7 +113,6 @@ RUN groupadd -g 10000 argocd && \
         gpg-agent \
         openssh-client \
         tini && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY --from=builder /usr/local/bin/kustomize /usr/local/bin/kustomize
@@ -118,6 +122,8 @@ COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/dist/* /usr/local/b
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/gpg-wrapper.sh /usr/local/bin/gpg-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/hack/git-verify-wrapper.sh /usr/local/bin/git-verify-wrapper.sh
 COPY --from=argocd-build /go/src/github.com/argoproj/argo-cd/LICENSE /usr/local/argocd/LICENSE
+
+RUN git lfs install --system
 
 WORKDIR /app/config
 RUN mkdir -p tls && \
