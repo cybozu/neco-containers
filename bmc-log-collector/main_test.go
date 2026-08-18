@@ -17,13 +17,13 @@ import (
 )
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
-	var testOutputDir = "testdata/output_main_test"
-	var testPointerDir = "testdata/pointers_main_test"
-	var serial1 = "683FPQ3" // basic test case1
-	var serial2 = "HN3CLP3" // basic test case2
-	var serial3 = "J7N6MW3" // the log reset test case
-	var serial4 = "483FPQ3" // the "OEM software events" with random timestamp test case
-	var serial5 = "JQ5M8K3" // Duplicate event occur case
+	testOutputDir := "testdata/output_main_test"
+	testPointerDir := "testdata/pointers_main_test"
+	serial1 := "683FPQ3" // basic test case1
+	serial2 := "HN3CLP3" // basic test case2
+	serial3 := "J7N6MW3" // the log reset test case
+	serial4 := "483FPQ3" // the "OEM software events" with random timestamp test case
+	serial5 := "JQ5M8K3" // Duplicate event occur case
 
 	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("start BMC stub servers")
@@ -38,9 +38,9 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		os.Remove(path.Join(testOutputDir, serial5))
 		os.Remove(path.Join(testPointerDir, serial5))
 
-		err := os.MkdirAll(testPointerDir, 0750)
+		err := os.MkdirAll(testPointerDir, 0o750)
 		Expect(err).ToNot(HaveOccurred())
-		err = os.MkdirAll(testOutputDir, 0750)
+		err = os.MkdirAll(testOutputDir, 0o750)
 		Expect(err).ToNot(HaveOccurred())
 
 		bm1 := bmcMock{
@@ -138,7 +138,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			_, err := client.Do(req)
 			return err
 		}).WithContext(ctx).Should(Succeed())
-
 	}, NodeTimeout(10*time.Second))
 
 	Context("stub of main equivalent", func() {
@@ -169,7 +168,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	})
 
 	Context("verify 683FPQ3", func() {
-		var serial string = "683FPQ3"
+		serial := "683FPQ3"
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
@@ -209,7 +208,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	})
 
 	Context("verify HN3CLP3", func() {
-		var serial string = "HN3CLP3"
+		serial := "HN3CLP3"
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
@@ -280,7 +279,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	})
 
 	Context("verify J7N6MW3", func() {
-		var serial string = "J7N6MW3"
+		serial := "J7N6MW3"
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
@@ -366,7 +365,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	})
 
 	Context("verify 483FPQ3", func() {
-		var serial string = "483FPQ3"
+		serial := "483FPQ3"
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
@@ -439,12 +438,12 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			stringJSON, err := ReadingTestResultLogNext(reader)
 			Expect(err).To(HaveOccurred())
 			GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
-			Expect(len(stringJSON)).To(Equal(0))
+			Expect(stringJSON).To(BeEmpty())
 		}, SpecTimeout(30*time.Second))
 	})
 
 	Context("verify JQ5M8K3", func() {
-		var serial string = "JQ5M8K3"
+		serial := "JQ5M8K3"
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
@@ -601,6 +600,5 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			Expect(rslt.Serial).To(Equal(serial))
 			Expect(rslt.Id).To(Equal("17"))
 		}, SpecTimeout(30*time.Second))
-
 	})
 })

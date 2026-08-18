@@ -1,0 +1,14 @@
+---
+checksum:
+  enabled: true
+  require_checksum: true
+registries:
+- type: standard
+  ref: v4.542.0
+- name: local
+  type: local
+  path: aqua-registry.yaml
+packages:
+- name: golangci/golangci-lint@v2.12.2
+- name: github.com/onsi/ginkgo/v2/ginkgo@v2.32.0
+  registry: local

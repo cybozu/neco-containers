@@ -1,0 +1,9 @@
+registries:
+  - type: standard
+  - name: local
+    type: local
+    path: aqua-registry.yaml
+
+packages:
+  - registry: standard
+  - registry: local

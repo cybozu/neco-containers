@@ -1,0 +1,4 @@
+packages:
+  - type: go_install
+    path: github.com/onsi/ginkgo/v2/ginkgo
+    description: A Modern Testing Framework for Go

@@ -6,18 +6,22 @@ all: check-generate test
 
 .PHONY: setup
 setup:
-	go install github.com/cybozu-go/golang-custom-analyzer/cmd/custom-checker@v0.1.5
-	go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
+	aqua i -l
 
 .PHONY: check-generate
 check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
+.PHONY: lint
+lint:
+	golangci-lint run ./... -vvv
+
+.PHONY: lint-fix
+lint-fix:
+	golangci-lint run ./... -vvv --fix
+
 .PHONY: test
 test:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
-	test -z "$$(custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
+	$(MAKE) lint
 	$(SUDO_GO) test -race -v ./...

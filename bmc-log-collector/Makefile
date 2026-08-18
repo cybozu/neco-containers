@@ -1,3 +1,6 @@
+AQUA_POLICY_CONFIG := $(CURDIR)/aqua-policy.yaml
+export AQUA_POLICY_CONFIG
+
 .PHONY: all
 all: check-generate test
 
@@ -6,13 +9,22 @@ check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
+.PHONY: lint
+lint: setup
+	golangci-lint run ./... -vvv
+
+.PHONY: lint-fix
+lint-fix: setup
+	golangci-lint run ./... -vvv --fix
+
 .PHONY: test
 test: clean
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	go tool staticcheck ./...
-	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
-	go tool ginkgo -v --race -p .
+	$(MAKE) lint
+	ginkgo -v --race -p .
+
+.PHONY: setup
+setup:
+	aqua install -l
 
 .PHONY: clean
 clean:

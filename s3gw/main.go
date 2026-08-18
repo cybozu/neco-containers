@@ -16,12 +16,14 @@ import (
 	flag "github.com/spf13/pflag"
 )
 
-var bucketHost string
-var bucketPort string
-var bucketHostPort string
-var bucketName string
-var bucketRegion string
-var awsCredentials aws.Credentials
+var (
+	bucketHost     string
+	bucketPort     string
+	bucketHostPort string
+	bucketName     string
+	bucketRegion   string
+	awsCredentials aws.Credentials
+)
 
 const metricsNamespace = "s3gw"
 
@@ -50,11 +52,13 @@ func init() {
 	prometheus.MustRegister(durationHistogram)
 }
 
-var flagUsePathStyle bool
-var flagListen string
-var flagHostsAllow string
-var flagHostsDeny string
-var flagReadTimeout time.Duration
+var (
+	flagUsePathStyle bool
+	flagListen       string
+	flagHostsAllow   string
+	flagHostsDeny    string
+	flagReadTimeout  time.Duration
+)
 
 func init() {
 	flag.BoolVar(&flagUsePathStyle, "use-path-style", false, "use path style bucket name")
@@ -66,7 +70,9 @@ func init() {
 
 func main() {
 	flag.Parse()
-	well.LogConfig{}.Apply()
+	if err := (well.LogConfig{}).Apply(); err != nil {
+		log.ErrorExit(err)
+	}
 
 	// names of envs which must not be empty
 	envNames := []string{
@@ -124,14 +130,12 @@ func main() {
 		},
 	}
 
-	listHandler :=
-		promhttp.InstrumentHandlerCounter(requestsCounter.MustCurryWith(prometheus.Labels{"handler": "list"}),
-			promhttp.InstrumentHandlerDuration(durationHistogram.MustCurryWith(prometheus.Labels{"handler": "list"}),
-				http.HandlerFunc(listHandlerFunc)))
-	objectHandler :=
-		promhttp.InstrumentHandlerCounter(requestsCounter.MustCurryWith(prometheus.Labels{"handler": "object"}),
-			promhttp.InstrumentHandlerDuration(durationHistogram.MustCurryWith(prometheus.Labels{"handler": "object"}),
-				http.HandlerFunc(objectHandlerFunc)))
+	listHandler := promhttp.InstrumentHandlerCounter(requestsCounter.MustCurryWith(prometheus.Labels{"handler": "list"}),
+		promhttp.InstrumentHandlerDuration(durationHistogram.MustCurryWith(prometheus.Labels{"handler": "list"}),
+			http.HandlerFunc(listHandlerFunc)))
+	objectHandler := promhttp.InstrumentHandlerCounter(requestsCounter.MustCurryWith(prometheus.Labels{"handler": "object"}),
+		promhttp.InstrumentHandlerDuration(durationHistogram.MustCurryWith(prometheus.Labels{"handler": "object"}),
+			http.HandlerFunc(objectHandlerFunc)))
 	mux.HandleFunc("/bucket/", func(res http.ResponseWriter, req *http.Request) {
 		if !allowdeny.IsAllowedHostPort(req.RemoteAddr) {
 			res.WriteHeader(http.StatusForbidden)

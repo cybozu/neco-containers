@@ -130,12 +130,12 @@ type logTest struct {
 
 func (l logTest) write(byteJson string, serial string) error {
 	fn := path.Join(l.outputDir, serial)
-	fd, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	fd, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0o666)
 	if err != nil {
 		return err
 	}
 	defer fd.Close()
-	_, err = fd.WriteString(fmt.Sprintln(string(byteJson)))
+	_, err = fmt.Fprintln(fd, byteJson)
 	if err != nil {
 		return err
 	}

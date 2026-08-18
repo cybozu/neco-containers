@@ -9,10 +9,19 @@ check-generate:
 	go mod tidy
 	git diff --exit-code --name-only
 
+.PHONY: lint
+lint:
+	golangci-lint run ./... -vvv
+
+.PHONY: lint-fix
+lint-fix:
+	golangci-lint run ./... -vvv --fix
+
 .PHONY: test
 test:
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	go tool staticcheck ./...
-	test -z "$$(go tool custom-checker -restrictpkg.packages=html/template,log ./... 2>&1 | tee /dev/stderr)"
-	go vet ./...
+	$(MAKE) lint
 	$(SUDO_GO) test -race -v ./...
+
+.PHONY: setup
+setup:
+	aqua install -l
