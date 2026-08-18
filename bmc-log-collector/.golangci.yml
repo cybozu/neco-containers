@@ -21,6 +21,8 @@ linters:
           deny:
             - pkg: ^html/template$
               desc: html/template must not be used
+            - pkg: ^log$
+              desc: log must not be used
 formatters:
   enable:
     - gofumpt
