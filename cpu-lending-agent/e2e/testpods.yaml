@@ -1,0 +1,40 @@
+# Simulated MOCO lender + borrower for the e2e test.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: moco-test-0
+  labels:
+    app.kubernetes.io/created-by: moco
+    app.kubernetes.io/name: mysql
+    moco.cybozu.com/role: replica
+spec:
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+  containers:
+  - name: mysqld
+    image: mirror.gcr.io/library/busybox
+    command: ["sleep", "inf"]
+    resources:
+      requests: {cpu: "2", memory: 128Mi}
+      limits: {cpu: "2", memory: 128Mi}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: borrower-1
+spec:
+  tolerations:
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists
+  containers:
+  - name: worker
+    image: mirror.gcr.io/library/busybox
+    command: ["sleep", "inf"]
+    resources:
+      requests:
+        # milli-CPU 単位: 1000 = 貸出コア 1 個相当
+        cpu-lending.cybozu.io/preemptible-millicpu: "1000"
+      limits:
+        cpu-lending.cybozu.io/preemptible-millicpu: "1000"
+    # No cpu/memory requests or limits: the pod must stay BestEffort.
