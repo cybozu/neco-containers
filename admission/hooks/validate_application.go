@@ -84,6 +84,7 @@ OUTER:
 func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructured) ([]string, error) {
 	var repoURLs []string
 
+	// spec.source.repoURL
 	repoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "source", "repoURL")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get spec.source.repoURL; %w", err)
@@ -92,13 +93,14 @@ func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructu
 		repoURLs = append(repoURLs, repoURL)
 	}
 
+	// spec.sources[*].repoURL
 	sources, found, err := unstructured.NestedSlice(app.UnstructuredContent(), "spec", "sources")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get spec.sources; %w", err)
 	}
 	if found {
 		for i, source := range sources {
-			sourceMap, ok := source.(map[string]interface{})
+			sourceMap, ok := source.(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("spec.sources[%d] should be mapping", i)
 			}
@@ -113,12 +115,22 @@ func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructu
 		}
 	}
 
-	hydratorRepoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "sourceHydrator", "drySource", "repoURL")
+	// spec.sourceHydrator.drySource.repoURL
+	drySourceRepoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "sourceHydrator", "drySource", "repoURL")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get spec.sourceHydrator.drySource.repoURL; %w", err)
 	}
 	if found {
-		repoURLs = append(repoURLs, hydratorRepoURL)
+		repoURLs = append(repoURLs, drySourceRepoURL)
+	}
+
+	// spec.sourceHydrator.syncSource.repoURL
+	syncSourceRepoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "sourceHydrator", "syncSource", "repoURL")
+	if err != nil {
+		return nil, fmt.Errorf("unable to get spec.sourceHydrator.syncSource.repoURL; %w", err)
+	}
+	if found && syncSourceRepoURL != "" {
+		repoURLs = append(repoURLs, syncSourceRepoURL)
 	}
 
 	return repoURLs, nil

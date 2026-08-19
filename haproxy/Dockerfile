@@ -1,9 +1,9 @@
 # ref. https://github.com/docker-library/haproxy/blob/master/3.0/Dockerfile
 FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260604@sha256:2b6f938e5831d2f205a6651d4f6226b2e76e2145678a9d41f3d81989a6fbd953 AS build
 
-ARG HAPROXY_VERSION=3.0.23
+ARG HAPROXY_VERSION=3.0.26
 ARG HAPROXY_URL=https://www.haproxy.org/download/3.0/src/haproxy-${HAPROXY_VERSION}.tar.gz
-ARG HAPROXY_SHA256=05084ba42534069f8b8c92114ba480a2fd636b0d612c3f63dcc1710b302d17c3
+ARG HAPROXY_SHA256=8a5b31ca881b7d714d228acccc7ac61b132bc7bcb9c3b76adc846e800917fe3a
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
