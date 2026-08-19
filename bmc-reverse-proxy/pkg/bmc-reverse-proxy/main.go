@@ -58,7 +58,7 @@ func directorToInner(request *http.Request, inner uint16, resolveMap map[string]
 	}
 	if !ok {
 		//nolint:errcheck
-		log.Error("failed to resolve hostname", map[string]interface{}{
+		log.Error("failed to resolve hostname", map[string]any{
 			"hostname": hostname,
 		})
 		// Director cannot return an error. Set an invalid address to fail.
