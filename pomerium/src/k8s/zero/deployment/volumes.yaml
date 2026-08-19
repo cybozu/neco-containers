@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pomerium
+spec:
+  template:
+    spec:
+      nodeSelector:
+        kubernetes.io/os: linux
+      containers:
+        - name: pomerium
+          env:
+            - name: TMPDIR
+              value: "/tmp/pomerium"
+            - name: XDG_CACHE_HOME
+              value: "/tmp/pomerium/cache"
+            - name: XDG_DATA_HOME
+              value: "/tmp/pomerium/cache"
+          volumeMounts:
+            - mountPath: "/tmp/pomerium"
+              name: tmp
+            - mountPath: "/var/run/secrets/pomerium"
+              name: bootstrap
+              readOnly: true
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: bootstrap
+          secret:
+            optional: true
+            secretName: pomerium
+            items:
+              - key: bootstrap
+                path: bootstrap.dat

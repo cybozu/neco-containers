@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package pomerium.zero;
+option go_package = "github.com/pomerium/pomerium/pkg/zero/connect";
+
+// SubscribeRequest is used to subscribe to a stream of messages
+// from the Zero Cloud to the Pomerium Core.
+//
+// The Authorization: Bearer header must contain a valid token,
+// that belongs to a cluster identity with appropriate claims set.
+message SubscribeRequest {
+  string hostname = 1;
+  string version = 2;
+}
+
+// Message is an aggregate of all possible messages that can be sent
+// from the cloud to the core in managed mode.
+message Message {
+  oneof message {
+    ConfigUpdated config_updated = 1;
+    BootstrapConfigUpdated bootstrap_config_updated = 2;
+    TelemetryRequest telemetry_request = 3;
+    RunHealthChecksRequest run_health_checks_request = 5;
+  }
+}
+
+// ConfigUpdated is sent when the configuration has been updated
+// for the connected Pomerium Core deployment
+message ConfigUpdated {
+  // version of the configuration changeset
+  int64 changeset_version = 1;
+}
+
+// BootstrapConfigUpdated is sent when the bootstrap configuration has been
+// updated. Bootstrap configuration is received via cluster API directly, and
+// does not involve long running operations to construct it, like with a regular
+// config.
+message BootstrapConfigUpdated {}
+
+// RunHealthChecksRequest is sent to request the Pomerium Core to re-run its health checks
+message RunHealthChecksRequest {}
+
+// TelemetryRequest is sent to request current telemetry data from the Pomerium Core to be sent to the Zero Cloud.
+message TelemetryRequest {
+  // include_session_analytics requests current MAU/DAU data
+  optional SessionAnalyticsRequest session_analytics = 1;
+  // envoy_metrics requests current envoy metrics
+  optional EnvoyMetricsRequest envoy_metrics = 2;
+  // pomerium_metrics requests current pomerium metrics
+  optional PomeriumMetricsRequest pomerium_metrics = 3;
+}
+
+// SessionAnalyticsRequest is used to request current MAU/DAU data
+message SessionAnalyticsRequest {}
+
+// EnvoyMetricsRequest is used to request current envoy metrics
+message EnvoyMetricsRequest {
+  // only include metrics that match the provided labels
+  repeated string metrics = 1;
+  // only include labels that match the provided labels
+  repeated string labels = 2;
+}
+
+// PomeriumMetricsRequest is used to request current pomerium metrics
+message PomeriumMetricsRequest {
+  // only include metrics that match the provided labels
+  repeated string metrics = 1;
+}
+
+// Connect service is used to maintain a persistent connection between the
+// Pomerium Core and Zero Cloud and receive messages from the cloud.
+service Connect {
+  // Subscribe is used to send a stream of messages from the Zero Cloud to the
+  // Pomerium Core in managed mode.
+  rpc Subscribe(SubscribeRequest) returns (stream Message);
+}

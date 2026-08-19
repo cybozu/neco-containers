@@ -1,0 +1,16 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pomerium
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: pomerium-zero
+  template:
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: pomerium-zero
+      containers:
+        - name: pomerium
+      terminationGracePeriodSeconds: 10

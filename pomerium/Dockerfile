@@ -23,6 +23,15 @@ ADD --checksum=sha256:cc8bc82b2dd0b595c3b95a4c3c9c8c350907cff011afbdee3d1379e812
 # Select the right download stage based on the target architecture
 FROM node-${TARGETARCH} AS node-download
 
+# Use vendored source in `src/`
+FROM ghcr.io/cybozu/golang:1.25.11.2_noble@sha256:6bca1e8b792037d5bd28ae3315dae20670521b208a53ec42e860a590d1e8792c AS vendor-source
+WORKDIR /vendor-source
+COPY --from=source /pomerium.tar.gz ./pomerium.tar.gz
+RUN mkdir download
+RUN tar zxf ./pomerium.tar.gz -C download --strip-components 1
+COPY src/ ./src/
+RUN diff -r download src
+
 FROM ghcr.io/cybozu/golang:1.25.11.2_noble@sha256:6bca1e8b792037d5bd28ae3315dae20670521b208a53ec42e860a590d1e8792c AS build
 
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
@@ -32,8 +41,7 @@ ENV PATH="/opt/node/bin:${PATH}"
 
 WORKDIR /work/pomerium
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-COPY --from=source /pomerium.tar.gz /tmp/pomerium.tar.gz
-RUN tar zxf /tmp/pomerium.tar.gz --strip-components 1 && rm /tmp/pomerium.tar.gz
+COPY --from=vendor-source /vendor-source/src .
 
 RUN cd ui; npm ci
 RUN make build-ui

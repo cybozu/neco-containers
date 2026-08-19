@@ -1,0 +1,93 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - asasalint
+    - bodyclose
+    - copyloopvar
+    - dogsled
+    - errcheck
+    - errorlint
+    - gocheckcompilerdirectives
+    - goprintffuncname
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - revive
+    - staticcheck
+    - unconvert
+    - unused
+    - usestdlibvars
+    - usetesting
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - bodyclose
+          - errcheck
+          - gosec
+          - lll
+          - maligned
+          - mnd
+          - scopelint
+          - staticcheck
+          - unparam
+          - unused
+        path: _test\.go$|^tests/|^integration/|^samples/|^internal/testutil/|templates\.go$
+      - linters:
+          - staticcheck
+        path: (.+)\.go$
+        text: QF1008
+      - linters:
+          - gosec
+        path: internal/identity/oauth/github/github.go
+        text: Potential hardcoded credentials
+      - linters:
+          - gosec
+        text: 'G112:'
+      - linters:
+          - gosec
+        text: 'G115:'
+      - linters:
+          - gosec
+        text: 'G402: TLS MinVersion too low.'
+      - path: (.+)\.go$
+        # errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
+        text: Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
+      - path: (.+)\.go$
+        text: empty-block
+      - path: (.+)\.go$
+        # go sec : we want to allow skipping tls auth
+        text: TLS InsecureSkipVerify set true.
+      - path: (.+)\.go$
+        text: SA1019
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gci
+    - gofumpt
+    - goimports
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - prefix(github.com/pomerium)
+      custom-order: true
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

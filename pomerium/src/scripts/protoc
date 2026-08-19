@@ -1,0 +1,24 @@
+#!/bin/bash
+set -euo pipefail
+
+_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+
+require-command() {
+	local _command="${1?"command is required"}"
+
+	if ! command -v "$_command" >/dev/null 2>&1; then
+		echo "$_command is required"
+		exit 1
+	fi
+}
+
+require-command protoc
+require-command go
+
+exec protoc \
+	-I "$(go list -m -f '{{.Dir}}' github.com/envoyproxy/protoc-gen-validate)" \
+	--experimental_allow_proto3_optional \
+	--plugin="protoc-gen-go=$_dir/protoc-gen-go" \
+	--plugin="protoc-gen-go-grpc=$_dir/protoc-gen-go-grpc" \
+	--plugin="protoc-gen-validate=$_dir/protoc-gen-validate" \
+	"$@"

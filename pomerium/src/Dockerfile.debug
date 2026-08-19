@@ -1,0 +1,41 @@
+FROM node:22.22.0-bookworm@sha256:cd7bcd2e7a1e6f72052feb023c7f6b722205d3fcab7bbcbd2d1bfdab10b1e935 AS ui
+WORKDIR /build
+
+COPY .git ./.git
+COPY Makefile ./Makefile
+
+# download npm dependencies
+COPY ui/package-lock.json ./ui/package-lock.json
+COPY ui/package.json ./ui/package.json
+RUN make npm-install
+
+# build ui
+COPY ./ui/ ./ui/
+RUN make build-ui
+
+FROM golang:1.25.6-bookworm@sha256:2f768d462dbffbb0f0b3a5171009f162945b086f326e0b2a8fd5d29c3219ff14 AS build
+WORKDIR /go/src/github.com/pomerium/pomerium
+
+RUN apt-get update \
+    && apt-get -y --no-install-recommends install zip
+
+# cache dependency downloads
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+COPY --from=ui /build/ui/dist ./ui/dist
+
+# build
+RUN make build-debug NAME=pomerium
+RUN touch /config.yaml
+RUN go install github.com/go-delve/delve/cmd/dlv@latest
+
+FROM debian:bookworm@sha256:b16cef8cbcb20935c0f052e37fc3d38dc92bfec0bcfb894c328547f81e932d67
+ENV AUTOCERT_DIR=/data/autocert
+WORKDIR /pomerium
+COPY --from=build /go/src/github.com/pomerium/pomerium/bin/* /bin/
+COPY --from=build /config.yaml /pomerium/config.yaml
+COPY --from=build /go/bin/dlv /bin
+COPY scripts/debug-entrypoint.sh /
+ENTRYPOINT [ "/bin/pomerium" ]
+CMD ["--config","/pomerium/config.yaml"]

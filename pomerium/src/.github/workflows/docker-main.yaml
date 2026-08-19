@@ -1,0 +1,96 @@
+name: Docker Main
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    outputs:
+      sha-tag: ${{ steps.metadata.outputs.sha-tag }}
+      image: ${{ steps.metadata.outputs.image }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+
+      - name: Login to DockerHub
+        uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Prepare Image Metadata
+        id: metadata
+        run: |
+          IMAGE=pomerium/pomerium
+          SHA_TAG=git-${GITHUB_SHA::8}
+          TAGS=${IMAGE}:main
+          TAGS=${TAGS},${IMAGE}:master
+          TAGS=${TAGS},${IMAGE}:${SHA_TAG}
+          TS=$(date +%Y%m%d%H%M%S)
+          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "timestamp=${TS}" >> $GITHUB_OUTPUT
+          echo "name=pomerium" >> $GITHUB_OUTPUT
+          echo "image=${IMAGE}" >> $GITHUB_OUTPUT
+          echo "sha-tag=${SHA_TAG}" >> $GITHUB_OUTPUT
+
+      - name: Docker Publish - Main
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: |
+            org.opencontainers.image.created=${{ steps.metadata.outputs.timestamp }}
+            org.opencontainers.image.name=${{ steps.metadata.outputs.name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+      - name: Docker Publish - Debug
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: ./Dockerfile.debug
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: pomerium/pomerium:debug
+          labels: |
+            org.opencontainers.image.created=${{ steps.metadata.outputs.timestamp }}
+            org.opencontainers.image.name=${{ steps.metadata.outputs.name }}
+            org.opencontainers.image.revision=${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-22.04
+    needs: publish
+    steps:
+      - name: Checkout Gitops Repo
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          repository: pomerium/gitops-argocd
+          token: ${{ secrets.APPARITOR_GITHUB_TOKEN }}
+
+      - name: Bump psql environment
+        uses: mikefarah/yq@065b200af9851db0d5132f50bc10b1406ea5c0a8
+        with:
+          cmd:
+            yq eval '.pomerium.image.tag = "${{ needs.publish.outputs.sha-tag }}"' -i
+            projects/pomerium-master-postgres/pomerium/values.yaml
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@04702edda442b2e678b25b537cec683a1493fcb9
+        with:
+          commit_message: |
+            Bump test environment pomerium/pomerium
+            Image tag: ${{ needs.publish.outputs.sha-tag }}
+            Source Repo: ${{ github.repository }}@${{ github.sha }}

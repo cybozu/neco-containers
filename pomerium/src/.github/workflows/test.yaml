@@ -1,0 +1,146 @@
+name: Test
+permissions:
+  contents: read
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-22.04]
+        deployment: [multi, single]
+        authenticate-flow: [stateful, stateless]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version-file: .tool-versions
+          cache: false
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version-file: .tool-versions
+
+      - name: set env vars
+        run: echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: build dev docker image
+        run: |
+          ./scripts/build-dev-docker.bash
+
+      - name: start cluster
+        run: |
+          export POMERIUM_TAG=dev
+          cd ./integration/clusters/${{matrix.deployment}}-${{matrix.authenticate-flow}}
+          docker compose up -d
+
+      - name: integration tests
+        run: |
+          (cd ./integration/clusters/${{matrix.deployment}}-${{matrix.authenticate-flow}} && docker compose logs -f &)
+          go test -tags integration -v ./integration/...
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version-file: .tool-versions
+
+      - uses: actions/setup-node@395ad3262231945c25e8478fd5baf05154b1d79f
+        with:
+          node-version-file: .tool-versions
+
+      - name: build
+        run: |
+          make build-deps
+          make build
+
+      - name: save binary
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          path: bin/pomerium*
+          name: pomerium ${{ github.run_id }} ${{ matrix.platform }}
+          retention-days: 1
+
+      - name: test
+        uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          command: make cover
+
+      - uses: jandelgado/gcov2lcov-action@e4612787670fc5b5f49026b8c29c5569921de1db
+        if: matrix.platform == 'ubuntu-latest'
+        name: convert coverage to lcov
+        with:
+          infile: coverage.txt
+          outfile: coverage.lcov
+
+      - name: upload to coveralls
+        uses: coverallsapp/github-action@5cbfd81b66ca5d10c19b062c04de0199c215fb6e
+        if: matrix.platform == 'ubuntu-latest'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: coverage.lcov
+
+  build-docker:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f
+
+      - name: Docker Build
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  precommit:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
+        with:
+          go-version-file: .tool-versions
+          cache: false
+
+      - uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        with:
+          python-version: "3.x"
+
+      - uses: pre-commit/action@2c7b3805fd2a0fd8c1884dcaebf91fc102a13ecd
+        with:
+          extra_args: --show-diff-on-failure --from-ref ${{
+            github.event.pull_request.base.sha }} --to-ref ${{
+            github.event.pull_request.head.sha }}
+        env:
+          SKIP: lint
+
+  check-docker-images:
+    runs-on: ubuntu-22.04
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+      - run: ./scripts/check-docker-images

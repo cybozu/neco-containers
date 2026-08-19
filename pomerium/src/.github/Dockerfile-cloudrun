@@ -1,0 +1,16 @@
+
+FROM busybox:latest@sha256:d80cd694d3e9467884fcb94b8ca1e20437d8a501096cdf367a5a1918a34fc2fd AS build
+RUN touch /config.yaml
+
+FROM gcr.io/distroless/base:latest@sha256:f5a3067027c2b322cd71b844f3d84ad3deada45ceb8a30f301260a602455070e
+ENV AUTOCERT_DIR=/data/autocert
+WORKDIR /pomerium
+COPY pomerium* /bin/
+COPY --from=build /config.yaml /pomerium/config.yaml
+
+ENV ADDRESS=":8080"
+ENV GRPC_INSECURE=true
+ENV INSECURE_SERVER=true
+
+ENTRYPOINT [ "/bin/pomerium" ]
+CMD ["--config","/pomerium/config.yaml"]

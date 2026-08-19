@@ -1,0 +1,398 @@
+// Package pomerium houses the main pomerium CLI command.
+package pomerium
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net/http"
+	"sync"
+
+	oteltrace "go.opentelemetry.io/otel/trace"
+	"go.uber.org/automaxprocs/maxprocs"
+	"golang.org/x/sync/errgroup"
+
+	"github.com/pomerium/pomerium/authenticate"
+	"github.com/pomerium/pomerium/authorize"
+	"github.com/pomerium/pomerium/config"
+	"github.com/pomerium/pomerium/config/envoyconfig/filemgr"
+	databroker_service "github.com/pomerium/pomerium/databroker"
+	"github.com/pomerium/pomerium/internal/autocert"
+	"github.com/pomerium/pomerium/internal/controlplane"
+	"github.com/pomerium/pomerium/internal/databroker"
+	"github.com/pomerium/pomerium/internal/events"
+	"github.com/pomerium/pomerium/internal/log"
+	"github.com/pomerium/pomerium/internal/registry"
+	"github.com/pomerium/pomerium/internal/version"
+	"github.com/pomerium/pomerium/pkg/contextutil"
+	derivecert_config "github.com/pomerium/pomerium/pkg/derivecert/config"
+	"github.com/pomerium/pomerium/pkg/envoy"
+	"github.com/pomerium/pomerium/pkg/envoy/files"
+	"github.com/pomerium/pomerium/pkg/health"
+	"github.com/pomerium/pomerium/pkg/telemetry/trace"
+	"github.com/pomerium/pomerium/proxy"
+)
+
+type Options struct {
+	fileMgr                    *filemgr.Manager
+	envoyServerOptions         []envoy.ServerOption
+	databrokerServerOptions    []databroker_service.Option
+	authorizeServerOptions     []authorize.Option
+	authenticateServiceOptions []authenticate.Option
+}
+
+type Option func(*Options)
+
+func (o *Options) apply(opts ...Option) {
+	for _, op := range opts {
+		op(o)
+	}
+}
+
+func WithOverrideFileManager(fileMgr *filemgr.Manager) Option {
+	return func(o *Options) {
+		o.fileMgr = fileMgr
+	}
+}
+
+func WithEnvoyServerOptions(opts ...envoy.ServerOption) Option {
+	return func(o *Options) {
+		o.envoyServerOptions = append(o.envoyServerOptions, opts...)
+	}
+}
+
+func WithDataBrokerServerOptions(opts ...databroker_service.Option) Option {
+	return func(o *Options) {
+		o.databrokerServerOptions = append(o.databrokerServerOptions, opts...)
+	}
+}
+
+func WithAuthorizeServerOptions(opts ...authorize.Option) Option {
+	return func(o *Options) {
+		o.authorizeServerOptions = append(o.authorizeServerOptions, opts...)
+	}
+}
+
+func WithAuthenticateServerOptions(opts ...authenticate.Option) Option {
+	return func(o *Options) {
+		o.authenticateServiceOptions = append(o.authenticateServiceOptions, opts...)
+	}
+}
+
+// Run runs the main pomerium application.
+func Run(ctx context.Context, src config.Source, opts ...Option) error {
+	p := New(opts...)
+	tracerProvider := trace.NewTracerProvider(ctx, "Pomerium")
+
+	if err := p.Start(ctx, tracerProvider, src); err != nil {
+		return err
+	}
+	return p.Wait()
+}
+
+var ErrShutdown = errors.New("Shutdown() called")
+
+type Pomerium struct {
+	Options
+	errGroup *errgroup.Group
+
+	startMu       sync.Mutex
+	cancel        context.CancelCauseFunc
+	envoyServer   *envoy.Server
+	envoyShutdown chan error
+	traceClientMu sync.Mutex
+}
+
+func New(opts ...Option) *Pomerium {
+	options := Options{}
+	options.apply(opts...)
+
+	return &Pomerium{
+		Options:       options,
+		envoyShutdown: make(chan error, 1),
+	}
+}
+
+func (p *Pomerium) Start(ctx context.Context, tracerProvider oteltrace.TracerProvider, src config.Source) error {
+	p.startMu.Lock()
+	defer p.startMu.Unlock()
+	p.updateTraceClient(ctx, src.GetConfig())
+	ctx, p.cancel = context.WithCancelCause(ctx)
+	_, _ = maxprocs.Set(maxprocs.Logger(func(s string, i ...any) { log.Ctx(ctx).Debug().Msgf(s, i...) }))
+
+	evt := log.Ctx(ctx).Info().
+		Str("envoy-version", files.FullVersion()).
+		Str("version", version.FullVersion())
+	if buildTime := version.BuildTime(); buildTime != "" {
+		evt = evt.Str("built", buildTime)
+	}
+	evt.Msg("cmd/pomerium")
+
+	src, err := config.NewLayeredSource(ctx, src, derivecert_config.NewBuilder())
+	if err != nil {
+		return err
+	}
+
+	src = databroker.NewConfigSource(ctx, tracerProvider, src, databroker.EnableConfigValidation(true))
+	_ = config.NewLogManager(ctx, src)
+
+	// trigger changes when underlying files are changed
+	src = config.NewFileWatcherSource(ctx, src)
+
+	src, err = autocert.New(ctx, src)
+	if err != nil {
+		return err
+	}
+
+	// override the default http transport so we can use the custom CA in the TLS client config (#1570)
+	http.DefaultTransport = config.NewHTTPTransport(src)
+
+	metricsMgr := config.NewMetricsManager(ctx, src)
+
+	eventsMgr := events.New()
+
+	fileMgr := p.fileMgr
+	if fileMgr == nil {
+		fileMgr = filemgr.NewManager()
+	}
+
+	cfg := src.GetConfig()
+	src.OnConfigChange(ctx, p.updateTraceClient)
+
+	// setup the control plane
+	controlPlane, err := controlplane.NewServer(ctx, cfg, metricsMgr, eventsMgr, fileMgr)
+	if err != nil {
+		return fmt.Errorf("error creating control plane: %w", err)
+	}
+	src.OnConfigChange(ctx,
+		func(ctx context.Context, cfg *config.Config) {
+			if err := controlPlane.OnConfigChange(ctx, cfg); err != nil {
+				log.Ctx(ctx).Error().Err(err).Msg("config change")
+			}
+		})
+
+	if err = controlPlane.OnConfigChange(ctx, src.GetConfig()); err != nil {
+		return fmt.Errorf("applying config: %w", err)
+	}
+
+	log.Ctx(ctx).Info().
+		Str("grpc-port", src.GetConfig().GRPCPort).
+		Str("http-port", src.GetConfig().HTTPPort).
+		Str("outbound-port", src.GetConfig().OutboundPort).
+		Str("metrics-port", src.GetConfig().MetricsPort).
+		Str("debug-port", src.GetConfig().DebugPort).
+		Str("health-addr", src.GetConfig().Options.HealthCheckAddr).
+		Str("acme-tls-alpn-port", src.GetConfig().ACMETLSALPNPort).
+		Msg("server started")
+
+	// create envoy server
+	p.envoyServer, err = envoy.NewServer(ctx, p.envoyShutdown, src, controlPlane.Builder, p.envoyServerOptions...)
+	if err != nil {
+		return fmt.Errorf("error creating envoy server: %w", err)
+	}
+	context.AfterFunc(ctx, func() {
+		p.envoyServer.Close()
+	})
+
+	// add services
+	controlPlaneChecks := []health.Check{}
+	if config.IsAuthenticate(src.GetConfig().Options.Services) {
+		controlPlaneChecks = append(controlPlaneChecks, health.AuthenticateService)
+		if err := setupAuthenticate(ctx, src, controlPlane, p.authenticateServiceOptions...); err != nil {
+			return err
+		}
+	}
+	var authorizeServer *authorize.Authorize
+	if config.IsAuthorize(src.GetConfig().Options.Services) {
+		authorizeServer, err = setupAuthorize(ctx, src, controlPlane, p.authorizeServerOptions...)
+		if err != nil {
+			return err
+		}
+	}
+	var dataBrokerServer *databroker_service.DataBroker
+	if config.IsDataBroker(src.GetConfig().Options.Services) {
+		dataBrokerServer, err = setupDataBroker(ctx, src, controlPlane, eventsMgr, p.databrokerServerOptions...)
+		if err != nil {
+			return fmt.Errorf("setting up databroker: %w", err)
+		}
+	}
+
+	if err = setupRegistryReporter(ctx, tracerProvider, src); err != nil {
+		return fmt.Errorf("setting up registry reporter: %w", err)
+	}
+
+	if config.IsProxy(src.GetConfig().Options.Services) {
+		controlPlaneChecks = append(controlPlaneChecks, health.ProxyService)
+		if err := setupProxy(ctx, src, controlPlane); err != nil {
+			return err
+		}
+	}
+
+	// run everything
+	p.errGroup, ctx = errgroup.WithContext(ctx)
+	if authorizeServer != nil {
+		p.errGroup.Go(func() error {
+			health.ReportRunning(health.AuthorizationService)
+			defer health.ReportTerminating(health.AuthorizationService)
+			return authorizeServer.Run(ctx)
+		})
+	}
+	p.errGroup.Go(func() error {
+		for _, check := range controlPlaneChecks {
+			health.ReportRunning(check)
+		}
+		defer func() {
+			for _, check := range controlPlaneChecks {
+				health.ReportTerminating(check)
+			}
+		}()
+		return controlPlane.Run(ctx)
+	})
+	if dataBrokerServer != nil {
+		p.errGroup.Go(func() error {
+			defer func() {
+				checks := []health.Check{
+					health.StorageBackend,
+					health.DatabrokerInitialSync,
+					health.DatabrokerBuildConfig,
+				}
+
+				for _, check := range checks {
+					health.ReportTerminating(check)
+				}
+			}()
+			return dataBrokerServer.Run(ctx)
+		})
+	}
+	return nil
+}
+
+func (p *Pomerium) Shutdown(ctx context.Context) error {
+	p.startMu.Lock()
+	envoyServer := p.envoyServer
+	p.startMu.Unlock()
+	var errs []error
+	if envoyServer != nil {
+		_ = trace.WaitForSpans(ctx, p.envoyServer.ExitGracePeriod())
+		errs = append(errs, p.envoyServer.Close()) // this only errors if signaling envoy fails
+	}
+	p.cancel(fmt.Errorf("requested manual Shutdown() : %w", contextutil.ErrShutdown))
+	errs = append(errs, p.Wait())
+	return errors.Join(errs...)
+}
+
+func (p *Pomerium) Wait() error {
+	errW := p.errGroup.Wait()
+	if errors.Is(errW, contextutil.ErrShutdown) {
+		errW = nil
+	}
+	errS := <-p.envoyShutdown
+	return errors.Join(errW, errS)
+}
+
+func setupAuthenticate(ctx context.Context, src config.Source, controlPlane *controlplane.Server, opts ...authenticate.Option) error {
+	svc, err := authenticate.New(ctx, src.GetConfig(), opts...)
+	if err != nil {
+		return fmt.Errorf("error creating authenticate service: %w", err)
+	}
+	err = controlPlane.EnableAuthenticate(ctx, svc)
+	if err != nil {
+		return fmt.Errorf("error adding authenticate service to control plane: %w", err)
+	}
+
+	src.OnConfigChange(ctx, svc.OnConfigChange)
+	svc.OnConfigChange(ctx, src.GetConfig())
+	log.Ctx(ctx).Info().Msg("enabled authenticate service")
+
+	return nil
+}
+
+func setupAuthorize(ctx context.Context, src config.Source, controlPlane *controlplane.Server, opts ...authorize.Option) (*authorize.Authorize, error) {
+	svc, err := authorize.New(ctx, src.GetConfig(), opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error creating authorize service: %w", err)
+	}
+	svc.RegisterGRPCServices(controlPlane.GRPCServer, src.GetConfig())
+	log.Ctx(ctx).Info().Msg("enabled authorize service")
+	src.OnConfigChange(ctx, svc.OnConfigChange)
+	svc.OnConfigChange(ctx, src.GetConfig())
+	return svc, nil
+}
+
+func setupDataBroker(ctx context.Context,
+	src config.Source,
+	controlPlane *controlplane.Server,
+	eventsMgr *events.Manager,
+	opts ...databroker_service.Option,
+) (*databroker_service.DataBroker, error) {
+	svc, err := databroker_service.New(ctx, src.GetConfig(), eventsMgr, opts...)
+	if err != nil {
+		return nil, fmt.Errorf("error creating databroker service: %w", err)
+	}
+	svc.Register(controlPlane.GRPCServer)
+	controlPlane.EnableDataBrokerDebug(svc)
+	log.Ctx(ctx).Info().Msg("enabled databroker service")
+	src.OnConfigChange(ctx, svc.OnConfigChange)
+	svc.OnConfigChange(ctx, src.GetConfig())
+	return svc, nil
+}
+
+func setupRegistryReporter(ctx context.Context, tracerProvider oteltrace.TracerProvider, src config.Source) error {
+	reporter := registry.NewReporter(tracerProvider)
+	src.OnConfigChange(ctx, reporter.OnConfigChange)
+	reporter.OnConfigChange(ctx, src.GetConfig())
+	return nil
+}
+
+func setupProxy(ctx context.Context, src config.Source, controlPlane *controlplane.Server) error {
+	svc, err := proxy.New(ctx, src.GetConfig())
+	if err != nil {
+		return fmt.Errorf("error creating proxy service: %w", err)
+	}
+	err = controlPlane.EnableProxy(ctx, svc)
+	if err != nil {
+		return fmt.Errorf("error adding proxy service to control plane: %w", err)
+	}
+
+	log.Ctx(ctx).Info().Msg("enabled proxy service")
+	src.OnConfigChange(ctx, svc.OnConfigChange)
+	svc.OnConfigChange(ctx, src.GetConfig())
+
+	return nil
+}
+
+func (p *Pomerium) updateTraceClient(ctx context.Context, cfg *config.Config) {
+	sc, ok := trace.RemoteClientFromContext(ctx).(trace.SyncClient)
+	if !ok {
+		return
+	}
+	newClient, err := trace.NewTraceClientFromConfig(cfg.Options.Tracing)
+	if err != nil {
+		log.Ctx(ctx).Warn().Err(err).Msg("error configuring trace client")
+	} else {
+		go func() {
+			if !p.traceClientMu.TryLock() {
+				log.Ctx(ctx).
+					Debug().
+					Msg("waiting for a previous trace client update to complete")
+				p.traceClientMu.Lock()
+			}
+			defer p.traceClientMu.Unlock()
+
+			if err := sc.Update(ctx, newClient); err != nil {
+				log.Ctx(ctx).
+					Warn().
+					Err(err).
+					Msg("error updating trace client")
+			}
+			provider := "none"
+			if cfg.Options.Tracing.OtelTracesExporter != nil {
+				provider = *cfg.Options.Tracing.OtelTracesExporter
+			}
+			log.Ctx(ctx).
+				Debug().
+				Str("provider", provider).
+				Msg("trace client updated")
+		}()
+	}
+}

@@ -1,0 +1,2146 @@
+{
+  "name": "envoy.filters.network.http_connection_manager",
+  "typedConfig": {
+    "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+    "accessLog": [
+      {
+        "name": "envoy.access_loggers.http_grpc",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.access_loggers.grpc.v3.HttpGrpcAccessLogConfig",
+          "commonConfig": {
+            "customTags": [
+              {
+                "metadata": {
+                  "kind": {
+                    "cluster": {}
+                  },
+                  "metadataKey": {
+                    "key": "com.pomerium.cluster",
+                    "path": [
+                      {
+                        "key": "stat_name"
+                      }
+                    ]
+                  }
+                },
+                "tag": "cluster_stat_name"
+              }
+            ],
+            "grpcService": {
+              "envoyGrpc": {
+                "clusterName": "pomerium-control-plane-grpc"
+              }
+            },
+            "logName": "ingress-http",
+            "transportApiVersion": "V3"
+          }
+        }
+      }
+    ],
+    "alwaysSetRequestIdInResponse": true,
+    "commonHttpProtocolOptions": {
+      "idleTimeout": "300s",
+      "maxHeadersCount": 1000
+    },
+    "earlyHeaderMutationExtensions": [
+      {
+        "name": "envoy.http.early_header_mutation.trace_context",
+        "typedConfig": {
+          "@type": "type.googleapis.com/pomerium.extensions.TraceContext"
+        }
+      }
+    ],
+    "httpFilters": [
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "local function starts_with(str, start)\n    return str:sub(1, #start) == start\nend\n\nfunction envoy_on_request(request_handle)\n    local headers = request_handle:headers()\n    local metadata = request_handle:metadata()\n\n    local remove_impersonate_headers = metadata:get(\"remove_impersonate_headers\")\n    if remove_impersonate_headers then\n        local to_remove = {}\n        for k, v in pairs(headers) do\n            if starts_with(k, \"impersonate-extra-\") or k == \"impersonate-group\" or k == \"impersonate-user\" then\n                table.insert(to_remove, k)\n            end\n        end\n\n        for k, v in pairs(to_remove) do\n            headers:remove(v)\n        end\n    end\nend\n\nfunction envoy_on_response(response_handle)\nend\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "function envoy_on_request(request_handle)\n    local metadata = request_handle:streamInfo():dynamicMetadata()\n    local ssl = request_handle:streamInfo():downstreamSslConnection()\n    if ssl == nil then\n        return\n    end\n    metadata:set(\"com.pomerium.client-certificate-info\", \"presented\",\n                 ssl:peerCertificatePresented())\n    metadata:set(\"com.pomerium.client-certificate-info\", \"chain\",\n                 ssl:urlEncodedPemEncodedPeerCertificateChain())\nend\n\nfunction envoy_on_response(response_handle) end\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.ext_authz",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_authz.v3.ExtAuthz",
+          "grpcService": {
+            "envoyGrpc": {
+              "clusterName": "pomerium-authorize"
+            },
+            "timeout": "10s"
+          },
+          "transportApiVersion": "V3",
+          "statusOnError": {
+            "code": "InternalServerError"
+          },
+          "metadataContextNamespaces": ["com.pomerium.client-certificate-info"]
+        }
+      },
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "function envoy_on_request(request_handle)\n    local headers = request_handle:headers()\n    local dynamic_meta = request_handle:streamInfo():dynamicMetadata()\n    if headers:get(\"x-pomerium-set-cookie\") ~= nil then\n        dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_set_cookie\",\n                         headers:get(\"x-pomerium-set-cookie\"))\n        headers:remove(\"x-pomerium-set-cookie\")\n    end\nend\n\nfunction envoy_on_response(response_handle)\n    local headers = response_handle:headers()\n    local dynamic_meta = response_handle:streamInfo():dynamicMetadata()\n    local tbl = dynamic_meta:get(\"envoy.filters.http.lua\")\n    if tbl ~= nil and tbl[\"pomerium_set_cookie\"] ~= nil then\n        headers:add(\"set-cookie\", tbl[\"pomerium_set_cookie\"])\n    end\nend\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "function has_prefix(str, prefix)\n    return str ~= nil and str:sub(1, #prefix) == prefix\nend\n\nfunction remove_pomerium_cookie(cookie_name, cookie)\n    local result = \"\"\n    for c in cookie:gmatch(\"([^;]+)\") do\n        c = c:gsub(\"^ +\",\"\")\n        local name = c:match(\"^([^=]+)\")\n        if name ~= cookie_name then\n            if string.len(result) > 0 then\n                result = result .. \"; \" .. c\n            else\n                result = result .. c\n            end\n        end\n    end\n    return result\nend\n\nfunction envoy_on_request(request_handle)\n    local headers = request_handle:headers()\n    local metadata = request_handle:metadata()\n\n    local remove_cookie_name = metadata:get(\"remove_pomerium_cookie\")\n    if remove_cookie_name then\n        local cookie = headers:get(\"cookie\")\n        if cookie ~= nil then\n            local newcookie = remove_pomerium_cookie(remove_cookie_name, cookie)\n            headers:replace(\"cookie\", newcookie)\n        end\n    end\n\n    local remove_authorization = metadata:get(\"remove_pomerium_authorization\")\n    if remove_authorization then\n        local authorization = headers:get(\"authorization\")\n        local authorization_prefix = \"Pomerium \"\n        if has_prefix(authorization, authorization_prefix) then\n            headers:remove(\"authorization\")\n        end\n\n        headers:remove('x-pomerium-authorization')\n    end\nend\n\nfunction envoy_on_response(response_handle) end\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "function replace_prefix(str, prefix, value)\n    if str:sub(0, prefix:len()) == prefix then\n        return value..str:sub(prefix:len()+1)\n    end\n    return str\nend\n\nfunction envoy_on_request(request_handle)\nend\n\nfunction envoy_on_response(response_handle)\n    local headers = response_handle:headers()\n    local metadata = response_handle:metadata()\n\n    -- should be in the form:\n    -- [{\n    --   \"header\":\"Location\",\n    --   \"prefix\":\"http://localhost:8000/two/\",\n    --   \"value\":\"http://frontend/one/\"\n    -- }]\n    local rewrite_response_headers = metadata:get(\"rewrite_response_headers\")\n    if rewrite_response_headers then\n        for _, obj in pairs(rewrite_response_headers) do\n            local hdr = headers:get(obj.header)\n            if hdr ~= nil then\n                local newhdr = replace_prefix(hdr, obj.prefix, obj.value)\n                headers:replace(obj.header, newhdr)\n            end\n        end\n    end\nend\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.lua",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.lua.v3.Lua",
+          "defaultSourceCode": {
+            "inlineString": "-- This filter interprets the accept header of an incoming request and attempts to map it to\n-- a metadata value of either \"html\", \"json\", \"grpc\" or \"plain\". This metadata value is used to format\n-- local replies in a format the client expects.\n\nlocal function has_prefix(str, prefix)\n    return str ~= nil and str:sub(1, #prefix) == prefix\nend\n\nfunction parse_accept_header(header_value)\n    -- returns a table with a type field, the table is sorted by position and weight\n    if header_value == nil then\n        return {}\n    end\n\n    local content_types = {}\n    local start_idx = 1\n    local position = 1\n    while true do\n        local end_idx = string.find(header_value, \",\", start_idx)\n        local segment\n        if end_idx == nil then\n            segment = string.sub(header_value, start_idx)\n        else\n            segment = string.sub(header_value, start_idx, end_idx-1)\n        end\n\n        local mime_type = segment\n        local q = 1.0\n        local semicolon_idx = string.find(segment, ';')\n        if semicolon_idx ~= nil then\n            mime_type = string.sub(segment, 1, semicolon_idx-1)\n            q_idx = string.find(segment, \"q=\", semicolon_idx+1)\n            if q_idx ~= nil then\n                q_str = string.sub(segment, q_idx+2)\n                q = tonumber(q_str)\n            end\n        end\n\n        table.insert(content_types, { type=mime_type, q=q, position=position })\n        position = position+1\n\n        if end_idx == nil then\n            break\n        else\n            start_idx = end_idx+1\n        end\n    end\n    table.sort(content_types, function(a,b)\n        if a.q == b.q then\n            return a.position < b.position\n        end\n        return a.q > b.q\n    end)\n    return content_types\nend\n\nfunction envoy_on_request(request_handle)\n    local headers = request_handle:headers()\n    local dynamic_meta = request_handle:streamInfo():dynamicMetadata()\n\n    local content_type = headers:get(\"content-type\")\n    if content_type ~= nil and has_prefix(content_type, \"application/grpc\") then\n        dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_local_reply_type\", \"grpc\")\n        return\n    end\n\n    local content_types = parse_accept_header(headers:get(\"accept\"))\n    for _, v in pairs(content_types) do\n        if v.type == \"text/html\" or v.type == \"text/*\"  then\n            dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_local_reply_type\", \"html\")\n            return\n        elseif v.type == \"text/plain\" then\n            dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_local_reply_type\", \"plain\")\n            return\n        elseif v.type == \"application/json\" or v.type == \"application/*\" then\n            dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_local_reply_type\", \"json\")\n            return\n        end\n    end\n    -- if nothing matched, just return html\n    dynamic_meta:set(\"envoy.filters.http.lua\", \"pomerium_local_reply_type\", \"html\")\nend\n\nfunction envoy_on_response(response_handle)\n    -- unused\nend\n"
+          }
+        }
+      },
+      {
+        "name": "envoy.filters.http.set_filter_state",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.set_filter_state.v3.Config",
+          "onRequestHeaders": [
+            {
+              "formatString": {
+                "textFormatSource": {
+                  "inlineString": "%DOWNSTREAM_REMOTE_ADDRESS%"
+                }
+              },
+              "objectKey": "pomerium.extensions.ssh.downstream_source_address",
+              "sharedWithUpstream": "ONCE"
+            },
+            {
+              "formatString": {
+                "textFormatSource": {
+                  "inlineString": "%REQUESTED_SERVER_NAME%"
+                }
+              },
+              "objectKey": "pomerium.extensions.ssh.requested_server_name",
+              "sharedWithUpstream": "ONCE"
+            },
+            {
+              "formatString": {
+                "textFormatSource": {
+                  "inlineString": "%PATH(NQ)%"
+                }
+              },
+              "objectKey": "pomerium.extensions.ssh.requested_path",
+              "sharedWithUpstream": "ONCE"
+            }
+          ]
+        }
+      },
+      {
+        "name": "envoy.filters.http.router",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router"
+        }
+      }
+    ],
+    "httpProtocolOptions": {
+      "headerKeyFormat": {
+        "statefulFormatter": {
+          "name": "preserve_case",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.http.header_formatters.preserve_case.v3.PreserveCaseFormatterConfig"
+          }
+        }
+      }
+    },
+    "localReplyConfig": {
+      "mappers": [
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": [
+                      "DC",
+                      "DF",
+                      "DI",
+                      "DO",
+                      "DPE",
+                      "DT",
+                      "FI",
+                      "IH",
+                      "LH",
+                      "LR",
+                      "NC",
+                      "NFCF",
+                      "NR",
+                      "OM",
+                      "RFCF",
+                      "RL",
+                      "RLSE",
+                      "SI",
+                      "UC",
+                      "UF",
+                      "UH",
+                      "UMSDR",
+                      "UO",
+                      "UPE",
+                      "UR",
+                      "URX",
+                      "UT"
+                    ]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "plain"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "text/plain; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": [
+                      "DC",
+                      "DF",
+                      "DI",
+                      "DO",
+                      "DPE",
+                      "DT",
+                      "FI",
+                      "IH",
+                      "LH",
+                      "LR",
+                      "NC",
+                      "NFCF",
+                      "NR",
+                      "OM",
+                      "RFCF",
+                      "RL",
+                      "RLSE",
+                      "SI",
+                      "UC",
+                      "UF",
+                      "UH",
+                      "UMSDR",
+                      "UO",
+                      "UPE",
+                      "UR",
+                      "URX",
+                      "UT"
+                    ]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "json"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DC"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DF"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DI"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DO"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DPE"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "2"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unknown"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["DT"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "4"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "DeadlineExceeded"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["FI"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["IH"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "3"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "InvalidArgument"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["LH"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["LR"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "1"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Canceled"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["NC"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["NFCF"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["NR"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "5"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "NotFound"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["OM"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "1"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Canceled"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["RFCF"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "2"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unknown"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["RL"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "8"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "ResourceExhausted"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["RLSE"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "13"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Internal"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["SI"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "4"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "DeadlineExceeded"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UC"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "1"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Canceled"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UF"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UH"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UMSDR"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "4"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "DeadlineExceeded"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UO"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UPE"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "13"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Internal"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UR"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "1"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Canceled"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["URX"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "14"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "Unavailable"
+              }
+            }
+          ]
+        },
+        {
+          "filter": {
+            "andFilter": {
+              "filters": [
+                {
+                  "responseFlagFilter": {
+                    "flags": ["UT"]
+                  }
+                },
+                {
+                  "metadataFilter": {
+                    "matcher": {
+                      "filter": "envoy.filters.http.lua",
+                      "path": [{ "key": "pomerium_local_reply_type" }],
+                      "value": {
+                        "stringMatch": {
+                          "exact": "grpc"
+                        }
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "bodyFormatOverride": {
+            "contentType": "application/grpc+json; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "ewogICJyZXF1ZXN0SWQiOiAiJVNUUkVBTV9JRCUiLAogICJzdGF0dXMiOiAiJVJFU1BPTlNFX0NPREUlIiwKICAic3RhdHVzVGV4dCI6ICIlUkVTUE9OU0VfQ09ERV9ERVRBSUxTJSIKfQ=="
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-status",
+                "value": "4"
+              }
+            },
+            {
+              "appendAction": "ADD_IF_ABSENT",
+              "header": {
+                "key": "grpc-message",
+                "value": "DeadlineExceeded"
+              }
+            }
+          ]
+        },
+        {
+          "bodyFormatOverride": {
+            "contentType": "text/html; charset=UTF-8",
+            "textFormatSource": {
+              "inlineBytes": "PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVuIj4KICA8aGVhZD4KICAgIDxtZXRhIGNoYXJzZXQ9InV0Zi04IiAvPgogICAgPGxpbmsgaWQ9ImZhdmljb24iIHJlbD0ic2hvcnRjdXQgaWNvbiIgaHJlZj0iLy5wb21lcml1bS9mYXZpY29uLmljbz92PTIiIC8+CiAgICA8bGluawogICAgICBjbGFzcz0icG9tZXJpdW1fZmF2aWNvbiIKICAgICAgcmVsPSJhcHBsZS10b3VjaC1pY29uIgogICAgICBzaXplcz0iMTgweDE4MCIKICAgICAgaHJlZj0iLy5wb21lcml1bS9hcHBsZS10b3VjaC1pY29uLnBuZyIKICAgIC8+CiAgICA8bGluawogICAgICBjbGFzcz0icG9tZXJpdW1fZmF2aWNvbiIKICAgICAgcmVsPSJpY29uIgogICAgICBzaXplcz0iMzJ4MzIiCiAgICAgIGhyZWY9Ii8ucG9tZXJpdW0vZmF2aWNvbi0zMngzMi5wbmciCiAgICAvPgogICAgPGxpbmsKICAgICAgY2xhc3M9InBvbWVyaXVtX2Zhdmljb24iCiAgICAgIHJlbD0iaWNvbiIKICAgICAgc2l6ZXM9IjE2eDE2IgogICAgICBocmVmPSIvLnBvbWVyaXVtL2Zhdmljb24tMTZ4MTYucG5nIgogICAgLz4KICAgIDxtZXRhCiAgICAgIG5hbWU9InZpZXdwb3J0IgogICAgICBjb250ZW50PSJ3aWR0aD1kZXZpY2Utd2lkdGgsIGluaXRpYWwtc2NhbGU9MSwgc2hyaW5rLXRvLWZpdD1ubyIKICAgIC8+CiAgICA8dGl0bGU+RXJyb3I8L3RpdGxlPgogICAgPGxpbmsgcmVsPSJzdHlsZXNoZWV0IiBocmVmPSIvLnBvbWVyaXVtL2luZGV4LmNzcyIgLz4KICA8L2hlYWQ+CiAgPGJvZHk+CiAgICA8bm9zY3JpcHQ+WW91IG5lZWQgdG8gZW5hYmxlIEphdmFTY3JpcHQgdG8gcnVuIHRoaXMgYXBwLjwvbm9zY3JpcHQ+CiAgICA8ZGl2IGlkPSJyb290Ij48L2Rpdj4KICAgIDxzY3JpcHQ+CiAgICAgIHdpbmRvdy5QT01FUklVTV9EQVRBID0geyJwYWdlIjoiRXJyb3IiLCJyZXF1ZXN0SWQiOiIlU1RSRUFNX0lEJSIsInJlc3BvbnNlRmxhZ3MiOiIlUkVTUE9OU0VfRkxBR1MlIiwic3RhdHVzIjoiJVJFU1BPTlNFX0NPREUlIiwic3RhdHVzVGV4dCI6IiVSRVNQT05TRV9DT0RFX0RFVEFJTFMlIn07CiAgICA8L3NjcmlwdD4KICAgIDxzY3JpcHQgc3JjPSIvLnBvbWVyaXVtL2luZGV4LmpzIj48L3NjcmlwdD4KICA8L2JvZHk+CjwvaHRtbD4K"
+            }
+          },
+          "filter": {
+            "responseFlagFilter": {
+              "flags": [
+                "DC",
+                "DF",
+                "DI",
+                "DO",
+                "DPE",
+                "DT",
+                "FI",
+                "IH",
+                "LH",
+                "LR",
+                "NC",
+                "NFCF",
+                "NR",
+                "OM",
+                "RFCF",
+                "RL",
+                "RLSE",
+                "SI",
+                "UC",
+                "UF",
+                "UH",
+                "UMSDR",
+                "UO",
+                "UPE",
+                "UR",
+                "URX",
+                "UT"
+              ]
+            }
+          },
+          "headersToAdd": [
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-Frame-Options",
+                "value": "SAMEORIGIN"
+              }
+            },
+            {
+              "appendAction": "OVERWRITE_IF_EXISTS_OR_ADD",
+              "header": {
+                "key": "X-XSS-Protection",
+                "value": "1; mode=block"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "requestIdExtension": {
+      "typedConfig": {
+        "@type": "type.googleapis.com/pomerium.extensions.UuidxRequestIdConfig",
+        "packTraceReason": true,
+        "useRequestIdForTraceSampling": true
+      }
+    },
+    "requestTimeout": "30s",
+    "maxRequestHeadersKb": 128,
+    "normalizePath": true,
+    "rds": {
+      "configSource": {
+        "ads": {},
+        "resourceApiVersion": "V3"
+      },
+      "routeConfigName": "main"
+    },
+    "skipXffAppend": true,
+    "statPrefix": "ingress",
+    "tracing": {
+      "randomSampling": {
+        "value": 100
+      },
+      "verbose": true,
+      "maxPathTagLength": 1024,
+      "provider": {
+        "name": "envoy.tracers.pomerium_otel",
+        "typedConfig": {
+          "@type": "type.googleapis.com/pomerium.extensions.OpenTelemetryConfig",
+          "grpcService": {
+            "envoyGrpc": {
+              "clusterName": "pomerium-control-plane-grpc"
+            },
+            "timeout": "10s"
+          },
+          "serviceName": "Envoy",
+          "resourceDetectors": [
+            {
+              "name": "envoy.tracers.opentelemetry.resource_detectors.static_config",
+              "typedConfig": {
+                "@type": "type.googleapis.com/envoy.extensions.tracers.opentelemetry.resource_detectors.v3.StaticConfigResourceDetectorConfig",
+                "attributes": {
+                  "pomerium.envoy": "true"
+                }
+              }
+            }
+          ]
+        }
+      },
+      "spawnUpstreamSpan": true
+    },
+    "useRemoteAddress": true,
+    "xffNumTrustedHops": 1,
+    "internalAddressConfig": {
+      "cidrRanges": [
+        {
+          "addressPrefix": "127.0.0.1",
+          "prefixLen": 32
+        },
+        {
+          "addressPrefix": "10.0.0.0",
+          "prefixLen": 8
+        },
+        {
+          "addressPrefix": "192.168.0.0",
+          "prefixLen": 16
+        },
+        {
+          "addressPrefix": "172.16.0.0",
+          "prefixLen": 12
+        },
+        {
+          "addressPrefix": "::1",
+          "prefixLen": 128
+        },
+        {
+          "addressPrefix": "fd00::",
+          "prefixLen": 8
+        }
+      ]
+    }
+  }
+}

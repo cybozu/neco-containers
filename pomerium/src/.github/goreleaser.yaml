@@ -1,0 +1,298 @@
+version: 2
+
+project_name: pomerium
+
+release:
+  prerelease: auto
+  github:
+    owner: pomerium
+    name: pomerium
+  name_template: "v{{.Version}}"
+
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - go mod download
+    - make get-envoy
+    - make build-deps
+    - make build-ui
+
+builds:
+  - id: pomerium
+    main: cmd/pomerium/main.go
+    binary: pomerium
+    goarch:
+      - amd64
+      - arm64
+    goos:
+      - linux
+
+    ldflags:
+      - -s -w
+      - -X github.com/pomerium/pomerium/internal/version.Version={{.Version}}
+      - -X github.com/pomerium/pomerium/internal/version.GitCommit={{.ShortCommit}}
+      - -X github.com/pomerium/pomerium/internal/version.Timestamp={{.Timestamp}}
+      - -X github.com/pomerium/pomerium/internal/version.ProjectName=pomerium
+      - -X github.com/pomerium/pomerium/internal/version.ProjectURL=https://www.pomerium.io
+
+archives:
+  - name_template: "{{ .ProjectName }}-{{ .Os }}-{{ .Arch }}{{ if .Arm }}v{{ .Arm }}{{ end }}"
+    id: pomerium
+    ids:
+      - pomerium
+    files:
+      - none*
+
+checksum:
+  name_template: "{{ .ProjectName }}_checksums.txt"
+
+snapshot:
+  version_template: "{{ .Version }}+next+{{ .ShortCommit }}"
+
+dockers:
+  - image_templates:
+      - "pomerium/pomerium:amd64-{{ .Tag }}"
+      - "pomerium/pomerium:amd64-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - image_templates:
+      - "pomerium/pomerium:nonroot-amd64-{{ .Tag }}"
+      - "pomerium/pomerium:nonroot-amd64-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-nonroot
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - image_templates:
+      - "pomerium/pomerium:debug-amd64-{{ .Tag }}"
+      - "pomerium/pomerium:debug-amd64-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-debug
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - image_templates:
+      - "pomerium/pomerium:debug-nonroot-amd64-{{ .Tag }}"
+      - "pomerium/pomerium:debug-nonroot-amd64-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-debug-nonroot
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - image_templates:
+      - "gcr.io/pomerium-io/pomerium:{{ .Tag }}-cloudrun"
+      - "gcr.io/pomerium-io/pomerium:v{{ .Major }}.{{ .Minor }}-cloudrun"
+    dockerfile: .github/Dockerfile-cloudrun
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - goarch: arm64
+    image_templates:
+      - "pomerium/pomerium:arm64v8-{{ .Tag }}"
+      - "pomerium/pomerium:arm64v8-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - goarch: arm64
+    image_templates:
+      - "pomerium/pomerium:nonroot-arm64v8-{{ .Tag }}"
+      - "pomerium/pomerium:nonroot-arm64v8-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-nonroot
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - goarch: arm64
+    image_templates:
+      - "pomerium/pomerium:debug-arm64v8-{{ .Tag }}"
+      - "pomerium/pomerium:debug-arm64v8-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-debug
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+  - goarch: arm64
+    image_templates:
+      - "pomerium/pomerium:debug-nonroot-arm64v8-{{ .Tag }}"
+      - "pomerium/pomerium:debug-nonroot-arm64v8-v{{ .Major }}.{{ .Minor }}"
+    dockerfile: .github/Dockerfile-release-debug-nonroot
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+      - "--provenance=false"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.name={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--label=org.opencontainers.image.source={{.GitURL}}"
+      - "--label=repository=http://github.com/pomerium/pomerium"
+      - "--label=homepage=http://www.pomerium.io"
+
+docker_manifests:
+  - name_template: "pomerium/pomerium:{{ .Tag }}"
+    image_templates:
+      - pomerium/pomerium:arm64v8-{{ .Tag }}
+      - pomerium/pomerium:amd64-{{ .Tag }}
+
+  - name_template: "pomerium/pomerium:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - pomerium/pomerium:arm64v8-v{{ .Major }}.{{ .Minor }}
+      - pomerium/pomerium:amd64-v{{ .Major }}.{{ .Minor }}
+
+  - name_template: "pomerium/pomerium:nonroot-{{ .Tag }}"
+    image_templates:
+      - pomerium/pomerium:nonroot-arm64v8-{{ .Tag }}
+      - pomerium/pomerium:nonroot-amd64-{{ .Tag }}
+
+  - name_template: "pomerium/pomerium:nonroot-v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - pomerium/pomerium:nonroot-arm64v8-v{{ .Major }}.{{ .Minor }}
+      - pomerium/pomerium:nonroot-amd64-v{{ .Major }}.{{ .Minor }}
+
+  - name_template: "pomerium/pomerium:debug-{{ .Tag }}"
+    image_templates:
+      - pomerium/pomerium:debug-arm64v8-{{ .Tag }}
+      - pomerium/pomerium:debug-amd64-{{ .Tag }}
+
+  - name_template: "pomerium/pomerium:debug-v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - pomerium/pomerium:debug-arm64v8-v{{ .Major }}.{{ .Minor }}
+      - pomerium/pomerium:debug-amd64-v{{ .Major }}.{{ .Minor }}
+
+  - name_template: "pomerium/pomerium:debug-nonroot-{{ .Tag }}"
+    image_templates:
+      - pomerium/pomerium:debug-nonroot-arm64v8-{{ .Tag }}
+      - pomerium/pomerium:debug-nonroot-amd64-{{ .Tag }}
+
+  - name_template: "pomerium/pomerium:debug-nonroot-v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - pomerium/pomerium:debug-nonroot-arm64v8-v{{ .Major }}.{{ .Minor }}
+      - pomerium/pomerium:debug-nonroot-amd64-v{{ .Major }}.{{ .Minor }}
+
+nfpms:
+  - id: pomerium
+
+    ids:
+      - pomerium
+
+    package_name: pomerium
+    vendor: Pomerium, Inc.
+    homepage: https://www.pomerium.com
+    description: Identity Aware Proxy
+    maintainer: Pomerium <info@pomerium.com>
+    license: Apache 2.0
+    epoch: 1
+    release: 1
+
+    formats:
+      - deb
+      - rpm
+
+    bindir: /usr/sbin
+
+    scripts:
+      preinstall: ospkg/preinstall.sh
+      postinstall: ospkg/postinstall.sh
+
+    contents:
+      - dst: /etc/pomerium
+        type: dir
+
+      - src: ospkg/conf/config.yaml
+        dst: /etc/pomerium/config.yaml
+        type: config|noreplace
+
+      - src: ospkg/pomerium.service
+        dst: /usr/lib/systemd/system/pomerium.service
+
+    overrides:
+      deb:
+        dependencies:
+          - libsystemd0
+        file_name_template: "{{ .ProjectName }}_{{ .Version }}-{{ .Release }}_{{ .Arch }}"
+      rpm:
+        dependencies:
+          - systemd-libs
+        file_name_template: >-
+          {{ .ProjectName }}-{{ .Version }}-{{ .Release }}.{{ if eq .Arch "amd64" }}x86_64{{ else if eq .Arch "arm64" }}aarch64{{ else }}{{ .Arch }}{{ end }}

@@ -1,0 +1,123 @@
+{
+  "name": "metrics-ingress-4258034393541505484",
+  "statPrefix": "metrics-ingress",
+  "perConnectionBufferLimitBytes": 32768,
+  "address": {
+    "socketAddress": {
+      "address": "127.0.0.1",
+      "portValue": 9902
+    }
+  },
+  "enableReusePort": {{.EnableReusePort}},
+  "filterChains": [
+    {
+      "filters": [
+        {
+          "name": "envoy.filters.network.http_connection_manager",
+          "typedConfig": {
+            "@type": "type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager",
+            "httpFilters": [
+              {
+                "name": "envoy.filters.http.router",
+                "typedConfig": {
+                  "@type": "type.googleapis.com/envoy.extensions.filters.http.router.v3.Router"
+                }
+              }
+            ],
+            "routeConfig": {
+              "name": "metrics",
+              "validateClusters": false,
+              "virtualHosts": [
+                {
+                  "name": "metrics",
+                  "domains": ["*"],
+                  "routes": [
+                    {
+                      "name": "envoy-metrics",
+                      "match": {
+                        "prefix": "/metrics/envoy"
+                      },
+                      "route": {
+                        "cluster": "pomerium-envoy-admin",
+                        "prefixRewrite": "/stats/prometheus"
+                      }
+                    },
+                    {
+                      "name": "metrics",
+                      "match": {
+                        "prefix": "/"
+                      },
+                      "route": {
+                        "cluster": "pomerium-control-plane-metrics"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            "statPrefix": "metrics",
+            "internalAddressConfig": {
+              "cidrRanges": [
+                {
+                  "addressPrefix": "127.0.0.1",
+                  "prefixLen": 32
+                },
+                {
+                  "addressPrefix": "10.0.0.0",
+                  "prefixLen": 8
+                },
+                {
+                  "addressPrefix": "192.168.0.0",
+                  "prefixLen": 16
+                },
+                {
+                  "addressPrefix": "172.16.0.0",
+                  "prefixLen": 12
+                },
+                {
+                  "addressPrefix": "::1",
+                  "prefixLen": 128
+                },
+                {
+                  "addressPrefix": "fd00::",
+                  "prefixLen": 8
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "transportSocket": {
+        "name": "tls",
+        "typedConfig": {
+          "@type": "type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext",
+          "commonTlsContext": {
+            "tlsParams": {
+              "cipherSuites": [
+                "ECDHE-ECDSA-AES256-GCM-SHA384",
+                "ECDHE-RSA-AES256-GCM-SHA384",
+                "ECDHE-ECDSA-AES128-GCM-SHA256",
+                "ECDHE-RSA-AES128-GCM-SHA256",
+                "ECDHE-ECDSA-CHACHA20-POLY1305",
+                "ECDHE-RSA-CHACHA20-POLY1305"
+              ],
+              "tlsMinimumProtocolVersion": "TLSv1_2",
+              "tlsMaximumProtocolVersion": "TLSv1_3"
+            },
+            "alpnProtocols": ["h2", "http/1.1"],
+            "tlsCertificates": [
+              {
+                "certificateChain": {
+                  "filename": "{{.CertFile}}"
+                },
+                "privateKey": {
+                  "filename": "{{.KeyFile}}"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
