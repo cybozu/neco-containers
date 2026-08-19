@@ -19,10 +19,11 @@ To use `ceph` and `radosgw-admin` commands in the docker container of ceph-extra
 
 Command-line options are:
 
-| Option               | Default value | Description                          |
-| -------------------- | ------------- | ------------------------------------ |
-| `port`               | `8080`        | port number to export metrics        |
-| `export-rgw-metrics` | `true`        | to export RGW related metrics or not |
+| Option                   | Default value | Description                                                                                            |
+| ------------------------ | ------------- | ------------------------------------------------------------------------------------------------------ |
+| `port`                   | `8080`        | port number to export metrics                                                                           |
+| `export-rgw-metrics`     | `true`        | to export RGW related metrics or not                                                                    |
+| `health-check-threshold` | `11m0s`       | how long a worker can go without a successful command execution before `/v1/health` reports unhealthy  |
 
 The `export-rgw-metrics` option is used to disable RGW related metrics on clusters that do not use RGW. Executing `radosgw-admin` creates RGW related pools which for some clusters is unnecessary, and this option was made to prevent it.
 
@@ -32,6 +33,8 @@ API endpoints are:
 | ----------- | --------------------------- |
 | /v1/health  | the path for liveness probe |
 | /v1/metrics | exporting metrics           |
+
+`/v1/health` returns 200 if every worker has succeeded in executing its command within `health-check-threshold`. If some worker has not succeeded for longer than the threshold (e.g. the command keeps failing, or the worker is stuck), it returns 503 with the name of the failing rule in the response body, so that the liveness probe can restart the pod.
 
 ## Prometheus metrics
 

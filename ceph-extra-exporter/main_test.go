@@ -3,10 +3,13 @@ package main
 import (
 	_ "embed"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -27,7 +30,7 @@ func TestServer(t *testing.T) {
 	testRules[2].command = []string{"echo", osd_df_json}
 
 	var port uint = 8080
-	go startServer(testRules, port, true)
+	go startServer(testRules, port, true, 2*executionInterval+commandTimeout)
 
 	expected := `# HELP ceph_extra_osd_df_crush_weight WEIGHT of ` + "`ceph osd df`" + ` command
 # TYPE ceph_extra_osd_df_crush_weight gauge
@@ -87,4 +90,65 @@ ceph_extra_rgw_bucket_stats_s3_size_rounded_bytes{bucket="session-log-bucket-3d9
 		)
 		assert.NoError(c, err)
 	}, 1*time.Minute, 5*time.Second)
+}
+
+func getHealth(t *testing.T, port uint) (int, string) {
+	t.Helper()
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d/v1/health", port))
+	if err != nil {
+		return 0, ""
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	return resp.StatusCode, string(body)
+}
+
+func TestHealthHealthy(t *testing.T) {
+	healthyRules := []rule{
+		{
+			name:    "health_test_healthy",
+			command: []string{"echo", "[]"},
+			metrics: map[string]metric{
+				"count": {
+					metricType: prometheus.GaugeValue,
+					help:       "test",
+					jqFilter:   "[{value: . | length, labels: []}]",
+				},
+			},
+		},
+	}
+
+	var port uint = 8081
+	go startServer(healthyRules, port, true, 2*executionInterval+commandTimeout)
+
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		status, _ := getHealth(t, port)
+		assert.Equal(c, http.StatusOK, status)
+	}, 10*time.Second, 100*time.Millisecond)
+}
+
+func TestHealthUnhealthy(t *testing.T) {
+	unhealthyRules := []rule{
+		{
+			name:    "health_test_unhealthy",
+			command: []string{"false"},
+			metrics: map[string]metric{
+				"count": {
+					metricType: prometheus.GaugeValue,
+					help:       "test",
+					jqFilter:   "[{value: . | length, labels: []}]",
+				},
+			},
+		},
+	}
+
+	var port uint = 8082
+	go startServer(unhealthyRules, port, true, 100*time.Millisecond)
+
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		status, body := getHealth(t, port)
+		assert.Equal(c, http.StatusServiceUnavailable, status)
+		assert.Contains(c, body, "health_test_unhealthy")
+	}, 10*time.Second, 100*time.Millisecond)
 }
