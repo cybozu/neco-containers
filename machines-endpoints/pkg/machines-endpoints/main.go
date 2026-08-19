@@ -174,6 +174,7 @@ func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) 
 		if err == nil {
 			return machines, nil
 		}
+		//nolint:errcheck
 		log.Error("failed to get machines from sabakan", map[string]interface{}{
 			"bootserver": boot.String(),
 			log.FnError:  err,

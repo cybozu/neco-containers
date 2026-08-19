@@ -149,14 +149,14 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	// TODO remove transitive code
 	// register old-style Endpoints and EndpointSlice
 	endpoints := testClient.k8s.CoreV1().Endpoints(ns)
-	_, err = endpoints.Create(t.Context(), &corev1.Endpoints{
+	_, err = endpoints.Create(t.Context(), &corev1.Endpoints{ //nolint:staticcheck
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "target-foo",
 			Labels: map[string]string{
 				"endpointslice.kubernetes.io/skip-mirror": "true",
 			},
 		},
-		Subsets: []corev1.EndpointSubset{
+		Subsets: []corev1.EndpointSubset{ //nolint:staticcheck
 			{
 				Addresses: []corev1.EndpointAddress{
 					{IP: "4.4.4.4"},

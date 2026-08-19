@@ -1,4 +1,4 @@
-module log-collector
+module github.com/cybozu/neco-containers/bmc-log-collector
 
 go 1.26.2
 
