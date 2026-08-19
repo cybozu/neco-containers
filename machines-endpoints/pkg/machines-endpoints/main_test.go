@@ -11,7 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/utils/ptr"
 )
 
 func TestUpdateTargetEndpoints(t *testing.T) {
@@ -184,7 +183,7 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 			{Addresses: []string{"4.4.4.4"}},
 		},
 		Ports: []discoveryv1.EndpointPort{
-			{Name: ptr.To("port-bar"), Port: ptr.To(int32(1234))},
+			{Name: new("port-bar"), Port: new(int32(1234))},
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
