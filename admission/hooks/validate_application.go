@@ -116,12 +116,12 @@ func (v *argocdApplicationValidator) extractRepoURLs(app *unstructured.Unstructu
 	}
 
 	// spec.sourceHydrator.drySource.repoURL
-	dryRepoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "sourceHydrator", "drySource", "repoURL")
+	drySourceRepoURL, found, err := unstructured.NestedString(app.UnstructuredContent(), "spec", "sourceHydrator", "drySource", "repoURL")
 	if err != nil {
 		return nil, fmt.Errorf("unable to get spec.sourceHydrator.drySource.repoURL; %w", err)
 	}
 	if found {
-		repoURLs = append(repoURLs, dryRepoURL)
+		repoURLs = append(repoURLs, drySourceRepoURL)
 	}
 
 	// spec.sourceHydrator.syncSource.repoURL
