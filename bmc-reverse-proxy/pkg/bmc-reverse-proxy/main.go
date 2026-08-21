@@ -57,7 +57,8 @@ func directorToInner(request *http.Request, inner uint16, resolveMap map[string]
 		address, ok = resolveMap[strings.ToUpper(hostname)]
 	}
 	if !ok {
-		log.Error("failed to resolve hostname", map[string]interface{}{
+		//nolint:errcheck
+		log.Error("failed to resolve hostname", map[string]any{
 			"hostname": hostname,
 		})
 		// Director cannot return an error. Set an invalid address to fail.
@@ -74,6 +75,7 @@ func makeTunnel(inner uint16, external uint16) error {
 		if c != nil {
 			resolveMap = c.(map[string]string)
 		} else {
+			//nolint:errcheck
 			log.Error("resolve map is not set", nil)
 			// Continue with nil resolveMap
 		}

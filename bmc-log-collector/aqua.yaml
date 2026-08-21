@@ -9,6 +9,5 @@ registries:
   type: local
   path: aqua-registry.yaml
 packages:
-- name: golangci/golangci-lint@v2.12.2
 - name: github.com/onsi/ginkgo/v2/ginkgo@v2.32.0
   registry: local

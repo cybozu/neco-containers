@@ -103,12 +103,10 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			// Choice the test logWriter to write a local file
 			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
-				wg.Add(1)
-				go func() {
+				wg.Go(func() {
 					lc.collectSystemEventLog(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
-					wg.Done()
-				}()
+				})
 			}
 			wg.Wait()
 		})
@@ -140,12 +138,10 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			// Choice the test logWriter to write a local file
 			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
-				wg.Add(1)
-				go func() {
+				wg.Go(func() {
 					lc.collectSystemEventLog(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
-					wg.Done()
-				}()
+				})
 			}
 			defer cancel()
 			wg.Wait()
@@ -173,12 +169,10 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			// Choice the test logWriter to write local file
 			logWriter := logTest{outputDir: testOutputDir}
 			for _, m := range machinesList {
-				wg.Add(1)
-				go func() {
+				wg.Go(func() {
 					lc.collectSystemEventLog(ctx, m, logWriter)
 					Expect(err).NotTo(HaveOccurred())
-					wg.Done()
-				}()
+				})
 			}
 			defer cancel()
 			wg.Wait()

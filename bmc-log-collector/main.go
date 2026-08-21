@@ -68,11 +68,9 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 			}
 			// Start log collector workers by BMCs
 			for _, m := range machinesList {
-				wg.Add(1)
-				go func() {
+				wg.Go(func() {
 					config.collectSystemEventLog(ctx, m, logWriter)
-					wg.Done()
-				}()
+				})
 			}
 			wg.Wait()
 			// Remove ptr files that disappeared the serial in machineList

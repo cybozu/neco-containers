@@ -1,9 +1,0 @@
----
-checksum:
-  enabled: true
-  require_checksum: true
-registries:
-- type: standard
-  ref: v4.542.0
-packages:
-- name: golangci/golangci-lint@v2.12.2
