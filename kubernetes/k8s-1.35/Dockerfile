@@ -3,8 +3,8 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-# v1.35.5
-ARG K8S_COMMIT=6636cbce3bbef91ff61d36658757179426f9e1b2
+# v1.35.8
+ARG K8S_COMMIT=1c2e10a409eb1b03f2f28f401ce935312e20d9fb
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
