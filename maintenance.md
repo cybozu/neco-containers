@@ -1087,6 +1087,15 @@ This is used as a sidecar of Alloy Pod now.
 4. Update `BRANCH` and `TAG` files.
 5. Update `README.md`, `COPYING` and the container LABEL in terms of license if necessary.
 
+## redis_exporter
+
+![Regular Update](./regular_update.svg)
+
+1. Check the [release page](https://github.com/oliver006/redis_exporter/releases).
+2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+3. Update `REDIS_EXPORTER_VERSION` and checksum of archive in `Dockerfile`.
+4. Update `BRANCH` and `TAG` files.
+
 ## registry
 
 ![Regular Update](./regular_update.svg)

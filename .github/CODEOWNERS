@@ -85,6 +85,7 @@
 /meows-neco-runner/               @cybozu/pdx
 /pomerium/                        @cybozu/pdx
 /redis/                           @cybozu/pdx
+/redis_exporter/                  @cybozu/pdx
 /teleport-node/                   @cybozu/pdx
 /trivy-operator/                  @cybozu/pdx
 
