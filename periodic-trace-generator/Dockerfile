@@ -1,0 +1,17 @@
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
+
+COPY . /work
+WORKDIR /work
+
+RUN CGO_ENABLED=0 go install -ldflags="-w -s"
+
+# Stage2: setup runtime container
+FROM scratch
+
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
+COPY --from=build /go/bin/periodic-trace-generator /
+
+USER 10000:10000
+
+ENTRYPOINT ["/periodic-trace-generator"]

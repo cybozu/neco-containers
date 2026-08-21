@@ -99,6 +99,7 @@
 /memcached/                       @cybozu/landsat
 /memcached-exporter/              @cybozu/landsat
 /opentelemetry-collector/         @cybozu/landsat
+/periodic-trace-generator/        @cybozu/landsat
 /prometheus-config-reloader/      @cybozu/landsat
 /pushgateway/                     @cybozu/landsat
 /pyroscope/                       @cybozu/landsat

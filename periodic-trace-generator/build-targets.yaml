@@ -1,0 +1,3 @@
+- container-image: "periodic-trace-generator"
+  scan:
+    enabled: false
