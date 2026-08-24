@@ -1,0 +1,41 @@
+[
+  {
+    "id": "150d0345-7184-4c04-a589-d88f70055570",
+    "in_progress": true,
+    "message": "Removing image pool-0/image-0 from trash",
+    "progress": 0.48373931308962265,
+    "refs": {
+      "action": "trash remove",
+      "image_id": "image-0",
+      "pool_name": "pool-0",
+      "pool_namespace": ""
+    },
+    "sequence": 27763
+  },
+  {
+    "id": "3e37ac30-1245-4495-8948-ccaf0ef31d8b",
+    "in_progress": true,
+    "message": "Removing image pool-0/image-1 from trash",
+    "progress": 0.12,
+    "refs": {
+      "action": "flatten",
+      "image_id": "image-1",
+      "pool_name": "pool-0",
+      "pool_namespace": ""
+    },
+    "sequence": 27764
+  },
+  {
+    "id": "69ca19c9-e2f4-4b6d-9c2d-230f1d0c87bc",
+    "in_progress": true,
+    "message": "Removing image pool-0/image-2 from trash",
+    "progress": 0.65,
+    "refs": {
+      "action": "trash remove",
+      "image_id": "image-2",
+      "pool_name": "pool-0",
+      "pool_namespace": ""
+    },
+    "sequence": 27765
+  }
+]

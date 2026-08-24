@@ -95,6 +95,14 @@ API endpoints are:
 | ----------- | ----------- |
 | ceph_daemon | OSD name    |
 
+### `ceph_extra_rbd_task_list_count`
+
+`ceph_extra_rbd_task_list_count` is a gauge metric that gives the number of RBD tasks.
+
+| Label    | Description     |
+| -------- | --------------- |
+| `action` | RBD task action |
+
 ## How to add metrics
 
 Add a new rule to `main.go` like below.
