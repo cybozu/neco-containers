@@ -28,6 +28,7 @@ type ruleTarget string
 const (
 	ruleTargetCommon ruleTarget = ""
 	ruleTargetRGW    ruleTarget = "rgw"
+	ruleTargetRBD    ruleTarget = "rbd"
 )
 
 type rule struct {

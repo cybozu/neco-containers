@@ -27,7 +27,7 @@ func TestServer(t *testing.T) {
 	testRules[2].command = []string{"echo", osd_df_json}
 
 	var port uint = 8080
-	go startServer(testRules, port, exportOptions{rgwMetrics: true})
+	go startServer(testRules, port, exportOptions{rgwMetrics: true, rbdMetrics: true})
 
 	expected := `# HELP ceph_extra_osd_df_crush_weight WEIGHT of ` + "`ceph osd df`" + ` command
 # TYPE ceph_extra_osd_df_crush_weight gauge

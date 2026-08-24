@@ -23,6 +23,7 @@ Command-line options are:
 | -------------------- | ------------- | ------------------------------------ |
 | `port`               | `8080`        | port number to export metrics        |
 | `export-rgw-metrics` | `true`        | to export RGW related metrics or not |
+| `export-rbd-metrics` | `true`        | to export RBD related metrics or not |
 
 The `export-rgw-metrics` option controls whether RGW-related metrics are exported. Set it to `false` on clusters that do not use RGW to avoid running `radosgw-admin` (which creates RGW-related pools).
 
@@ -104,7 +105,7 @@ var rules = []rule{
     {
         name:    "<metrics subsystem name. it is usually the command and options joined by `-`.>",
         command: []string{"<the command output json formatted text.>"},
-        target:  <rule target e.g. ruleTargetCommon, or ruleTargetRGW>,
+        target:  <rule target e.g. ruleTargetCommon, ruleTargetRGW, or ruleTargetRBD>,
         metrics: map[string]metric{
             "<metrics name.>": {
                 metricType: <metrics type e.g. `prometheus.GaugeValue`>,

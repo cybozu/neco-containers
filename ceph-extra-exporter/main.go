@@ -67,6 +67,7 @@ var rules = []rule{
 
 type exportOptions struct {
 	rgwMetrics bool
+	rbdMetrics bool
 }
 
 func (o exportOptions) enabled(target ruleTarget) bool {
@@ -75,6 +76,8 @@ func (o exportOptions) enabled(target ruleTarget) bool {
 		return true
 	case ruleTargetRGW:
 		return o.rgwMetrics
+	case ruleTargetRBD:
+		return o.rbdMetrics
 	default:
 		return false
 	}
@@ -136,8 +139,9 @@ func startServer(rules []rule, port uint, options exportOptions) error {
 func main() {
 	port := flag.Uint("port", 8080, "port number")
 	rgwMetrics := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	rbdMetrics := flag.Bool("export-rbd-metrics", true, "to export RBD related metrics or not")
 	flag.Parse()
-	if err := startServer(rules, *port, exportOptions{rgwMetrics: *rgwMetrics}); err != nil {
+	if err := startServer(rules, *port, exportOptions{rgwMetrics: *rgwMetrics, rbdMetrics: *rbdMetrics}); err != nil {
 		os.Exit(1)
 	}
 }
