@@ -29,6 +29,7 @@ var rules = []rule{
 	{
 		name:    "rgw_bucket_stats",
 		command: []string{"radosgw-admin", "bucket", "stats"},
+		target:  ruleTargetRGW,
 		metrics: map[string]metric{
 			"s3_object_count": {
 				metricType: prometheus.GaugeValue,
@@ -64,6 +65,21 @@ var rules = []rule{
 	},
 }
 
+type exportOptions struct {
+	rgwMetrics bool
+}
+
+func (o exportOptions) enabled(target ruleTarget) bool {
+	switch target {
+	case ruleTargetCommon:
+		return true
+	case ruleTargetRGW:
+		return o.rgwMetrics
+	default:
+		return false
+	}
+}
+
 //go:embed TAG
 var version string
 
@@ -78,7 +94,7 @@ func init() {
 	prometheus.MustRegister(buildInfo)
 }
 
-func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
+func startServer(rules []rule, port uint, options exportOptions) error {
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
@@ -86,7 +102,7 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 		wg.Wait()
 	}()
 	for i := 0; i < len(rules); i++ {
-		if !doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
+		if !options.enabled(rules[i].target) {
 			continue
 		}
 		wg.Add(1)
@@ -119,9 +135,9 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 
 func main() {
 	port := flag.Uint("port", 8080, "port number")
-	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	rgwMetrics := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
 	flag.Parse()
-	if err := startServer(rules, *port, *doesRunRGWAdmin); err != nil {
+	if err := startServer(rules, *port, exportOptions{rgwMetrics: *rgwMetrics}); err != nil {
 		os.Exit(1)
 	}
 }

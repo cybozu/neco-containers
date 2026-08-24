@@ -24,7 +24,7 @@ Command-line options are:
 | `port`               | `8080`        | port number to export metrics        |
 | `export-rgw-metrics` | `true`        | to export RGW related metrics or not |
 
-The `export-rgw-metrics` option is used to disable RGW related metrics on clusters that do not use RGW. Executing `radosgw-admin` creates RGW related pools which for some clusters is unnecessary, and this option was made to prevent it.
+The `export-rgw-metrics` option controls whether RGW-related metrics are exported. Set it to `false` on clusters that do not use RGW to avoid running `radosgw-admin` (which creates RGW-related pools).
 
 API endpoints are:
 
@@ -104,6 +104,7 @@ var rules = []rule{
     {
         name:    "<metrics subsystem name. it is usually the command and options joined by `-`.>",
         command: []string{"<the command output json formatted text.>"},
+        target:  <rule target e.g. ruleTargetCommon, or ruleTargetRGW>,
         metrics: map[string]metric{
             "<metrics name.>": {
                 metricType: <metrics type e.g. `prometheus.GaugeValue`>,

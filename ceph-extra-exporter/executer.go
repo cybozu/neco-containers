@@ -23,9 +23,17 @@ type metric struct {
 	labelKeys  []string
 }
 
+type ruleTarget string
+
+const (
+	ruleTargetCommon ruleTarget = ""
+	ruleTargetRGW    ruleTarget = "rgw"
+)
+
 type rule struct {
 	name    string
 	command []string
+	target  ruleTarget
 	metrics map[string]metric
 }
 
