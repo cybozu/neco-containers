@@ -2,6 +2,8 @@
 
 # Neco Containers
 
+Checkpoint for Cilium 1.17
+
 This repository contains Dockerfiles to build OSS products
 used in our project, Neco.  They are built from the official
 sources, and based on our Ubuntu base image.
