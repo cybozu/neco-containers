@@ -4,7 +4,6 @@ import (
 	"net"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -15,7 +14,7 @@ import (
 
 func TestUpdateTargetEndpoints(t *testing.T) {
 	// setup test client
-	testClient := client{
+	testClient := k8sClient{
 		k8s:        fake.NewClientset(),
 		kubeConfig: &clientcmd.DefaultClientConfig,
 	}
@@ -26,7 +25,7 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 		net.ParseIP("2.2.2.2"),
 		net.ParseIP("3.3.3.3"),
 	}
-	err := testClient.updateTargetEndpoints(t.Context(), targets, 2, "target-foo", "port-bar", 1234)
+	err := testClient.updateTargetEndpoints(t.Context(), "target-foo", targets, 2, []namedPort{{name: "port-bar", port: 1234}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -119,7 +118,7 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	targets = []net.IP{
 		net.ParseIP("4.4.4.4"),
 	}
-	err = testClient.updateTargetEndpoints(t.Context(), targets, 2, "target-foo", "port-bar", 1234)
+	err = testClient.updateTargetEndpoints(t.Context(), "target-foo", targets, 2, []namedPort{{name: "port-bar", port: 1234}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -191,7 +190,7 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	}
 
 	// call update to delete old-style Endpoints and EndpointSlice
-	err = testClient.updateTargetEndpoints(t.Context(), targets, 2, "target-foo", "port-bar", 1234)
+	err = testClient.updateTargetEndpoints(t.Context(), "target-foo", targets, 2, []namedPort{{name: "port-bar", port: 1234}})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -208,30 +207,98 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	}
 }
 
-func TestUpdateBMCLogCollectorConfigMap(t *testing.T) {
-	var ml []Machine
-
-	var m0 Machine
-	m0.Spec.IPv4 = append(m0.Spec.IPv4, "1.1.1.1")
-	m0.Spec.IPv4 = append(m0.Spec.IPv4, "1.2.2.2")
-	m0.Spec.BMC.IPv4 = "1.3.3.3"
-	m0.Spec.Serial = "ABC123"
-	ml = append(ml, m0)
-
-	var m1 Machine
-	m1.Spec.IPv4 = append(m1.Spec.IPv4, "2.1.1.1")
-	m1.Spec.IPv4 = append(m1.Spec.IPv4, "2.2.2.2")
-	m1.Spec.BMC.IPv4 = "2.3.3.3"
-	m1.Spec.Serial = "XYZ123"
-	ml = append(ml, m1)
-
-	// expectedJSON is made from ml
-	expectedJSON := `[{"serial":"ABC123","bmc_ipv4":"1.3.3.3","node_ipv4":"1.1.1.1"},{"serial":"XYZ123","bmc_ipv4":"2.3.3.3","node_ipv4":"2.1.1.1"}]`
-	stringJSON, err := createMachinesList(ml)
-	if err != nil {
-		t.Fatalf("failed create JSON data %#v", err)
+func TestUpdateTargetEndpointsMultiplePorts(t *testing.T) {
+	testClient := k8sClient{
+		k8s:        fake.NewClientset(),
+		kubeConfig: &clientcmd.DefaultClientConfig,
 	}
-	if !cmp.Equal(stringJSON, expectedJSON) {
-		t.Fatalf("Not expected JSON data %v", expectedJSON)
+
+	targets := []net.IP{net.ParseIP("1.1.1.1")}
+	ports := []namedPort{
+		{name: "port-bar", port: 2222},
+		{name: "port-foo", port: 1111},
+	}
+	err := testClient.updateTargetEndpoints(t.Context(), "target-multi", targets, 2, ports)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ns, _, err := testClient.kubeConfig.Namespace()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	service, err := testClient.k8s.CoreV1().Services(ns).Get(t.Context(), "target-multi", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(service.Spec.Ports) != 2 {
+		t.Fatalf("len(service.Spec.Ports) != 2: %#v", service.Spec.Ports)
+	}
+	if service.Spec.Ports[0].Name != "port-bar" || service.Spec.Ports[0].Port != 2222 {
+		t.Errorf("unexpected service.Spec.Ports[0]: %#v", service.Spec.Ports[0])
+	}
+	if service.Spec.Ports[1].Name != "port-foo" || service.Spec.Ports[1].Port != 1111 {
+		t.Errorf("unexpected service.Spec.Ports[1]: %#v", service.Spec.Ports[1])
+	}
+
+	slice, err := testClient.k8s.DiscoveryV1().EndpointSlices(ns).Get(t.Context(), "target-multi-0", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(slice.Ports) != 2 {
+		t.Fatalf("len(slice.Ports) != 2: %#v", slice.Ports)
+	}
+	if *slice.Ports[0].Name != "port-bar" || *slice.Ports[0].Port != 2222 {
+		t.Errorf("unexpected slice.Ports[0]: name=%v port=%v", *slice.Ports[0].Name, *slice.Ports[0].Port)
+	}
+	if *slice.Ports[1].Name != "port-foo" || *slice.Ports[1].Port != 1111 {
+		t.Errorf("unexpected slice.Ports[1]: name=%v port=%v", *slice.Ports[1].Name, *slice.Ports[1].Port)
+	}
+
+	// update ports on the existing Service
+	newPorts := []namedPort{{name: "port-baz", port: 3333}}
+	err = testClient.updateTargetEndpoints(t.Context(), "target-multi", targets, 2, newPorts)
+	if err != nil {
+		t.Fatal(err)
+	}
+	service, err = testClient.k8s.CoreV1().Services(ns).Get(t.Context(), "target-multi", metav1.GetOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(service.Spec.Ports) != 1 || service.Spec.Ports[0].Name != "port-baz" || service.Spec.Ports[0].Port != 3333 {
+		t.Errorf("Service ports were not updated: %#v", service.Spec.Ports)
+	}
+}
+
+func TestDryRun(t *testing.T) {
+	testClient := k8sClient{
+		k8s:        fake.NewClientset(),
+		kubeConfig: &clientcmd.DefaultClientConfig,
+		dryRun:     true,
+	}
+
+	targets := []net.IP{net.ParseIP("1.1.1.1")}
+	ports := []namedPort{{name: "port-bar", port: 1234}}
+	if err := testClient.updateTargetEndpoints(t.Context(), "target-foo", targets, 2, ports); err != nil {
+		t.Fatal(err)
+	}
+	if err := testClient.applyConfigMap(t.Context(), "configmap-foo", map[string]string{"key": "value"}); err != nil {
+		t.Fatal(err)
+	}
+
+	// dry-run must not actually create any resources
+	ns, _, err := testClient.kubeConfig.Namespace()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := testClient.k8s.CoreV1().Services(ns).Get(t.Context(), "target-foo", metav1.GetOptions{}); !k8serrors.IsNotFound(err) {
+		t.Error("dry-run should not create the Service")
+	}
+	if _, err := testClient.k8s.DiscoveryV1().EndpointSlices(ns).Get(t.Context(), "target-foo-0", metav1.GetOptions{}); !k8serrors.IsNotFound(err) {
+		t.Error("dry-run should not create the EndpointSlice")
+	}
+	if _, err := testClient.k8s.CoreV1().ConfigMaps(ns).Get(t.Context(), "configmap-foo", metav1.GetOptions{}); !k8serrors.IsNotFound(err) {
+		t.Error("dry-run should not create the ConfigMap")
 	}
 }

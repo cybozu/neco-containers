@@ -12,7 +12,7 @@ rules:
     resources:
       - services
       - configmaps
-    verbs: ["get", "update", "create"]
+    verbs: ["patch", "create"]
   - apiGroups: [""]
     resources:
       - endpoints
@@ -20,7 +20,7 @@ rules:
   - apiGroups: ["discovery.k8s.io"]
     resources:
       - endpointslices
-    verbs: ["get", "list", "update", "create", "delete"]
+    verbs: ["get", "list", "patch", "create", "delete"]
   - apiGroups: ["policy"]
     resources: ["podsecuritypolicies"]
     verbs: ["use"]
@@ -103,7 +103,9 @@ spec:
               image: ghcr.io/cybozu/machines-endpoints:1.0.0
               imagePullPolicy: IfNotPresent
               args:
-                - --monitoring-endpoints
+                - --sabakan-address=<SABAKAN_ADDRESS>:10080  # replace with the sabakan address and its GraphQL port
+                - --all-servers-port=node-exporter:9100
+                - --boot-servers-port=etcd-metrics:2381
                 - --bmc-reverse-proxy-configmap
                 - --bmc-log-collector-configmap
           hostNetwork: true
