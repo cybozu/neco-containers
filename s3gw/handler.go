@@ -99,6 +99,7 @@ func listHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	res.Header().Set("Content-Length", fmt.Sprint(len(marshalled)))
 	if _, err := res.Write(marshalled); err != nil {
+		//nolint:errcheck
 		log.Error("failed to write list response", map[string]any{
 			log.FnError: err,
 		})
@@ -132,6 +133,7 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 	defer func() {
 		if err := output.Body.Close(); err != nil {
+			//nolint:errcheck
 			log.Error("failed to close object response body", map[string]any{
 				log.FnError: err,
 			})
@@ -146,6 +148,7 @@ func objectGetHandlerFunc(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if _, err := io.Copy(res, output.Body); err != nil {
+		//nolint:errcheck
 		log.Error("failed to write object response", map[string]any{
 			log.FnError: err,
 		})

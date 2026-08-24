@@ -11,7 +11,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/utils/ptr"
 )
 
 func TestUpdateTargetEndpoints(t *testing.T) {
@@ -149,14 +148,14 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	// TODO remove transitive code
 	// register old-style Endpoints and EndpointSlice
 	endpoints := testClient.k8s.CoreV1().Endpoints(ns)
-	_, err = endpoints.Create(t.Context(), &corev1.Endpoints{
+	_, err = endpoints.Create(t.Context(), &corev1.Endpoints{ //nolint:staticcheck
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "target-foo",
 			Labels: map[string]string{
 				"endpointslice.kubernetes.io/skip-mirror": "true",
 			},
 		},
-		Subsets: []corev1.EndpointSubset{
+		Subsets: []corev1.EndpointSubset{ //nolint:staticcheck
 			{
 				Addresses: []corev1.EndpointAddress{
 					{IP: "4.4.4.4"},
@@ -184,7 +183,7 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 			{Addresses: []string{"4.4.4.4"}},
 		},
 		Ports: []discoveryv1.EndpointPort{
-			{Name: ptr.To("port-bar"), Port: ptr.To(int32(1234))},
+			{Name: new("port-bar"), Port: new(int32(1234))},
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {

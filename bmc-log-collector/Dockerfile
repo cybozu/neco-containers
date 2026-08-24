@@ -15,4 +15,4 @@ COPY --from=build /go/bin /
 
 USER 10000:10000
 
-ENTRYPOINT ["/log-collector"]
+ENTRYPOINT ["/bmc-log-collector"]

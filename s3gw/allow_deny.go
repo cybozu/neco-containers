@@ -15,7 +15,7 @@ type AllowDeny struct {
 func parseCIDRs(cidrs, name string) ([]*net.IPNet, error) {
 	var nets []*net.IPNet
 
-	for _, s := range strings.Split(cidrs, ",") {
+	for s := range strings.SplitSeq(cidrs, ",") {
 		s = strings.Trim(s, " ")
 		if s == "" {
 			continue

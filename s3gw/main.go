@@ -155,6 +155,7 @@ func main() {
 	if err != nil {
 		log.ErrorExit(err)
 	}
+	//nolint:errcheck
 	log.Info("starting...", nil)
 
 	well.Stop()

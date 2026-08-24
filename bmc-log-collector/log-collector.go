@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"path"
+	"slices"
 	"strconv"
 	"time"
 )
@@ -123,19 +124,19 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 	firstCreateTime := createTime.Unix()
 
-	for i := len(response.Sel) - 1; i >= 0; i-- {
-		currentId, err := strconv.Atoi(response.Sel[i].Id)
+	for i, v := range slices.Backward(response.Sel) {
+		currentId, err := strconv.Atoi(v.Id)
 		if err != nil {
 			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId, "ptrDir", c.ptrDir)
 			continue
 		}
 		// Add the information to identify of the node
-		response.Sel[i].Serial = m.Serial
-		response.Sel[i].BmcIP = m.BmcIP
-		response.Sel[i].NodeIP = m.NodeIP
+		v.Serial = m.Serial
+		v.BmcIP = m.BmcIP
+		v.NodeIP = m.NodeIP
 
 		if lastPtr.LastReadId < currentId {
-			bmcByteJsonLog, err := json.Marshal(response.Sel[i])
+			bmcByteJsonLog, err := json.Marshal(v)
 			if err != nil {
 				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
 			}
@@ -150,9 +151,9 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 			// If the log is reset in iDRAC, the ID starts from 1.
 			// In that case, determine if generated time been changed to identify log reseted.
 			if lastPtr.FirstCreateTime != firstCreateTime {
-				bmcByteJsonLog, err := json.Marshal(response.Sel[i])
+				bmcByteJsonLog, err := json.Marshal(v)
 				if err != nil {
-					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", response.Sel[i], "currentLastReadId", currentId)
+					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", v, "currentLastReadId", currentId)
 				}
 
 				// Output duplicate log, after log reset in iDRAC
