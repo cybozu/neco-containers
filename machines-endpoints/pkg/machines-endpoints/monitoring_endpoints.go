@@ -48,7 +48,7 @@ func parseNamedPorts(specs []string) ([]namedPort, error) {
 		if port == 0 {
 			return nil, fmt.Errorf("invalid port %q: port must be between 1 and 65535", spec)
 		}
-		if errs := validation.IsValidPortName(name); len(errs) > 0 {
+		if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
 			return nil, fmt.Errorf("invalid port name %q: %s", name, strings.Join(errs, "; "))
 		}
 		if _, ok := seen[name]; ok {

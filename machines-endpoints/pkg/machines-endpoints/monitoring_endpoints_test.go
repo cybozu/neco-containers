@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -29,11 +30,11 @@ func TestParseNamedPorts(t *testing.T) {
 	if _, err := parseNamedPorts([]string{"1234:Invalid-Name"}); err == nil {
 		t.Error("expected an error for an invalid port name")
 	}
-	if _, err := parseNamedPorts([]string{"1234:a-name-too-long-to-be-valid"}); err == nil {
-		t.Error("expected an error for a port name longer than 15 characters")
+	if _, err := parseNamedPorts([]string{"1234:" + strings.Repeat("a", 64)}); err == nil {
+		t.Error("expected an error for a port name longer than 63 characters")
 	}
-	if _, err := parseNamedPorts([]string{"1234:12345"}); err == nil {
-		t.Error("expected an error for a port name without any letters")
+	if _, err := parseNamedPorts([]string{"1234:-name"}); err == nil {
+		t.Error("expected an error for a port name starting with a hyphen")
 	}
 	if _, err := parseNamedPorts([]string{"0:name"}); err == nil {
 		t.Error("expected an error for port 0")
@@ -43,6 +44,9 @@ func TestParseNamedPorts(t *testing.T) {
 	}
 	if _, err := parseNamedPorts([]string{"1234:name", "5678:name"}); err == nil {
 		t.Error("expected an error for a duplicate port name")
+	}
+	if _, err := parseNamedPorts([]string{"9100:http-node-exporter", "2381:http-etcd-metric"}); err != nil {
+		t.Errorf("port names longer than 15 characters should be accepted: %v", err)
 	}
 }
 

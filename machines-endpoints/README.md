@@ -38,7 +38,20 @@ Usage
    kubectl get configmap -n NAMESPACE bmc-reverse-proxy
    kubectl get configmap -n NAMESPACE bmc-log-collector
    ```
- 
+
+Options
+-------
+
+| Option | Default | Description |
+| ------ | ------- | ----------- |
+| `--sabakan-address` | (required) | Address of sabakan's GraphQL API, in the form `host:port`. A hostname is accepted; prefer a name that resolves to every boot server, or a VIP, so that one unreachable boot server does not stop updates. |
+| `--all-servers-port` | (none) | Port to expose on the `all-servers-targets` target, which lists all non-retired machines. In the form `port:name`, repeatable. The Service and EndpointSlices for the target are created only when at least one port is given. |
+| `--boot-servers-port` | (none) | Same as `--all-servers-port`, but for the `boot-servers-targets` target, which lists non-retired boot servers only. |
+| `--max-endpoints-per-slice` | `100` | Maximum number of endpoints per EndpointSlice. Must be between 1 and 1000. |
+| `--bmc-reverse-proxy-configmap` | `false` | Generate the `bmc-reverse-proxy` ConfigMap. |
+| `--bmc-log-collector-configmap` | `false` | Generate the `bmc-log-collector` ConfigMap. |
+| `--dry-run` | `false` | Print the JSON of the resources that would be applied to stdout instead of applying them. A usable kubeconfig is still required, and EndpointSlices that would be deleted are not reported. |
+
 Docker images
 -------------
 
