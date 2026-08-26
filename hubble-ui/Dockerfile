@@ -6,7 +6,7 @@ ARG PKG_RELEASE=1~noble
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.26-noble AS backend-builder
+FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -22,7 +22,7 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.26-noble AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS frontend-builder
 ARG NODE_VERSION
 ARG NODE_SHA
 
@@ -52,7 +52,7 @@ RUN pnpm run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template
-FROM ghcr.io/cybozu/ubuntu:24.04 AS frontend
+FROM ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be8822fd555cc2cda4f2b16ecc71c6ffdad8c5c74ff054ba7 AS frontend
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 ARG NGINX_VERSION
 ARG NJS_VERSION

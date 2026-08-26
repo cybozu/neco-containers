@@ -1,5 +1,5 @@
-ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26-noble
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be8822fd555cc2cda4f2b16ecc71c6ffdad8c5c74ff054ba7
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51
 
 # https://github.com/cilium/cilium/releases/tag/v1.18.6
 ARG CILIUM_SHA=95896696119f33a0f5d21019182192fcdab3600f

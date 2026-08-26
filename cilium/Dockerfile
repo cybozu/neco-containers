@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Image Name Mapping:
 #   cilium-compiler:            docker.io/cilium/image-compilers
 #   cilium-llvm:                docker.io/cilium/cilium-llvm
@@ -10,15 +11,15 @@
 #
 # ref: https://docs.cilium.io/en/stable/contributing/development/images/
 
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26-noble
-ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be8822fd555cc2cda4f2b16ecc71c6ffdad8c5c74ff054ba7
 ARG DESTDIR=/tmp/install/linux/amd64
 
 # -----------------------------------
 FROM ${GOLANG_IMAGE} AS cybozu-golang
 
 # ------------------------------------------------------------------------------------------
-# https://github.com/cilium/image-tools/blob/master/images/compilers/Dockerfile (AS builder)
+# https://github.com/cilium/image-tools/blob/eb5ebfccd515283c30aa7d08c114f1b047ff45b4/images/compilers/Dockerfile (AS builder)
 FROM ${UBUNTU_IMAGE} AS cilium-compiler
 COPY src/image-tools/images/compilers/install-deps.sh /tmp/install-deps.sh
 
@@ -30,11 +31,12 @@ RUN mv /tmp/install-deps.sh /tmp/install-deps-original.sh \
 RUN /tmp/install-deps.sh
 
 # -------------------------------------------------------------------------------------
-# https://github.com/cilium/image-tools/blob/master/images/llvm/Dockerfile (AS builder)
+# https://github.com/cilium/image-tools/blob/eb5ebfccd515283c30aa7d08c114f1b047ff45b4/images/llvm/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-llvm
 
 ARG LLVM_VERSION="llvmorg-19.1.7"
-ADD https://github.com/llvm/llvm-project/archive/${LLVM_VERSION}.tar.gz /tmp/llvm.tar.gz
+ADD --checksum=sha256:59abea1c22e64933fad4de1671a61cdb934098793c7a31b333ff58dc41bff36c \
+    https://github.com/llvm/llvm-project/archive/${LLVM_VERSION}.tar.gz /tmp/llvm.tar.gz
 WORKDIR /src/llvm
 RUN tar -xf /tmp/llvm.tar.gz --strip-components=1 --directory /src/llvm
 
@@ -45,12 +47,14 @@ RUN /tmp/build-llvm.sh
 RUN cp /out/bin/* /usr/local/bin/
 
 # ----------------------------------------------------------------------------------------
-# https://github.com/cilium/image-tools/blob/master/images/bpftool/Dockerfile (AS builder)
+# https://github.com/cilium/image-tools/blob/eb5ebfccd515283c30aa7d08c114f1b047ff45b4/images/bpftool/Dockerfile (AS builder)
 FROM cilium-compiler AS cilium-bpftool
 
 ARG BPFTOOL_VERSION="v7.4.0"
+ARG BPFTOOL_SHA=20ce6933869b70bacfdd0dd1a8399199290bf8ff
 WORKDIR /bpftool
-RUN git clone --recurse-submodules --branch "${BPFTOOL_VERSION}" https://github.com/libbpf/bpftool.git /bpftool
+RUN git clone --recurse-submodules --branch "${BPFTOOL_VERSION}" https://github.com/libbpf/bpftool.git /bpftool \
+    && test "$(git -C /bpftool rev-parse HEAD)" = "${BPFTOOL_SHA}"
 
 RUN \
     # From Ubuntu 24.04 builder image, libzstd must be added at the end of LIBS and LIBS_BOOTSTRAP to compile statically
@@ -62,7 +66,7 @@ RUN \
     && mv /bpftool/src/bpftool /out/bin/
 
 # -----------------------------------------------------------------------------------
-# https://github.com/cilium/image-tools/blob/master/images/iptables/Dockerfile (AS .)
+# https://github.com/cilium/image-tools/blob/eb5ebfccd515283c30aa7d08c114f1b047ff45b4/images/iptables/Dockerfile (AS .)
 FROM ${UBUNTU_IMAGE} AS cilium-iptables
 ENV IPTABLES_VERSION=1.8.8-1
 ENV SNAPSHOT_DATE=20230116T212610Z
@@ -79,7 +83,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # ------------------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile (AS gops-cni-builder)
+# https://github.com/cilium/cilium/blob/v1.18.6/images/runtime/Dockerfile (AS gops-cni-builder)
 FROM ${GOLANG_IMAGE} AS gops-cni-builder
 RUN apt-get update && apt-get install -y binutils-aarch64-linux-gnu binutils-x86-64-linux-gnu
 
@@ -91,7 +95,7 @@ RUN ./build-gops.sh
 RUN ./download-cni.sh
 
 # --------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile (AS rootfs)
+# https://github.com/cilium/cilium/blob/v1.18.6/images/runtime/Dockerfile (AS rootfs)
 # !! WARNING !!
 # This is the base of the final image, do not leave anything unrelated to the final output.
 FROM ${UBUNTU_IMAGE} AS cilium-runtime
@@ -117,7 +121,7 @@ COPY --from=gops-cni-builder /out/linux/amd64/bin/loopback /cni/loopback
 COPY --from=gops-cni-builder /out/linux/amd64/bin/gops /bin/gops
 
 # --------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/builder/Dockerfile (AS rootfs)
+# https://github.com/cilium/cilium/blob/v1.18.6/images/builder/Dockerfile (AS rootfs)
 FROM cilium-runtime AS cilium-builder
 
 # TARGETARCH is an automatic platform ARG enabled by Docker BuildKit.
@@ -183,7 +187,7 @@ RUN --mount=type=bind,readwrite,source=src/cilium/images/builder,target=/go/src/
 COPY --from=cilium-llvm /usr/local/bin/llvm-objcopy /bin/
 
 # --------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile (AS builder)
+# https://github.com/cilium/cilium/blob/v1.18.6/images/cilium/Dockerfile (AS builder)
 FROM cilium-builder AS cilium-agent-builder
 WORKDIR /go/src/github.com/cilium/cilium
 
@@ -206,7 +210,7 @@ COPY src/cilium/images/cilium/init-container.sh \
        /tmp/install/linux/amd64
 
 # --------------------------------------------------------------------------------
-# https://github.com/cilium/cilium/blob/main/images/cilium/Dockerfile (AS release)
+# https://github.com/cilium/cilium/blob/v1.18.6/images/cilium/Dockerfile (AS release)
 FROM cilium-runtime
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
