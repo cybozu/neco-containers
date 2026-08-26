@@ -155,31 +155,6 @@ func (c k8sClient) updateTargetEndpoints(ctx context.Context, name string, ips [
 		}
 	}
 
-	// TODO remove transitive code
-	// Delete Endpoints; Endpoints API is deprecated
-	endpointInterface := c.k8s.CoreV1().Endpoints(ns)
-	_, err = endpointInterface.Get(ctx, name, metav1.GetOptions{})
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
-	} else if err == nil {
-		err := endpointInterface.Delete(ctx, name, metav1.DeleteOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
-			return err
-		}
-	}
-
-	// TODO remove transitive code
-	// Delete EndpointSlice with old name
-	_, err = endpointSliceInterface.Get(ctx, name, metav1.GetOptions{})
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
-	} else if err == nil {
-		err := endpointSliceInterface.Delete(ctx, name, metav1.DeleteOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
-			return err
-		}
-	}
-
 	return nil
 }
 

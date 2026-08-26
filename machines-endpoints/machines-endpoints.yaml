@@ -13,10 +13,6 @@ rules:
       - services
       - configmaps
     verbs: ["patch", "create"]
-  - apiGroups: [""]
-    resources:
-      - endpoints
-    verbs: ["get", "delete"]
   - apiGroups: ["discovery.k8s.io"]
     resources:
       - endpointslices
