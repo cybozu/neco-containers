@@ -29,7 +29,7 @@ func validateMaxEndpointsPerSlice(maxEndpointsPerSlice int) error {
 	return nil
 }
 
-// parseNamedPorts parses specs of the form "name:port" into namedPorts,
+// parseNamedPorts parses specs of the form "port:name" into namedPorts,
 // validating that name is a valid Service/EndpointPort port name, that port
 // is in the range 1-65535, and that names are unique. The result is sorted
 // by name, so that it is deterministic regardless of input order.
@@ -37,12 +37,9 @@ func parseNamedPorts(specs []string) ([]namedPort, error) {
 	seen := make(map[string]struct{}, len(specs))
 	ports := make([]namedPort, 0, len(specs))
 	for _, spec := range specs {
-		name, portStr, ok := strings.Cut(spec, ":")
+		portStr, name, ok := strings.Cut(spec, ":")
 		if !ok {
-			return nil, fmt.Errorf("invalid port %q (expected name:port)", spec)
-		}
-		if errs := validation.IsValidPortName(name); len(errs) > 0 {
-			return nil, fmt.Errorf("invalid port name %q: %s", name, strings.Join(errs, "; "))
+			return nil, fmt.Errorf("invalid port %q (expected port:name)", spec)
 		}
 		port, err := strconv.ParseUint(portStr, 10, 16)
 		if err != nil {
@@ -50,6 +47,9 @@ func parseNamedPorts(specs []string) ([]namedPort, error) {
 		}
 		if port == 0 {
 			return nil, fmt.Errorf("invalid port %q: port must be between 1 and 65535", spec)
+		}
+		if errs := validation.IsValidPortName(name); len(errs) > 0 {
+			return nil, fmt.Errorf("invalid port name %q: %s", name, strings.Join(errs, "; "))
 		}
 		if _, ok := seen[name]; ok {
 			return nil, fmt.Errorf("duplicate port name %q", name)

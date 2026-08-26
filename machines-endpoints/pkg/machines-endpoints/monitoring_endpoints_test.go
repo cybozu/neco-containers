@@ -7,7 +7,7 @@ import (
 )
 
 func TestParseNamedPorts(t *testing.T) {
-	ports, err := parseNamedPorts([]string{"node-exporter:9100", "etcd-metrics:2381"})
+	ports, err := parseNamedPorts([]string{"9100:node-exporter", "2381:etcd-metrics"})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -23,25 +23,25 @@ func TestParseNamedPorts(t *testing.T) {
 	if _, err := parseNamedPorts([]string{"invalid"}); err == nil {
 		t.Error("expected an error for a spec without a port")
 	}
-	if _, err := parseNamedPorts([]string{"name:not-a-number"}); err == nil {
+	if _, err := parseNamedPorts([]string{"not-a-number:name"}); err == nil {
 		t.Error("expected an error for a non-numeric port")
 	}
-	if _, err := parseNamedPorts([]string{"Invalid-Name:1234"}); err == nil {
+	if _, err := parseNamedPorts([]string{"1234:Invalid-Name"}); err == nil {
 		t.Error("expected an error for an invalid port name")
 	}
-	if _, err := parseNamedPorts([]string{"a-name-too-long-to-be-valid:1234"}); err == nil {
+	if _, err := parseNamedPorts([]string{"1234:a-name-too-long-to-be-valid"}); err == nil {
 		t.Error("expected an error for a port name longer than 15 characters")
 	}
-	if _, err := parseNamedPorts([]string{"12345:1234"}); err == nil {
+	if _, err := parseNamedPorts([]string{"1234:12345"}); err == nil {
 		t.Error("expected an error for a port name without any letters")
 	}
-	if _, err := parseNamedPorts([]string{"name:0"}); err == nil {
+	if _, err := parseNamedPorts([]string{"0:name"}); err == nil {
 		t.Error("expected an error for port 0")
 	}
-	if _, err := parseNamedPorts([]string{"name:65536"}); err == nil {
+	if _, err := parseNamedPorts([]string{"65536:name"}); err == nil {
 		t.Error("expected an error for a port out of range")
 	}
-	if _, err := parseNamedPorts([]string{"name:1234", "name:5678"}); err == nil {
+	if _, err := parseNamedPorts([]string{"1234:name", "5678:name"}); err == nil {
 		t.Error("expected an error for a duplicate port name")
 	}
 }

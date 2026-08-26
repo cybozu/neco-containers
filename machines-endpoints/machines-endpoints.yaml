@@ -104,8 +104,8 @@ spec:
               imagePullPolicy: IfNotPresent
               args:
                 - --sabakan-address=<SABAKAN_ADDRESS>:10080  # replace with the sabakan address and its GraphQL port
-                - --all-servers-port=node-exporter:9100
-                - --boot-servers-port=etcd-metrics:2381
+                - --all-servers-port=9100:node-exporter
+                - --boot-servers-port=2381:etcd-metrics
                 - --bmc-reverse-proxy-configmap
                 - --bmc-log-collector-configmap
           hostNetwork: true

@@ -17,8 +17,8 @@ var (
 
 	// flags for monitoring Service/EndpointSlices; the boot-servers/all-servers
 	// target is only created when its port list is non-empty.
-	flgAllServersPorts      = pflag.StringArray("all-servers-port", []string{}, "port to expose on the all-servers target, in the form name:port (may be repeated); the target is not created if unset")
-	flgBootServersPorts     = pflag.StringArray("boot-servers-port", []string{}, "port to expose on the boot-servers target, in the form name:port (may be repeated); the target is not created if unset")
+	flgAllServersPorts      = pflag.StringArray("all-servers-port", []string{}, "port to expose on the all-servers target, in the form port:name (may be repeated); the target is not created if unset")
+	flgBootServersPorts     = pflag.StringArray("boot-servers-port", []string{}, "port to expose on the boot-servers target, in the form port:name (may be repeated); the target is not created if unset")
 	flgMaxEndpointsPerSlice = pflag.Int("max-endpoints-per-slice", defaultMaxEndpointsPerSlice, "maximum number of endpoints per EndpointSlice")
 
 	// flags for BMC-related ConfigMaps
