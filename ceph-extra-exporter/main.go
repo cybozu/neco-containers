@@ -29,6 +29,7 @@ var rules = []rule{
 	{
 		name:    "rgw_bucket_stats",
 		command: []string{"radosgw-admin", "bucket", "stats"},
+		target:  ruleTargetRGW,
 		metrics: map[string]metric{
 			"s3_object_count": {
 				metricType: prometheus.GaugeValue,
@@ -62,6 +63,37 @@ var rules = []rule{
 			},
 		},
 	},
+	{
+		name:    "rbd_task_list",
+		command: []string{"ceph", "rbd", "task", "list", "-f", "json"},
+		target:  ruleTargetRBD,
+		metrics: map[string]metric{
+			"count": {
+				metricType: prometheus.GaugeValue,
+				help:       "RBD task count of `ceph rbd task list` command",
+				jqFilter:   "group_by(.refs.action) | map({value: length, labels: [.[0].refs.action]})",
+				labelKeys:  []string{"action"},
+			},
+		},
+	},
+}
+
+type exportOptions struct {
+	rgwMetrics bool
+	rbdMetrics bool
+}
+
+func (o exportOptions) enabled(target ruleTarget) bool {
+	switch target {
+	case ruleTargetCommon:
+		return true
+	case ruleTargetRGW:
+		return o.rgwMetrics
+	case ruleTargetRBD:
+		return o.rbdMetrics
+	default:
+		return false
+	}
 }
 
 //go:embed TAG
@@ -78,7 +110,12 @@ func init() {
 	prometheus.MustRegister(buildInfo)
 }
 
-func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
+func startServer(rules []rule, port uint, reg prometheus.Registerer, options exportOptions) error {
+	gatherer, ok := reg.(prometheus.Gatherer)
+	if !ok {
+		return fmt.Errorf("reg must implement prometheus.Gatherer")
+	}
+
 	wg := &sync.WaitGroup{}
 	ctx, cancel := context.WithCancel(context.Background())
 	defer func() {
@@ -86,13 +123,13 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 		wg.Wait()
 	}()
 	for i := 0; i < len(rules); i++ {
-		if !doesRunRGWAdmin && rules[i].command[0] == "radosgw-admin" {
+		if !options.enabled(rules[i].target) {
 			continue
 		}
 		wg.Add(1)
 		go func(r *rule) {
 			executer := newExecuter(r)
-			prometheus.MustRegister(newCollector(executer, "ceph_extra"))
+			reg.MustRegister(newCollector(executer, "ceph_extra"))
 			executer.start(ctx)
 			wg.Done()
 		}(&rules[i])
@@ -102,7 +139,7 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 	mux.Handle("/v1/health", http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		rw.WriteHeader(http.StatusOK)
 	}))
-	mux.Handle("/v1/metrics", promhttp.Handler())
+	mux.Handle("/v1/metrics", promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{}))
 
 	server := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
@@ -119,9 +156,12 @@ func startServer(rules []rule, port uint, doesRunRGWAdmin bool) error {
 
 func main() {
 	port := flag.Uint("port", 8080, "port number")
-	doesRunRGWAdmin := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	rgwMetrics := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
+	rbdMetrics := flag.Bool("export-rbd-metrics", true, "to export RBD related metrics or not")
 	flag.Parse()
-	if err := startServer(rules, *port, *doesRunRGWAdmin); err != nil {
+	if err := startServer(rules, *port, prometheus.DefaultRegisterer,
+		exportOptions{rgwMetrics: *rgwMetrics, rbdMetrics: *rbdMetrics}); err != nil {
+		logger.Error("failed to start server", "error", err)
 		os.Exit(1)
 	}
 }
