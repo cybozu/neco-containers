@@ -1,541 +1,105 @@
 package main
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
+	"log/slog"
 	"net"
-	"net/http"
-	"net/url"
-	"path"
-	"reflect"
-	"slices"
-	"strings"
-	"time"
+	"os"
+	"os/signal"
+	"syscall"
 
-	"github.com/cybozu-go/log"
-	sabakan "github.com/cybozu-go/sabakan/v3"
-	serfclient "github.com/hashicorp/serf/client"
 	"github.com/spf13/pflag"
-	corev1 "k8s.io/api/core/v1"
-	discoveryv1 "k8s.io/api/discovery/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
 )
-
-const (
-	// EndpointSlice
-	defaultMaxEndpointsPerSlice = 100
-	labelManagedByValue         = "machines-endpoints.cybozu.io"
-
-	// node-exporter
-	targetEndpointsName     = "prometheus-node-targets"
-	nodeExporterPortName    = "http-node-exporter"
-	defaultNodeExporterPort = 9100
-
-	// etcd metrics
-	targetEtcdMetricsEndpointsName = "bootserver-etcd-metrics"
-	etcdMetricsPortName            = "http-etcd-metrics"
-	defaultEtcdMetricsPort         = 2381
-
-	// BMC Proxy ConfigMap
-	bmcProxyConfigMapName = "bmc-reverse-proxy"
-
-	// BMC Log Collector ConfigMap
-	bmcLogCollectorConfigMapName = "bmc-log-collector"
-)
-
-const graphQLQuery = `
-query search {
-  searchMachines(having: null, notHaving: null) {
-    spec {
-      ipv4
-      serial
-      rack
-      indexInRack
-      role
-      bmc {
-        ipv4
-      }
-    }
-    status {
-      state
-    }
-  }
-}
-`
 
 var (
-	flgMaxEndpointsPerSlice     = pflag.Int("max-endpoints-per-slice", defaultMaxEndpointsPerSlice, "maximum number of endpoints per EndpointSlice")
-	flgMonitoringEndpoints      = pflag.Bool("monitoring-endpoints", false, "generate Endpoints for monitoring")
+	flgSabakanAddress = pflag.String("sabakan-address", "", "address of sabakan's GraphQL API, in the form host:port")
+
+	// flags for monitoring Service/EndpointSlices; the boot-servers/all-servers
+	// target is only created when its port list is non-empty.
+	flgAllServersPorts      = pflag.StringArray("all-servers-port", []string{}, "port to expose on the all-servers target, in the form port:name (may be repeated); the target is not created if unset")
+	flgBootServersPorts     = pflag.StringArray("boot-servers-port", []string{}, "port to expose on the boot-servers target, in the form port:name (may be repeated); the target is not created if unset")
+	flgMaxEndpointsPerSlice = pflag.Int("max-endpoints-per-slice", defaultMaxEndpointsPerSlice, "maximum number of endpoints per EndpointSlice")
+
+	// flags for BMC-related ConfigMaps
 	flgBMCReverseProxyConfigMap = pflag.Bool("bmc-reverse-proxy-configmap", false, "generate ConfigMap for BMC reverse proxy")
 	flgBMCLogCollectorConfigMap = pflag.Bool("bmc-log-collector-configmap", false, "generate ConfigMap for BMC log collector")
-	flgNodeExporterPort         = pflag.Int32("node-exporter-port", defaultNodeExporterPort, "node-exporter port")
-	flgEtcdMetricsPort          = pflag.Int32("etcd-metrics-port", defaultEtcdMetricsPort, "etcd metrics port")
+
+	// flag for dry-run
+	flgDryRun = pflag.Bool("dry-run", false, "print resources to stdout instead of updating them in Kubernetes")
 )
 
-// Machine represents a machine registered with sabakan.
-type Machine struct {
-	Spec struct {
-		IPv4        []string `json:"ipv4"`
-		Serial      string   `json:"serial"`
-		Rack        int      `json:"rack"`
-		IndexInRack int      `json:"indexInRack"`
-		Role        string   `json:"role"`
-		BMC         struct {
-			IPv4 string `json:"ipv4"`
-		}
-	}
-	Status struct {
-		State string `json:"state"`
+func main() {
+	pflag.Parse()
+
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	if err := subMain(ctx); err != nil {
+		slog.Error(err.Error())
+		os.Exit(1)
 	}
 }
 
-type member struct {
-	name string
-	addr net.IP
-	tags map[string]string
-}
-
-type client struct {
-	http       *http.Client
-	k8s        kubernetes.Interface
-	kubeConfig clientcmd.ClientConfig
-	serf       *serfclient.RPCClient
-}
-
-type machineSerialandIP struct {
-	Serial string `json:"serial"`
-	BmcIP  string `json:"bmc_ipv4"`
-	NodeIP string `json:"node_ipv4"`
-}
-
-func (c client) getMachinesFromSabakan(bootservers []net.IP) ([]Machine, error) {
-	if len(bootservers) == 0 {
-		return nil, errors.New("no bootservers")
+func subMain(ctx context.Context) error {
+	allServersPorts, err := parseNamedPorts(*flgAllServersPorts)
+	if err != nil {
+		return fmt.Errorf("all-servers-port: %w", err)
+	}
+	bootServersPorts, err := parseNamedPorts(*flgBootServersPorts)
+	if err != nil {
+		return fmt.Errorf("boot-servers-port: %w", err)
+	}
+	if err := validateMaxEndpointsPerSlice(*flgMaxEndpointsPerSlice); err != nil {
+		return err
 	}
 
-	var machines []Machine
-	var err error
-	for _, boot := range bootservers {
-		machines, err = func() ([]Machine, error) {
-			addr := net.JoinHostPort(boot.String(), "10080")
-			queryURL, err := url.Parse("http://" + addr)
-			if err != nil {
-				return nil, err
-			}
-
-			queryURL.Path = path.Join(queryURL.Path, "/graphql")
-			body := struct {
-				Query string `json:"query"`
-			}{
-				graphQLQuery,
-			}
-			data, err := json.Marshal(body)
-			if err != nil {
-				return nil, err
-			}
-
-			req, err := http.NewRequest(http.MethodPost, queryURL.String(), bytes.NewReader(data))
-			if err != nil {
-				return nil, err
-			}
-			// gqlgen 0.9+ requires application/json content-type header.
-			req.Header.Set("Content-Type", "application/json")
-			resp, err := c.http.Do(req)
-			if err != nil {
-				return nil, err
-			}
-			defer resp.Body.Close()
-
-			var result struct {
-				Data struct {
-					Machines []Machine `json:"searchMachines"`
-				} `json:"data"`
-				Errors []struct {
-					Message string `json:"message"`
-				} `json:"errors"`
-			}
-			err = json.NewDecoder(resp.Body).Decode(&result)
-			if err != nil {
-				return nil, err
-			}
-			if len(result.Errors) > 0 {
-				return nil, fmt.Errorf("sabakan returned error: %v", result.Errors)
-			}
-
-			return result.Data.Machines, nil
-		}()
-		if err == nil {
-			return machines, nil
-		}
-		//nolint:errcheck
-		log.Error("failed to get machines from sabakan", map[string]any{
-			"bootserver": boot.String(),
-			log.FnError:  err,
-		})
+	sabakanHost, sabakanPort, err := net.SplitHostPort(*flgSabakanAddress)
+	if err != nil || sabakanHost == "" || sabakanPort == "" {
+		return fmt.Errorf("invalid sabakan-address: %q (expected host:port)", *flgSabakanAddress)
 	}
-	return nil, err
-}
+	sabakanCli := newSabakanClient(*flgSabakanAddress)
 
-func (c client) updateTargetEndpoints(ctx context.Context, targetIPs []net.IP, maxEndpoints int, target, portName string, port int32) error {
-	ns, _, err := c.kubeConfig.Namespace()
+	machines, err := sabakanCli.getMachines(ctx)
 	if err != nil {
 		return err
 	}
 
-	// Create Service if not exists
-	services := c.k8s.CoreV1().Services(ns)
-	_, err = services.Get(ctx, target, metav1.GetOptions{})
-	switch {
-	case err == nil:
-	case k8serrors.IsNotFound(err):
-		_, err = services.Create(ctx, &corev1.Service{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: target,
-			},
-			Spec: corev1.ServiceSpec{
-				Ports: []corev1.ServicePort{
-					{Port: port, TargetPort: intstr.FromInt(int(port)), Name: portName},
-				},
-				ClusterIP: "None",
-			},
-		}, metav1.CreateOptions{})
-		if err != nil {
-			return err
-		}
-	default:
-		return err
-	}
-
-	// Create or update EndpointSlice(s)
-	endpointSliceInterface := c.k8s.DiscoveryV1().EndpointSlices(ns)
-	sliceIndex := 0
-	sliceNames := []string{}
-	for chunkedIPs := range slices.Chunk(targetIPs, maxEndpoints) {
-		endpoints := make([]discoveryv1.Endpoint, len(chunkedIPs))
-		for i, ip := range chunkedIPs {
-			endpoints[i].Addresses = []string{ip.String()}
-		}
-
-		sliceName := fmt.Sprintf("%s-%d", target, sliceIndex)
-		endpointSlice := &discoveryv1.EndpointSlice{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: sliceName,
-				Labels: map[string]string{
-					discoveryv1.LabelManagedBy:   labelManagedByValue,
-					discoveryv1.LabelServiceName: target,
-				},
-			},
-			AddressType: discoveryv1.AddressTypeIPv4,
-			Endpoints:   endpoints,
-			Ports: []discoveryv1.EndpointPort{
-				{
-					Name: &portName,
-					Port: &port,
-				},
-			},
-		}
-
-		_, err = endpointSliceInterface.Update(ctx, endpointSlice, metav1.UpdateOptions{})
-		if k8serrors.IsNotFound(err) {
-			_, err = endpointSliceInterface.Create(ctx, endpointSlice, metav1.CreateOptions{})
-		}
-		if err != nil {
-			return err
-		}
-
-		sliceIndex++
-		sliceNames = append(sliceNames, sliceName)
-	}
-
-	// Delete unnecessary EndpointSlice(s)
-	sliceList, err := endpointSliceInterface.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", discoveryv1.LabelManagedBy, labelManagedByValue, discoveryv1.LabelServiceName, target),
-	})
+	k8sCli, err := newKubernetesClient(*flgDryRun)
 	if err != nil {
 		return err
 	}
 
-	for _, slice := range sliceList.Items {
-		if slices.Contains(sliceNames, slice.Name) {
-			continue
-		}
-		err := endpointSliceInterface.Delete(ctx, slice.Name, metav1.DeleteOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
+	if len(allServersPorts) > 0 {
+		ips := allServerIPs(machines)
+		if err := k8sCli.updateTargetEndpoints(ctx, targetAllServersName, ips, *flgMaxEndpointsPerSlice, allServersPorts); err != nil {
 			return err
 		}
 	}
 
-	// TODO remove transitive code
-	// Delete Endpoints; Endpoints API is deprecated
-	endpointInterface := c.k8s.CoreV1().Endpoints(ns)
-	_, err = endpointInterface.Get(ctx, target, metav1.GetOptions{})
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
-	} else if err == nil {
-		err := endpointInterface.Delete(ctx, target, metav1.DeleteOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
+	if len(bootServersPorts) > 0 {
+		ips := bootServerIPs(machines)
+		if err := k8sCli.updateTargetEndpoints(ctx, targetBootServersName, ips, *flgMaxEndpointsPerSlice, bootServersPorts); err != nil {
 			return err
 		}
 	}
 
-	// TODO remove transitive code
-	// Delete EndpointSlice with old name
-	_, err = endpointSliceInterface.Get(ctx, target, metav1.GetOptions{})
-	if err != nil && !k8serrors.IsNotFound(err) {
-		return err
-	} else if err == nil {
-		err := endpointSliceInterface.Delete(ctx, target, metav1.DeleteOptions{})
-		if err != nil && !k8serrors.IsNotFound(err) {
+	if *flgBMCReverseProxyConfigMap {
+		data := bmcReverseProxyConfigMapData(machines)
+		if err := k8sCli.applyConfigMap(ctx, bmcReverseProxyConfigMapName, data); err != nil {
+			return err
+		}
+	}
+
+	if *flgBMCLogCollectorConfigMap {
+		data, err := bmcLogCollectorConfigMapData(machines)
+		if err != nil {
+			return err
+		}
+		if err := k8sCli.applyConfigMap(ctx, bmcLogCollectorConfigMapName, data); err != nil {
 			return err
 		}
 	}
 
 	return nil
-}
-
-func (c client) updateBMCProxyConfigMap(ctx context.Context, machines []Machine) error {
-	ns, _, err := c.kubeConfig.Namespace()
-	if err != nil {
-		return err
-	}
-
-	addresses := make(map[string]string)
-	for _, machine := range machines {
-		if machine.Spec.BMC.IPv4 == "" {
-			continue
-		}
-
-		var hostname string
-		if machine.Spec.Role == "boot" {
-			// Though full hostname is like "stage0-boot-0",
-			// the part of "stage0-" is insignificant in a cluster while it is hard to get.
-			// So use "boot-0" for resolving.
-			hostname = fmt.Sprintf("boot-%d", machine.Spec.Rack)
-		} else {
-			hostname = fmt.Sprintf("rack%d-%s%d", machine.Spec.Rack, machine.Spec.Role, machine.Spec.IndexInRack)
-		}
-		addresses[hostname] = machine.Spec.BMC.IPv4
-
-		// "a.b.c.d" does not match the wildcard in "*.bmc.<cluster>.<base>".  "a-b-c-d" does match.
-		addresses[strings.ReplaceAll(machine.Spec.IPv4[0], ".", "-")] = machine.Spec.BMC.IPv4
-
-		addresses[machine.Spec.Serial] = machine.Spec.BMC.IPv4
-	}
-
-	configMap := corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bmcProxyConfigMapName,
-		},
-		Data: addresses,
-	}
-
-	cms := c.k8s.CoreV1().ConfigMaps(ns)
-	_, err = cms.Get(ctx, bmcProxyConfigMapName, metav1.GetOptions{})
-	switch {
-	case err == nil:
-		_, err := cms.Update(ctx, &configMap, metav1.UpdateOptions{})
-		return err
-	case k8serrors.IsNotFound(err):
-		_, err := cms.Create(ctx, &configMap, metav1.CreateOptions{})
-		return err
-	}
-	return err
-}
-
-func (c client) GetMembers() ([]member, error) {
-	serfMembers, err := c.serf.Members()
-	if err != nil {
-		return nil, err
-	}
-
-	members := make([]member, len(serfMembers))
-	for i, s := range serfMembers {
-		members[i] = member{name: s.Name, addr: s.Addr, tags: s.Tags}
-	}
-	return members, nil
-}
-
-func getBootServers(members []member) []net.IP {
-	var bootservers []net.IP
-	for _, member := range members {
-		if member.tags["boot-server"] == "true" {
-			bootservers = append(bootservers, member.addr)
-		}
-	}
-	return bootservers
-}
-
-func localHTTPClient() *http.Client {
-	// Most of the following values are copied from http.DefaultTransport to workaround a proxy issue.
-	// See: https://github.com/golang/go/issues/25793
-	transport := &http.Transport{
-		Proxy: nil,
-		DialContext: (&net.Dialer{
-			Timeout:   30 * time.Second,
-			KeepAlive: 30 * time.Second,
-		}).DialContext,
-		MaxIdleConns:          100,
-		IdleConnTimeout:       90 * time.Second,
-		TLSHandshakeTimeout:   10 * time.Second,
-		ExpectContinueTimeout: 1 * time.Second,
-	}
-
-	return &http.Client{
-		Transport: transport,
-		Timeout:   10 * time.Minute,
-	}
-}
-
-func createMachinesList(machines []Machine) (string, error) {
-	var ml []machineSerialandIP
-
-	for _, machine := range machines {
-		var m machineSerialandIP
-		if machine.Spec.BMC.IPv4 == "" {
-			continue
-		}
-		m.Serial = machine.Spec.Serial
-		m.BmcIP = machine.Spec.BMC.IPv4
-		m.NodeIP = machine.Spec.IPv4[0]
-		ml = append(ml, m)
-	}
-
-	byteJSON, err := json.Marshal(ml)
-	if err != nil {
-		return "", err
-	}
-	return string(byteJSON), nil
-}
-
-func (c client) updateBmcLogCollectorConfigMap(ctx context.Context, machinesList string) error {
-	data := make(map[string]string)
-	data["machineslist.json"] = machinesList
-
-	ns, _, err := c.kubeConfig.Namespace()
-	if err != nil {
-		return err
-	}
-
-	nextConfigMap := corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: bmcLogCollectorConfigMapName,
-		},
-		Data: data,
-	}
-
-	cms := c.k8s.CoreV1().ConfigMaps(ns)
-	currentConfigMap, err := cms.Get(ctx, bmcLogCollectorConfigMapName, metav1.GetOptions{})
-	switch {
-	case err == nil:
-		if reflect.DeepEqual(nextConfigMap.Data, currentConfigMap.Data) {
-			return nil
-		}
-		_, err := cms.Update(ctx, &nextConfigMap, metav1.UpdateOptions{})
-		return err
-	case k8serrors.IsNotFound(err):
-		_, err := cms.Create(ctx, &nextConfigMap, metav1.CreateOptions{})
-		return err
-	}
-	return err
-}
-
-func main() {
-	pflag.Parse()
-
-	serfc, err := serfclient.NewRPCClient("127.0.0.1:7373")
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
-	configOverrides := &clientcmd.ConfigOverrides{}
-	kubeConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides)
-	config, err := kubeConfig.ClientConfig()
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	k8sClientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-	client := client{http: localHTTPClient(), k8s: k8sClientSet, serf: serfc, kubeConfig: kubeConfig}
-
-	members, err := client.GetMembers()
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	bootservers := getBootServers(members)
-	machines, err := client.getMachinesFromSabakan(bootservers)
-	if err != nil {
-		log.ErrorExit(err)
-	}
-
-	// sort machines not to generate almost-identical-but-differ-in-order objects, which cause frequent updates
-	slices.SortFunc(machines, func(a, b Machine) int { return strings.Compare(a.Spec.Serial, b.Spec.Serial) })
-
-	ctx := context.Background()
-
-	if *flgMonitoringEndpoints {
-		machineIPs := make([]net.IP, 0, len(machines))
-		currentBootservers := make([]net.IP, 0, len(bootservers))
-		for _, machine := range machines {
-			if machine.Status.State == sabakan.StateRetired.GQLEnum() {
-				continue
-			}
-			if len(machine.Spec.IPv4) == 0 {
-				continue
-			}
-			machineIP := net.ParseIP(machine.Spec.IPv4[0])
-			machineIPs = append(machineIPs, machineIP)
-			if machine.Spec.Role == "boot" {
-				currentBootservers = append(currentBootservers, machineIP)
-			}
-		}
-
-		maxEndpointsPerSlice := *flgMaxEndpointsPerSlice
-		if maxEndpointsPerSlice <= 0 || maxEndpointsPerSlice > 1000 {
-			log.ErrorExit(fmt.Errorf("max-endpoints-per-slice %d is out of range", maxEndpointsPerSlice))
-		}
-
-		// create etcd metrics endpoints on boot servers
-		err = client.updateTargetEndpoints(ctx, currentBootservers, maxEndpointsPerSlice, targetEtcdMetricsEndpointsName, etcdMetricsPortName, *flgEtcdMetricsPort)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-
-		// create node-exporter endpoints on all servers
-		err = client.updateTargetEndpoints(ctx, machineIPs, maxEndpointsPerSlice, targetEndpointsName, nodeExporterPortName, *flgNodeExporterPort)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-	}
-
-	if *flgBMCReverseProxyConfigMap {
-		// create bmc-reverse-proxy configmap on all servers
-		err = client.updateBMCProxyConfigMap(ctx, machines)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-	}
-
-	if *flgBMCLogCollectorConfigMap {
-		// create bmc-log-collector configmap of all servers
-		machinesList, err := createMachinesList(machines)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-		err = client.updateBmcLogCollectorConfigMap(ctx, machinesList)
-		if err != nil {
-			log.ErrorExit(err)
-		}
-	}
 }

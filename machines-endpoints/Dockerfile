@@ -16,6 +16,5 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 COPY --from=build /go/bin /
 
 USER 10000:10000
-EXPOSE 7373 7946
 
 ENTRYPOINT ["/machines-endpoints"]
