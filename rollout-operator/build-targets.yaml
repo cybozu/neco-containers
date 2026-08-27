@@ -1,0 +1,4 @@
+- container-image: "rollout-operator"
+  scan:
+    enabled: true
+    team: neco
