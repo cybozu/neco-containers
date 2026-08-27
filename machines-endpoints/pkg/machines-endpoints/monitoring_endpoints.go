@@ -30,11 +30,13 @@ func validateMaxEndpointsPerSlice(maxEndpointsPerSlice int) error {
 }
 
 // parseNamedPorts parses specs of the form "port:name" into namedPorts,
-// validating that name is a valid Service/EndpointPort port name, that port
-// is in the range 1-65535, and that names are unique. The result is sorted
-// by name, so that it is deterministic regardless of input order.
+// validating that name is a valid EndpointSlice port name, that port
+// is in the range 1-65535, and that names and ports are each unique.
+// The result is sorted by name, so that it is deterministic regardless
+// of input order.
 func parseNamedPorts(specs []string) ([]namedPort, error) {
-	seen := make(map[string]struct{}, len(specs))
+	seenPorts := make(map[int32]struct{}, len(specs))
+	seenNames := make(map[string]struct{}, len(specs))
 	ports := make([]namedPort, 0, len(specs))
 	for _, spec := range specs {
 		portStr, name, ok := strings.Cut(spec, ":")
@@ -51,10 +53,14 @@ func parseNamedPorts(specs []string) ([]namedPort, error) {
 		if errs := validation.IsDNS1123Label(name); len(errs) > 0 {
 			return nil, fmt.Errorf("invalid port name %q: %s", name, strings.Join(errs, "; "))
 		}
-		if _, ok := seen[name]; ok {
+		if _, ok := seenNames[name]; ok {
 			return nil, fmt.Errorf("duplicate port name %q", name)
 		}
-		seen[name] = struct{}{}
+		if _, ok := seenPorts[int32(port)]; ok {
+			return nil, fmt.Errorf("duplicate port %q", spec)
+		}
+		seenNames[name] = struct{}{}
+		seenPorts[int32(port)] = struct{}{}
 		ports = append(ports, namedPort{name: name, port: int32(port)})
 	}
 	slices.SortFunc(ports, func(a, b namedPort) int { return strings.Compare(a.name, b.name) })

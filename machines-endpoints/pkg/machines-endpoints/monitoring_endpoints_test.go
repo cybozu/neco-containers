@@ -45,6 +45,9 @@ func TestParseNamedPorts(t *testing.T) {
 	if _, err := parseNamedPorts([]string{"1234:name", "5678:name"}); err == nil {
 		t.Error("expected an error for a duplicate port name")
 	}
+	if _, err := parseNamedPorts([]string{"1234:name-a", "1234:name-b"}); err == nil {
+		t.Error("expected an error for a duplicate port number")
+	}
 	if _, err := parseNamedPorts([]string{"9100:http-node-exporter", "2381:http-etcd-metric"}); err != nil {
 		t.Errorf("port names longer than 15 characters should be accepted: %v", err)
 	}
