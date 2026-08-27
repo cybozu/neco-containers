@@ -4,12 +4,13 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG TEMPO_SRCREPO=grafana/tempo
-ARG TEMPO_VERSION=2.10.8
+ARG TEMPO_VERSION=3.0.3
 
 WORKDIR /work
 RUN git clone --depth=1 -b v${TEMPO_VERSION} https://github.com/${TEMPO_SRCREPO}.git tempo
 COPY *.patch /work
 RUN cd tempo && patch -p1 < ../ingester-cut-to-wal-metrics.patch
+RUN cd tempo && patch -p1 < ../sasl-mechanisms.patch
 RUN cd tempo && make tempo tempo-cli tempo-vulture
 
 # Stage2: setup runtime containers
