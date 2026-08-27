@@ -126,7 +126,7 @@ jobs:
         uses: ./.github/actions/build_envoy
         with:
           push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-          envoy_commit_sha: 0ebfcfe5b0484b89ca85b761da9e05ce75dbda8d
+          envoy_commit_sha: ef2d997c1b022cf8b849a1d3521fbf234d79ca26
 
   scan_envoy_image:
     uses: ./.github/workflows/scan.yaml
