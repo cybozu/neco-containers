@@ -157,7 +157,9 @@ ceph_extra_rbd_task_list_count{action="trash remove"} 2
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			go startServer(testRules, tc.port, prometheus.NewRegistry(), tc.options)
+			cfg := testServerConfig(tc.port)
+			cfg.options = tc.options
+			go startServer(testRules, prometheus.NewRegistry(), cfg)
 			url := fmt.Sprintf("http://localhost:%d/v1/metrics", tc.port)
 
 			assert.EventuallyWithT(t, func(c *assert.CollectT) {
@@ -172,16 +174,138 @@ ceph_extra_rbd_task_list_count{action="trash remove"} 2
 					return
 				}
 
-				resp, err := http.Get(url)
-				require.NoError(c, err)
-				defer resp.Body.Close()
-
-				body, err := io.ReadAll(resp.Body)
+				_, body, err := get(tc.port, "/v1/metrics")
 				require.NoError(c, err)
 				for _, s := range tc.notContains {
-					assert.NotContains(c, string(body), s)
+					assert.NotContains(c, body, s)
 				}
-			}, 1*time.Minute, 5*time.Second)
+			}, 1*time.Minute, 100*time.Millisecond)
 		})
 	}
+}
+
+func getHealth(port uint) (int, string, error) {
+	return get(port, "/v1/health")
+}
+
+// fastHealthConfig shrinks the timings so that a health test finishes in
+// well under a second instead of minutes.
+func fastHealthConfig(port uint) serverConfig {
+	cfg := testServerConfig(port)
+	cfg.executionInterval = 50 * time.Millisecond
+	cfg.commandTimeout = 200 * time.Millisecond
+	cfg.healthCheckThreshold = 500 * time.Millisecond
+	return cfg
+}
+
+func get(port uint, path string) (int, string, error) {
+	resp, err := http.Get(fmt.Sprintf("http://localhost:%d%s", port, path))
+	if err != nil {
+		return 0, "", err
+	}
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, "", err
+	}
+	return resp.StatusCode, string(body), nil
+}
+
+// testServerConfig returns a serverConfig with the production defaults, which
+// each test overrides only where it matters.
+func testServerConfig(port uint) serverConfig {
+	return serverConfig{
+		port:                 port,
+		options:              exportOptions{rgwMetrics: true, rbdMetrics: true},
+		executionInterval:    executionInterval,
+		commandTimeout:       commandTimeout,
+		healthCheckThreshold: defaultHealthCheckThreshold,
+	}
+}
+
+func healthTestRules(command []string) []rule {
+	return []rule{
+		{
+			name:    "health_test",
+			command: command,
+			metrics: map[string]metric{
+				"count": {
+					metricType: prometheus.GaugeValue,
+					help:       "test",
+					jqFilter:   "[{value: . | length, labels: []}]",
+				},
+			},
+		},
+	}
+}
+
+// TestHealthWithFailingCommand confirms that a worker whose command keeps
+// failing is still reported as healthy, because restarting the pod does not
+// fix such a failure.
+func TestHealthWithFailingCommand(t *testing.T) {
+	t.Parallel()
+
+	var port uint = 8086
+	go startServer(healthTestRules([]string{"false"}), prometheus.NewRegistry(), fastHealthConfig(port))
+
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		status, _, err := getHealth(port)
+		if !assert.NoError(c, err) {
+			return
+		}
+		assert.Equal(c, http.StatusOK, status)
+	}, 10*time.Second, 100*time.Millisecond)
+
+	// The worker keeps failing for longer than healthCheckThreshold, but it
+	// must never be reported as unhealthy.
+	assert.Never(t, func() bool {
+		status, _, err := getHealth(port)
+		return err != nil || status != http.StatusOK
+	}, time.Second, 100*time.Millisecond)
+}
+
+// TestHealthWithStuckWorker confirms that a worker stuck in update() is
+// reported as unhealthy. The command spawns a background process which
+// inherits stdout, so reading stdout does not finish even after the command
+// itself has exited and its context has timed out.
+func TestHealthWithStuckWorker(t *testing.T) {
+	t.Parallel()
+
+	var port uint = 8087
+	go startServer(healthTestRules([]string{"sh", "-c", "sleep 5 & echo '[]'"}), prometheus.NewRegistry(), fastHealthConfig(port))
+
+	assert.EventuallyWithT(t, func(c *assert.CollectT) {
+		status, body, err := getHealth(port)
+		if !assert.NoError(c, err) {
+			return
+		}
+		assert.Equal(c, http.StatusServiceUnavailable, status)
+		assert.Contains(c, body, "health_test")
+	}, 10*time.Second, 100*time.Millisecond)
+}
+
+func TestStartServerConfigValidation(t *testing.T) {
+	testcases := map[string]func(cfg *serverConfig){
+		"executionInterval is not positive": func(cfg *serverConfig) { cfg.executionInterval = 0 },
+		"commandTimeout is not positive":    func(cfg *serverConfig) { cfg.commandTimeout = 0 },
+		"healthCheckThreshold is shorter than the minimum": func(cfg *serverConfig) {
+			cfg.healthCheckThreshold = executionInterval
+		},
+	}
+
+	for name, breakConfig := range testcases {
+		t.Run(name, func(t *testing.T) {
+			cfg := testServerConfig(8088)
+			breakConfig(&cfg)
+			err := startServer(healthTestRules([]string{"echo", "[]"}), prometheus.NewRegistry(), cfg)
+			assert.Error(t, err)
+		})
+	}
+}
+
+// TestDefaultHealthCheckThreshold guards defaultHealthCheckThreshold against
+// a rule which gains metrics: the default must never be rejected by validate().
+func TestDefaultHealthCheckThreshold(t *testing.T) {
+	cfg := testServerConfig(0)
+	assert.NoError(t, cfg.validate(rules))
 }

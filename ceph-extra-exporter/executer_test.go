@@ -86,11 +86,14 @@ func TestCephExecuterUpdate(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			ce := newExecuter(&tc.rule)
+			ce := newExecuter(&tc.rule, executionInterval, commandTimeout)
+			initialUpdateTime := ce.lastUpdateTime
 			ce.update(t.Context())
 
 			assert.Equal(t, tc.expectedMetricValue, ce.metricValues)
 			assert.Subset(t, ce.failedCounter, tc.expectedFailedCount)
+			// update() must refresh lastUpdateTime even when a command fails.
+			assert.True(t, ce.lastUpdateTime.After(initialUpdateTime))
 		})
 	}
 }

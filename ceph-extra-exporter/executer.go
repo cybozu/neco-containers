@@ -16,6 +16,11 @@ import (
 const executionInterval time.Duration = 300 * time.Second
 const commandTimeout time.Duration = 60 * time.Second
 
+// defaultHealthCheckThreshold must be longer than
+// minHealthCheckThreshold(rules, ...), which TestDefaultHealthCheckThreshold
+// guards.
+const defaultHealthCheckThreshold time.Duration = 2*executionInterval + commandTimeout
+
 type metric struct {
 	metricType prometheus.ValueType
 	help       string
@@ -64,24 +69,33 @@ func (mv *metricValue) UnmarshalJSON(b []byte) error {
 }
 
 type cephExecuter struct {
-	rule          *rule
-	metricValues  map[string][]metricValue
-	mutex         sync.RWMutex
-	failedCounter map[string]int
+	rule              *rule
+	executionInterval time.Duration
+	commandTimeout    time.Duration
+	metricValues      map[string][]metricValue
+	mutex             sync.RWMutex
+	failedCounter     map[string]int
+	// lastUpdateTime is the time when update() finished last, regardless of
+	// whether the commands in it succeeded or not. It is used to detect a
+	// worker stuck in update().
+	lastUpdateTime time.Time
 }
 
-func newExecuter(rule *rule) *cephExecuter {
+func newExecuter(rule *rule, executionInterval, commandTimeout time.Duration) *cephExecuter {
 	return &cephExecuter{
-		rule:          rule,
-		metricValues:  make(map[string][]metricValue),
-		failedCounter: map[string]int{"command": 0, "jq": 0, "parse": 0},
+		rule:              rule,
+		executionInterval: executionInterval,
+		commandTimeout:    commandTimeout,
+		metricValues:      make(map[string][]metricValue),
+		failedCounter:     map[string]int{"command": 0, "jq": 0, "parse": 0},
+		lastUpdateTime:    time.Now(),
 	}
 }
 
 func (ce *cephExecuter) start(ctx context.Context) {
 	ce.update(ctx)
 
-	ticker := time.NewTicker(executionInterval)
+	ticker := time.NewTicker(ce.executionInterval)
 	for {
 		select {
 		case <-ctx.Done():
@@ -93,6 +107,25 @@ func (ce *cephExecuter) start(ctx context.Context) {
 	}
 }
 
+func (ce *cephExecuter) timeSinceLastUpdate() time.Duration {
+	ce.mutex.RLock()
+	defer ce.mutex.RUnlock()
+	return time.Since(ce.lastUpdateTime)
+}
+
+func (ce *cephExecuter) incrementFailedCounter(reason string) {
+	ce.mutex.Lock()
+	defer ce.mutex.Unlock()
+	ce.failedCounter[reason] += 1
+}
+
+// maxUpdateDuration returns the longest time update() can take for this rule.
+// update() runs the command of the rule once and one jq command per metric,
+// each of which is aborted after commandTimeout.
+func (r *rule) maxUpdateDuration(commandTimeout time.Duration) time.Duration {
+	return time.Duration(1+len(r.metrics)) * commandTimeout
+}
+
 func (ce *cephExecuter) update(ctx context.Context) {
 	logger.Info("starting update", "rule", ce.rule.name)
 	values := make(map[string][]metricValue)
@@ -101,35 +134,36 @@ func (ce *cephExecuter) update(ctx context.Context) {
 		ce.mutex.Lock()
 		defer ce.mutex.Unlock()
 		ce.metricValues = values
+		ce.lastUpdateTime = time.Now()
 	}()
 
-	jsonBytes, err := executeCommand(ctx, ce.rule.command, nil)
+	jsonBytes, err := executeCommand(ctx, ce.rule.command, nil, ce.commandTimeout)
 	if err != nil {
 		logger.Warn("command execution failed", "command", ce.rule.command)
-		ce.failedCounter["command"] += 1
+		ce.incrementFailedCounter("command")
 		return
 	}
 
 	for name, metric := range ce.rule.metrics {
-		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
+		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes), ce.commandTimeout)
 		if err != nil {
 			logger.Warn("jq command failed", "filter", metric.jqFilter)
-			ce.failedCounter["jq"] += 1
+			ce.incrementFailedCounter("jq")
 			continue
 		}
 
 		mv := []metricValue{}
 		if err := json.Unmarshal(result, &mv); err != nil {
 			logger.Warn("parse value failed", "value", string(result), "error", err)
-			ce.failedCounter["parse"] += 1
+			ce.incrementFailedCounter("parse")
 			continue
 		}
 		values[name] = mv
 	}
 }
 
-func executeCommand(ctx context.Context, command []string, input io.Reader) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+func executeCommand(ctx context.Context, command []string, input io.Reader, timeout time.Duration) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)
