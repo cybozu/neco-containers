@@ -1,4 +1,10 @@
 - container-image: "tempo"
+  target: "tempo"
+  scan:
+    enabled: true
+    team: neco
+- container-image: "tempo-vulture"
+  target: "vulture"
   scan:
     enabled: true
     team: neco
