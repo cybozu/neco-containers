@@ -19,11 +19,12 @@ To use `ceph` and `radosgw-admin` commands in the docker container of ceph-extra
 
 Command-line options are:
 
-| Option               | Default value | Description                          |
-| -------------------- | ------------- | ------------------------------------ |
-| `port`               | `8080`        | port number to export metrics        |
-| `export-rgw-metrics` | `true`        | to export RGW related metrics or not |
-| `export-rbd-metrics` | `true`        | to export RBD related metrics or not |
+| Option                   | Default value | Description                                                                                  |
+| ------------------------ | ------------- | -------------------------------------------------------------------------------------------- |
+| `port`                   | `8080`        | port number to export metrics                                                                |
+| `export-rgw-metrics`     | `true`        | to export RGW related metrics or not                                                         |
+| `export-rbd-metrics`     | `true`        | to export RBD related metrics or not                                                         |
+| `health-check-threshold` | `11m0s`       | how long a worker can go without finishing an update before `/v1/health` reports it as stuck |
 
 The `export-rgw-metrics` option controls whether RGW-related metrics are exported. Set it to `false` on clusters that do not use RGW to avoid running `radosgw-admin` (which creates RGW-related pools).
 
@@ -33,6 +34,12 @@ API endpoints are:
 | ----------- | --------------------------- |
 | /v1/health  | the path for liveness probe |
 | /v1/metrics | exporting metrics           |
+
+`/v1/health` returns 200 if every worker has finished executing its rule (an update) within `health-check-threshold`. If some worker has not finished an update for longer than the threshold, the worker is regarded as stuck, and the endpoint returns 503 with the name of its rule in the response body, so that the liveness probe can restart the pod.
+
+Whether the commands of a worker succeed or not does not affect `/v1/health`, because restarting the pod does not fix such a failure. It is exposed as the [`ceph_extra_failed_total`](#ceph_extra_failed_total) metric instead, so alert on that metric to detect it.
+
+`health-check-threshold` must be longer than the longest possible interval between two consecutive ends of an update, that is `execution interval + (1 + the number of metrics of a rule) * command timeout`. Otherwise a healthy worker would also be reported as stuck, so `ceph-extra-exporter` refuses to start if a shorter value is given, reporting the minimum value in the error message.
 
 ## Prometheus metrics
 
