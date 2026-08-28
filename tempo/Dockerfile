@@ -4,16 +4,16 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG TEMPO_SRCREPO=grafana/tempo
-ARG TEMPO_VERSION=2.10.5
+ARG TEMPO_VERSION=2.10.8
 
 WORKDIR /work
 RUN git clone --depth=1 -b v${TEMPO_VERSION} https://github.com/${TEMPO_SRCREPO}.git tempo
 COPY *.patch /work
 RUN cd tempo && patch -p1 < ../ingester-cut-to-wal-metrics.patch
-RUN cd tempo && make tempo tempo-cli
+RUN cd tempo && make tempo tempo-cli tempo-vulture
 
 # Stage2: setup runtime containers
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04 AS tempo
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/tempo/bin/linux/tempo-amd64 /tempo
@@ -22,3 +22,13 @@ COPY --from=build /work/tempo/bin/linux/tempo-cli-amd64 /tempo-cli
 USER 10000:10000
 
 ENTRYPOINT ["/tempo"]
+
+
+FROM ghcr.io/cybozu/ubuntu:24.04 AS vulture
+LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+
+COPY --from=build /work/tempo/bin/linux/tempo-vulture-amd64 /tempo-vulture
+
+USER 10000:10000
+
+ENTRYPOINT ["/tempo-vulture"]
