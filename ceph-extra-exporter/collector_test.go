@@ -22,7 +22,7 @@ func TestCephCollector(t *testing.T) {
 		},
 	}
 
-	ce := newExecuter(&rule)
+	ce := newExecuter(&rule, executionInterval)
 	ce.update(t.Context())
 	cc := newCollector(ce, "ceph_extra")
 

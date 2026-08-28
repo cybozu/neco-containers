@@ -9,6 +9,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -110,7 +111,24 @@ func init() {
 	prometheus.MustRegister(buildInfo)
 }
 
-func startServer(rules []rule, port uint, reg prometheus.Registerer, options exportOptions) error {
+type serverConfig struct {
+	port              uint
+	options           exportOptions
+	executionInterval time.Duration
+}
+
+func (c serverConfig) validate() error {
+	if c.executionInterval <= 0 {
+		return fmt.Errorf("execution interval must be positive")
+	}
+	return nil
+}
+
+func startServer(rules []rule, reg prometheus.Registerer, cfg serverConfig) error {
+	if err := cfg.validate(); err != nil {
+		return err
+	}
+
 	gatherer, ok := reg.(prometheus.Gatherer)
 	if !ok {
 		return fmt.Errorf("reg must implement prometheus.Gatherer")
@@ -123,12 +141,12 @@ func startServer(rules []rule, port uint, reg prometheus.Registerer, options exp
 		wg.Wait()
 	}()
 	for i := 0; i < len(rules); i++ {
-		if !options.enabled(rules[i].target) {
+		if !cfg.options.enabled(rules[i].target) {
 			continue
 		}
 		wg.Add(1)
 		go func(r *rule) {
-			executer := newExecuter(r)
+			executer := newExecuter(r, cfg.executionInterval)
 			reg.MustRegister(newCollector(executer, "ceph_extra"))
 			executer.start(ctx)
 			wg.Done()
@@ -142,7 +160,7 @@ func startServer(rules []rule, port uint, reg prometheus.Registerer, options exp
 	mux.Handle("/v1/metrics", promhttp.HandlerFor(gatherer, promhttp.HandlerOpts{}))
 
 	server := &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    fmt.Sprintf(":%d", cfg.port),
 		Handler: mux,
 	}
 
@@ -159,8 +177,11 @@ func main() {
 	rgwMetrics := flag.Bool("export-rgw-metrics", true, "to export RGW related metrics or not")
 	rbdMetrics := flag.Bool("export-rbd-metrics", true, "to export RBD related metrics or not")
 	flag.Parse()
-	if err := startServer(rules, *port, prometheus.DefaultRegisterer,
-		exportOptions{rgwMetrics: *rgwMetrics, rbdMetrics: *rbdMetrics}); err != nil {
+	if err := startServer(rules, prometheus.DefaultRegisterer, serverConfig{
+		port:              *port,
+		options:           exportOptions{rgwMetrics: *rgwMetrics, rbdMetrics: *rbdMetrics},
+		executionInterval: executionInterval,
+	}); err != nil {
 		logger.Error("failed to start server", "error", err)
 		os.Exit(1)
 	}

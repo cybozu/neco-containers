@@ -64,24 +64,26 @@ func (mv *metricValue) UnmarshalJSON(b []byte) error {
 }
 
 type cephExecuter struct {
-	rule          *rule
-	metricValues  map[string][]metricValue
-	mutex         sync.RWMutex
-	failedCounter map[string]int
+	rule              *rule
+	executionInterval time.Duration
+	metricValues      map[string][]metricValue
+	mutex             sync.RWMutex
+	failedCounter     map[string]int
 }
 
-func newExecuter(rule *rule) *cephExecuter {
+func newExecuter(rule *rule, executionInterval time.Duration) *cephExecuter {
 	return &cephExecuter{
-		rule:          rule,
-		metricValues:  make(map[string][]metricValue),
-		failedCounter: map[string]int{"command": 0, "jq": 0, "parse": 0},
+		rule:              rule,
+		executionInterval: executionInterval,
+		metricValues:      make(map[string][]metricValue),
+		failedCounter:     map[string]int{"command": 0, "jq": 0, "parse": 0},
 	}
 }
 
 func (ce *cephExecuter) start(ctx context.Context) {
 	ce.update(ctx)
 
-	ticker := time.NewTicker(executionInterval)
+	ticker := time.NewTicker(ce.executionInterval)
 	for {
 		select {
 		case <-ctx.Done():

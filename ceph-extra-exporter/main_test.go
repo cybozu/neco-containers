@@ -157,7 +157,9 @@ ceph_extra_rbd_task_list_count{action="trash remove"} 2
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			go startServer(testRules, tc.port, prometheus.NewRegistry(), tc.options)
+			cfg := testServerConfig(tc.port)
+			cfg.options = tc.options
+			go startServer(testRules, prometheus.NewRegistry(), cfg)
 			url := fmt.Sprintf("http://localhost:%d/v1/metrics", tc.port)
 
 			assert.EventuallyWithT(t, func(c *assert.CollectT) {
@@ -182,6 +184,31 @@ ceph_extra_rbd_task_list_count{action="trash remove"} 2
 					assert.NotContains(c, string(body), s)
 				}
 			}, 1*time.Minute, 5*time.Second)
+		})
+	}
+}
+
+// testServerConfig returns a serverConfig with the production defaults, which
+// each test overrides only where it matters.
+func testServerConfig(port uint) serverConfig {
+	return serverConfig{
+		port:              port,
+		options:           exportOptions{rgwMetrics: true, rbdMetrics: true},
+		executionInterval: executionInterval,
+	}
+}
+
+func TestStartServerConfigValidation(t *testing.T) {
+	testcases := map[string]func(cfg *serverConfig){
+		"executionInterval is not positive": func(cfg *serverConfig) { cfg.executionInterval = 0 },
+	}
+
+	for name, breakConfig := range testcases {
+		t.Run(name, func(t *testing.T) {
+			cfg := testServerConfig(8088)
+			breakConfig(&cfg)
+			err := startServer(rules, prometheus.NewRegistry(), cfg)
+			assert.Error(t, err)
 		})
 	}
 }
