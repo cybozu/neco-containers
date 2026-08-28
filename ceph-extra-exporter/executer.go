@@ -66,15 +66,17 @@ func (mv *metricValue) UnmarshalJSON(b []byte) error {
 type cephExecuter struct {
 	rule              *rule
 	executionInterval time.Duration
+	commandTimeout    time.Duration
 	metricValues      map[string][]metricValue
 	mutex             sync.RWMutex
 	failedCounter     map[string]int
 }
 
-func newExecuter(rule *rule, executionInterval time.Duration) *cephExecuter {
+func newExecuter(rule *rule, executionInterval, commandTimeout time.Duration) *cephExecuter {
 	return &cephExecuter{
 		rule:              rule,
 		executionInterval: executionInterval,
+		commandTimeout:    commandTimeout,
 		metricValues:      make(map[string][]metricValue),
 		failedCounter:     map[string]int{"command": 0, "jq": 0, "parse": 0},
 	}
@@ -105,7 +107,7 @@ func (ce *cephExecuter) update(ctx context.Context) {
 		ce.metricValues = values
 	}()
 
-	jsonBytes, err := executeCommand(ctx, ce.rule.command, nil)
+	jsonBytes, err := executeCommand(ctx, ce.rule.command, nil, ce.commandTimeout)
 	if err != nil {
 		logger.Warn("command execution failed", "command", ce.rule.command)
 		ce.failedCounter["command"] += 1
@@ -113,7 +115,7 @@ func (ce *cephExecuter) update(ctx context.Context) {
 	}
 
 	for name, metric := range ce.rule.metrics {
-		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes))
+		result, err := executeCommand(ctx, []string{"jq", "-r", metric.jqFilter}, bytes.NewBuffer(jsonBytes), ce.commandTimeout)
 		if err != nil {
 			logger.Warn("jq command failed", "filter", metric.jqFilter)
 			ce.failedCounter["jq"] += 1
@@ -130,8 +132,8 @@ func (ce *cephExecuter) update(ctx context.Context) {
 	}
 }
 
-func executeCommand(ctx context.Context, command []string, input io.Reader) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
+func executeCommand(ctx context.Context, command []string, input io.Reader, timeout time.Duration) ([]byte, error) {
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, command[0], command[1:]...)

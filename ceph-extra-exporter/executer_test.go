@@ -86,7 +86,7 @@ func TestCephExecuterUpdate(t *testing.T) {
 
 	for name, tc := range testcases {
 		t.Run(name, func(t *testing.T) {
-			ce := newExecuter(&tc.rule, executionInterval)
+			ce := newExecuter(&tc.rule, executionInterval, commandTimeout)
 			ce.update(t.Context())
 
 			assert.Equal(t, tc.expectedMetricValue, ce.metricValues)

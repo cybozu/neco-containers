@@ -115,11 +115,15 @@ type serverConfig struct {
 	port              uint
 	options           exportOptions
 	executionInterval time.Duration
+	commandTimeout    time.Duration
 }
 
 func (c serverConfig) validate() error {
 	if c.executionInterval <= 0 {
 		return fmt.Errorf("execution interval must be positive")
+	}
+	if c.commandTimeout <= 0 {
+		return fmt.Errorf("command timeout must be positive")
 	}
 	return nil
 }
@@ -146,7 +150,7 @@ func startServer(rules []rule, reg prometheus.Registerer, cfg serverConfig) erro
 		}
 		wg.Add(1)
 		go func(r *rule) {
-			executer := newExecuter(r, cfg.executionInterval)
+			executer := newExecuter(r, cfg.executionInterval, cfg.commandTimeout)
 			reg.MustRegister(newCollector(executer, "ceph_extra"))
 			executer.start(ctx)
 			wg.Done()
@@ -181,6 +185,7 @@ func main() {
 		port:              *port,
 		options:           exportOptions{rgwMetrics: *rgwMetrics, rbdMetrics: *rbdMetrics},
 		executionInterval: executionInterval,
+		commandTimeout:    commandTimeout,
 	}); err != nil {
 		logger.Error("failed to start server", "error", err)
 		os.Exit(1)

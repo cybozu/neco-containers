@@ -195,12 +195,14 @@ func testServerConfig(port uint) serverConfig {
 		port:              port,
 		options:           exportOptions{rgwMetrics: true, rbdMetrics: true},
 		executionInterval: executionInterval,
+		commandTimeout:    commandTimeout,
 	}
 }
 
 func TestStartServerConfigValidation(t *testing.T) {
 	testcases := map[string]func(cfg *serverConfig){
 		"executionInterval is not positive": func(cfg *serverConfig) { cfg.executionInterval = 0 },
+		"commandTimeout is not positive":    func(cfg *serverConfig) { cfg.commandTimeout = 0 },
 	}
 
 	for name, breakConfig := range testcases {
