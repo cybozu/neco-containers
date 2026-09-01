@@ -2,15 +2,7 @@ Go container
 ============
 
 This directory provides a Dockerfile to build a Docker container
-that includes [Go](https://golang.org/) language runtime and following
-tools:
-
-* [goimports](https://godoc.org/golang.org/x/tools/cmd/goimports)
-* [golint](https://github.com/golang/lint)
-* [staticcheck](https://staticcheck.io/)
-* [ineffassign](https://github.com/gordonklaus/ineffassign)
-* [ghr](https://github.com/tcnksm/ghr)
-* [golang custom analyzer](https://github.com/cybozu-go/golang-custom-analyzer)
+that includes the [Go](https://golang.org/) language runtime.
 
 This container is based on [ghcr.io/cybozu/ubuntu-dev](https://ghcr.io/repository/cybozu/ubuntu-dev).
 
