@@ -80,6 +80,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 
 	var page0 []LifeCycleLog // the latest page, kept for the first collection and the after-clear restart
 	var newLogs []LifeCycleLog
+	minCollectedId := 0
 	newestId := 0
 	var newestCreateTime int64
 	foundKnown := false
@@ -177,7 +178,13 @@ scan:
 				continue
 			}
 			if id > lastPtr.LcLastReadId {
-				newLogs = append(newLogs, v)
+				// An entry created between the page requests shifts the $skip
+				// offset backward and the next page repeats the entries of the
+				// previous page. Skip the already collected Ids.
+				if len(newLogs) == 0 || id < minCollectedId {
+					newLogs = append(newLogs, v)
+					minCollectedId = id
+				}
 				continue
 			}
 			if id == lastPtr.LcLastReadId && lastPtr.LcLastReadCreateTime != 0 {

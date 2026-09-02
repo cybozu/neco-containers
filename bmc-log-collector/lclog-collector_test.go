@@ -29,7 +29,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineTruncated := Machine{Serial: "LCLOG02", BmcIP: "127.0.0.1:9280", NodeIP: "10.69.0.5"}
 	machineMismatch := Machine{Serial: "LCLOG03", BmcIP: "127.0.0.1:9380", NodeIP: "10.69.0.6"}
 	machineNoLcLog := Machine{Serial: "LCLOG04", BmcIP: "127.0.0.1:9480", NodeIP: "10.69.0.7"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog}
+	machineShifted := Machine{Serial: "LCLOG05", BmcIP: "127.0.0.1:9580", NodeIP: "10.69.0.8"}
+	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -81,6 +82,13 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				// The LC log service is not implemented (the mock replies 404)
 				host:   machineNoLcLog.BmcIP,
 				resDir: "testdata/redfish_response",
+			},
+			{
+				// The snapshot grows by one entry between the page requests
+				host:            machineShifted.BmcIP,
+				resDir:          "testdata/redfish_response",
+				lcFiles:         []string{"LCLOG05-lc-1.json", "LCLOG05-lc-2.json", "LCLOG05-lc-3.json", "LCLOG05-lc-4.json"},
+				lcAdvanceOnSkip: true,
 			},
 		}
 		for _, bm := range mocks {
@@ -233,6 +241,36 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Create).To(HavePrefix("2026-09-01T02:"))
 			}
 			Expect(lcLastReadId(machineMismatch.Serial)).To(Equal(3))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("an entry arrives between the page requests and shifts the $skip offset", func() {
+		var file *os.File
+		var reader *bufio.Reader
+		var err error
+
+		It("collect the first time", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineShifted, logWriter)
+
+			file, err = OpenTestResultLog(path.Join(testOutputDir, machineShifted.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader = bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+		}, SpecTimeout(30*time.Second))
+
+		It("does not emit the entries repeated by the shifted pages", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineShifted, logWriter)
+
+			// The entry with Id 7 appears on two pages, but must be emitted once
+			for _, id := range []string{"3", "4", "5", "6", "7", "8", "9"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineShifted.Serial)).To(Equal(9))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})

@@ -40,9 +40,12 @@ type bmcMock struct {
 	// Lifecycle log mock: each file in lcFiles is a whole LC log snapshot
 	// (newest first) used for one scraping cycle. The handler slices it into
 	// pages of lcPageSize entries and serves them via the $skip query parameter.
-	lcFiles    []string
-	lcPageSize int
-	lcCounter  int
+	// With lcAdvanceOnSkip, every request advances to the next snapshot file,
+	// which simulates new entries arriving between the page requests.
+	lcFiles         []string
+	lcPageSize      int
+	lcCounter       int
+	lcAdvanceOnSkip bool
 }
 
 // Mock server of iDRAC
@@ -125,7 +128,7 @@ func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
 
 	skip, _ := strconv.Atoi(r.URL.Query().Get("$skip"))
 	idx := b.lcCounter
-	if skip == 0 {
+	if skip == 0 || b.lcAdvanceOnSkip {
 		if idx > len(b.lcFiles)-1 {
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 			w.WriteHeader(http.StatusNotFound)
