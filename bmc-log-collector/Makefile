@@ -29,6 +29,8 @@ setup:
 .PHONY: clean
 clean:
 	rm -f testdata/output_main_test/*
+	rm -f testdata/output_lclog_collector/*
 	rm -fr testdata/pointers_get_machines
 	rm -fr testdata/pointers_log_collector
+	rm -fr testdata/pointers_lclog_collector
 	rm -fr testdata/pointers_main_test

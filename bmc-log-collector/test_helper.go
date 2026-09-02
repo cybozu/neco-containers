@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -10,11 +11,15 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 	"sync"
 	"time"
 )
 
-var redfishPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+var (
+	redfishPath   string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries"
+	redfishLcPath string = "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries"
+)
 
 // ID & password for basic authentication
 const (
@@ -31,6 +36,13 @@ type bmcMock struct {
 	responseDir   map[string]string
 	isInitmap     bool
 	mutex         sync.Mutex
+
+	// Lifecycle log mock: each file in lcFiles is a whole LC log snapshot
+	// (newest first) used for one scraping cycle. The handler slices it into
+	// pages of lcPageSize entries and serves them via the $skip query parameter.
+	lcFiles    []string
+	lcPageSize int
+	lcCounter  int
 }
 
 // Mock server of iDRAC
@@ -43,6 +55,7 @@ func (b *bmcMock) startMock() {
 
 	server := http.NewServeMux()
 	server.HandleFunc(redfishPath, b.redfishSel)
+	server.HandleFunc(redfishLcPath, b.redfishLclog)
 	go func() {
 		slog.Error("error at ListenAndServeTLS", "err", http.ListenAndServeTLS(b.host, "testdata/ssl/localhost.crt", "testdata/ssl/localhost.key", server))
 	}()
@@ -92,6 +105,75 @@ func (b *bmcMock) redfishSel(w http.ResponseWriter, r *http.Request) {
 	// Reply
 	stringJSON, _ := io.ReadAll(fd)
 	fmt.Fprint(w, string(stringJSON))
+}
+
+// DELL Lifecycle Log Service at Redfish REST.
+// A request without $skip starts the next scraping cycle (advances to the
+// next snapshot file); a request with $skip serves the following pages of
+// the current snapshot.
+func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json;odata.metadata=minimal;charset=utf-8")
+	// Basic authentication
+	if user, pass, ok := r.BasicAuth(); !ok || user != basicAuthUser || pass != basicAuthPassword {
+		w.Header().Add("WWW-Authenticate", `Basic realm="my private area"`)
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	b.mutex.Lock()
+	defer b.mutex.Unlock()
+
+	skip, _ := strconv.Atoi(r.URL.Query().Get("$skip"))
+	idx := b.lcCounter
+	if skip == 0 {
+		if idx > len(b.lcFiles)-1 {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+		b.lcCounter = idx + 1
+	} else {
+		// The following pages of the current snapshot
+		idx = idx - 1
+		if idx < 0 || idx > len(b.lcFiles)-1 {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+	}
+
+	fd, err := os.Open(path.Join(b.resDir, b.lcFiles[idx]))
+	if err != nil {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+	defer fd.Close()
+
+	var snapshot struct {
+		Members []json.RawMessage `json:"Members"`
+	}
+	if err := json.NewDecoder(fd).Decode(&snapshot); err != nil {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	pageSize := b.lcPageSize
+	if pageSize == 0 {
+		pageSize = 3
+	}
+	page := []json.RawMessage{}
+	if skip < len(snapshot.Members) {
+		page = snapshot.Members[skip:min(skip+pageSize, len(snapshot.Members))]
+	}
+	response := map[string]any{
+		"Members@odata.count": len(snapshot.Members),
+		"Members":             page,
+	}
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		fmt.Println("failed to encode the LC log response", err)
+	}
 }
 
 // Method for Test

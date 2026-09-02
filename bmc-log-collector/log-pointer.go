@@ -14,6 +14,13 @@ type LastPointer struct {
 	LastError          string // for TCP Error
 	LastHttpStatusCode int    // for HTTP Error
 	FirstCreateTime    int64
+
+	// Lifecycle log (files written by older versions lack these fields,
+	// so they are loaded as zero values and the LC log starts fresh)
+	LcLastReadId         int    // BMC LC log Id
+	LcLastReadCreateTime int64  // Created time of the LcLastReadId entry, to detect log clear
+	LcLastError          string // for TCP Error
+	LcLastHttpStatusCode int    // for HTTP Error
 }
 
 func checkAndCreatePointerFile(filePath string) error {

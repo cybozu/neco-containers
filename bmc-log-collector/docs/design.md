@@ -1,7 +1,7 @@
 # BMC Log Collector Design
 
 “BMC Log Collector” collects Hareware Error from Baseboard Management Controller (BMC) and output to own stdout.
-In case of DELL hardware, “BMC Log Collector” collects System Event Log (SEL) from iDRAC.
+In case of DELL hardware, “BMC Log Collector” collects System Event Log (SEL) and Lifecycle (LC) log from iDRAC.
 The first case of collecting is DELL.
 
 “BMC Log Collector” has the following features
@@ -41,6 +41,36 @@ flowchart TB
 9. Perform tasks 1 through 8 above, at intervals of a few minutes.
 10. Continue this cycle while the “BMC Log Collector” is running.
 
+
+## How “BMC Log Collector” collects the Lifecycle (LC) log
+
+The LC log is collected in the same way as the SEL with the following differences.
+
+1. Use `/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries` as the path to Redfish.
+2. This endpoint returns only the latest 50 entries in the newest-first order.
+   The collector pages backward with the `$skip` query parameter until it finds the entry
+   whose ID was recorded in the pointer file in the previous cycle.
+   The number of pages read in one cycle is limited (40 pages by default). When the limit is hit,
+   the collector emits only the entries it has read, records the gap in the
+   `bmc_lclog_catchup_truncated_total` metric, and continues from the newest entry.
+3. On the first collection for a machine, only the latest page is emitted.
+   The whole history is not backfilled to avoid a write spike to the log pipeline.
+4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
+   The clear is detected when the newest ID is smaller than the pointer, or when
+   the entry with the pointered ID has a different creation time. In both cases
+   the collector restarts from the latest page.
+   Note that a clear followed by more new entries than the page limit within one
+   scraping interval cannot be distinguished from a plain backlog; such a cycle is
+   handled as a truncation (recorded in the metric, the entries in between are skipped).
+   This is accepted because the LC log grows only a few entries per day in our fleet.
+5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
+   the log type can be distinguished in Loki.
+6. A BMC that replies 404 or 405 for the LC log path does not implement the LC log service.
+   It is not counted in `bmc_log_requests_failed_total` to avoid a permanent false alarm
+   on such machines.
+7. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
+   alert rules aggregate these counters with `sum by(serial)`, so adding the label does not
+   break them.
 
 ## Architectural Decisions
 

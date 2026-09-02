@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+// Values of the LogType field that identifies the log source in the output JSON
+const (
+	logTypeSEL   = "SEL"
+	logTypeLCLog = "LCLog"
+)
+
 type SystemEventLog struct {
 	Od_Id             string   `json:"@odata.id"`
 	Od_Type           string   `json:"@odata.type"`
@@ -31,6 +37,7 @@ type SystemEventLog struct {
 	Serial            string
 	NodeIP            string
 	BmcIP             string
+	LogType           string
 }
 
 type RedfishJsonSchema struct {
@@ -43,18 +50,20 @@ type RedfishJsonSchema struct {
 	Sel         []SystemEventLog `json:"Members"`
 }
 
-// SEL(System Event Log) Collector
-type selCollector struct {
+// Collector of the iDRAC hardware logs: SEL (System Event Log) and LC (Lifecycle) log
+type logCollector struct {
 	machinesListDir string        // Directory of the machines list
 	rfSelPath       string        // SEL path of Redfish API address
+	rfLcPath        string        // LC log path of Redfish API address
 	ptrDir          string        // Pointer store
 	username        string        // iDRAC username
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
 	intervalTime    time.Duration // interval (sec) time of scraping
+	lcMaxPages      int           // maximum LC log pages to read per cycle
 }
 
-func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
+func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
 	err := checkAndCreatePointerFile(filePath)
@@ -73,7 +82,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 	if err != nil {
 		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial).Inc()
+		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
 		// Prevent log output by the same error code
 		if lastPtr.LastError != err.Error() {
 			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error(), "serial", m.Serial)
@@ -88,7 +97,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 	if statusCode != 200 {
 		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial).Inc()
+		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
 		// Prevent log output by the same httpStatus
 		if statusCode != lastPtr.LastHttpStatusCode {
 			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode, "serial", m.Serial)
@@ -103,7 +112,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	// Increment the success counter
-	counterRequestSuccess.WithLabelValues(m.Serial).Inc()
+	counterRequestSuccess.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {
@@ -134,6 +143,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		v.Serial = m.Serial
 		v.BmcIP = m.BmcIP
 		v.NodeIP = m.NodeIP
+		v.LogType = logTypeSEL
 
 		if lastPtr.LastReadId < currentId {
 			bmcByteJsonLog, err := json.Marshal(v)

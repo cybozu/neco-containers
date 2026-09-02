@@ -20,7 +20,7 @@ import (
 Read the machines list and access iDRAC mock, and eliminate duplicated entry.
 */
 var _ = Describe("gathering up logs", Ordered, func() {
-	var lc selCollector
+	var lc logCollector
 	var cl *http.Client
 	testOutputDir := "testdata/output_log_collector"
 	testPointerDir := "testdata/pointers_log_collector"
@@ -80,7 +80,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 				}).DialContext,
 			},
 		}
-		lc = selCollector{
+		lc = logCollector{
 			machinesListDir: "testdata/configmap/log-collector-test.json",
 			rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:          testPointerDir,
