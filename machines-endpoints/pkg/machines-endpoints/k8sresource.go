@@ -10,6 +10,7 @@ import (
 	discoveryv1 "k8s.io/api/discovery/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	corev1apply "k8s.io/client-go/applyconfigurations/core/v1"
 	discoveryv1apply "k8s.io/client-go/applyconfigurations/discovery/v1"
@@ -18,6 +19,10 @@ import (
 )
 
 const (
+	labelAppManagedByKey = "app.kubernetes.io/managed-by"
+	labelAppNameKey      = "app.kubernetes.io/name"
+	// labelManagedByValue is used for the Service's app.kubernetes.io/managed-by
+	// label and the EndpointSlice's endpointslice.kubernetes.io/managed-by label.
 	labelManagedByValue = "machines-endpoints.cybozu.io"
 	fieldManager        = "machines-endpoints"
 )
@@ -90,6 +95,10 @@ func (c k8sClient) updateTargetEndpoints(ctx context.Context, name string, ips [
 
 	// Create or update the Service
 	serviceApply := corev1apply.Service(name, ns).
+		WithLabels(map[string]string{
+			labelAppManagedByKey: labelManagedByValue,
+			labelAppNameKey:      name,
+		}).
 		WithSpec(corev1apply.ServiceSpec().
 			WithPorts(servicePorts...).
 			WithClusterIP("None"))
@@ -139,7 +148,10 @@ func (c k8sClient) updateTargetEndpoints(ctx context.Context, name string, ips [
 
 	// Delete unnecessary EndpointSlice(s)
 	sliceList, err := endpointSliceInterface.List(ctx, metav1.ListOptions{
-		LabelSelector: fmt.Sprintf("%s=%s,%s=%s", discoveryv1.LabelManagedBy, labelManagedByValue, discoveryv1.LabelServiceName, name),
+		LabelSelector: labels.Set{
+			discoveryv1.LabelManagedBy:   labelManagedByValue,
+			discoveryv1.LabelServiceName: name,
+		}.AsSelector().String(),
 	})
 	if err != nil {
 		return err

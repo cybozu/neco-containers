@@ -47,6 +47,12 @@ func TestUpdateTargetEndpoints(t *testing.T) {
 	if service.Spec.Ports[0].Port != 1234 {
 		t.Error(`service.Spec.Ports[0].Port != 1234`)
 	}
+	if service.Labels["app.kubernetes.io/managed-by"] != "machines-endpoints.cybozu.io" {
+		t.Error(`service.Labels["app.kubernetes.io/managed-by"] != "machines-endpoints.cybozu.io"`)
+	}
+	if service.Labels["app.kubernetes.io/name"] != "target-foo" {
+		t.Error(`service.Labels["app.kubernetes.io/name"] != "target-foo"`)
+	}
 
 	// check EndpointSlice #0
 	endpointslices := testClient.k8s.DiscoveryV1().EndpointSlices(ns)
