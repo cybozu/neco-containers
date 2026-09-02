@@ -1,12 +1,12 @@
 bmc-log-collector
 ============================
 
-`bmc-log-collector` collects hardware logs from Baseboard Management Controller (BMC) and output own stdout.
+`bmc-log-collector` collects hardware logs from Baseboard Management Controller (BMC) and outputs them to its own stdout.
 
 The following products are assumed as BMC.
 - DELL integrated Dell Remote Access Controller (iDRAC) 
 
-This program reads the "machineslist.json" and retrieves the System Event Log (SEL) and the Lifecycle (LC) log from each BMC. "bmc-log-collector" adds the serial, the node IP, and the log type (`SEL` or `LCLog`) to own STD output.
+This program reads the "machineslist.json" and retrieves the System Event Log (SEL) and the Lifecycle (LC) log from each BMC. "bmc-log-collector" adds the serial, the node IP, and the log type (`SEL` or `LCLog`) to each entry and writes it to stdout.
 
 The LC log endpoint of iDRAC returns only the latest 50 entries (newest first), so the collector pages backward with the `$skip` query parameter until it reaches the entry read in the previous cycle. On the first collection for a machine, and after the LC log was cleared in iDRAC, only the latest page is emitted so that the whole history is not backfilled at once.
 

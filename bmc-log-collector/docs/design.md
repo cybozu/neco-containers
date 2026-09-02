@@ -1,6 +1,6 @@
 # BMC Log Collector Design
 
-“BMC Log Collector” collects Hareware Error from Baseboard Management Controller (BMC) and output to own stdout.
+“BMC Log Collector” collects hardware errors from Baseboard Management Controller (BMC) and outputs them to its own stdout.
 In case of DELL hardware, “BMC Log Collector” collects System Event Log (SEL) and Lifecycle (LC) log from iDRAC.
 The first case of collecting is DELL.
 
@@ -57,8 +57,8 @@ The LC log is collected in the same way as the SEL with the following difference
    The whole history is not backfilled to avoid a write spike to the log pipeline.
 4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
    The clear is detected when the newest ID is smaller than the pointer, or when
-   the entry with the pointered ID has a different creation time. In both cases
-   the collector restarts from the latest page.
+   the entry with the ID recorded in the pointer file has a different creation time.
+   In both cases the collector restarts from the latest page.
    Note that a clear followed by more new entries than the page limit within one
    scraping interval cannot be distinguished from a plain backlog; such a cycle is
    handled as a truncation (recorded in the metric, the entries in between are skipped).
