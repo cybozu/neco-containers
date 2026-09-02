@@ -1,9 +1,9 @@
 # serf container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-ARG SERF_COMMIT=93c69c072b854e28812e80a803ca769ed1f85999
+ARG SERF_COMMIT=5eba0bee43709508be4adc92112eb0f1c6a0e669
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/hashicorp/serf \
@@ -12,7 +12,7 @@ tar -x -z -f - --strip-components 1 -C /go/src/github.com/hashicorp/serf
 
 WORKDIR /go/src/github.com/hashicorp/serf
 
-RUN go install -ldflags="-w -s" ./...
+RUN go install -ldflags="-w -s" -tags hashicorpmetrics ./...
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
