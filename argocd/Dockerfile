@@ -1,13 +1,13 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.5.1
+ARG ARGOCD_VERSION=3.5.2
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
 ARG HELM_VERSION=4.2.1
 ARG GIT_LFS_VERSION=3.7.1
-ARG NODE_VERSION=24.19.0
+ARG NODE_VERSION=24.20.0
 ARG PNPM_VERSION=10.34.5
 
 FROM scratch AS kustomize-download
@@ -27,12 +27,12 @@ ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5
 
 FROM scratch AS node-download
 ARG NODE_VERSION
-ADD --checksum=sha256:f625d97cd707df4ff96254916fbc5ff014f09c09effe5a1e0ca8f6d41a8789d4 \
+ADD --checksum=sha256:855d581f8a4eb1a8117e3426de25fe02770592febcfb31369aee1ffbfee9e8ec \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:d2a97bfe71bd6135f1643ceaace39c40067ce1ebe1d1f44274516f3618eeff10 \
+ADD --checksum=sha256:8236a02fefd9cc349b6bf2ce554713c47a58e3f4ce498ee0208504c8873ef2a8 \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
 FROM scratch AS pnpm-download
@@ -40,7 +40,7 @@ ARG PNPM_VERSION
 ADD --checksum=sha256:69a535476f407fb0f64427913c2b592ca2ed6bf93f92e2cb82a32349e31f36eb \
     https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64 /pnpm
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20260814@sha256:1d772c73f9277d7f7715e4e26a68facb5d5154378a744bfc59f5f2d01f3e8570 AS cybozu-ubuntu
+FROM ghcr.io/cybozu/ubuntu:24.04.20260902@sha256:182a16198fafecbce2f813a07de269d28efb885aa4843e611ce44c25ce46cc2b AS cybozu-ubuntu
     
 # Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder
@@ -61,7 +61,7 @@ RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/g
     tar xf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.26.6.1_noble@sha256:fbb14a1408124f5a7fffd60fd0f1fe81ad6c852d2960202691651fa83b9027c1 AS argocd-build
+FROM ghcr.io/cybozu/golang:1.26.8.1_noble@sha256:fcdd7870a523950129a6afc09e03c035796446ac7c1b2f84994e4a7920042879 AS argocd-build
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
