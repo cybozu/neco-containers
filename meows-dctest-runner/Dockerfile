@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-ARG MEOWS_RUNNER_TAG=2.336.0-ubuntu22.04-meows0.26.0
-ARG MEOWS_RUNNER_CHECKSUM=sha256:a521b9688189bd1270e8faae979dafaa2f2c3e3773eaca4e08a6b14bfab40d1c
+ARG MEOWS_RUNNER_TAG=2.337.0-ubuntu22.04-meows0.26.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:629ba6aae56266e57e2449ae1ffa532b6b64c1c23a6255f736f42816fede8012
 
 FROM scratch AS go-download
 ADD --checksum=sha256:1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f \
@@ -86,7 +86,7 @@ RUN --mount=type=bind,from=placemat-download,source=/placemat2.deb,target=/tmp/p
     && chown -R actions:actions /opt/hostedtoolcache \
     && chown -R actions:actions ${HOME}
 
-# /home/actions is where a separate volume will be mounted, 
+# /home/actions is where a separate volume will be mounted,
 # so install aqua itself under /usr/local/aquaproj-aqua instead.
 RUN --mount=type=bind,from=aqua-installer-download,source=/aqua-installer,target=/tmp/aqua-installer,rw \
     chmod +x /tmp/aqua-installer \
