@@ -1,0 +1,11 @@
+name: "Setup tools"
+description: "Setup tools with aqua"
+runs:
+  using: composite
+  steps:
+    - uses: aquaproj/aqua-installer@96a9bc20066c5bf5e275b41019cfc165b25f4e2e # v4.0.5
+      with:
+        aqua_version: v2.62.3
+        aqua_opts: ""
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
