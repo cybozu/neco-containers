@@ -54,6 +54,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [falco](#falco)
 - [falco-k8s-metacollector](#falco-k8s-metacollector)
 - [falco-operator](#falco-operator)
+- [falcosidekick](#falcosidekick)
 - [fluent-bit](#fluent-bit)
 - [gitleaks](#gitleaks)
 - [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
@@ -682,6 +683,18 @@ The instance operator deploys the artifact operator, so the artifact operator im
 3. Update `FALCO_OPERATOR_COMMIT` in `Dockerfile`.
 4. Update `ARTIFACT_OPERATOR_IMAGE` in `Dockerfile` to match the new `TAG`.
 5. Update `TAG` file.
+
+## falcosidekick
+
+![No Need Update](./no_need_update.svg)
+
+Used as a PoC, so regular updates are not required.
+
+1. Check the [release page](https://github.com/falcosecurity/falcosidekick/releases).
+2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
+   - `https://github.com/falcosecurity/falcosidekick/blob/X.Y.Z/Dockerfile`
+3. Update `FALCOSIDEKICK_VERSION` and `FALCOSIDEKICK_COMMIT` in `Dockerfile`.
+4. Update `TAG` file.
 
 ## fluent-bit
 
