@@ -3,4 +3,4 @@
   scan:
     enabled: true
     team: pdx
-    identifier: "ghcr.io/cybozu/golang:1.25-jammy"
+    identifier: "ghcr.io/cybozu/golang:1.27-noble"
