@@ -1,6 +1,6 @@
 ARG BASE_IMAGE=scratch
-ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.24-noble
-ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
+ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51
+ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be8822fd555cc2cda4f2b16ecc71c6ffdad8c5c74ff054ba7
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
