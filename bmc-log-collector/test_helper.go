@@ -261,3 +261,10 @@ func findMetrics(lines []string, keyword string) (string, error) {
 	}
 	return "", fmt.Errorf("not Found %v", keyword)
 }
+
+// failingLogWriter always fails; for testing the write-failure handling
+type failingLogWriter struct{}
+
+func (f failingLogWriter) write(stringJson string, serial string) error {
+	return errors.New("write failed for test")
+}

@@ -213,12 +213,13 @@ scan:
 		bmcUrl = "https://" + m.BmcIP + response.NextLink
 	}
 
+	var emitErr error
 	switch {
 	case lastPtr.LcLastReadId == 0:
-		c.emitLifecycleLogs(page0, m, logWriter)
+		emitErr = c.emitLifecycleLogs(page0, m, logWriter)
 	case cleared:
 		slog.Warn("the lifecycle log was cleared in iDRAC; restarting from the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
-		c.emitLifecycleLogs(page0, m, logWriter)
+		emitErr = c.emitLifecycleLogs(page0, m, logWriter)
 	default:
 		if !foundKnown && len(newLogs) > 0 {
 			if page == c.lcMaxPages {
@@ -228,10 +229,12 @@ scan:
 				slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
 			}
 		}
-		c.emitLifecycleLogs(newLogs, m, logWriter)
+		emitErr = c.emitLifecycleLogs(newLogs, m, logWriter)
 	}
 
-	if newestId > 0 {
+	// Advance the pointer only when all the entries were written, so that a
+	// write failure does not lose entries; the next cycle re-emits them
+	if emitErr == nil && newestId > 0 {
 		lastPtr.LcLastReadId = newestId
 		lastPtr.LcLastReadCreateTime = newestCreateTime
 	}
@@ -241,8 +244,11 @@ scan:
 	}
 }
 
-// emitLifecycleLogs writes the entries, given newest first, in ascending order
-func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWriter bmcLogWriter) {
+// emitLifecycleLogs writes the entries, given newest first, in ascending order.
+// A write failure stops the emission and is returned so that the caller keeps
+// the pointer unchanged; an entry that cannot be marshaled is skipped instead
+// because retrying cannot fix it.
+func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWriter bmcLogWriter) error {
 	for _, v := range slices.Backward(logs) {
 		// Add the information to identify of the node
 		v.Serial = m.Serial
@@ -258,6 +264,8 @@ func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWrit
 		err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 		if err != nil {
 			slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog))
+			return err
 		}
 	}
+	return nil
 }

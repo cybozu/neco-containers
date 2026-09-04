@@ -157,7 +157,10 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 			if err != nil {
+				// Abort without updating the pointer file so that the entry is
+				// not lost; the next cycle re-emits from the last persisted Id
 				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				return
 			}
 
 			lastPtr.LastReadId = currentId
@@ -174,7 +177,10 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 				// Output duplicate log, after log reset in iDRAC
 				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 				if err != nil {
+					// Abort without updating the pointer file so that the entry is
+					// not lost; the next cycle re-emits from the last persisted Id
 					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
+					return
 				}
 
 				lastPtr.LastReadId = currentId

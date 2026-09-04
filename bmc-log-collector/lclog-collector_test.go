@@ -32,7 +32,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineShifted := Machine{Serial: "LCLOG05", BmcIP: "127.0.0.1:9580", NodeIP: "10.69.0.8"}
 	machineExhausted := Machine{Serial: "LCLOG06", BmcIP: "127.0.0.1:9680", NodeIP: "10.69.0.9"}
 	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry}
+	machineWriteFail := Machine{Serial: "LCLOG08", BmcIP: "127.0.0.1:9980", NodeIP: "10.69.0.12"}
+	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -103,6 +104,12 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineBadEntry.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG07-lc-1.json", "LCLOG07-lc-2.json", "LCLOG07-lc-3.json"},
+			},
+			{
+				// The log writer fails in the first cycle
+				host:    machineWriteFail.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG08-lc-2.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -370,6 +377,24 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			Expect(ptr.LcLastReadId).To(Equal(0))
 			_, err = os.Stat(path.Join(testOutputDir, machineNoLcLog.Serial))
 			Expect(err).To(MatchError(os.ErrNotExist))
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("the log writer fails", func() {
+		It("does not advance the pointer, and the next cycle re-emits the entries", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineWriteFail, failingLogWriter{})
+			Expect(lcLastReadId(machineWriteFail.Serial)).To(Equal(0))
+
+			lc.collectLifecycleLog(ctx, machineWriteFail, logWriter)
+			file, err := OpenTestResultLog(path.Join(testOutputDir, machineWriteFail.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader := bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineWriteFail.Serial)).To(Equal(2))
+			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
 
