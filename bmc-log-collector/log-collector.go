@@ -66,57 +66,22 @@ type logCollector struct {
 func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
-	err := checkAndCreatePointerFile(filePath)
+	lastPtr, err := loadLastPointer(filePath)
 	if err != nil {
-		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		return
-	}
-
-	lastPtr, err := readLastPointer(filePath)
-	if err != nil {
-		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
-	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
-	if err != nil {
-		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
-		// Prevent log output by the same error code
-		if lastPtr.LastError != err.Error() {
-			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error(), "serial", m.Serial)
-		}
-		lastPtr.LastHttpStatusCode = 0
-		lastPtr.LastError = err.Error()
-		err = updateLastPointer(lastPtr, filePath)
-		if err != nil {
+	byteJSON, ok := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeSel, &lastPtr.LastHttpStatusCode, &lastPtr.LastError)
+	if !ok {
+		// The failure has been reported; record the request status and keep
+		// the read position unchanged so that the next cycle retries
+		if err := updateLastPointer(lastPtr, filePath); err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
 		return
 	}
-	if statusCode != 200 {
-		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
-		// Prevent log output by the same httpStatus
-		if statusCode != lastPtr.LastHttpStatusCode {
-			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode, "serial", m.Serial)
-		}
-		lastPtr.LastHttpStatusCode = statusCode
-		lastPtr.LastError = ""
-		err = updateLastPointer(lastPtr, filePath)
-		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
-		return
-	}
-
-	// Increment the success counter
-	counterRequestSuccess.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
-	// Clear the last error status so that the same error after a recovery
-	// is logged again instead of being suppressed by the deduplication
-	lastPtr.LastHttpStatusCode = statusCode
-	lastPtr.LastError = ""
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {

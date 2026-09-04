@@ -95,15 +95,9 @@ func (r lcScanResult) catchingUp() bool {
 func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
-	err := checkAndCreatePointerFile(filePath)
+	lastPtr, err := loadLastPointer(filePath)
 	if err != nil {
-		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		return
-	}
-
-	lastPtr, err := readLastPointer(filePath)
-	if err != nil {
-		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
 
@@ -235,43 +229,18 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 
 // fetchLifecycleLogPage requests one page of the LC log and records the
 // request status in lastPtr. It returns false when the page could not be
-// obtained; the failure has been reported (suppressed while the same failure
-// repeats) and counted in the request metrics.
+// obtained; the failure has been reported and counted by requestBmcLog.
+// A 404/405 reply to the first page means that the BMC does not implement
+// the LC log service; the same reply to a later page is an ordinary failure.
 func (c *logCollector) fetchLifecycleLogPage(ctx context.Context, m Machine, lastPtr *LastPointer, url string, firstPage bool) (RedfishLcLogSchema, bool) {
-	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, url)
-	if err != nil {
-		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-		// Prevent log output by the same error code
-		if lastPtr.LcLastError != err.Error() {
-			slog.Error("failed access to iDRAC on TCP/IP level.", "url", url, "err", err.Error(), "serial", m.Serial)
-		}
-		lastPtr.LcLastHttpStatusCode = 0
-		lastPtr.LcLastError = err.Error()
+	var notImplemented []int
+	if firstPage {
+		notImplemented = []int{http.StatusNotFound, http.StatusMethodNotAllowed}
+	}
+	byteJSON, ok := c.requestBmcLog(ctx, m, url, metricLogTypeLc, &lastPtr.LcLastHttpStatusCode, &lastPtr.LcLastError, notImplemented...)
+	if !ok {
 		return RedfishLcLogSchema{}, false
 	}
-	if firstPage && (statusCode == http.StatusNotFound || statusCode == http.StatusMethodNotAllowed) {
-		// The BMC does not implement the LC log service.
-		// Not counted as a failure to avoid a permanent false alarm.
-		if statusCode != lastPtr.LcLastHttpStatusCode {
-			slog.Warn("the lifecycle log service is not implemented on this BMC", "url", url, "httpStatusCode", statusCode, "serial", m.Serial)
-		}
-		lastPtr.LcLastHttpStatusCode = statusCode
-		lastPtr.LcLastError = ""
-		return RedfishLcLogSchema{}, false
-	}
-	if statusCode != http.StatusOK {
-		counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-		// Prevent log output by the same httpStatus
-		if statusCode != lastPtr.LcLastHttpStatusCode {
-			slog.Error("failed access to iDRAC on HTTP level.", "url", url, "httpStatusCode", statusCode, "serial", m.Serial)
-		}
-		lastPtr.LcLastHttpStatusCode = statusCode
-		lastPtr.LcLastError = ""
-		return RedfishLcLogSchema{}, false
-	}
-	counterRequestSuccess.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-	lastPtr.LcLastHttpStatusCode = statusCode
-	lastPtr.LcLastError = ""
 
 	var response RedfishLcLogSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {
