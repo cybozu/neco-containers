@@ -146,6 +146,14 @@ scan:
 
 		if page == 0 {
 			page0 = response.Members
+			// Validate all the Ids before the early exits below emit this page,
+			// matching the retry policy of the normal catch-up path
+			for _, v := range response.Members {
+				if _, err := strconv.Atoi(v.Id); err != nil {
+					slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id)
+					return
+				}
+			}
 			newestId, err = strconv.Atoi(response.Members[0].Id)
 			if err != nil {
 				slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", response.Members[0].Id)

@@ -33,7 +33,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineExhausted := Machine{Serial: "LCLOG06", BmcIP: "127.0.0.1:9680", NodeIP: "10.69.0.9"}
 	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
 	machineWriteFail := Machine{Serial: "LCLOG08", BmcIP: "127.0.0.1:9980", NodeIP: "10.69.0.12"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail}
+	machineBadInitial := Machine{Serial: "LCLOG09", BmcIP: "127.0.0.1:10080", NodeIP: "10.69.0.13"}
+	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail, machineBadInitial}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -110,6 +111,12 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineWriteFail.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG08-lc-2.json"},
+			},
+			{
+				// A malformed non-first entry in page0 on the initial collection
+				host:    machineBadInitial.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG09-lc-1.json", "LCLOG09-lc-2.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -377,6 +384,24 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			Expect(ptr.LcLastReadId).To(Equal(0))
 			_, err = os.Stat(path.Join(testOutputDir, machineNoLcLog.Serial))
 			Expect(err).To(MatchError(os.ErrNotExist))
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("a malformed entry appears on the initial collection", func() {
+		It("aborts before emitting, then collects after the device recovers", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadInitial, logWriter)
+			Expect(lcLastReadId(machineBadInitial.Serial)).To(Equal(0))
+
+			lc.collectLifecycleLog(ctx, machineBadInitial, logWriter)
+			file, err := OpenTestResultLog(path.Join(testOutputDir, machineBadInitial.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader := bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2", "3"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineBadInitial.Serial)).To(Equal(3))
+			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
 
