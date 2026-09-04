@@ -144,12 +144,14 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 		It("main loop test", func() {
 			intervalTimeString := "10s"
 			intervalTime, _ := time.ParseDuration(intervalTimeString)
-			lcConfig := selCollector{
+			lcConfig := logCollector{
 				machinesListDir: "testdata/configmap/serverlist2.json",
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+				rfLcPath:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries",
 				ptrDir:          testPointerDir,
 				username:        "support",
 				intervalTime:    intervalTime,
+				lcMaxPages:      10,
 			}
 			user, err := LoadBMCUserConfig("testdata/etc/bmc-user.json")
 			Expect(err).ToNot(HaveOccurred())

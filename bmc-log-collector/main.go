@@ -21,7 +21,7 @@ type bmcLogWriter interface {
 	write(stringJson string, serial string) (err error)
 }
 
-func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
+func doLogScrapingLoop(config logCollector, logWriter bmcLogWriter) {
 	config.httpClient = &http.Client{
 		Timeout: 120 * time.Second,
 		Transport: &http.Transport{
@@ -66,10 +66,13 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				slog.Error("can't read the machine list", "err", err, "path", config.machinesListDir)
 				return
 			}
-			// Start log collector workers by BMCs
+			// Start log collector workers by BMCs.
+			// Collect the logs sequentially in a worker to avoid
+			// concurrent accesses to the same iDRAC.
 			for _, m := range machinesList {
 				wg.Go(func() {
 					config.collectSystemEventLog(ctx, m, logWriter)
+					config.collectLifecycleLog(ctx, m, logWriter)
 				})
 			}
 			wg.Wait()
@@ -97,6 +100,7 @@ var (
 	flgMachineList          *string = pflag.String("machine-list-json", "/config/machineslist.json", "Target machines list of log scraping")
 	flgPointerDir           *string = pflag.String("pointer-dir-path", "/data/pointers", "Data directory of pointer management")
 	flgScrapingIntervalTime *int    = pflag.Int("scraping-interval-time", 300, "Timer(sec) of scraping interval time")
+	flgLcMaxPages           *int    = pflag.Int("lclog-max-pages", 3, "Maximum pages of the lifecycle log to read per scraping cycle")
 )
 
 func main() {
@@ -109,6 +113,15 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
+	if *flgLcMaxPages < 1 {
+		slog.Error("lclog-max-pages must be 1 or larger", "lclog-max-pages", *flgLcMaxPages)
+		os.Exit(1)
+	}
+	if *flgScrapingIntervalTime < 1 {
+		slog.Error("scraping-interval-time must be 1 or larger", "scraping-interval-time", *flgScrapingIntervalTime)
+		os.Exit(1)
+	}
+
 	// Read user & password for BMC
 	user, err := LoadBMCUserConfig(*flgUserFile)
 	if err != nil {
@@ -117,13 +130,15 @@ func main() {
 	}
 
 	// Setup log scraping loop
-	configLc := selCollector{
+	configLc := logCollector{
 		machinesListDir: *flgMachineList,
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+		rfLcPath:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries",
 		ptrDir:          *flgPointerDir,
 		username:        *flgUserId,
 		password:        user.Support.Password.Raw,
 		intervalTime:    time.Duration(*flgScrapingIntervalTime) * time.Second,
+		lcMaxPages:      *flgLcMaxPages,
 	}
 
 	// Set BMC log writer

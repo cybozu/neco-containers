@@ -1,7 +1,7 @@
 # BMC Log Collector Design
 
-“BMC Log Collector” collects Hareware Error from Baseboard Management Controller (BMC) and output to own stdout.
-In case of DELL hardware, “BMC Log Collector” collects System Event Log (SEL) from iDRAC.
+“BMC Log Collector” collects hardware errors from Baseboard Management Controller (BMC) and outputs them to its own stdout.
+In case of DELL hardware, “BMC Log Collector” collects System Event Log (SEL) and Lifecycle (LC) log from iDRAC.
 The first case of collecting is DELL.
 
 “BMC Log Collector” has the following features
@@ -41,6 +41,54 @@ flowchart TB
 9. Perform tasks 1 through 8 above, at intervals of a few minutes.
 10. Continue this cycle while the “BMC Log Collector” is running.
 
+
+## How “BMC Log Collector” collects the Lifecycle (LC) log
+
+The LC log is collected in the same way as the SEL with the following differences.
+
+1. Use `/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries` as the path to Redfish.
+2. This endpoint returns only the latest 50 entries in the newest-first order.
+   The collector follows `Members@odata.nextLink` backward until it finds the entry
+   whose ID was recorded in the pointer file in the previous cycle. On the real iDRAC
+   (verified on FW 7.20.30.55), `Members@odata.nextLink` is returned while more entries
+   are available and is omitted on the last page.
+   The number of pages read in one cycle is limited (3 pages by default). When the limit is hit,
+   the collector emits only the entries it has read, records the gap in the
+   `bmc_lclog_catchup_truncated_total` metric, and continues from the newest entry.
+   When the last page is reached without finding the pointered entry (which suggests
+   an undetected log clear), the collector emits the read entries with a warning and
+   continues from the newest entry; the metric is not counted in this case.
+   The metric and the warnings are suppressed while collecting from scratch (the first
+   collection and the collection after a log clear), where the limit just bounds the backfill.
+3. The first collection for a machine goes through the same loop with an empty pointer,
+   so it collects from the newest entry back to the page limit (150 entries by default).
+   The whole history is not ingested at once.
+4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
+   The clear is detected when the newest ID is smaller than the pointer, or when
+   the entry with the ID recorded in the pointer file has a different creation time.
+   In both cases the collector collects from scratch, bounded by the page limit.
+   Note that a clear followed by more new entries than the page limit within one
+   scraping interval cannot be distinguished from a plain backlog; such a cycle is
+   handled as a truncation (recorded in the metric, the entries in between are skipped).
+   This is accepted because the LC log grows only a few entries per day in our fleet.
+5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
+   the log type can be distinguished in Loki.
+6. A BMC that replies 404 or 405 for the first page of the LC log path does not implement
+   the LC log service. It is not counted in `bmc_log_requests_failed_total` to avoid a
+   permanent false alarm on such machines. The same status on the following pages is
+   handled as an ordinary HTTP failure.
+7. The entry ID and the creation time are the basis of the pointer management, so when
+   they cannot be parsed the collector aborts the cycle without advancing the pointer
+   and retries in the next cycle.
+8. The numeric, monotonically increasing entry ID is a Dell iDRAC implementation
+   behavior, not a Redfish specification guarantee (DSP0266 defines Id only as an
+   opaque unique string). This collector is Dell-specific and relies on it, the same
+   assumption as the existing SEL collection; it was verified on iDRAC FW 7.20.30.55.
+   If a firmware change made the IDs non-numeric, the collector would abort every
+   cycle with error logs and the pointer would stay unchanged.
+9. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
+   alert rules aggregate these counters with `sum by(serial)`, so adding the label does not
+   break them.
 
 ## Architectural Decisions
 

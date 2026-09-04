@@ -11,6 +11,12 @@ import (
 	"time"
 )
 
+// Values of the LogType field that identifies the log source in the output JSON
+const (
+	logTypeSEL   = "SEL"
+	logTypeLCLog = "LCLog"
+)
+
 type SystemEventLog struct {
 	Od_Id             string   `json:"@odata.id"`
 	Od_Type           string   `json:"@odata.type"`
@@ -31,6 +37,7 @@ type SystemEventLog struct {
 	Serial            string
 	NodeIP            string
 	BmcIP             string
+	LogType           string
 }
 
 type RedfishJsonSchema struct {
@@ -39,71 +46,42 @@ type RedfishJsonSchema struct {
 	Context     string           `json:"@odata.context"`
 	Id          string           `json:"@odata.id"`
 	Type        string           `json:"@odata.type"`
-	Description string           `json:"Descriptionta"`
+	Description string           `json:"Description"`
 	Sel         []SystemEventLog `json:"Members"`
 }
 
-// SEL(System Event Log) Collector
-type selCollector struct {
+// Collector of the iDRAC hardware logs: SEL (System Event Log) and LC (Lifecycle) log
+type logCollector struct {
 	machinesListDir string        // Directory of the machines list
 	rfSelPath       string        // SEL path of Redfish API address
+	rfLcPath        string        // LC log path of Redfish API address
 	ptrDir          string        // Pointer store
 	username        string        // iDRAC username
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
 	intervalTime    time.Duration // interval (sec) time of scraping
+	lcMaxPages      int           // maximum LC log pages to read per cycle
 }
 
-func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
+func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
-	err := checkAndCreatePointerFile(filePath)
+	lastPtr, err := loadLastPointer(filePath)
 	if err != nil {
-		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		return
-	}
-
-	lastPtr, err := readLastPointer(filePath)
-	if err != nil {
-		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
-	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
-	if err != nil {
-		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial).Inc()
-		// Prevent log output by the same error code
-		if lastPtr.LastError != err.Error() {
-			slog.Error("failed access to iDRAC on TCP/IP level.", "url", bmcUrl, "err", err.Error(), "serial", m.Serial)
-		}
-		lastPtr.LastHttpStatusCode = 0
-		lastPtr.LastError = err.Error()
-		err = updateLastPointer(lastPtr, filePath)
-		if err != nil {
+	byteJSON, ok := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeSel, &lastPtr.LastHttpStatusCode, &lastPtr.LastError)
+	if !ok {
+		// The failure has been reported; record the request status and keep
+		// the read position unchanged so that the next cycle retries
+		if err := updateLastPointer(lastPtr, filePath); err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
 		return
 	}
-	if statusCode != 200 {
-		// Increment the failed counter
-		counterRequestFailed.WithLabelValues(m.Serial).Inc()
-		// Prevent log output by the same httpStatus
-		if statusCode != lastPtr.LastHttpStatusCode {
-			slog.Error("failed access to iDRAC on HTTP level.", "url", bmcUrl, "httpStatusCode", statusCode, "serial", m.Serial)
-		}
-		lastPtr.LastHttpStatusCode = statusCode
-		lastPtr.LastError = ""
-		err = updateLastPointer(lastPtr, filePath)
-		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
-		return
-	}
-
-	// Increment the success counter
-	counterRequestSuccess.WithLabelValues(m.Serial).Inc()
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {
@@ -117,6 +95,16 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
+	// The Id is the basis of the pointer management. Validate all the Ids
+	// before writing any entry: aborting after some entries were written
+	// would re-emit them every cycle while a malformed entry persists.
+	for _, v := range response.Sel {
+		if _, err := strconv.Atoi(v.Id); err != nil {
+			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
+			return
+		}
+	}
+
 	createTime, err := time.Parse(time.RFC3339, response.Sel[len(response.Sel)-1].Create)
 	if err != nil {
 		slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
@@ -127,23 +115,29 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	for i, v := range slices.Backward(response.Sel) {
 		currentId, err := strconv.Atoi(v.Id)
 		if err != nil {
-			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId, "ptrDir", c.ptrDir)
-			continue
+			// Unreachable: all the Ids were validated above
+			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
+			return
 		}
 		// Add the information to identify of the node
 		v.Serial = m.Serial
 		v.BmcIP = m.BmcIP
 		v.NodeIP = m.NodeIP
+		v.LogType = logTypeSEL
 
 		if lastPtr.LastReadId < currentId {
 			bmcByteJsonLog, err := json.Marshal(v)
 			if err != nil {
 				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				continue
 			}
 
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 			if err != nil {
+				// Abort without updating the pointer file so that the entry is
+				// not lost; the next cycle re-emits from the last persisted Id
 				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				return
 			}
 
 			lastPtr.LastReadId = currentId
@@ -154,12 +148,16 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 				bmcByteJsonLog, err := json.Marshal(v)
 				if err != nil {
 					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", v, "currentLastReadId", currentId)
+					continue
 				}
 
 				// Output duplicate log, after log reset in iDRAC
 				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 				if err != nil {
+					// Abort without updating the pointer file so that the entry is
+					// not lost; the next cycle re-emits from the last persisted Id
 					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
+					return
 				}
 
 				lastPtr.LastReadId = currentId
