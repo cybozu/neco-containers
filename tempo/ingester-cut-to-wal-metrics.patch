@@ -1,31 +1,14 @@
-diff --git a/modules/ingester/flush.go b/modules/ingester/flush.go
-index 6db7fc8fc..8315332d4 100644
---- a/modules/ingester/flush.go
-+++ b/modules/ingester/flush.go
-@@ -178,6 +178,12 @@ func (i *Ingester) cutAllInstancesToWal() {
- }
- 
- func (i *Ingester) cutOneInstanceToWal(instance *instance, immediate bool) {
-+	startTime := time.Now()
-+	defer func() {
-+		duration := time.Since(startTime).Seconds()
-+		instance.cutToWalDuration.WithLabelValues(strconv.FormatBool(immediate)).Observe(duration)
-+	}()
-+
- 	// cut traces internally
- 	err := instance.CutCompleteTraces(i.cfg.MaxTraceIdle, i.cfg.MaxTraceLive, immediate)
- 	if err != nil {
-diff --git a/modules/ingester/instance.go b/modules/ingester/instance.go
-index c324b88e6..a9478be29 100644
---- a/modules/ingester/instance.go
-+++ b/modules/ingester/instance.go
-@@ -74,6 +74,19 @@ var (
- 		Name:      "ingester_replay_errors_total",
- 		Help:      "The total number of replay errors received per tenant.",
- 	}, []string{"tenant"})
+diff --git a/modules/livestore/instance.go b/modules/livestore/instance.go
+index 2bd166c47..77954dcab 100644
+--- a/modules/livestore/instance.go
++++ b/modules/livestore/instance.go
+@@ -65,6 +65,19 @@ var (
+ 		Name:      "bytes_received_total",
+ 		Help:      "The total bytes received per tenant.",
+ 	}, []string{"tenant", "data_type"})
 +	metricCutToWalDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
-+		Namespace: "tempo",
-+		Name:      "ingester_cut_traces_to_wal_duration_seconds",
++		Namespace: "tempo_live_store",
++		Name:      "cut_traces_to_wal_duration_seconds",
 +		Help:      "Time spent cutting traces to wal",
 +		// These buckets are configured to keep the duration shorter than 30s (flush_check_period).
 +		Buckets: []float64{
@@ -36,22 +19,47 @@ index c324b88e6..a9478be29 100644
 +			30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0,
 +		},
 +	}, []string{"tenant", "immediate"})
- )
- 
- type instance struct {
-@@ -94,6 +107,7 @@ type instance struct {
- 	instanceID         string
+ 	metricBlocksClearedTotal = promauto.NewCounterVec(prometheus.CounterOpts{
+ 		Namespace: "tempo_live_store",
+ 		Name:      "blocks_cleared_total",
+@@ -136,6 +149,7 @@ type instance struct {
+ 	// Metrics
  	tracesCreatedTotal prometheus.Counter
  	bytesReceivedTotal *prometheus.CounterVec
 +	cutToWalDuration   prometheus.ObserverVec
- 	limiter            Limiter
- 	writer             tempodb.Writer
  
-@@ -117,6 +131,7 @@ func newInstance(instanceID string, limiter Limiter, overrides ingesterOverrides
- 		instanceID:         instanceID,
- 		tracesCreatedTotal: metricTracesCreatedTotal.WithLabelValues(instanceID),
- 		bytesReceivedTotal: metricBytesReceivedTotal,
-+		cutToWalDuration:   metricCutToWalDuration.MustCurryWith(prometheus.Labels{"tenant": instanceID}),
- 		limiter:            limiter,
- 		writer:             writer,
+ 	overrides overrides.Interface
+ }
+@@ -162,6 +176,7 @@ func newInstance(instanceID string, cfg Config, wal *wal.WAL, completeBlockEncod
+ 		overrides:              overrides,
+ 		tracesCreatedTotal:     metricTracesCreatedTotal.WithLabelValues(instanceID),
+ 		bytesReceivedTotal:     metricBytesReceivedTotal,
++		cutToWalDuration:       metricCutToWalDuration.MustCurryWith(prometheus.Labels{"tenant": instanceID}),
+ 		reclaim:                newQuarantine(cfg.BlockReclaimGrace),
+ 	}
+ 	i.blocks.Store(emptyBlockSnapshot())
+diff --git a/modules/livestore/live_store.go b/modules/livestore/live_store.go
+index 51fc3a9ff..0f62f3186 100644
+--- a/modules/livestore/live_store.go
++++ b/modules/livestore/live_store.go
+@@ -5,6 +5,7 @@ import (
+ 	"errors"
+ 	"fmt"
+ 	"os"
++	"strconv"
+ 	"sync"
+ 	"sync/atomic"
+ 	"time"
+@@ -746,6 +747,12 @@ func (s *LiveStore) cutAllInstancesToWal() {
+ }
  
+ func (s *LiveStore) cutOneInstanceToWal(ctx context.Context, inst *instance, immediate bool) {
++	startTime := time.Now()
++	defer func() {
++		duration := time.Since(startTime).Seconds()
++		inst.cutToWalDuration.WithLabelValues(strconv.FormatBool(immediate)).Observe(duration)
++	}()
++
+ 	ctx, span := tracer.Start(ctx, "LiveStore.cutOneInstanceToWal",
+ 		oteltrace.WithAttributes(
+ 			attribute.String("tenant", inst.tenantID),
