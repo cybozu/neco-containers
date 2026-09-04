@@ -100,7 +100,7 @@ var (
 	flgMachineList          *string = pflag.String("machine-list-json", "/config/machineslist.json", "Target machines list of log scraping")
 	flgPointerDir           *string = pflag.String("pointer-dir-path", "/data/pointers", "Data directory of pointer management")
 	flgScrapingIntervalTime *int    = pflag.Int("scraping-interval-time", 300, "Timer(sec) of scraping interval time")
-	flgLcMaxPages           *int    = pflag.Int("lclog-max-pages", 40, "Maximum pages of the lifecycle log to read per scraping cycle")
+	flgLcMaxPages           *int    = pflag.Int("lclog-max-pages", 10, "Maximum pages of the lifecycle log to read per scraping cycle")
 )
 
 func main() {

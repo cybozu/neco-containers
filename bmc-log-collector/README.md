@@ -48,7 +48,7 @@ $ bmc-log-collector --help
 
 Usage of ./bmc-log-collector:
       --bmc-user-json string         User and password of BMC (default "/users/neco/bmc-user.json")
-      --lclog-max-pages int          Maximum pages of the lifecycle log to read per scraping cycle (default 40)
+      --lclog-max-pages int          Maximum pages of the lifecycle log to read per scraping cycle (default 10)
       --machine-list-json string     Target machines list of log scraping (default "/config/machineslist.json")
       --pointer-dir-path string      Data directory of pointer management (default "/data/pointers")
       --scraping-interval-time int   Timer(sec) of scraping interval time (default 300)

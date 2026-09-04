@@ -52,7 +52,7 @@ The LC log is collected in the same way as the SEL with the following difference
    whose ID was recorded in the pointer file in the previous cycle. On the real iDRAC
    (verified on FW 7.20.30.55), `Members@odata.nextLink` is returned while more entries
    are available and is omitted on the last page.
-   The number of pages read in one cycle is limited (40 pages by default). When the limit is hit,
+   The number of pages read in one cycle is limited (10 pages by default). When the limit is hit,
    the collector emits only the entries it has read, records the gap in the
    `bmc_lclog_catchup_truncated_total` metric, and continues from the newest entry.
    When the last page is reached without finding the pointered entry (which suggests
