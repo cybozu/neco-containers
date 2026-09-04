@@ -113,6 +113,10 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	// Increment the success counter
 	counterRequestSuccess.WithLabelValues(m.Serial, metricLogTypeSel).Inc()
+	// Clear the last error status so that the same error after a recovery
+	// is logged again instead of being suppressed by the deduplication
+	lastPtr.LastHttpStatusCode = statusCode
+	lastPtr.LastError = ""
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {

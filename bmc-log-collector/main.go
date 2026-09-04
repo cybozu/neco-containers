@@ -117,6 +117,10 @@ func main() {
 		slog.Error("lclog-max-pages must be 1 or larger", "lclog-max-pages", *flgLcMaxPages)
 		os.Exit(1)
 	}
+	if *flgScrapingIntervalTime < 1 {
+		slog.Error("scraping-interval-time must be 1 or larger", "scraping-interval-time", *flgScrapingIntervalTime)
+		os.Exit(1)
+	}
 
 	// Read user & password for BMC
 	user, err := LoadBMCUserConfig(*flgUserFile)

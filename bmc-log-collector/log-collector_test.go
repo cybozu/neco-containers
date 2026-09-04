@@ -285,6 +285,12 @@ var _ = Describe("SEL entry with a non-numeric Id", Ordered, func() {
 			Expect(readNextSel().Id).To(Equal(id))
 		}
 		Expect(selLastReadId()).To(Equal(2))
+
+		// A successful cycle clears the last error status
+		ptr, err := readLastPointer(path.Join(testPointerDir, machine.Serial))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ptr.LastHttpStatusCode).To(Equal(http.StatusOK))
+		Expect(ptr.LastError).To(BeEmpty())
 	}, SpecTimeout(30*time.Second))
 
 	It("abort the cycle and keep the pointer unchanged", func(ctx SpecContext) {
