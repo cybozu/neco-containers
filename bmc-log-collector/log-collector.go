@@ -46,7 +46,7 @@ type RedfishJsonSchema struct {
 	Context     string           `json:"@odata.context"`
 	Id          string           `json:"@odata.id"`
 	Type        string           `json:"@odata.type"`
-	Description string           `json:"Descriptionta"`
+	Description string           `json:"Description"`
 	Sel         []SystemEventLog `json:"Members"`
 }
 
@@ -136,8 +136,11 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	for i, v := range slices.Backward(response.Sel) {
 		currentId, err := strconv.Atoi(v.Id)
 		if err != nil {
-			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId, "ptrDir", c.ptrDir)
-			continue
+			// The Id is the basis of the pointer management. When it cannot be
+			// parsed, abort this cycle without updating the pointer file so that
+			// no entry is skipped permanently; the next cycle retries.
+			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
+			return
 		}
 		// Add the information to identify of the node
 		v.Serial = m.Serial
@@ -149,6 +152,7 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 			bmcByteJsonLog, err := json.Marshal(v)
 			if err != nil {
 				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				continue
 			}
 
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
@@ -164,6 +168,7 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 				bmcByteJsonLog, err := json.Marshal(v)
 				if err != nil {
 					slog.Error("failed to convert JSON", "err", err, "serial", m.Serial, "i", i, "Event", v, "currentLastReadId", currentId)
+					continue
 				}
 
 				// Output duplicate log, after log reset in iDRAC
