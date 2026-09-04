@@ -80,7 +80,13 @@ The LC log is collected in the same way as the SEL with the following difference
 7. The entry ID and the creation time are the basis of the pointer management, so when
    they cannot be parsed the collector aborts the cycle without advancing the pointer
    and retries in the next cycle.
-8. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
+8. The numeric, monotonically increasing entry ID is a Dell iDRAC implementation
+   behavior, not a Redfish specification guarantee (DSP0266 defines Id only as an
+   opaque unique string). This collector is Dell-specific and relies on it, the same
+   assumption as the existing SEL collection; it was verified on iDRAC FW 7.20.30.55.
+   If a firmware change made the IDs non-numeric, the collector would abort every
+   cycle with error logs and the pointer would stay unchanged.
+9. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
    alert rules aggregate these counters with `sum by(serial)`, so adding the label does not
    break them.
 
