@@ -126,6 +126,16 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
+	// The Id is the basis of the pointer management. Validate all the Ids
+	// before writing any entry: aborting after some entries were written
+	// would re-emit them every cycle while a malformed entry persists.
+	for _, v := range response.Sel {
+		if _, err := strconv.Atoi(v.Id); err != nil {
+			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
+			return
+		}
+	}
+
 	createTime, err := time.Parse(time.RFC3339, response.Sel[len(response.Sel)-1].Create)
 	if err != nil {
 		slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
@@ -136,9 +146,7 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	for i, v := range slices.Backward(response.Sel) {
 		currentId, err := strconv.Atoi(v.Id)
 		if err != nil {
-			// The Id is the basis of the pointer management. When it cannot be
-			// parsed, abort this cycle without updating the pointer file so that
-			// no entry is skipped permanently; the next cycle retries.
+			// Unreachable: all the Ids were validated above
 			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
 			return
 		}

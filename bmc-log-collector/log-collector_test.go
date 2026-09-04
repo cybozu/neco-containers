@@ -289,9 +289,9 @@ var _ = Describe("SEL entry with a non-numeric Id", Ordered, func() {
 
 	It("abort the cycle and keep the pointer unchanged", func(ctx SpecContext) {
 		lc.collectSystemEventLog(ctx, machine, logWriter)
-		// The entry 3 is emitted before the bad entry is found, but the pointer
-		// file stays at 2, so the next cycle emits it again (at-least-once).
-		Expect(readNextSel().Id).To(Equal("3"))
+		// All the Ids are validated before writing any entry, so nothing is
+		// emitted and the pointer stays; the next test case proves it by
+		// reading the recovered entries as the immediately following output.
 		Expect(selLastReadId()).To(Equal(2))
 	}, SpecTimeout(30*time.Second))
 
