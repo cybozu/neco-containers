@@ -111,9 +111,28 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		return
 	}
 
+	// Advance the pointer only when all the entries were written, so that a
+	// write failure does not lose entries; the next cycle re-emits them
+	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
+		if err := updateLastPointer(lastPtr, filePath); err != nil {
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		}
+		return
+	}
+	if result.newestId > 0 {
+		lastPtr.LcLastReadId = result.newestId
+		lastPtr.LcLastReadCreateTime = result.newestCreateTime
+	}
+	if err := updateLastPointer(lastPtr, filePath); err != nil {
+		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		return
+	}
+
 	// Not finding the last read entry is an anomaly only during a catch-up;
 	// stopping at the page limit while collecting from scratch just bounds
-	// the backfill
+	// the backfill. Reported only after the new position is persisted: when
+	// the emission or the pointer write above fails, the next cycle retries
+	// from the old position and no entry is skipped
 	if result.catchingUp() {
 		switch result.stop {
 		case lcScanPageLimit:
@@ -122,19 +141,6 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		case lcScanEndOfLog:
 			slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", result.lastReadId, "newestId", result.newestId)
 		}
-	}
-
-	emitErr := c.emitLifecycleLogs(result.logs, m, logWriter)
-
-	// Advance the pointer only when all the entries were written, so that a
-	// write failure does not lose entries; the next cycle re-emits them
-	if emitErr == nil && result.newestId > 0 {
-		lastPtr.LcLastReadId = result.newestId
-		lastPtr.LcLastReadCreateTime = result.newestCreateTime
-	}
-	err = updateLastPointer(lastPtr, filePath)
-	if err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 	}
 }
 

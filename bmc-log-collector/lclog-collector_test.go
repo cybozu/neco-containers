@@ -34,7 +34,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
 	machineWriteFail := Machine{Serial: "LCLOG08", BmcIP: "127.0.0.1:9980", NodeIP: "10.69.0.12"}
 	machineBadInitial := Machine{Serial: "LCLOG09", BmcIP: "127.0.0.1:10080", NodeIP: "10.69.0.13"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail, machineBadInitial}
+	machineTruncatedWriteFail := Machine{Serial: "LCLOG10", BmcIP: "127.0.0.1:10180", NodeIP: "10.69.0.14"}
+	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail, machineBadInitial, machineTruncatedWriteFail}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -117,6 +118,13 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineBadInitial.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG09-lc-1.json", "LCLOG09-lc-2.json"},
+			},
+			{
+				// The log writer fails while the catch-up hits the page limit;
+				// the same snapshot is served again for the retry cycle
+				host:    machineTruncatedWriteFail.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG02-lc-1.json", "LCLOG02-lc-2.json", "LCLOG02-lc-2.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -238,6 +246,33 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			}
 			Expect(lcLastReadId(machineTruncated.Serial)).To(Equal(12))
 			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncated.Serial))).To(Equal(1.0))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("the log writer fails while the catch-up hits the page limit", func() {
+		It("does not count the truncated counter until the entries are emitted and the pointer is advanced", func(ctx SpecContext) {
+			lcSmall := lc
+			lcSmall.lcMaxPages = 2
+			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
+			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
+
+			// The write failure keeps the pointer, so no entry is skipped yet
+			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, failingLogWriter{})
+			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
+			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(0.0))
+
+			// The retry emits the entries and records the gap once
+			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
+			file, err := OpenTestResultLog(path.Join(testOutputDir, machineTruncatedWriteFail.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader := bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2", "7", "8", "9", "10", "11", "12"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(12))
+			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(1.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
