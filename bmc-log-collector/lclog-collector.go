@@ -51,16 +51,17 @@ type RedfishLcLogSchema struct {
 	Type        string         `json:"@odata.type"`
 	Description string         `json:"Description"`
 	Members     []LifeCycleLog `json:"Members"`
+	NextLink    string         `json:"Members@odata.nextLink"`
 }
 
 // collectLifecycleLog collects the LC (Lifecycle) log from iDRAC.
 //
 // Unlike the SEL endpoint, the LC log endpoint returns only the latest page
-// (50 entries on the real iDRAC, newest first) and older entries are read
-// with the $skip query parameter. This function pages backward until it
-// finds the entry read in the previous cycle. On the first collection for a
-// machine, and after the LC log was cleared in iDRAC, only the latest page
-// is emitted so that the whole history is not backfilled at once.
+// (50 entries on the real iDRAC, newest first). This function follows
+// Members@odata.nextLink backward until it finds the entry read in the
+// previous cycle. On the first collection for a machine, and after the LC
+// log was cleared in iDRAC, only the latest page is emitted so that the
+// whole history is not backfilled at once.
 func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
@@ -76,23 +77,19 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		return
 	}
 
-	baseUrl := "https://" + m.BmcIP + c.rfLcPath
-
 	var page0 []LifeCycleLog // the latest page, kept for the first collection and the after-clear restart
 	var newLogs []LifeCycleLog
-	minCollectedId := 0
+	seen := make(map[string]struct{})
 	newestId := 0
 	var newestCreateTime int64
 	foundKnown := false
 	cleared := false
-	skip := 0
+	exhausted := false // reached the end of the LC log without finding the last read entry
 
+	bmcUrl := "https://" + m.BmcIP + c.rfLcPath
+	page := 0
 scan:
-	for page := range c.lcMaxPages {
-		bmcUrl := baseUrl
-		if skip > 0 {
-			bmcUrl = baseUrl + "?$skip=" + strconv.Itoa(skip)
-		}
+	for ; page < c.lcMaxPages; page++ {
 		byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
 		if err != nil {
 			counterRequestFailed.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
@@ -107,7 +104,7 @@ scan:
 			}
 			return
 		}
-		if statusCode == http.StatusNotFound || statusCode == http.StatusMethodNotAllowed {
+		if page == 0 && (statusCode == http.StatusNotFound || statusCode == http.StatusMethodNotAllowed) {
 			// The BMC does not implement the LC log service.
 			// Not counted as a failure to avoid a permanent false alarm.
 			if statusCode != lastPtr.LcLastHttpStatusCode {
@@ -143,6 +140,7 @@ scan:
 			return
 		}
 		if len(response.Members) == 0 {
+			exhausted = true
 			break
 		}
 
@@ -150,12 +148,12 @@ scan:
 			page0 = response.Members
 			newestId, err = strconv.Atoi(response.Members[0].Id)
 			if err != nil {
-				slog.Error("failed to strconv", "err", err, "serial", m.Serial, "Id", response.Members[0].Id)
+				slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", response.Members[0].Id)
 				return
 			}
 			createTime, err := time.Parse(time.RFC3339, response.Members[0].Create)
 			if err != nil {
-				slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
+				slog.Error("failed to parse for time; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Created", response.Members[0].Create)
 				return
 			}
 			newestCreateTime = createTime.Unix()
@@ -172,34 +170,47 @@ scan:
 		}
 
 		for _, v := range response.Members {
+			// The Id and the Created time are the basis of the pointer management.
+			// When they cannot be parsed, abort this cycle without advancing the
+			// pointer so that no entry is skipped permanently; the next cycle retries.
 			id, err := strconv.Atoi(v.Id)
 			if err != nil {
-				slog.Error("failed to strconv", "err", err, "serial", m.Serial, "Id", v.Id)
-				continue
-			}
-			if id > lastPtr.LcLastReadId {
-				// An entry created between the page requests shifts the $skip
-				// offset backward and the next page repeats the entries of the
-				// previous page. Skip the already collected Ids.
-				if len(newLogs) == 0 || id < minCollectedId {
-					newLogs = append(newLogs, v)
-					minCollectedId = id
-				}
-				continue
+				slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id)
+				return
 			}
 			if id == lastPtr.LcLastReadId && lastPtr.LcLastReadCreateTime != 0 {
 				createTime, err := time.Parse(time.RFC3339, v.Create)
-				if err == nil && createTime.Unix() != lastPtr.LcLastReadCreateTime {
+				if err != nil {
+					slog.Error("failed to parse for time; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Created", v.Create)
+					return
+				}
+				if createTime.Unix() != lastPtr.LcLastReadCreateTime {
 					// The same Id with a different creation time: the LC log was
 					// cleared and has grown beyond the last read Id since then
 					cleared = true
 					break scan
 				}
 			}
-			foundKnown = true
-			break scan
+			if id <= lastPtr.LcLastReadId {
+				foundKnown = true
+				break scan
+			}
+			// An entry created between the page requests shifts the pages backward
+			// and the next page repeats the entries of the previous page.
+			// Skip the already collected entries.
+			if _, ok := seen[v.Id]; ok {
+				continue
+			}
+			seen[v.Id] = struct{}{}
+			newLogs = append(newLogs, v)
 		}
-		skip += len(response.Members)
+
+		if response.NextLink == "" {
+			// The last page of the LC log
+			exhausted = true
+			break
+		}
+		bmcUrl = "https://" + m.BmcIP + response.NextLink
 	}
 
 	switch {
@@ -209,9 +220,13 @@ scan:
 		slog.Warn("the lifecycle log was cleared in iDRAC; restarting from the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
 		c.emitLifecycleLogs(page0, m, logWriter)
 	default:
-		if len(newLogs) > 0 && !foundKnown {
-			counterLcCatchupTruncated.WithLabelValues(m.Serial).Inc()
-			slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
+		if !foundKnown && len(newLogs) > 0 {
+			if page == c.lcMaxPages {
+				counterLcCatchupTruncated.WithLabelValues(m.Serial).Inc()
+				slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
+			} else if exhausted {
+				slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newestId)
+			}
 		}
 		c.emitLifecycleLogs(newLogs, m, logWriter)
 	}

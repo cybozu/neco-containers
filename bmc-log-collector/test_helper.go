@@ -174,6 +174,11 @@ func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
 		"Members@odata.count": len(snapshot.Members),
 		"Members":             page,
 	}
+	// The real iDRAC returns Members@odata.nextLink while more entries are
+	// available and omits it on the last page (verified on FW 7.20.30.55)
+	if skip+pageSize < len(snapshot.Members) {
+		response["Members@odata.nextLink"] = redfishLcPath + "?$skip=" + strconv.Itoa(skip+pageSize)
+	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		fmt.Println("failed to encode the LC log response", err)
 	}

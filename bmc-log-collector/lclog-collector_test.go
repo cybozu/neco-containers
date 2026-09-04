@@ -30,7 +30,9 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineMismatch := Machine{Serial: "LCLOG03", BmcIP: "127.0.0.1:9380", NodeIP: "10.69.0.6"}
 	machineNoLcLog := Machine{Serial: "LCLOG04", BmcIP: "127.0.0.1:9480", NodeIP: "10.69.0.7"}
 	machineShifted := Machine{Serial: "LCLOG05", BmcIP: "127.0.0.1:9580", NodeIP: "10.69.0.8"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted}
+	machineExhausted := Machine{Serial: "LCLOG06", BmcIP: "127.0.0.1:9680", NodeIP: "10.69.0.9"}
+	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
+	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -89,6 +91,18 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				resDir:          "testdata/redfish_response",
 				lcFiles:         []string{"LCLOG05-lc-1.json", "LCLOG05-lc-2.json", "LCLOG05-lc-3.json", "LCLOG05-lc-4.json"},
 				lcAdvanceOnSkip: true,
+			},
+			{
+				// The log ends (no nextLink) before reaching the pointered entry
+				host:    machineExhausted.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG06-lc-1.json", "LCLOG06-lc-2.json"},
+			},
+			{
+				// An entry with a non-numeric Id appears, then the device recovers
+				host:    machineBadEntry.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG07-lc-1.json", "LCLOG07-lc-2.json", "LCLOG07-lc-3.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -271,6 +285,73 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineShifted.Serial)).To(Equal(9))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("the log ends before reaching the last read entry", func() {
+		var file *os.File
+		var reader *bufio.Reader
+		var err error
+
+		It("collect the first time", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineExhausted, logWriter)
+
+			file, err = OpenTestResultLog(path.Join(testOutputDir, machineExhausted.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader = bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"3", "4", "5"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+		}, SpecTimeout(30*time.Second))
+
+		It("emit the read entries without counting the truncated counter", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineExhausted, logWriter)
+
+			for _, id := range []string{"6", "7", "8", "9"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineExhausted.Serial)).To(Equal(9))
+			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineExhausted.Serial))).To(Equal(0.0))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("an entry has a non-numeric Id", func() {
+		var file *os.File
+		var reader *bufio.Reader
+		var err error
+
+		It("collect the first time", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadEntry, logWriter)
+
+			file, err = OpenTestResultLog(path.Join(testOutputDir, machineBadEntry.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader = bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineBadEntry.Serial)).To(Equal(2))
+		}, SpecTimeout(30*time.Second))
+
+		It("abort the cycle and keep the pointer unchanged", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadEntry, logWriter)
+			Expect(lcLastReadId(machineBadEntry.Serial)).To(Equal(2))
+			// Nothing is emitted in this cycle; the next test case proves it by
+			// reading the recovered entries as the immediately following output.
+		}, SpecTimeout(30*time.Second))
+
+		It("retry successfully in the next cycle", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadEntry, logWriter)
+
+			for _, id := range []string{"3", "4", "5"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			Expect(lcLastReadId(machineBadEntry.Serial)).To(Equal(5))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})

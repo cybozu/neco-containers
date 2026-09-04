@@ -48,11 +48,16 @@ The LC log is collected in the same way as the SEL with the following difference
 
 1. Use `/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries` as the path to Redfish.
 2. This endpoint returns only the latest 50 entries in the newest-first order.
-   The collector pages backward with the `$skip` query parameter until it finds the entry
-   whose ID was recorded in the pointer file in the previous cycle.
+   The collector follows `Members@odata.nextLink` backward until it finds the entry
+   whose ID was recorded in the pointer file in the previous cycle. On the real iDRAC
+   (verified on FW 7.20.30.55), `Members@odata.nextLink` is returned while more entries
+   are available and is omitted on the last page.
    The number of pages read in one cycle is limited (40 pages by default). When the limit is hit,
    the collector emits only the entries it has read, records the gap in the
    `bmc_lclog_catchup_truncated_total` metric, and continues from the newest entry.
+   When the last page is reached without finding the pointered entry (which suggests
+   an undetected log clear), the collector emits the read entries with a warning and
+   continues from the newest entry; the metric is not counted in this case.
 3. On the first collection for a machine, only the latest page is emitted.
    The whole history is not backfilled to avoid a write spike to the log pipeline.
 4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
@@ -65,10 +70,14 @@ The LC log is collected in the same way as the SEL with the following difference
    This is accepted because the LC log grows only a few entries per day in our fleet.
 5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
    the log type can be distinguished in Loki.
-6. A BMC that replies 404 or 405 for the LC log path does not implement the LC log service.
-   It is not counted in `bmc_log_requests_failed_total` to avoid a permanent false alarm
-   on such machines.
-7. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
+6. A BMC that replies 404 or 405 for the first page of the LC log path does not implement
+   the LC log service. It is not counted in `bmc_log_requests_failed_total` to avoid a
+   permanent false alarm on such machines. The same status on the following pages is
+   handled as an ordinary HTTP failure.
+7. The entry ID and the creation time are the basis of the pointer management, so when
+   they cannot be parsed the collector aborts the cycle without advancing the pointer
+   and retries in the next cycle.
+8. The request counters have the `log_type` label (`sel` or `lclog`). Note that the existing
    alert rules aggregate these counters with `sum by(serial)`, so adding the label does not
    break them.
 
