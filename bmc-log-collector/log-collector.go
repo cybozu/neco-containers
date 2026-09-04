@@ -73,10 +73,19 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
-	byteJSON, ok := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeSel, &lastPtr.LastHttpStatusCode, &lastPtr.LastError)
-	if !ok {
-		// The failure has been reported; record the request status and keep
-		// the read position unchanged so that the next cycle retries
+	byteJSON, statusCode, err := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeSel)
+
+	lastPtr.LastHttpStatusCode = statusCode
+	lastPtr.LastError = ""
+	if err != nil {
+		lastPtr.LastError = err.Error()
+		if err := updateLastPointer(lastPtr, filePath); err != nil {
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		}
+		return
+	}
+
+	if statusCode != http.StatusOK {
 		if err := updateLastPointer(lastPtr, filePath); err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
