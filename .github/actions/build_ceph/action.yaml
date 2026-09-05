@@ -7,6 +7,9 @@ inputs:
       Note that the image will NOT be pushed if the tag has already existed
       on the registry, even if this field is set to 'true'.
     required: true
+  takumi-guard-bot-id:
+    description: "Takumi Guard bot ID"
+    required: true
 runs:
   using: composite
   steps:
@@ -22,6 +25,7 @@ runs:
       uses: ./.github/actions/setup
       with:
         platforms: ${{ fromJSON(steps.prepare.outputs.plan).platforms }}
+        takumi-guard-bot-id: ${{ inputs.takumi-guard-bot-id }}
     - name: Build
       if: fromJSON(steps.prepare.outputs.plan).build
       shell: bash
