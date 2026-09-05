@@ -10,6 +10,9 @@ inputs:
       Note that the image will NOT be pushed if the tag has already existed 
       on the registry, even if this field is set to 'true'.
     required: true
+  takumi-guard-bot-id:
+    description: "Takumi Guard bot ID"
+    required: true
 
 outputs:
   image:
@@ -46,6 +49,7 @@ runs:
       with:
         platforms: "linux/amd64"
         go-version-file: "./envoy/go.mod"
+        takumi-guard-bot-id: ${{ inputs.takumi-guard-bot-id }}
     - name: Prepare VERSION
       shell: bash
       run: |
