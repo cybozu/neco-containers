@@ -8,6 +8,8 @@ inputs:
     description: "Go version"
   go-version-file:
     description: "Go version file"
+  takumi-guard-bot-id:
+    description: "Takumi Guard bot ID"
 
 runs:
   using: "composite"
@@ -31,6 +33,9 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
         go-version-file: ${{ inputs.go-version-file }}
+    - uses: flatt-security/setup-takumi-guard-golang@1c8aa7498f7f635fbd6ad6a0f436d03092b3502d # v1.1.0
+      with:
+        bot-id: ${{ inputs.takumi-guard-bot-id }}
     - name: Setup aqua
       uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
       with:
