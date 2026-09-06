@@ -1,9 +1,9 @@
 # ref. https://github.com/docker-library/haproxy/blob/master/3.0/Dockerfile
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260604@sha256:2b6f938e5831d2f205a6651d4f6226b2e76e2145678a9d41f3d81989a6fbd953 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260902@sha256:d1d788d7de6d89d8253484b4f6d959a86005aee02ef2b69d9f451fba86be6a4d AS build
 
-ARG HAPROXY_VERSION=3.0.26
+ARG HAPROXY_VERSION=3.0.27
 ARG HAPROXY_URL=https://www.haproxy.org/download/3.0/src/haproxy-${HAPROXY_VERSION}.tar.gz
-ARG HAPROXY_SHA256=8a5b31ca881b7d714d228acccc7ac61b132bc7bcb9c3b76adc846e800917fe3a
+ARG HAPROXY_SHA256=c200b72ed5078d99d4bd658834478058409420b45d08dcec7e7a015e9c7b1dd1
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -31,7 +31,7 @@ RUN wget -O haproxy.tar.gz "$HAPROXY_URL" && \
     make -C /tmp/haproxy -j "$(nproc)" all $makeOpts && \
     make -C /tmp/haproxy install-bin $makeOpts
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20260604@sha256:c7c519ae7504df61e01495635ebda9c8698f2d221cd3fcf6e9500ad97b9d2421
+FROM ghcr.io/cybozu/ubuntu:24.04.20260902@sha256:182a16198fafecbce2f813a07de269d28efb885aa4843e611ce44c25ce46cc2b
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 # runtime does not need -dev packages
