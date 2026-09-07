@@ -11,38 +11,43 @@ import (
 	"time"
 )
 
+// LifeCycleLog is an entry of the iDRAC Lifecycle log as returned by Redfish,
+// extended with the fields that identify the machine in the output.
 type LifeCycleLog struct {
-	Od_Id             string       `json:"@odata.id"`
-	Od_Type           string       `json:"@odata.type"`
-	Create            string       `json:"Created"`
-	Description       string       `json:"Description"`
-	EntryType         string       `json:"EntryType"`
-	Id                string       `json:"Id"`
-	Message           string       `json:"Message"`
-	MessageArgs       []string     `json:"MessageArgs"`
-	OdCnt_MessageArgs int          `json:"MessageArgs@odata.count"`
-	MessageId         string       `json:"MessageId"`
-	Name              string       `json:"Name"`
-	Oem               LifeCycleOem `json:"Oem"`
-	OemRecordFormat   string       `json:"OemRecordFormat"`
-	Severity          string       `json:"Severity"`
-	Serial            string
-	NodeIP            string
-	BmcIP             string
-	LogType           string
+	ODataID          string       `json:"@odata.id"`
+	ODataType        string       `json:"@odata.type"`
+	Create           string       `json:"Created"`
+	Description      string       `json:"Description"`
+	EntryType        string       `json:"EntryType"`
+	Id               string       `json:"Id"`
+	Message          string       `json:"Message"`
+	MessageArgs      []string     `json:"MessageArgs"`
+	MessageArgsCount int          `json:"MessageArgs@odata.count"`
+	MessageId        string       `json:"MessageId"`
+	Name             string       `json:"Name"`
+	Oem              LifeCycleOem `json:"Oem"`
+	OemRecordFormat  string       `json:"OemRecordFormat"`
+	Severity         string       `json:"Severity"`
+	Serial           string
+	NodeIP           string
+	BmcIP            string
+	LogType          string
 }
 
+// LifeCycleOem is the vendor-specific part of a Lifecycle log entry.
 type LifeCycleOem struct {
 	Dell LifeCycleOemDell `json:"Dell"`
 }
 
+// LifeCycleOemDell is the Dell-specific part of a Lifecycle log entry.
 type LifeCycleOemDell struct {
-	Od_Type           string  `json:"@odata.type"`
+	ODataType         string  `json:"@odata.type"`
 	Category          string  `json:"Category"`
 	Comment           *string `json:"Comment"`
 	LastUpdatedByUser *string `json:"LastUpdatedByUser"`
 }
 
+// RedfishLcLogSchema is one page of the Lifecycle log entry collection.
 type RedfishLcLogSchema struct {
 	Name        string         `json:"Name"`
 	Count       int            `json:"Members@odata.count"`
@@ -100,7 +105,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 
 	// Advance the read position only when all the entries were written, so
 	// that a write failure does not lose entries; the next cycle re-emits them
-	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
+	if !c.emitLifecycleLogs(result.logs, m, logWriter) {
 		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
@@ -279,10 +284,10 @@ func parseLifecycleLogCreateTime(m Machine, v LifeCycleLog) (time.Time, bool) {
 }
 
 // emitLifecycleLogs writes the entries, given newest first, in ascending order.
-// A write failure stops the emission and is returned so that the caller keeps
-// the pointer unchanged; an entry that cannot be marshaled is skipped instead
-// because retrying cannot fix it.
-func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWriter bmcLogWriter) error {
+// A write failure is reported and stops the emission, returning false so that
+// the caller keeps the pointer unchanged; an entry that cannot be marshaled is
+// skipped instead because retrying cannot fix it.
+func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWriter bmcLogWriter) bool {
 	for _, v := range slices.Backward(logs) {
 		// Add the information to identify of the node
 		v.Serial = m.Serial
@@ -295,11 +300,10 @@ func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWrit
 			slog.Error("failed to marshal the lifecycle log", "err", err, "serial", m.Serial, "Id", v.Id)
 			continue
 		}
-		err = logWriter.write(string(bmcByteJsonLog), m.Serial)
-		if err != nil {
+		if err := logWriter.write(string(bmcByteJsonLog), m.Serial); err != nil {
 			slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog))
-			return err
+			return false
 		}
 	}
-	return nil
+	return true
 }
