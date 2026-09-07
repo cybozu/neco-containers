@@ -77,9 +77,7 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	if !ok {
 		// The failure has been reported; record the request status and keep
 		// the read position unchanged so that the next cycle retries
-		if err := updateLastPointer(lastPtr, filePath); err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
+		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
 
@@ -166,9 +164,5 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	lastPtr.FirstCreateTime = firstCreateTime
-	err = updateLastPointer(lastPtr, filePath)
-	if err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "firstCreateTime", firstCreateTime, "filePath", filePath)
-		return
-	}
+	saveLastPointer(lastPtr, filePath, m.Serial)
 }

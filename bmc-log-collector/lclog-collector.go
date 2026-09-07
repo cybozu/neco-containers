@@ -54,34 +54,18 @@ type RedfishLcLogSchema struct {
 	NextLink    string         `json:"Members@odata.nextLink"`
 }
 
-// lcScanStop is the reason why scanLifecycleLog stopped following the pages.
-type lcScanStop int
-
-const (
-	// lcScanFoundLastRead: reached the entry read in the previous cycle.
-	lcScanFoundLastRead lcScanStop = iota
-	// lcScanEndOfLog: reached the oldest entry of the LC log.
-	lcScanEndOfLog
-	// lcScanPageLimit: read lcMaxPages pages.
-	lcScanPageLimit
-	// lcScanEmptyLog: the LC log has no entry.
-	lcScanEmptyLog
-)
-
 // lcScanResult is the outcome of a successful scanLifecycleLog.
 type lcScanResult struct {
 	logs             []LifeCycleLog // the entries to emit, newest first
 	newestId         int            // Id of the newest entry; 0 when the log is empty
 	newestCreateTime int64          // Created time of the newest entry
-	lastReadId       int            // the Id the scan searched for; 0 when collecting from scratch
-	stop             lcScanStop
+	gap              bool           // the scan stopped at the page limit before reaching the target: the entries in between are not in logs
 }
 
-// catchingUp reports whether the scan searched for the entry read in the
-// previous cycle, as opposed to collecting from scratch (the first collection
-// for a machine, or the collection after the LC log was cleared in iDRAC).
-func (r lcScanResult) catchingUp() bool {
-	return r.lastReadId > 0
+// lcScanTarget is the entry read in the previous cycle, where the scan stops.
+type lcScanTarget struct {
+	id         int
+	createTime int64 // 0 when unknown (pointer file written by an older version)
 }
 
 // collectLifecycleLog collects the LC (Lifecycle) log from iDRAC.
@@ -100,94 +84,83 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
+	lastReadId := lastPtr.LcLastReadId
 
 	result, ok := c.scanLifecycleLog(ctx, m, &lastPtr)
 	if !ok {
 		// The failure has been reported; record the request status and keep
-		// the read position unchanged so that the next cycle retries
-		if err := updateLastPointer(lastPtr, filePath); err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
+		// the read position so that the next cycle retries
+		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
-
-	// Advance the pointer only when all the entries were written, so that a
-	// write failure does not lose entries; the next cycle re-emits them
+	// Advance the read position only when all the entries were written, so
+	// that a write failure does not lose entries; the next cycle re-emits them
 	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
-		if err := updateLastPointer(lastPtr, filePath); err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
+		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
 	if result.newestId > 0 {
 		lastPtr.LcLastReadId = result.newestId
 		lastPtr.LcLastReadCreateTime = result.newestCreateTime
 	}
-	if err := updateLastPointer(lastPtr, filePath); err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+	if !saveLastPointer(lastPtr, filePath, m.Serial) {
 		return
 	}
-
-	// Not finding the last read entry is an anomaly only during a catch-up;
-	// stopping at the page limit while collecting from scratch just bounds
-	// the backfill. Reported only after the new position is persisted: when
-	// the emission or the pointer write above fails, the next cycle retries
-	// from the old position and no entry is skipped
-	if result.catchingUp() {
-		switch result.stop {
-		case lcScanPageLimit:
-			counterLcCatchupTruncated.WithLabelValues(m.Serial).Inc()
-			slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", result.lastReadId, "newestId", result.newestId)
-		case lcScanEndOfLog:
-			slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", result.lastReadId, "newestId", result.newestId)
-		}
+	// The gap is reported only now that the new position is persisted; a
+	// failure above makes the next cycle retry from the old position instead
+	if result.gap {
+		counterLcPageLimitReached.WithLabelValues(m.Serial).Inc()
+		slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", lastReadId, "newestId", result.newestId)
 	}
 }
 
-// scanLifecycleLog follows the LC log pages from the newest entry backward and
-// gathers the entries newer than the one read in the previous cycle.
+// scanLifecycleLog follows the LC log pages from the newest entry backward
+// and gathers the entries newer than the target, the entry read in the
+// previous cycle. Without a target (the first collection for a machine, or
+// after the LC log was cleared in iDRAC) it collects from scratch, and the
+// page limit just bounds the backfill.
 //
-// It returns false when the cycle must be aborted. The failure has already
-// been reported and lastPtr carries the status of the last request, but the
-// read position in lastPtr is left unchanged. On the real iDRAC the entry Id
-// is a contiguous number, newest first; the Id and the Created time are the
-// basis of the pointer management, so an entry whose Id or Created time
-// cannot be parsed aborts the cycle to avoid skipping it permanently.
+// It returns false when the cycle must be aborted: the failure has been
+// reported and lastPtr carries the status of the last request. The Id and
+// the Created time are the basis of the pointer management, so an entry
+// whose Id or Created time cannot be parsed aborts the cycle to avoid
+// skipping it permanently.
 func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr *LastPointer) (lcScanResult, bool) {
-	result := lcScanResult{lastReadId: lastPtr.LcLastReadId}
-	seen := make(map[string]struct{})
+	var target *lcScanTarget
+	if lastPtr.LcLastReadId > 0 {
+		target = &lcScanTarget{id: lastPtr.LcLastReadId, createTime: lastPtr.LcLastReadCreateTime}
+	}
 
+	var result lcScanResult
+	seen := make(map[string]struct{})
 	url := "https://" + m.BmcIP + c.rfLcPath
 	for page := 0; page < c.lcMaxPages; page++ {
 		response, ok := c.fetchLifecycleLogPage(ctx, m, lastPtr, url, page == 0)
 		if !ok {
 			return lcScanResult{}, false
 		}
-		if len(response.Members) == 0 {
-			if page == 0 {
-				result.stop = lcScanEmptyLog
-			} else {
-				result.stop = lcScanEndOfLog
-			}
-			return result, true
-		}
 
 		if page == 0 {
+			if len(response.Members) == 0 {
+				// The LC log is empty
+				return lcScanResult{}, true
+			}
 			newest := response.Members[0]
-			result.newestId, ok = parseLifecycleLogId(m, newest)
+			newestId, ok := parseLifecycleLogId(m, newest)
 			if !ok {
 				return lcScanResult{}, false
 			}
-			createTime, ok := parseLifecycleLogCreateTime(m, newest)
+			newestCreateTime, ok := parseLifecycleLogCreateTime(m, newest)
 			if !ok {
 				return lcScanResult{}, false
 			}
-			result.newestCreateTime = createTime.Unix()
+			result.newestId = newestId
+			result.newestCreateTime = newestCreateTime.Unix()
 
 			// The entry Id restarts from 1 when the LC log is cleared in iDRAC
-			if result.newestId < result.lastReadId {
-				slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", result.lastReadId, "newestId", result.newestId)
-				result.lastReadId = 0
+			if target != nil && result.newestId < target.id {
+				slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", target.id, "newestId", result.newestId)
+				target = nil
 			}
 		}
 
@@ -196,20 +169,20 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 			if !ok {
 				return lcScanResult{}, false
 			}
-			if result.catchingUp() && id == result.lastReadId && lastPtr.LcLastReadCreateTime != 0 {
+			if target != nil && id == target.id && target.createTime != 0 {
 				createTime, ok := parseLifecycleLogCreateTime(m, v)
 				if !ok {
 					return lcScanResult{}, false
 				}
-				if createTime.Unix() != lastPtr.LcLastReadCreateTime {
+				if createTime.Unix() != target.createTime {
 					// The same Id with a different creation time: the LC log was
-					// cleared and has grown beyond the last read Id since then
-					slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", result.lastReadId, "Id", v.Id)
-					result.lastReadId = 0
+					// cleared and has grown beyond the target since then
+					slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", target.id, "Id", v.Id)
+					target = nil
 				}
 			}
-			if result.catchingUp() && id <= result.lastReadId {
-				result.stop = lcScanFoundLastRead
+			if target != nil && id <= target.id {
+				// Reached the target: the entries gathered so far are the new ones
 				return result, true
 			}
 			// An entry created between the page requests shifts the pages backward
@@ -222,14 +195,19 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 			result.logs = append(result.logs, v)
 		}
 
-		if response.NextLink == "" {
-			result.stop = lcScanEndOfLog
+		if response.NextLink == "" || len(response.Members) == 0 {
+			// The last page of the LC log
+			if target != nil {
+				slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", target.id, "newestId", result.newestId)
+			}
 			return result, true
 		}
 		url = "https://" + m.BmcIP + response.NextLink
 	}
 
-	result.stop = lcScanPageLimit
+	// Stopping at the page limit skips entries only during a catch-up; while
+	// collecting from scratch the limit just bounds the backfill
+	result.gap = target != nil
 	return result, true
 }
 

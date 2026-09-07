@@ -54,7 +54,7 @@ The LC log is collected in the same way as the SEL with the following difference
    are available and is omitted on the last page.
    The number of pages read in one cycle is limited (3 pages by default). When the limit is hit,
    the collector emits only the entries it has read, records the gap in the
-   `bmc_lclog_catchup_truncated_total` metric, and continues from the newest entry.
+   `bmc_lclog_page_limit_reached_total` metric, and continues from the newest entry.
    When the last page is reached without finding the pointered entry (which suggests
    an undetected log clear), the collector emits the read entries with a warning and
    continues from the newest entry; the metric is not counted in this case.
@@ -69,7 +69,7 @@ The LC log is collected in the same way as the SEL with the following difference
    In both cases the collector collects from scratch, bounded by the page limit.
    Note that a clear followed by more new entries than the page limit within one
    scraping interval cannot be distinguished from a plain backlog; such a cycle is
-   handled as a truncation (recorded in the metric, the entries in between are skipped).
+   recorded in the metric as a page limit hit (the entries in between are skipped).
    This is accepted because the LC log grows only a few entries per day in our fleet.
 5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
    the log type can be distinguished in Loki.

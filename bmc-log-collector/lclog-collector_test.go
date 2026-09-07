@@ -234,7 +234,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			}
 		}, SpecTimeout(30*time.Second))
 
-		It("emit only the entries within the page limit and count up the truncated counter", func(ctx SpecContext) {
+		It("emit only the entries within the page limit and count up the page limit counter", func(ctx SpecContext) {
 			lcSmall := lc
 			lcSmall.lcMaxPages = 2
 			lcSmall.collectLifecycleLog(ctx, machineTruncated, logWriter)
@@ -245,13 +245,13 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineTruncated.Serial)).To(Equal(12))
-			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncated.Serial))).To(Equal(1.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncated.Serial))).To(Equal(1.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
 
 	Context("the log writer fails while the catch-up hits the page limit", func() {
-		It("does not count the truncated counter until the entries are emitted and the pointer is advanced", func(ctx SpecContext) {
+		It("does not count the page limit counter until the entries are emitted and the pointer is advanced", func(ctx SpecContext) {
 			lcSmall := lc
 			lcSmall.lcMaxPages = 2
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
@@ -260,7 +260,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			// The write failure keeps the pointer, so no entry is skipped yet
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, failingLogWriter{})
 			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
-			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(0.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(0.0))
 
 			// The retry emits the entries and records the gap once
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
@@ -272,7 +272,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(12))
-			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(1.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial))).To(Equal(1.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
@@ -355,7 +355,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			}
 		}, SpecTimeout(30*time.Second))
 
-		It("emit the read entries without counting the truncated counter", func(ctx SpecContext) {
+		It("emit the read entries without counting the page limit counter", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineExhausted, logWriter)
 
 			for _, id := range []string{"6", "7", "8", "9"} {
@@ -363,7 +363,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineExhausted.Serial)).To(Equal(9))
-			Expect(testutil.ToFloat64(counterLcCatchupTruncated.WithLabelValues(machineExhausted.Serial))).To(Equal(0.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineExhausted.Serial))).To(Equal(0.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
