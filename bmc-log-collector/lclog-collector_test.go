@@ -167,13 +167,14 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		var reader *bufio.Reader
 		var err error
 
-		It("collect the whole log on the first time, bounded by the page limit", func(ctx SpecContext) {
+		It("collect only the latest page on the first time", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineBasic, logWriter)
 
 			file, err = OpenTestResultLog(path.Join(testOutputDir, machineBasic.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader = bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"1", "2", "3", "4", "5"} {
+			// 5 entries exist, but the mock serves 3 per page
+			for _, id := range []string{"3", "4", "5"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 				Expect(result.Serial).To(Equal(machineBasic.Serial))
@@ -201,7 +202,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			// the next entries read from the output are the ones after the log clear.
 		}, SpecTimeout(30*time.Second))
 
-		It("collect from scratch after the log was cleared in iDRAC", func(ctx SpecContext) {
+		It("collect the latest page after the log was cleared in iDRAC", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineBasic, logWriter)
 
 			for _, id := range []string{"1", "2"} {
@@ -295,7 +296,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			}
 		}, SpecTimeout(30*time.Second))
 
-		It("collect from scratch when the same Id has a different creation time", func(ctx SpecContext) {
+		It("collect the latest page when the same Id has a different creation time", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineMismatch, logWriter)
 
 			for _, id := range []string{"1", "2", "3"} {
@@ -349,7 +350,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			file, err = OpenTestResultLog(path.Join(testOutputDir, machineExhausted.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader = bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"1", "2", "3", "4", "5"} {
+			for _, id := range []string{"3", "4", "5"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 			}

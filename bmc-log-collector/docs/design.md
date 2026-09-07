@@ -58,16 +58,14 @@ The LC log is collected in the same way as the SEL with the following difference
    When the last page is reached without finding the pointered entry (which suggests
    an undetected log clear), the collector emits the read entries with a warning and
    continues from the newest entry; the metric is not counted in this case.
-   The metric and the warnings are suppressed while collecting from scratch (the first
-   collection and the collection after a log clear), where the limit just bounds the backfill.
-3. The first collection for a machine goes through the same loop with an empty pointer,
-   so it collects from the newest entry back to the page limit (150 entries by default).
-   The whole history is not ingested at once.
+3. The first collection for a machine reads only the latest page (50 entries on the
+   real iDRAC) and continues from its newest entry. The whole history is not ingested
+   at once, and a single request decides the outcome, which suits unreliable BMCs.
 4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
    The clear is detected when the newest ID is smaller than the pointer, or when
    the entry with the ID recorded in the pointer file has a different creation time.
-   In both cases the collector collects from scratch, bounded by the page limit.
-   Note that a clear followed by more new entries than the page limit within one
+   In both cases the collector reads only the latest page, as on the first collection.
+   Note that a clear followed by more new entries than one page within one
    scraping interval cannot be distinguished from a plain backlog; such a cycle is
    recorded in the metric as a page limit hit (the entries in between are skipped).
    This is accepted because the LC log grows only a few entries per day in our fleet.

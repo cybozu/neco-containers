@@ -74,8 +74,8 @@ type lcScanTarget struct {
 // (50 entries on the real iDRAC, newest first). This function follows
 // Members@odata.nextLink backward until it finds the entry read in the
 // previous cycle, up to lcMaxPages pages. The first collection for a machine
-// and the collection after the LC log was cleared in iDRAC go through the
-// same loop; the page limit bounds the backfill in those cases.
+// and the collection after the LC log was cleared in iDRAC read only the
+// latest page, so that the whole history is not ingested at once.
 func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
@@ -116,12 +116,12 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 
 // scanLifecycleLog follows the LC log pages from the newest entry backward
 // and gathers the entries newer than the target, the entry read in the
-// previous cycle. Without a target (the first collection for a machine, or
-// after the LC log was cleared in iDRAC) it collects from scratch, and the
-// page limit just bounds the backfill.
+// previous cycle. Without a target (the first collection for a machine) or
+// when the LC log was cleared in iDRAC since the previous cycle, it returns
+// only the latest page.
 //
 // It returns false when the cycle must be aborted: the failure has been
-// reported and lastPtr carries the status of the last request. The Id and
+// reported and lastPtr carries the status of the failed request. The Id and
 // the Created time are the basis of the pointer management, so an entry
 // whose Id or Created time cannot be parsed aborts the cycle to avoid
 // skipping it permanently.
@@ -132,6 +132,7 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 	}
 
 	var result lcScanResult
+	var latestPage []LifeCycleLog
 	seen := make(map[string]struct{})
 	url := "https://" + m.BmcIP + c.rfLcPath
 	for page := 0; page < c.lcMaxPages; page++ {
@@ -145,7 +146,8 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 				// The LC log is empty
 				return lcScanResult{}, true
 			}
-			newest := response.Members[0]
+			latestPage = response.Members
+			newest := latestPage[0]
 			newestId, ok := parseLifecycleLogId(m, newest)
 			if !ok {
 				return lcScanResult{}, false
@@ -157,10 +159,14 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 			result.newestId = newestId
 			result.newestCreateTime = newestCreateTime.Unix()
 
+			if target == nil {
+				// The first collection for the machine
+				return lcLatestPage(m, result, latestPage)
+			}
 			// The entry Id restarts from 1 when the LC log is cleared in iDRAC
-			if target != nil && result.newestId < target.id {
-				slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", target.id, "newestId", result.newestId)
-				target = nil
+			if newestId < target.id {
+				slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", target.id, "newestId", newestId)
+				return lcLatestPage(m, result, latestPage)
 			}
 		}
 
@@ -169,7 +175,7 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 			if !ok {
 				return lcScanResult{}, false
 			}
-			if target != nil && id == target.id && target.createTime != 0 {
+			if id == target.id && target.createTime != 0 {
 				createTime, ok := parseLifecycleLogCreateTime(m, v)
 				if !ok {
 					return lcScanResult{}, false
@@ -177,11 +183,11 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 				if createTime.Unix() != target.createTime {
 					// The same Id with a different creation time: the LC log was
 					// cleared and has grown beyond the target since then
-					slog.Warn("the lifecycle log was cleared in iDRAC; collecting from scratch", "serial", m.Serial, "lastReadId", target.id, "Id", v.Id)
-					target = nil
+					slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", target.id, "Id", v.Id)
+					return lcLatestPage(m, result, latestPage)
 				}
 			}
-			if target != nil && id <= target.id {
+			if id <= target.id {
 				// Reached the target: the entries gathered so far are the new ones
 				return result, true
 			}
@@ -197,23 +203,34 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 
 		if response.NextLink == "" || len(response.Members) == 0 {
 			// The last page of the LC log
-			if target != nil {
-				slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", target.id, "newestId", result.newestId)
-			}
+			slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", target.id, "newestId", result.newestId)
 			return result, true
 		}
 		url = "https://" + m.BmcIP + response.NextLink
 	}
 
-	// Stopping at the page limit skips entries only during a catch-up; while
-	// collecting from scratch the limit just bounds the backfill
-	result.gap = target != nil
+	// The target was not reached within the page limit
+	result.gap = true
 	return result, true
 }
 
-// fetchLifecycleLogPage requests one page of the LC log and records the
-// request status in lastPtr. It returns false when the page could not be
-// obtained; the failure has been reported and counted by requestBmcLog.
+// lcLatestPage returns the whole latest page as the entries to emit, for the
+// cases without a previous position to catch up from. Every Id is validated
+// first so that a malformed entry aborts the cycle instead of being skipped
+// permanently when the position advances.
+func lcLatestPage(m Machine, result lcScanResult, latestPage []LifeCycleLog) (lcScanResult, bool) {
+	for _, v := range latestPage {
+		if _, ok := parseLifecycleLogId(m, v); !ok {
+			return lcScanResult{}, false
+		}
+	}
+	result.logs = latestPage
+	return result, true
+}
+
+// fetchLifecycleLogPage requests one page of the LC log. It returns false
+// when the page could not be obtained; the failure has been reported and
+// counted by requestBmcLog, and recorded in lastPtr.
 // A 404/405 reply to the first page means that the BMC does not implement
 // the LC log service; the same reply to a later page is an ordinary failure.
 func (c *logCollector) fetchLifecycleLogPage(ctx context.Context, m Machine, lastPtr *LastPointer, url string, firstPage bool) (RedfishLcLogSchema, bool) {
