@@ -19,4 +19,4 @@ jobs:
       - name: Verify SHAs and tag comments are consistent
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: pinact run --check --verify-comment
+        run: pinact run --check --verify-comment --min-age 14
