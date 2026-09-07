@@ -80,6 +80,10 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
+	// Clear the failure status so that the same failure after a recovery is
+	// reported again instead of being suppressed by the deduplication
+	lastPtr.LastHttpStatusCode = http.StatusOK
+	lastPtr.LastError = ""
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {

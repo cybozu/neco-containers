@@ -93,6 +93,11 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
+	// The whole scan succeeded: clear the failure status so that the same
+	// failure after a recovery is reported again
+	lastPtr.LcLastHttpStatusCode = http.StatusOK
+	lastPtr.LcLastError = ""
+
 	// Advance the read position only when all the entries were written, so
 	// that a write failure does not lose entries; the next cycle re-emits them
 	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
