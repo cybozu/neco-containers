@@ -1,0 +1,119 @@
+{
+  "checksums": [
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-darwin-amd64.tar.gz",
+      "checksum": "8070F03216142069C96A3F42D89A1387A74AFD0007FD59E485CA63675B1DD5CE",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-darwin-arm64.tar.gz",
+      "checksum": "9E58B4B8CB6D926946B2E59EB25FC2FB923965D3E000E00325E0227704FCD318",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-linux-amd64.tar.gz",
+      "checksum": "98ECD554591A592B0EE32F5D73871133BCEE06639619F1C032BCBA339340DC26",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-linux-arm64.tar.gz",
+      "checksum": "866C86683AA63C943A94CA2AF5DC2B0DB3483D1C3ED8C72BAEEABD13061A7E42",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-windows-amd64.zip",
+      "checksum": "52B924F382D2F323F4B374C875CB29D8DA754B5914C0B9466B7F265924D40050",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/cilium/cilium-cli/v0.19.4/cilium-windows-arm64.zip",
+      "checksum": "70E9CC9D4D73319001E1021B72FF2AFAE8D900E54E82BE4D24BFE56433BA1A7F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.31.0/kind-darwin-amd64",
+      "checksum": "A8B3CF77B2AD77AEC5BF710D1A2589D9117576132AF812885CAD41E9DEDE4D4E",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.31.0/kind-darwin-arm64",
+      "checksum": "88BF554FE9DA6311C9F8C2D082613C002911A476F6B5090E9420B35D84E70C5C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.31.0/kind-linux-amd64",
+      "checksum": "EB244CBAFCC157DFF60CF68693C14C9A75C4E6E6FEDAF9CD71C58117CB93E3FA",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.31.0/kind-linux-arm64",
+      "checksum": "8E1014E87C34901CC422A1445866835D1E666F2A61301C27E722BDEAB5A1F7E4",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/kubernetes-sigs/kind/v0.31.0/kind-windows-amd64",
+      "checksum": "2C3A9FF954DE16244380778683CF99E271BFC2FAC9C6C4E797E4623C45E59D9D",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/darwin/amd64/kubectl",
+      "checksum": "07A04D82BC2DE2F5D53DFD81F2109CA864F634A82B225257DAA2F9C2DB15CCEF",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/darwin/arm64/kubectl",
+      "checksum": "2B000DDED317319B1EBCA19C2BC70F772C7AAA0E8962FAE2D987BA04DD1A1B50",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/linux/amd64/kubectl",
+      "checksum": "36E2F4AC66259232341DD7866952D64A958846470F6A9A6A813B9117BD965207",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/linux/arm64/kubectl",
+      "checksum": "706256E21A4E9192EE62D1A007AC0BFCFF2B0B26E92CC7BAAD487A6A5D08FF82",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/windows/amd64/kubectl.exe",
+      "checksum": "D2D28CA3440ED94262B9B4BFFB30119CFCA69AC30B9CAD531A08E8EBD9720DD2",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/dl.k8s.io/v1.35.1/bin/windows/arm64/kubectl.exe",
+      "checksum": "BD79A702525F2E30D5275A22AA2BDA6FD34B92FA8D474DCE2B151E7B9A155B4C",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/get.helm.sh/helm-v4.2.0-darwin-amd64.tar.gz",
+      "checksum": "1376EA697140E4DB316736E760D5A47D12AFC1524DCE704476EF06FD7FDEDDC6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/get.helm.sh/helm-v4.2.0-darwin-arm64.tar.gz",
+      "checksum": "F13F959015447B6BC309F9FD506509926543988A39035C088B52522EC95E2ACB",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/get.helm.sh/helm-v4.2.0-linux-amd64.tar.gz",
+      "checksum": "97DBEB971BE4AC4B27E3839976D9564C0FB35C6F3B1DA89DD1E292D236AF4096",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/get.helm.sh/helm-v4.2.0-linux-arm64.tar.gz",
+      "checksum": "1F8DE130DFBD04DE64978E7B852A7A547BE1404956A366608276D2520B678670",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "http/get.helm.sh/helm-v4.2.0-windows-amd64.tar.gz",
+      "checksum": "34BF9659F8F04F3841A60131183B8E2ACC44E260DB4C93B889FF09718CACCA6F",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "registries/github_content/github.com/aquaproj/aqua-registry/v4.492.0/registry.yaml",
+      "checksum": "A0FAAA0CDBA0C23349E000D45D7DFE48185519CA72A0D5618A4C6198F2BCBA9EE10FA209351D44437495541A3BCECD987D65D176BBF59CF23271FC30D53DA90E",
+      "algorithm": "sha512"
+    }
+  ]
+}
