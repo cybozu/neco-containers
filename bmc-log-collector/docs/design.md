@@ -51,10 +51,12 @@ The LC log is collected in the same way as the SEL with the following difference
    The collector follows `Members@odata.nextLink` backward until it finds the entry
    whose ID was recorded in the pointer file in the previous cycle. On the real iDRAC
    (verified on FW 7.20.30.55), `Members@odata.nextLink` is returned while more entries
-   are available and is omitted on the last page.
+   are available and is omitted on the last page. The scan relies on this order:
+   a page whose IDs are not strictly descending aborts the cycle with an error, so that
+   a device with a different behavior is noticed instead of entries being skipped.
    The number of pages read in one cycle is limited (3 pages by default). When the limit is hit,
    the collector emits only the entries it has read, records the gap in the
-   `bmc_lclog_page_limit_reached_total` metric, and continues from the newest entry.
+   `bmc_log_page_limit_reached_total` metric (`log_type="lclog"`), and continues from the newest entry.
    When the last page is reached without finding the pointered entry (which suggests
    an undetected log clear), the collector emits the read entries with a warning and
    continues from the newest entry; the metric is not counted in this case.

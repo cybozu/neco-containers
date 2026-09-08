@@ -51,16 +51,6 @@ func checkAndCreatePointerFile(filePath string) error {
 	return err
 }
 
-// saveLastPointer writes the pointer file of a machine and reports a
-// failure. It returns false when the file could not be written.
-func saveLastPointer(lastPtr LastPointer, filePath, serial string) bool {
-	if err := updateLastPointer(lastPtr, filePath); err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", serial, "filePath", filePath)
-		return false
-	}
-	return true
-}
-
 func updateLastPointer(lptr LastPointer, filePath string) error {
 	byteJSON, err := json.Marshal(lptr)
 	if err != nil {
