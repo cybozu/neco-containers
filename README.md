@@ -94,3 +94,17 @@ Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
 
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/
+
+## GitHub Actions
+
+### Updating action versions
+
+We use [pinact](https://github.com/suzuki-shunsuke/pinact) to update GitHub Actions versions and pin them to commit hashes.
+
+> [!IMPORTANT]
+> When updating, ensure that at least 14 days have passed since the release.
+> Specifying `-m 14` (`--min-age 14`) ensures that only actions released 14 or more days ago will be updated.
+
+```sh
+PINACT_GITHUB_TOKEN=$(gh auth token) pinact run -m 14 -u
+```

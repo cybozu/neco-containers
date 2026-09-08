@@ -12,13 +12,13 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Set up QEMU
+    - name: Setup QEMU
       # Setup QEMU for non-native platforms (e.g., linux/arm64 on linux/amd64)
       if: ${{ inputs.platforms != 'linux/amd64' }}
       uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
       with:
         platforms: ${{ inputs.platforms }}
-    - name: Set up Docker Buildx
+    - name: Setup Docker Buildx
       uses: docker/setup-buildx-action@4d04d5d9486b7bd6fa91e7baf45bbb4f8b9deedd # v4.0.0
     - name: Login to GitHub Container Registry
       uses: docker/login-action@b45d80f862d83dbcd57f89517bcf500b2ab88fb2 # v4.0.0
@@ -31,9 +31,5 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
         go-version-file: ${{ inputs.go-version-file }}
-    - name: Setup aqua
-      uses: aquaproj/aqua-installer@11dd79b4e498d471a9385aa9fb7f62bb5f52a73c # v4.0.4
-      with:
-        aqua_version: v2.56.5
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    - name: Setup tools with aqua
+      uses: ./.github/actions/aqua
