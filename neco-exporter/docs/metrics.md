@@ -114,7 +114,13 @@ every collection (0 when nothing was skipped); a persistent non-zero value means
 the procfs layout or the driver's handler naming differs from what the collector
 expects. A log line is written only when the counts change, not on every
 collection; the metric is the signal to alert on. A node whose NIC stopped producing `nicirq_queue_cpu` altogether can be
-found with `neco_node_collector_health{collector="nicirq"} == 1 unless on (node) count by (node) (neco_node_nicirq_queue_cpu)`.
+found by joining on the scrape target (`collector_health` carries no `node`
+label, but both series come from the same pod):
+
+```
+neco_node_collector_health{collector="nicirq"} == 1
+  unless on (instance) count by (instance) (neco_node_nicirq_queue_cpu)
+```
 
 | Label    | Description                                                                 |
 | -------- | --------------------------------------------------------------------------- |
