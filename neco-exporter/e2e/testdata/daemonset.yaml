@@ -20,7 +20,7 @@ spec:
           name: exporter
           args:
             - --scope=node
-            - --collectors=bpf,kubelet
+            - --collectors=bpf,kubelet,nicirq
             - --interval=10s
           env:
             - name: NODE_NAME

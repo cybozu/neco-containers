@@ -36,4 +36,5 @@ func runTest() {
 	// test node collectors
 	Context("bpf", testBPFCollector)
 	Context("kubeletconfig", testKubeletConfigCollector)
+	Context("nicirq", testNICIRQCollector)
 }
