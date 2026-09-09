@@ -1,9 +1,9 @@
 # hubble container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS build
 
-ARG HUBBLE_SHA=400168bfe4e94b11bc6246787e51fb905b8d24ab
+ARG HUBBLE_SHA=39037bdd6cb6acb02a241dde33b5ffcf0e8471e2
 
 COPY TAG /
 
