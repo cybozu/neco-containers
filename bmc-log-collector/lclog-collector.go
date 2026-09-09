@@ -66,7 +66,6 @@ type lcScanResult struct {
 	logs             []LifeCycleLog // the entries to emit, newest first
 	newestId         int            // Id of the newest entry; 0 when the log is empty
 	newestCreateTime int64          // Created time of the newest entry
-	gap              bool           // the scan stopped at the page limit before reaching the target: the entries in between are not in logs
 }
 
 // lcScanTarget is the entry read in the previous cycle, where the scan stops.
@@ -91,24 +90,15 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
-	lastReadId := lastPtr.LcLastReadId
 
-	result, cycleErr := c.updateLifecycleLog(ctx, m, &lastPtr, logWriter)
-	if cycleErr != nil && !errors.Is(cycleErr, errBMCRequestFailed) {
-		slog.Error("failed to collect the lifecycle log; the read position is kept for a retry", "err", cycleErr, "serial", m.Serial)
+	if err := c.updateLifecycleLog(ctx, m, &lastPtr, logWriter); err != nil && !errors.Is(err, errBMCRequestFailed) {
+		slog.Error("failed to collect the lifecycle log; the read position is kept for a retry", "err", err, "serial", m.Serial)
 	}
 	// The pointer file is written on every outcome: the request status is
 	// recorded even when the cycle failed, while the read position has been
 	// advanced only after all the new entries were written
 	if err := updateLastPointer(lastPtr, filePath); err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		return
-	}
-	// The gap is reported only now that the new position is persisted; a
-	// failure above makes the next cycle retry from the old position instead
-	if cycleErr == nil && result.gap {
-		counterLcPageLimitReached.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-		slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", lastReadId, "newestId", result.newestId)
 	}
 }
 
@@ -116,10 +106,10 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 // read position in lastPtr. On an error the read position is left unchanged
 // so that the next cycle retries; errBMCRequestFailed means that the
 // failure has already been reported by requestBmcLog.
-func (c *logCollector) updateLifecycleLog(ctx context.Context, m Machine, lastPtr *LastPointer, logWriter bmcLogWriter) (lcScanResult, error) {
+func (c *logCollector) updateLifecycleLog(ctx context.Context, m Machine, lastPtr *LastPointer, logWriter bmcLogWriter) error {
 	result, err := c.scanLifecycleLog(ctx, m, lastPtr)
 	if err != nil {
-		return lcScanResult{}, err
+		return err
 	}
 	// The whole scan succeeded: clear the failure status so that the same
 	// failure after a recovery is reported again
@@ -127,13 +117,13 @@ func (c *logCollector) updateLifecycleLog(ctx context.Context, m Machine, lastPt
 	lastPtr.LcLastError = ""
 
 	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
-		return lcScanResult{}, err
+		return err
 	}
 	if result.newestId > 0 {
 		lastPtr.LcLastReadId = result.newestId
 		lastPtr.LcLastReadCreateTime = result.newestCreateTime
 	}
-	return result, nil
+	return nil
 }
 
 // scanLifecycleLog follows the LC log pages from the newest entry backward
@@ -231,8 +221,10 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 		url = "https://" + m.BmcIP + response.NextLink
 	}
 
-	// The target was not reached within the page limit
-	result.gap = true
+	// The target was not reached within the page limit: the entries in
+	// between are skipped when the position advances
+	counterLcPageLimitReached.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
+	slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", target.id, "newestId", result.newestId)
 	return result, nil
 }
 

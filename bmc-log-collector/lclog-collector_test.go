@@ -259,18 +259,18 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	})
 
 	Context("the log writer fails while the catch-up hits the page limit", func() {
-		It("does not count the page limit counter until the entries are emitted and the pointer is advanced", func(ctx SpecContext) {
+		It("keeps the pointer and re-emits the entries in the next cycle; each scan at the page limit is counted", func(ctx SpecContext) {
 			lcSmall := lc
 			lcSmall.lcMaxPages = 2
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
 			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
 
-			// The write failure keeps the pointer, so no entry is skipped yet
+			// The write failure keeps the pointer; the scan itself reached the page limit
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, failingLogWriter{})
 			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(0.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(1.0))
 
-			// The retry emits the entries and records the gap once
+			// The retry scans up to the page limit again and emits the entries
 			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
 			file, err := OpenTestResultLog(path.Join(testOutputDir, machineTruncatedWriteFail.Serial))
 			Expect(err).NotTo(HaveOccurred())
@@ -280,7 +280,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(12))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(1.0))
+			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(2.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})

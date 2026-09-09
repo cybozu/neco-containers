@@ -34,7 +34,7 @@ var counterRequestSuccess = promauto.NewCounterVec(
 var counterLcPageLimitReached = promauto.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "bmc_log_page_limit_reached_total",
-		Help: "Count of the log catch-ups that stopped at the page limit; the entries in between were skipped",
+		Help: "Count of the log catch-ups that stopped at the page limit; the entries in between are skipped once the cycle completes",
 	},
 	[]string{"serial", "log_type"},
 )
