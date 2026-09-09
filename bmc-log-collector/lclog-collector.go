@@ -61,6 +61,34 @@ type RedfishLcLogSchema struct {
 	NextLink    string         `json:"Members@odata.nextLink"`
 }
 
+// createTime parses the Created time of the entry.
+func (v LifeCycleLog) createTime() (time.Time, error) {
+	createTime, err := time.Parse(time.RFC3339, v.Create)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("parse Created %q of Id %s: %w", v.Create, v.Id, err)
+	}
+	return createTime, nil
+}
+
+// memberIds returns the numeric Ids of the members, newest first. It fails
+// when an Id is not a number or the members are not in the newest-first
+// order, the invariants the scan relies on: on the real iDRAC the Id is a
+// number that decreases strictly along the page.
+func (r RedfishLcLogSchema) memberIds() ([]int, error) {
+	ids := make([]int, len(r.Members))
+	for i, v := range r.Members {
+		id, err := strconv.Atoi(v.Id)
+		if err != nil {
+			return nil, fmt.Errorf("parse Id %q: %w", v.Id, err)
+		}
+		if i > 0 && id >= ids[i-1] {
+			return nil, fmt.Errorf("the entries are not in the newest-first order: Id %d follows Id %d", id, ids[i-1])
+		}
+		ids[i] = id
+	}
+	return ids, nil
+}
+
 // lcScanResult is the outcome of a successful scanLifecycleLog.
 type lcScanResult struct {
 	logs             []LifeCycleLog // the entries to emit, newest first
@@ -152,7 +180,7 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 		if err != nil {
 			return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
 		}
-		ids, err := lcPageIds(response.Members)
+		ids, err := response.memberIds()
 		if err != nil {
 			return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
 		}
@@ -163,7 +191,7 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 				return lcScanResult{}, nil
 			}
 			latestPage = response.Members
-			newestCreateTime, err := parseLifecycleLogCreateTime(latestPage[0])
+			newestCreateTime, err := latestPage[0].createTime()
 			if err != nil {
 				return lcScanResult{}, err
 			}
@@ -186,7 +214,7 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 		for i, v := range response.Members {
 			id := ids[i]
 			if id == target.id && target.createTime != 0 {
-				createTime, err := parseLifecycleLogCreateTime(v)
+				createTime, err := v.createTime()
 				if err != nil {
 					return lcScanResult{}, err
 				}
@@ -248,33 +276,6 @@ func (c *logCollector) fetchLifecycleLogPage(ctx context.Context, m Machine, las
 		return RedfishLcLogSchema{}, fmt.Errorf("decode the response of %s: %w", url, err)
 	}
 	return response, nil
-}
-
-// lcPageIds parses the Ids of a page and verifies the newest-first order that
-// the scan relies on: on the real iDRAC the Id is a number that decreases
-// strictly along the page.
-func lcPageIds(members []LifeCycleLog) ([]int, error) {
-	ids := make([]int, len(members))
-	for i, v := range members {
-		id, err := strconv.Atoi(v.Id)
-		if err != nil {
-			return nil, fmt.Errorf("parse Id %q: %w", v.Id, err)
-		}
-		if i > 0 && id >= ids[i-1] {
-			return nil, fmt.Errorf("the entries are not in the newest-first order: Id %d follows Id %d", id, ids[i-1])
-		}
-		ids[i] = id
-	}
-	return ids, nil
-}
-
-// parseLifecycleLogCreateTime parses the Created time of an LC log entry.
-func parseLifecycleLogCreateTime(v LifeCycleLog) (time.Time, error) {
-	createTime, err := time.Parse(time.RFC3339, v.Create)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("parse Created %q of Id %s: %w", v.Create, v.Id, err)
-	}
-	return createTime, nil
 }
 
 // emitLifecycleLogs writes the entries, given newest first, in ascending order.
