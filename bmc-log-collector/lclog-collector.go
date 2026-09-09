@@ -196,10 +196,24 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 		return latest, nil
 	}
 
-	// Catch up: follow the pages backward until the target
+	// Catch up: follow the pages backward until the target. The first page
+	// is already at hand; the following ones are fetched at the top of the
+	// loop, up to lcMaxPages pages in total.
 	var logs []LifeCycleLog
 	seen := make(map[string]struct{})
-	for page := 0; ; page++ {
+	for page := 0; page < c.lcMaxPages; page++ {
+		if page > 0 {
+			url = "https://" + m.BmcIP + response.NextLink
+			response, err = c.fetchLifecycleLogPage(ctx, m, lastPtr, url, false)
+			if err != nil {
+				return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
+			}
+			ids, err = response.memberIds()
+			if err != nil {
+				return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
+			}
+		}
+
 		for i, v := range response.Members {
 			id := ids[i]
 			if id == target.id && target.createTime != 0 {
@@ -234,24 +248,13 @@ func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr 
 			slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", target.id, "newestId", latest.newest.id)
 			return lcScanResult{logs: logs, newest: latest.newest}, nil
 		}
-		if page+1 == c.lcMaxPages {
-			// The target was not reached within the page limit: the entries in
-			// between are skipped when the position advances
-			counterLcPageLimitReached.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-			slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", target.id, "newestId", latest.newest.id)
-			return lcScanResult{logs: logs, newest: latest.newest}, nil
-		}
-
-		url = "https://" + m.BmcIP + response.NextLink
-		response, err = c.fetchLifecycleLogPage(ctx, m, lastPtr, url, false)
-		if err != nil {
-			return lcScanResult{}, fmt.Errorf("page %d: %w", page+1, err)
-		}
-		ids, err = response.memberIds()
-		if err != nil {
-			return lcScanResult{}, fmt.Errorf("page %d: %w", page+1, err)
-		}
 	}
+
+	// The target was not reached within the page limit: the entries in
+	// between are skipped when the position advances
+	counterLcPageLimitReached.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
+	slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", target.id, "newestId", latest.newest.id)
+	return lcScanResult{logs: logs, newest: latest.newest}, nil
 }
 
 // fetchLifecycleLogPage requests one page of the LC log. A request failure
