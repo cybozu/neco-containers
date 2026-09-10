@@ -60,7 +60,6 @@ type logCollector struct {
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
 	intervalTime    time.Duration // interval (sec) time of scraping
-	lcMaxPages      int           // maximum LC log pages to read per cycle
 }
 
 func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {

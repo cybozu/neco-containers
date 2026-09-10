@@ -16,9 +16,10 @@ import (
 )
 
 /*
-Access the iDRAC mock and collect the lifecycle logs with paging.
-The mock serves one snapshot file per scraping cycle and slices it into
-pages of three entries (see bmcMock.redfishLclog).
+Access the iDRAC mock and collect the lifecycle logs.
+The mock serves one snapshot file per scraping cycle and returns only its
+newest three entries (five for the basic scenario), as the real iDRAC
+returns only the latest page (see bmcMock.redfishLclog).
 */
 var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	var lc logCollector
@@ -26,17 +27,14 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	testPointerDir := "testdata/pointers_lclog_collector"
 
 	machineBasic := Machine{Serial: "LCLOG01", BmcIP: "127.0.0.1:9180", NodeIP: "10.69.0.4"}
-	machineTruncated := Machine{Serial: "LCLOG02", BmcIP: "127.0.0.1:9280", NodeIP: "10.69.0.5"}
+	machineGap := Machine{Serial: "LCLOG02", BmcIP: "127.0.0.1:9280", NodeIP: "10.69.0.5"}
 	machineMismatch := Machine{Serial: "LCLOG03", BmcIP: "127.0.0.1:9380", NodeIP: "10.69.0.6"}
 	machineNoLcLog := Machine{Serial: "LCLOG04", BmcIP: "127.0.0.1:9480", NodeIP: "10.69.0.7"}
-	machineShifted := Machine{Serial: "LCLOG05", BmcIP: "127.0.0.1:9580", NodeIP: "10.69.0.8"}
-	machineExhausted := Machine{Serial: "LCLOG06", BmcIP: "127.0.0.1:9680", NodeIP: "10.69.0.9"}
 	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
 	machineWriteFail := Machine{Serial: "LCLOG08", BmcIP: "127.0.0.1:9980", NodeIP: "10.69.0.12"}
 	machineBadInitial := Machine{Serial: "LCLOG09", BmcIP: "127.0.0.1:10080", NodeIP: "10.69.0.13"}
-	machineTruncatedWriteFail := Machine{Serial: "LCLOG10", BmcIP: "127.0.0.1:10180", NodeIP: "10.69.0.14"}
 	machineOutOfOrder := Machine{Serial: "LCLOG11", BmcIP: "127.0.0.1:10280", NodeIP: "10.69.0.15"}
-	machines := []Machine{machineBasic, machineTruncated, machineMismatch, machineNoLcLog, machineShifted, machineExhausted, machineBadEntry, machineWriteFail, machineBadInitial, machineTruncatedWriteFail, machineOutOfOrder}
+	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -70,12 +68,14 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		GinkgoWriter.Println("Start iDRAC Stub")
 		mocks := []*bmcMock{
 			{
-				host:    machineBasic.BmcIP,
-				resDir:  "testdata/redfish_response",
-				lcFiles: []string{"LCLOG01-lc-1.json", "LCLOG01-lc-2.json", "LCLOG01-lc-3.json", "LCLOG01-lc-4.json"},
+				host:       machineBasic.BmcIP,
+				resDir:     "testdata/redfish_response",
+				lcFiles:    []string{"LCLOG01-lc-1.json", "LCLOG01-lc-2.json", "LCLOG01-lc-3.json", "LCLOG01-lc-4.json"},
+				lcPageSize: 5,
 			},
 			{
-				host:    machineTruncated.BmcIP,
+				// More entries arrive than the page holds
+				host:    machineGap.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG02-lc-1.json", "LCLOG02-lc-2.json"},
 			},
@@ -90,19 +90,6 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				resDir: "testdata/redfish_response",
 			},
 			{
-				// The snapshot grows by one entry between the page requests
-				host:            machineShifted.BmcIP,
-				resDir:          "testdata/redfish_response",
-				lcFiles:         []string{"LCLOG05-lc-1.json", "LCLOG05-lc-2.json", "LCLOG05-lc-3.json", "LCLOG05-lc-4.json"},
-				lcAdvanceOnSkip: true,
-			},
-			{
-				// The log ends (no nextLink) before reaching the pointered entry
-				host:    machineExhausted.BmcIP,
-				resDir:  "testdata/redfish_response",
-				lcFiles: []string{"LCLOG06-lc-1.json", "LCLOG06-lc-2.json"},
-			},
-			{
 				// An entry with a non-numeric Id appears, then the device recovers
 				host:    machineBadEntry.BmcIP,
 				resDir:  "testdata/redfish_response",
@@ -115,20 +102,13 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG08-lc-2.json"},
 			},
 			{
-				// A malformed non-first entry in page0 on the initial collection
+				// A malformed non-first entry in the page on the initial collection
 				host:    machineBadInitial.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG09-lc-1.json", "LCLOG09-lc-2.json"},
 			},
 			{
-				// The log writer fails while the catch-up hits the page limit;
-				// the same snapshot is served again for the retry cycle
-				host:    machineTruncatedWriteFail.BmcIP,
-				resDir:  "testdata/redfish_response",
-				lcFiles: []string{"LCLOG02-lc-1.json", "LCLOG02-lc-2.json", "LCLOG02-lc-2.json"},
-			},
-			{
-				// The entries of a page are not in the newest-first order, then the device recovers
+				// The entries of the page are not in the newest-first order
 				host:    machineOutOfOrder.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG11-lc-1.json", "LCLOG11-lc-2.json"},
@@ -150,11 +130,10 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		}
 
 		lc = logCollector{
-			rfLcPath:   redfishLcPath,
-			ptrDir:     testPointerDir,
-			username:   "support",
-			password:   basicAuthPassword,
-			lcMaxPages: 10,
+			rfLcPath: redfishLcPath,
+			ptrDir:   testPointerDir,
+			username: "support",
+			password: basicAuthPassword,
 			httpClient: &http.Client{
 				Timeout: time.Duration(10) * time.Second,
 				Transport: &http.Transport{
@@ -169,19 +148,18 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		}
 	}, NodeTimeout(30*time.Second))
 
-	Context("basic scenario: initial, catch-up with paging, no change, log clear", func() {
+	Context("basic scenario: initial, new entries, no change, log clear", func() {
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
 
-		It("collect only the latest page on the first time", func(ctx SpecContext) {
+		It("collect the latest page on the first time", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineBasic, logWriter)
 
 			file, err = OpenTestResultLog(path.Join(testOutputDir, machineBasic.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader = bufio.NewReaderSize(file, 4096)
-			// 5 entries exist, but the mock serves 3 per page
-			for _, id := range []string{"3", "4", "5"} {
+			for _, id := range []string{"1", "2", "3", "4", "5"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 				Expect(result.Serial).To(Equal(machineBasic.Serial))
@@ -192,9 +170,10 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			Expect(lcLastReadId(machineBasic.Serial)).To(Equal(5))
 		}, SpecTimeout(30*time.Second))
 
-		It("collect the new entries beyond the page boundary", func(ctx SpecContext) {
+		It("collect only the new entries", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineBasic, logWriter)
 
+			// The page holds Id 5..9; Id 5 was read in the previous cycle
 			for _, id := range []string{"6", "7", "8", "9"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
@@ -223,17 +202,15 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		}, SpecTimeout(30*time.Second))
 	})
 
-	Context("catch-up hits the page limit", func() {
+	Context("more entries arrive than the page holds", func() {
 		var file *os.File
 		var reader *bufio.Reader
 		var err error
 
 		It("collect the first time", func(ctx SpecContext) {
-			lcSmall := lc
-			lcSmall.lcMaxPages = 2
-			lcSmall.collectLifecycleLog(ctx, machineTruncated, logWriter)
+			lc.collectLifecycleLog(ctx, machineGap, logWriter)
 
-			file, err = OpenTestResultLog(path.Join(testOutputDir, machineTruncated.Serial))
+			file, err = OpenTestResultLog(path.Join(testOutputDir, machineGap.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader = bufio.NewReaderSize(file, 4096)
 			for _, id := range []string{"1", "2"} {
@@ -242,45 +219,15 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 			}
 		}, SpecTimeout(30*time.Second))
 
-		It("emit only the entries within the page limit and count up the page limit counter", func(ctx SpecContext) {
-			lcSmall := lc
-			lcSmall.lcMaxPages = 2
-			lcSmall.collectLifecycleLog(ctx, machineTruncated, logWriter)
+		It("emit only the entries of the latest page and skip the ones in between", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineGap, logWriter)
 
-			// 10 entries (Id 3..12) are new, but only 2 pages x 3 entries are read
-			for _, id := range []string{"7", "8", "9", "10", "11", "12"} {
+			// 10 entries (Id 3..12) are new, but the page holds only the newest 3
+			for _, id := range []string{"10", "11", "12"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 			}
-			Expect(lcLastReadId(machineTruncated.Serial)).To(Equal(12))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncated.Serial, metricLogTypeLc))).To(Equal(1.0))
-			file.Close()
-		}, SpecTimeout(30*time.Second))
-	})
-
-	Context("the log writer fails while the catch-up hits the page limit", func() {
-		It("keeps the pointer and re-emits the entries in the next cycle; each scan at the page limit is counted", func(ctx SpecContext) {
-			lcSmall := lc
-			lcSmall.lcMaxPages = 2
-			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
-			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
-
-			// The write failure keeps the pointer; the scan itself reached the page limit
-			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, failingLogWriter{})
-			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(2))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(1.0))
-
-			// The retry scans up to the page limit again and emits the entries
-			lcSmall.collectLifecycleLog(ctx, machineTruncatedWriteFail, logWriter)
-			file, err := OpenTestResultLog(path.Join(testOutputDir, machineTruncatedWriteFail.Serial))
-			Expect(err).NotTo(HaveOccurred())
-			reader := bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"1", "2", "7", "8", "9", "10", "11", "12"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-			Expect(lcLastReadId(machineTruncatedWriteFail.Serial)).To(Equal(12))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineTruncatedWriteFail.Serial, metricLogTypeLc))).To(Equal(2.0))
+			Expect(lcLastReadId(machineGap.Serial)).To(Equal(12))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
@@ -312,66 +259,6 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Create).To(HavePrefix("2026-09-01T02:"))
 			}
 			Expect(lcLastReadId(machineMismatch.Serial)).To(Equal(3))
-			file.Close()
-		}, SpecTimeout(30*time.Second))
-	})
-
-	Context("an entry arrives between the page requests and shifts the $skip offset", func() {
-		var file *os.File
-		var reader *bufio.Reader
-		var err error
-
-		It("collect the first time", func(ctx SpecContext) {
-			lc.collectLifecycleLog(ctx, machineShifted, logWriter)
-
-			file, err = OpenTestResultLog(path.Join(testOutputDir, machineShifted.Serial))
-			Expect(err).NotTo(HaveOccurred())
-			reader = bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"1", "2"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-		}, SpecTimeout(30*time.Second))
-
-		It("does not emit the entries repeated by the shifted pages", func(ctx SpecContext) {
-			lc.collectLifecycleLog(ctx, machineShifted, logWriter)
-
-			// The entry with Id 7 appears on two pages, but must be emitted once
-			for _, id := range []string{"3", "4", "5", "6", "7", "8", "9"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-			Expect(lcLastReadId(machineShifted.Serial)).To(Equal(9))
-			file.Close()
-		}, SpecTimeout(30*time.Second))
-	})
-
-	Context("the log ends before reaching the last read entry", func() {
-		var file *os.File
-		var reader *bufio.Reader
-		var err error
-
-		It("collect the first time", func(ctx SpecContext) {
-			lc.collectLifecycleLog(ctx, machineExhausted, logWriter)
-
-			file, err = OpenTestResultLog(path.Join(testOutputDir, machineExhausted.Serial))
-			Expect(err).NotTo(HaveOccurred())
-			reader = bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"3", "4", "5"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-		}, SpecTimeout(30*time.Second))
-
-		It("emit the read entries without counting the page limit counter", func(ctx SpecContext) {
-			lc.collectLifecycleLog(ctx, machineExhausted, logWriter)
-
-			for _, id := range []string{"6", "7", "8", "9"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-			Expect(lcLastReadId(machineExhausted.Serial)).To(Equal(9))
-			Expect(testutil.ToFloat64(counterLcPageLimitReached.WithLabelValues(machineExhausted.Serial, metricLogTypeLc))).To(Equal(0.0))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
@@ -448,21 +335,21 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 		}, SpecTimeout(30*time.Second))
 	})
 
-	Context("the entries of a page are not in the newest-first order", func() {
-		It("aborts the cycle without emitting, then collects after the device recovers", func(ctx SpecContext) {
+	Context("the entries of the page are not in the newest-first order", func() {
+		It("emits them in the ascending order of the Id", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineOutOfOrder, logWriter)
-			Expect(lcLastReadId(machineOutOfOrder.Serial)).To(Equal(0))
-			_, err := os.Stat(path.Join(testOutputDir, machineOutOfOrder.Serial))
-			Expect(err).To(MatchError(os.ErrNotExist))
 
-			lc.collectLifecycleLog(ctx, machineOutOfOrder, logWriter)
 			file, err := OpenTestResultLog(path.Join(testOutputDir, machineOutOfOrder.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader := bufio.NewReaderSize(file, 4096)
+			// The page holds Id 5, 3, 4 in this order
 			for _, id := range []string{"3", "4", "5"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 			}
+			Expect(lcLastReadId(machineOutOfOrder.Serial)).To(Equal(5))
+
+			lc.collectLifecycleLog(ctx, machineOutOfOrder, logWriter)
 			Expect(lcLastReadId(machineOutOfOrder.Serial)).To(Equal(5))
 			file.Close()
 		}, SpecTimeout(30*time.Second))

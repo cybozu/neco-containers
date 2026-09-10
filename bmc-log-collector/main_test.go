@@ -151,7 +151,6 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 				ptrDir:          testPointerDir,
 				username:        "support",
 				intervalTime:    intervalTime,
-				lcMaxPages:      10,
 			}
 			user, err := LoadBMCUserConfig("testdata/etc/bmc-user.json")
 			Expect(err).ToNot(HaveOccurred())

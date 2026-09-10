@@ -36,13 +36,12 @@ func requestToBmc(ctx context.Context, username string, password string, client 
 	return buf, resp.StatusCode, nil
 }
 
-// requestBmcLog requests one page of a BMC log service. The request metrics
+// requestBmcLog requests the entries of a BMC log service. The request metrics
 // of logType are counted, and a failure is recorded in the pointer status
 // fields of the log type and reported only when it differs from the recorded
 // one, so that a persistent failure does not flood the log. The caller
-// clears the recorded status once the whole collection succeeds, so that a
-// failure on a later page is also deduplicated across the cycles. The body
-// is returned only for a 200 reply; any failure is errBMCRequestFailed.
+// clears the recorded status once the collection succeeds. The body is
+// returned only for a 200 reply; any failure is errBMCRequestFailed.
 //
 // A status listed in notImplemented means that the BMC lacks the log
 // service: it is reported as a warning and not counted as a failure, to

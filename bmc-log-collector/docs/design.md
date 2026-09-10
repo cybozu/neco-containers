@@ -47,39 +47,31 @@ flowchart TB
 The LC log is collected in the same way as the SEL with the following differences.
 
 1. Use `/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries` as the path to Redfish.
-2. This endpoint returns only the latest 50 entries in the newest-first order.
-   The collector follows `Members@odata.nextLink` backward until it finds the entry
-   whose ID was recorded in the pointer file in the previous cycle. On the real iDRAC
-   (verified on FW 7.20.30.55), `Members@odata.nextLink` is returned while more entries
-   are available and is omitted on the last page. The scan relies on this order:
-   a page whose IDs are not strictly descending aborts the cycle with an error, so that
-   a device with a different behavior is noticed instead of entries being skipped.
-   The number of pages read in one cycle is limited (3 pages by default). When the limit is hit,
-   the collector emits only the entries it has read, records the gap in the
-   `bmc_log_page_limit_reached_total` metric (`log_type="lclog"`), and continues from the newest entry.
-   When the last page is reached without finding the pointered entry (which suggests
-   an undetected log clear), the collector emits the read entries with a warning and
-   continues from the newest entry; the metric is not counted in this case.
-3. The first collection for a machine reads only the latest page (50 entries on the
-   real iDRAC) and continues from its newest entry. The whole history is not ingested
-   at once, and a single request decides the outcome, which suits unreliable BMCs.
+2. This endpoint returns only the latest 50 entries (verified on iDRAC FW 7.20.30.55).
+   The collector emits the entries of that page whose ID is larger than the ID recorded
+   in the pointer file, and advances the pointer to the newest ID. It does not follow
+   `Members@odata.nextLink` to the older pages: the entries that fell off the page since
+   the previous cycle are not collected, and a warning is logged in that case. This is
+   accepted because the LC log grows only a few entries per day in our fleet (about 2.3
+   entries per day per machine on stage0), far below the 50 entries per scraping interval
+   that would be needed to lose an entry.
+3. The first collection for a machine emits the latest page and continues from its newest
+   entry. The whole history is not ingested at once.
 4. The entry ID of the LC log restarts from 1 when the log is cleared in iDRAC.
    The clear is detected when the newest ID is smaller than the pointer, or when
    the entry with the ID recorded in the pointer file has a different creation time.
-   In both cases the collector reads only the latest page, as on the first collection.
-   Note that a clear followed by more new entries than one page within one
-   scraping interval cannot be distinguished from a plain backlog; such a cycle is
-   recorded in the metric as a page limit hit (the entries in between are skipped).
-   This is accepted because the LC log grows only a few entries per day in our fleet.
+   In both cases the collector emits the whole latest page, as on the first collection.
+   The SEL uses the creation time of the oldest entry for this purpose, but the oldest
+   entry of the LC log page changes every cycle, so the creation time of the pointered
+   entry is recorded in the pointer file instead.
 5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
    the log type can be distinguished in Loki.
-6. A BMC that replies 404 or 405 for the first page of the LC log path does not implement
-   the LC log service. It is not counted in `bmc_log_requests_failed_total` to avoid a
-   permanent false alarm on such machines. The same status on the following pages is
-   handled as an ordinary HTTP failure.
-7. The entry ID and the creation time are the basis of the pointer management, so when
-   they cannot be parsed the collector aborts the cycle without advancing the pointer
-   and retries in the next cycle.
+6. A BMC that replies 404 or 405 for the LC log path does not implement the LC log
+   service. It is not counted in `bmc_log_requests_failed_total` to avoid a permanent
+   false alarm on such machines.
+7. The pointer is advanced in the same way as the SEL: when an entry ID cannot be parsed
+   or an entry cannot be written, the collector aborts the cycle without advancing the
+   pointer and retries in the next cycle; an entry that cannot be marshaled is skipped.
 8. The numeric, monotonically increasing entry ID is a Dell iDRAC implementation
    behavior, not a Redfish specification guarantee (DSP0266 defines Id only as an
    opaque unique string). This collector is Dell-specific and relies on it, the same

@@ -11,7 +11,6 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -38,14 +37,12 @@ type bmcMock struct {
 	mutex         sync.Mutex
 
 	// Lifecycle log mock: each file in lcFiles is a whole LC log snapshot
-	// (newest first) used for one scraping cycle. The handler slices it into
-	// pages of lcPageSize entries and serves them via the $skip query parameter.
-	// With lcAdvanceOnSkip, every request advances to the next snapshot file,
-	// which simulates new entries arriving between the page requests.
-	lcFiles         []string
-	lcPageSize      int
-	lcCounter       int
-	lcAdvanceOnSkip bool
+	// (newest first) used for one scraping cycle. The handler serves only the
+	// newest lcPageSize entries of it, as the real iDRAC returns only the
+	// latest page of the LC log.
+	lcFiles    []string
+	lcPageSize int
+	lcCounter  int
 }
 
 // Mock server of iDRAC
@@ -111,9 +108,7 @@ func (b *bmcMock) redfishSel(w http.ResponseWriter, r *http.Request) {
 }
 
 // DELL Lifecycle Log Service at Redfish REST.
-// A request without $skip starts the next scraping cycle (advances to the
-// next snapshot file); a request with $skip serves the following pages of
-// the current snapshot.
+// Each request serves the latest page of the next snapshot file.
 func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json;odata.metadata=minimal;charset=utf-8")
 	// Basic authentication
@@ -126,24 +121,13 @@ func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
 	b.mutex.Lock()
 	defer b.mutex.Unlock()
 
-	skip, _ := strconv.Atoi(r.URL.Query().Get("$skip"))
 	idx := b.lcCounter
-	if skip == 0 || b.lcAdvanceOnSkip {
-		if idx > len(b.lcFiles)-1 {
-			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
-		b.lcCounter = idx + 1
-	} else {
-		// The following pages of the current snapshot
-		idx = idx - 1
-		if idx < 0 || idx > len(b.lcFiles)-1 {
-			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-			w.WriteHeader(http.StatusNotFound)
-			return
-		}
+	if idx > len(b.lcFiles)-1 {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
+	b.lcCounter = idx + 1
 
 	fd, err := os.Open(path.Join(b.resDir, b.lcFiles[idx]))
 	if err != nil {
@@ -166,18 +150,9 @@ func (b *bmcMock) redfishLclog(w http.ResponseWriter, r *http.Request) {
 	if pageSize == 0 {
 		pageSize = 3
 	}
-	page := []json.RawMessage{}
-	if skip < len(snapshot.Members) {
-		page = snapshot.Members[skip:min(skip+pageSize, len(snapshot.Members))]
-	}
 	response := map[string]any{
 		"Members@odata.count": len(snapshot.Members),
-		"Members":             page,
-	}
-	// The real iDRAC returns Members@odata.nextLink while more entries are
-	// available and omits it on the last page (verified on FW 7.20.30.55)
-	if skip+pageSize < len(snapshot.Members) {
-		response["Members@odata.nextLink"] = redfishLcPath + "?$skip=" + strconv.Itoa(skip+pageSize)
+		"Members":             snapshot.Members[:min(pageSize, len(snapshot.Members))],
 	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		fmt.Println("failed to encode the LC log response", err)

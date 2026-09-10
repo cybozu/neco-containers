@@ -31,19 +31,10 @@ var counterRequestSuccess = promauto.NewCounterVec(
 	[]string{"serial", "log_type"},
 )
 
-var counterLcPageLimitReached = promauto.NewCounterVec(
-	prometheus.CounterOpts{
-		Name: "bmc_log_page_limit_reached_total",
-		Help: "Count of the log catch-ups that stopped at the page limit; the entries in between are skipped once the cycle completes",
-	},
-	[]string{"serial", "log_type"},
-)
-
 func metrics(path string, port string) {
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(counterRequestFailed)
 	reg.MustRegister(counterRequestSuccess)
-	reg.MustRegister(counterLcPageLimitReached)
 
 	// Expose the registered metrics via HTTP.
 	http.Handle(path, promhttp.HandlerFor(
@@ -59,5 +50,4 @@ func metrics(path string, port string) {
 func deleteMetrics(serial string) {
 	counterRequestSuccess.DeletePartialMatch(prometheus.Labels{"serial": serial})
 	counterRequestFailed.DeletePartialMatch(prometheus.Labels{"serial": serial})
-	counterLcPageLimitReached.DeletePartialMatch(prometheus.Labels{"serial": serial})
 }

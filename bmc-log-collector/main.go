@@ -100,7 +100,6 @@ var (
 	flgMachineList          *string = pflag.String("machine-list-json", "/config/machineslist.json", "Target machines list of log scraping")
 	flgPointerDir           *string = pflag.String("pointer-dir-path", "/data/pointers", "Data directory of pointer management")
 	flgScrapingIntervalTime *int    = pflag.Int("scraping-interval-time", 300, "Timer(sec) of scraping interval time")
-	flgLcMaxPages           *int    = pflag.Int("lclog-max-pages", 3, "Maximum pages of the lifecycle log to read per scraping cycle")
 )
 
 func main() {
@@ -113,10 +112,6 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
-	if *flgLcMaxPages < 1 {
-		slog.Error("lclog-max-pages must be 1 or larger", "lclog-max-pages", *flgLcMaxPages)
-		os.Exit(1)
-	}
 	if *flgScrapingIntervalTime < 1 {
 		slog.Error("scraping-interval-time must be 1 or larger", "scraping-interval-time", *flgScrapingIntervalTime)
 		os.Exit(1)
@@ -138,7 +133,6 @@ func main() {
 		username:        *flgUserId,
 		password:        user.Support.Password.Raw,
 		intervalTime:    time.Duration(*flgScrapingIntervalTime) * time.Second,
-		lcMaxPages:      *flgLcMaxPages,
 	}
 
 	// Set BMC log writer

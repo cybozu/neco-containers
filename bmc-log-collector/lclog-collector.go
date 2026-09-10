@@ -1,9 +1,9 @@
 package main
 
 import (
+	"cmp"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -49,7 +49,8 @@ type LifeCycleOemDell struct {
 	LastUpdatedByUser *string `json:"LastUpdatedByUser"`
 }
 
-// RedfishLcLogSchema is one page of the Lifecycle log entry collection.
+// RedfishLcLogSchema is the Lifecycle log entry collection as returned by
+// Redfish: the latest page of the log.
 type RedfishLcLogSchema struct {
 	Name        string         `json:"Name"`
 	Count       int            `json:"Members@odata.count"`
@@ -58,59 +59,22 @@ type RedfishLcLogSchema struct {
 	Type        string         `json:"@odata.type"`
 	Description string         `json:"Description"`
 	Members     []LifeCycleLog `json:"Members"`
-	NextLink    string         `json:"Members@odata.nextLink"`
 }
 
-// createTime parses the Created time of the entry.
-func (v LifeCycleLog) createTime() (time.Time, error) {
-	createTime, err := time.Parse(time.RFC3339, v.Create)
-	if err != nil {
-		return time.Time{}, fmt.Errorf("parse Created %q of Id %s: %w", v.Create, v.Id, err)
-	}
-	return createTime, nil
+// lcEntry is a Lifecycle log entry with its Id parsed as a number.
+type lcEntry struct {
+	id int
+	LifeCycleLog
 }
 
-// memberIds returns the numeric Ids of the members, newest first. It fails
-// when an Id is not a number or the members are not in the newest-first
-// order, the invariants the scan relies on: on the real iDRAC the Id is a
-// number that decreases strictly along the page.
-func (r RedfishLcLogSchema) memberIds() ([]int, error) {
-	ids := make([]int, len(r.Members))
-	for i, v := range r.Members {
-		id, err := strconv.Atoi(v.Id)
-		if err != nil {
-			return nil, fmt.Errorf("parse Id %q: %w", v.Id, err)
-		}
-		if i > 0 && id >= ids[i-1] {
-			return nil, fmt.Errorf("the entries are not in the newest-first order: Id %d follows Id %d", id, ids[i-1])
-		}
-		ids[i] = id
-	}
-	return ids, nil
-}
-
-// lcPosition identifies an entry of the LC log by its Id and Created time:
-// the newest entry of a scan, or the entry read in the previous cycle that
-// the scan searches for.
-type lcPosition struct {
-	id         int
-	createTime int64 // 0 when unknown (pointer file written by an older version)
-}
-
-// lcScanResult is the outcome of a successful scanLifecycleLog.
-type lcScanResult struct {
-	logs   []LifeCycleLog // the entries to emit, newest first
-	newest lcPosition     // the newest entry of the log; zero when the log is empty
-}
-
-// collectLifecycleLog collects the LC (Lifecycle) log from iDRAC.
+// collectLifecycleLog collects the LC (Lifecycle) log from iDRAC in the same
+// way as the SEL: the entries newer than the Id recorded in the pointer file
+// are emitted, and the pointer is advanced to the newest Id.
 //
 // Unlike the SEL endpoint, the LC log endpoint returns only the latest page
-// (50 entries on the real iDRAC, newest first). This function follows
-// Members@odata.nextLink backward until it finds the entry read in the
-// previous cycle, up to lcMaxPages pages. The first collection for a machine
-// and the collection after the LC log was cleared in iDRAC read only the
-// latest page, so that the whole history is not ingested at once.
+// (50 entries on the real iDRAC). The entries that fell off the page since the
+// previous cycle are not collected; this is accepted because the LC log grows
+// only a few entries per day in our fleet (see docs/design.md).
 func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
@@ -119,172 +83,78 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		slog.Error("can't load a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		return
 	}
-	// The pointer file is written on every exit: the request status is
-	// recorded even when the cycle fails, while the read position is
-	// advanced only after all the new entries were written
-	defer func() {
+
+	bmcUrl := "https://" + m.BmcIP + c.rfLcPath
+	// A 404/405 reply means that the BMC does not implement the LC log service
+	byteJSON, err := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeLc, &lastPtr.LcLastHttpStatusCode, &lastPtr.LcLastError, http.StatusNotFound, http.StatusMethodNotAllowed)
+	if err != nil {
+		// The failure has been reported; record the request status and keep
+		// the read position unchanged so that the next cycle retries
 		if err := updateLastPointer(lastPtr, filePath); err != nil {
 			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 		}
-	}()
-
-	result, err := c.scanLifecycleLog(ctx, m, &lastPtr)
-	if err != nil {
-		// A request failure has already been reported by requestBmcLog
-		if !errors.Is(err, errBMCRequestFailed) {
-			slog.Error("failed to scan the lifecycle log; the read position is kept for a retry", "err", err, "serial", m.Serial)
-		}
 		return
 	}
-	// The whole scan succeeded: clear the failure status so that the same
-	// failure after a recovery is reported again
+	// Clear the failure status so that the same failure after a recovery is
+	// reported again instead of being suppressed by the deduplication
 	lastPtr.LcLastHttpStatusCode = http.StatusOK
 	lastPtr.LcLastError = ""
 
-	if err := c.emitLifecycleLogs(result.logs, m, logWriter); err != nil {
-		slog.Error("failed to write the lifecycle log; the read position is kept for a retry", "err", err, "serial", m.Serial)
-		return
-	}
-	if result.newest.id > 0 {
-		lastPtr.LcLastReadId = result.newest.id
-		lastPtr.LcLastReadCreateTime = result.newest.createTime
-	}
-}
-
-// scanLifecycleLog reads the latest page of the LC log and, when there is a
-// target (the entry read in the previous cycle), follows the pages backward
-// to gather the entries newer than the target. Without a target (the first
-// collection for a machine) or when the LC log was cleared in iDRAC since
-// the previous cycle, it returns only the latest page.
-//
-// The Id and the Created time are the basis of the pointer management, so a
-// page whose Ids cannot be parsed or are not in the newest-first order, or an
-// entry whose Created time cannot be parsed, is an error: the cycle is
-// aborted to avoid skipping entries permanently. lastPtr carries the status
-// of a failed request.
-func (c *logCollector) scanLifecycleLog(ctx context.Context, m Machine, lastPtr *LastPointer) (lcScanResult, error) {
-	url := "https://" + m.BmcIP + c.rfLcPath
-	response, err := c.fetchLifecycleLogPage(ctx, m, lastPtr, url, true)
-	if err != nil {
-		return lcScanResult{}, err
-	}
-	ids, err := response.memberIds()
-	if err != nil {
-		return lcScanResult{}, err
-	}
-	if len(ids) == 0 {
-		// The LC log is empty
-		return lcScanResult{}, nil
-	}
-	newestCreateTime, err := response.Members[0].createTime()
-	if err != nil {
-		return lcScanResult{}, err
-	}
-	latest := lcScanResult{
-		logs:   response.Members,
-		newest: lcPosition{id: ids[0], createTime: newestCreateTime.Unix()},
-	}
-
-	if lastPtr.LcLastReadId == 0 {
-		// The first collection for the machine: only the latest page
-		return latest, nil
-	}
-	target := lcPosition{id: lastPtr.LcLastReadId, createTime: lastPtr.LcLastReadCreateTime}
-	// The entry Id restarts from 1 when the LC log is cleared in iDRAC
-	if latest.newest.id < target.id {
-		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", target.id, "newestId", latest.newest.id)
-		return latest, nil
-	}
-
-	// Catch up: follow the pages backward until the target. The first page
-	// is already at hand; the following ones are fetched at the top of the
-	// loop, up to lcMaxPages pages in total.
-	var logs []LifeCycleLog
-	seen := make(map[string]struct{})
-	for page := 0; page < c.lcMaxPages; page++ {
-		if page > 0 {
-			url = "https://" + m.BmcIP + response.NextLink
-			response, err = c.fetchLifecycleLogPage(ctx, m, lastPtr, url, false)
-			if err != nil {
-				return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
-			}
-			ids, err = response.memberIds()
-			if err != nil {
-				return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
-			}
-		}
-
-		for i, v := range response.Members {
-			id := ids[i]
-			if id == target.id && target.createTime != 0 {
-				createTime, err := v.createTime()
-				if err != nil {
-					return lcScanResult{}, fmt.Errorf("page %d: %w", page, err)
-				}
-				if createTime.Unix() != target.createTime {
-					// The same Id with a different creation time: the LC log was
-					// cleared and has grown beyond the target since then. Only the
-					// latest page is collected, as on the first collection.
-					slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", target.id, "Id", v.Id)
-					return latest, nil
-				}
-			}
-			if id <= target.id {
-				// Reached the target: the entries gathered so far are the new ones
-				return lcScanResult{logs: logs, newest: latest.newest}, nil
-			}
-			// An entry created between the page requests shifts the pages backward
-			// and the next page repeats the entries of the previous page.
-			// Skip the already collected entries.
-			if _, dup := seen[v.Id]; dup {
-				continue
-			}
-			seen[v.Id] = struct{}{}
-			logs = append(logs, v)
-		}
-
-		if response.NextLink == "" || len(response.Members) == 0 {
-			// The last page of the LC log
-			slog.Warn("reached the end of the lifecycle log without finding the last read entry; the log may have been cleared", "serial", m.Serial, "lastReadId", target.id, "newestId", latest.newest.id)
-			return lcScanResult{logs: logs, newest: latest.newest}, nil
-		}
-	}
-
-	// The target was not reached within the page limit: the entries in
-	// between are skipped when the position advances
-	counterLcPageLimitReached.WithLabelValues(m.Serial, metricLogTypeLc).Inc()
-	slog.Warn("stopped catching up the lifecycle log at the page limit; the entries in between are skipped", "serial", m.Serial, "pageLimit", c.lcMaxPages, "lastReadId", target.id, "newestId", latest.newest.id)
-	return lcScanResult{logs: logs, newest: latest.newest}, nil
-}
-
-// fetchLifecycleLogPage requests one page of the LC log. A request failure
-// has been reported, counted, and recorded in lastPtr by requestBmcLog and is
-// returned as errBMCRequestFailed. A 404/405 reply to the first page means
-// that the BMC does not implement the LC log service; the same reply to a
-// later page is an ordinary failure.
-func (c *logCollector) fetchLifecycleLogPage(ctx context.Context, m Machine, lastPtr *LastPointer, url string, firstPage bool) (RedfishLcLogSchema, error) {
-	var notImplemented []int
-	if firstPage {
-		notImplemented = []int{http.StatusNotFound, http.StatusMethodNotAllowed}
-	}
-	byteJSON, err := c.requestBmcLog(ctx, m, url, metricLogTypeLc, &lastPtr.LcLastHttpStatusCode, &lastPtr.LcLastError, notImplemented...)
-	if err != nil {
-		return RedfishLcLogSchema{}, err
-	}
-
 	var response RedfishLcLogSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {
-		return RedfishLcLogSchema{}, fmt.Errorf("decode the response of %s: %w", url, err)
+		slog.Error("failed to translate JSON to go struct.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		return
 	}
-	return response, nil
-}
 
-// emitLifecycleLogs writes the entries, given newest first, in ascending order.
-// A write failure stops the emission and is returned so that the caller keeps
-// the pointer unchanged; an entry that cannot be marshaled is skipped instead
-// because retrying cannot fix it.
-func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWriter bmcLogWriter) error {
-	for _, v := range slices.Backward(logs) {
+	// The Id is the basis of the pointer management. Validate all the Ids
+	// before writing any entry: aborting after some entries were written
+	// would re-emit them every cycle while a malformed entry persists.
+	entries := make([]lcEntry, len(response.Members))
+	for i, v := range response.Members {
+		id, err := strconv.Atoi(v.Id)
+		if err != nil {
+			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
+			return
+		}
+		entries[i] = lcEntry{id: id, LifeCycleLog: v}
+	}
+	if len(entries) == 0 {
+		// The LC log is empty; there is nothing to collect. A clear is
+		// detected by the Id when new entries arrive.
+		if err := updateLastPointer(lastPtr, filePath); err != nil {
+			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		}
+		return
+	}
+	// Emit in the ascending order of the Id. The real iDRAC returns the
+	// entries newest first, but the order is not relied on.
+	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.id, b.id) })
+	oldest, newest := entries[0], entries[len(entries)-1]
+
+	newestCreateTime, err := time.Parse(time.RFC3339, newest.Create)
+	if err != nil {
+		slog.Error("failed to parse for time", "err", err, "serial", m.Serial, "Id", newest.Id)
+		return
+	}
+
+	cleared, err := isLcLogCleared(lastPtr, entries)
+	if err != nil {
+		slog.Error("failed to parse for time; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial)
+		return
+	}
+	if cleared {
+		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newest.id)
+	} else if lastPtr.LcLastReadId > 0 && oldest.id > lastPtr.LcLastReadId+1 {
+		// The entries between the pointer and the page fell off the page
+		slog.Warn("the entries between the last read entry and the latest page were not collected", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "oldestId", oldest.id, "newestId", newest.id)
+	}
+
+	for _, e := range entries {
+		// Output duplicate log, after log clear in iDRAC
+		if e.id <= lastPtr.LcLastReadId && !cleared {
+			continue
+		}
+		v := e.LifeCycleLog
 		// Add the information to identify of the node
 		v.Serial = m.Serial
 		v.BmcIP = m.BmcIP
@@ -296,9 +166,51 @@ func (c *logCollector) emitLifecycleLogs(logs []LifeCycleLog, m Machine, logWrit
 			slog.Error("failed to marshal the lifecycle log", "err", err, "serial", m.Serial, "Id", v.Id)
 			continue
 		}
+
 		if err := logWriter.write(string(bmcByteJsonLog), m.Serial); err != nil {
-			return fmt.Errorf("write the entry Id %s: %w", v.Id, err)
+			// Abort without updating the pointer file so that the entry is
+			// not lost; the next cycle re-emits from the last persisted Id
+			slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", e.id, "ptrDir", c.ptrDir)
+			return
 		}
+
+		lastPtr.LcLastReadId = e.id
 	}
-	return nil
+
+	// All the entries up to the newest one were written
+	lastPtr.LcLastReadCreateTime = newestCreateTime.Unix()
+	if err := updateLastPointer(lastPtr, filePath); err != nil {
+		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+	}
+}
+
+// isLcLogCleared reports whether the LC log was cleared in iDRAC since the
+// previous cycle. The entry Id restarts from 1 on a clear, so the log was
+// cleared when the newest Id is smaller than the pointer, or when the entry
+// with the pointered Id has a different creation time (the log was cleared
+// and has grown beyond the pointer since then). entries must be sorted in
+// the ascending order of the Id and not empty.
+func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
+	if lastPtr.LcLastReadId == 0 {
+		// The first collection for the machine
+		return false, nil
+	}
+	if entries[len(entries)-1].id < lastPtr.LcLastReadId {
+		return true, nil
+	}
+	if lastPtr.LcLastReadCreateTime == 0 {
+		// The pointer file was written by an older version
+		return false, nil
+	}
+	for _, e := range entries {
+		if e.id != lastPtr.LcLastReadId {
+			continue
+		}
+		createTime, err := time.Parse(time.RFC3339, e.Create)
+		if err != nil {
+			return false, fmt.Errorf("parse Created %q of Id %s: %w", e.Create, e.Id, err)
+		}
+		return createTime.Unix() != lastPtr.LcLastReadCreateTime, nil
+	}
+	return false, nil
 }
