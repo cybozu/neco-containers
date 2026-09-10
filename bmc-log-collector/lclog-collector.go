@@ -130,10 +130,15 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.idNum, b.idNum) })
 	oldest, newest := entries[0], entries[len(entries)-1]
 
-	newestCreateTime, err := time.Parse(time.RFC3339, newest.Create)
-	if err != nil {
-		slog.Error("failed to parse for time", "err", err, "serial", m.Serial, "Id", newest.Id)
-		return
+	// The creation time of the newest entry is recorded for the clear
+	// detection. When it cannot be parsed, it is recorded as unknown (0) and
+	// the clear detection of the next cycle relies on the Id alone; a parse
+	// failure of the log content does not stop the collection.
+	var newestCreateTime int64
+	if t, err := time.Parse(time.RFC3339, newest.Create); err != nil {
+		slog.Warn("failed to parse for time of the newest entry; the creation time is not recorded", "err", err, "serial", m.Serial, "Id", newest.Id)
+	} else {
+		newestCreateTime = t.Unix()
 	}
 
 	cleared := isLcLogCleared(m, lastPtr, entries)
@@ -175,7 +180,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	}
 
 	// All the entries up to the newest one were written
-	lastPtr.LcLastReadCreateTime = newestCreateTime.Unix()
+	lastPtr.LcLastReadCreateTime = newestCreateTime
 	if err := updateLastPointer(lastPtr, filePath); err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
 	}
@@ -200,7 +205,8 @@ func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
 		return true
 	}
 	if lastPtr.LcLastReadCreateTime == 0 {
-		// The pointer file was written by an older version
+		// The creation time is unknown: the pointer file was written by an
+		// older version, or the creation time could not be parsed
 		return false
 	}
 	for _, e := range entries {

@@ -36,7 +36,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineOutOfOrder := Machine{Serial: "LCLOG11", BmcIP: "127.0.0.1:10280", NodeIP: "10.69.0.15"}
 	machineBadCreated := Machine{Serial: "LCLOG12", BmcIP: "127.0.0.1:10380", NodeIP: "10.69.0.16"}
 	machineEmpty := Machine{Serial: "LCLOG13", BmcIP: "127.0.0.1:10480", NodeIP: "10.69.0.17"}
-	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder, machineBadCreated, machineEmpty}
+	machineBadNewestCreated := Machine{Serial: "LCLOG14", BmcIP: "127.0.0.1:10580", NodeIP: "10.69.0.18"}
+	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder, machineBadCreated, machineEmpty, machineBadNewestCreated}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -126,6 +127,12 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineEmpty.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG-lc-empty.json", "LCLOG03-lc-2.json"},
+			},
+			{
+				// The creation time of the newest entry is unparsable
+				host:    machineBadNewestCreated.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG14-lc-1.json", "LCLOG14-lc-2.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -384,6 +391,33 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineBadCreated.Serial)).To(Equal(4))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("the creation time of the newest entry cannot be parsed", func() {
+		It("collects the entries and records the creation time as unknown", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadNewestCreated, logWriter)
+			file, err := OpenTestResultLog(path.Join(testOutputDir, machineBadNewestCreated.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader := bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+			}
+			ptr, err := readLastPointer(path.Join(testPointerDir, machineBadNewestCreated.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ptr.LcLastReadId).To(Equal(2))
+			Expect(ptr.LcLastReadCreateTime).To(Equal(int64(0)))
+
+			// The next cycle goes on by the Id and records the creation time again
+			lc.collectLifecycleLog(ctx, machineBadNewestCreated, logWriter)
+			result := readNextLcLog(reader)
+			Expect(result.Id).To(Equal("3"))
+			ptr, err = readLastPointer(path.Join(testPointerDir, machineBadNewestCreated.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ptr.LcLastReadId).To(Equal(3))
+			Expect(ptr.LcLastReadCreateTime).NotTo(Equal(int64(0)))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
