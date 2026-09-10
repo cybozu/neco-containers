@@ -62,7 +62,7 @@ type RedfishLcLogSchema struct {
 
 // lcEntry is a Lifecycle log entry with its Id parsed as a number.
 type lcEntry struct {
-	id int
+	idNum int
 	LifeCycleLog
 }
 
@@ -115,7 +115,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
 			return
 		}
-		entries[i] = lcEntry{id: id, LifeCycleLog: v}
+		entries[i] = lcEntry{idNum: id, LifeCycleLog: v}
 	}
 	if len(entries) == 0 {
 		// The LC log is empty; there is nothing to collect. A clear is
@@ -127,7 +127,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	}
 	// Emit in the ascending order of the Id. The real iDRAC returns the
 	// entries newest first, but the order is not relied on.
-	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.id, b.id) })
+	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.idNum, b.idNum) })
 	oldest, newest := entries[0], entries[len(entries)-1]
 
 	newestCreateTime, err := time.Parse(time.RFC3339, newest.Create)
@@ -138,15 +138,17 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 
 	cleared := isLcLogCleared(m, lastPtr, entries)
 	if cleared {
-		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newest.id)
-	} else if lastPtr.LcLastReadId > 0 && oldest.id > lastPtr.LcLastReadId+1 {
+		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newest.idNum)
+	} else if lastPtr.LcLastReadId > 0 && oldest.idNum > lastPtr.LcLastReadId+1 {
 		// The entries between the pointer and the page fell off the page
-		slog.Warn("the entries between the last read entry and the latest page were not collected", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "oldestId", oldest.id, "newestId", newest.id)
+		slog.Warn("the entries between the last read entry and the latest page were not collected", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "oldestId", oldest.idNum, "newestId", newest.idNum)
 	}
 
 	for _, e := range entries {
-		// Output duplicate log, after log clear in iDRAC
-		if e.id <= lastPtr.LcLastReadId && !cleared {
+		// Emit the entries newer than the pointer. After a log clear the
+		// whole page is emitted, as the Ids restarted; the entries that were
+		// emitted before the clear may be duplicated, as with the SEL.
+		if e.idNum <= lastPtr.LcLastReadId && !cleared {
 			continue
 		}
 		v := e.LifeCycleLog
@@ -165,11 +167,11 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		if err := logWriter.write(string(bmcByteJsonLog), m.Serial); err != nil {
 			// Abort without updating the pointer file so that the entry is
 			// not lost; the next cycle re-emits from the last persisted Id
-			slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", e.id, "ptrDir", c.ptrDir)
+			slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", e.idNum, "ptrDir", c.ptrDir)
 			return
 		}
 
-		lastPtr.LcLastReadId = e.id
+		lastPtr.LcLastReadId = e.idNum
 	}
 
 	// All the entries up to the newest one were written
@@ -194,7 +196,7 @@ func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
 		// The first collection for the machine
 		return false
 	}
-	if entries[len(entries)-1].id < lastPtr.LcLastReadId {
+	if entries[len(entries)-1].idNum < lastPtr.LcLastReadId {
 		return true
 	}
 	if lastPtr.LcLastReadCreateTime == 0 {
@@ -202,7 +204,7 @@ func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
 		return false
 	}
 	for _, e := range entries {
-		if e.id != lastPtr.LcLastReadId {
+		if e.idNum != lastPtr.LcLastReadId {
 			continue
 		}
 		createTime, err := time.Parse(time.RFC3339, e.Create)

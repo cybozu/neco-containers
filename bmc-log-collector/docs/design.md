@@ -64,6 +64,9 @@ The LC log is collected in the same way as the SEL with the following difference
    The SEL uses the creation time of the oldest entry for this purpose, but the oldest
    entry of the LC log page changes every cycle, so the creation time of the pointered
    entry is recorded in the pointer file instead.
+   Note that a clear followed by more new entries than one page within one scraping
+   interval cannot be distinguished from a plain backlog: the entries up to the pointered
+   ID are skipped as described in 2. This is accepted for the same reason.
 5. Each output line has `LogType: "LCLog"` (the SEL lines have `LogType: "SEL"`) so that
    the log type can be distinguished in Loki.
 6. A BMC that replies 404 or 405 for the LC log path does not implement the LC log

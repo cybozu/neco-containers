@@ -35,7 +35,8 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineBadInitial := Machine{Serial: "LCLOG09", BmcIP: "127.0.0.1:10080", NodeIP: "10.69.0.13"}
 	machineOutOfOrder := Machine{Serial: "LCLOG11", BmcIP: "127.0.0.1:10280", NodeIP: "10.69.0.15"}
 	machineBadCreated := Machine{Serial: "LCLOG12", BmcIP: "127.0.0.1:10380", NodeIP: "10.69.0.16"}
-	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder, machineBadCreated}
+	machineEmpty := Machine{Serial: "LCLOG13", BmcIP: "127.0.0.1:10480", NodeIP: "10.69.0.17"}
+	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder, machineBadCreated, machineEmpty}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -119,6 +120,12 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineBadCreated.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG12-lc-1.json", "LCLOG12-lc-2.json"},
+			},
+			{
+				// The LC log becomes empty (e.g. just cleared), then grows again
+				host:    machineEmpty.BmcIP,
+				resDir:  "testdata/redfish_response",
+				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG-lc-empty.json", "LCLOG03-lc-2.json"},
 			},
 		}
 		for _, bm := range mocks {
@@ -377,6 +384,39 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineBadCreated.Serial)).To(Equal(4))
+			file.Close()
+		}, SpecTimeout(30*time.Second))
+	})
+
+	Context("the LC log is empty", func() {
+		It("collects nothing and keeps the pointer, then detects the clear when entries arrive", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineEmpty, logWriter)
+			Expect(lcLastReadId(machineEmpty.Serial)).To(Equal(2))
+
+			// The empty page: nothing is emitted, the position is kept, and
+			// the request status is recorded as a success
+			lc.collectLifecycleLog(ctx, machineEmpty, logWriter)
+			ptr, err := readLastPointer(path.Join(testPointerDir, machineEmpty.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ptr.LcLastReadId).To(Equal(2))
+			Expect(ptr.LcLastHttpStatusCode).To(Equal(http.StatusOK))
+
+			// The log grows again from Id 1 with new creation times: a clear
+			lc.collectLifecycleLog(ctx, machineEmpty, logWriter)
+			file, err := OpenTestResultLog(path.Join(testOutputDir, machineEmpty.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			reader := bufio.NewReaderSize(file, 4096)
+			for _, id := range []string{"1", "2"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+				Expect(result.Create).To(HavePrefix("2026-09-01T00:"))
+			}
+			for _, id := range []string{"1", "2", "3"} {
+				result := readNextLcLog(reader)
+				Expect(result.Id).To(Equal(id))
+				Expect(result.Create).To(HavePrefix("2026-09-01T02:"))
+			}
+			Expect(lcLastReadId(machineEmpty.Serial)).To(Equal(3))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})
