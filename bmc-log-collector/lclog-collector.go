@@ -4,7 +4,6 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"path"
@@ -137,11 +136,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		return
 	}
 
-	cleared, err := isLcLogCleared(lastPtr, entries)
-	if err != nil {
-		slog.Error("failed to parse for time; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial)
-		return
-	}
+	cleared := isLcLogCleared(m, lastPtr, entries)
 	if cleared {
 		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newest.id)
 	} else if lastPtr.LcLastReadId > 0 && oldest.id > lastPtr.LcLastReadId+1 {
@@ -190,17 +185,21 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 // with the pointered Id has a different creation time (the log was cleared
 // and has grown beyond the pointer since then). entries must be sorted in
 // the ascending order of the Id and not empty.
-func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
+//
+// A creation time that cannot be parsed is reported and treated as not
+// cleared, so that the collection goes on as with the SEL; the clear is
+// still detected by the Id in the following cycles.
+func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
 	if lastPtr.LcLastReadId == 0 {
 		// The first collection for the machine
-		return false, nil
+		return false
 	}
 	if entries[len(entries)-1].id < lastPtr.LcLastReadId {
-		return true, nil
+		return true
 	}
 	if lastPtr.LcLastReadCreateTime == 0 {
 		// The pointer file was written by an older version
-		return false, nil
+		return false
 	}
 	for _, e := range entries {
 		if e.id != lastPtr.LcLastReadId {
@@ -208,9 +207,10 @@ func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
 		}
 		createTime, err := time.Parse(time.RFC3339, e.Create)
 		if err != nil {
-			return false, fmt.Errorf("parse Created %q of Id %s: %w", e.Create, e.Id, err)
+			slog.Warn("failed to parse for time of the last read entry; assuming the lifecycle log was not cleared", "err", err, "serial", m.Serial, "Id", e.Id)
+			return false
 		}
-		return createTime.Unix() != lastPtr.LcLastReadCreateTime, nil
+		return createTime.Unix() != lastPtr.LcLastReadCreateTime
 	}
-	return false, nil
+	return false
 }
