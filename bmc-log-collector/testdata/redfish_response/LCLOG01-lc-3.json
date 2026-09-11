@@ -1,0 +1,217 @@
+{
+ "@odata.context": "/redfish/v1/$metadata#LogEntryCollection.LogEntryCollection",
+ "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries",
+ "@odata.type": "#LogEntryCollection.LogEntryCollection",
+ "Description": "LC Logs for this manager",
+ "Members": [
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/9",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:09:00-05:00",
+   "Description": "Log Entry 9",
+   "EntryType": "Oem",
+   "Id": "9",
+   "Message": "mock lifecycle event 9",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 9",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/8",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:08:00-05:00",
+   "Description": "Log Entry 8",
+   "EntryType": "Oem",
+   "Id": "8",
+   "Message": "mock lifecycle event 8",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 8",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/7",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:07:00-05:00",
+   "Description": "Log Entry 7",
+   "EntryType": "Oem",
+   "Id": "7",
+   "Message": "mock lifecycle event 7",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 7",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/6",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:06:00-05:00",
+   "Description": "Log Entry 6",
+   "EntryType": "Oem",
+   "Id": "6",
+   "Message": "mock lifecycle event 6",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 6",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/5",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:05:00-05:00",
+   "Description": "Log Entry 5",
+   "EntryType": "Oem",
+   "Id": "5",
+   "Message": "mock lifecycle event 5",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 5",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/4",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:04:00-05:00",
+   "Description": "Log Entry 4",
+   "EntryType": "Oem",
+   "Id": "4",
+   "Message": "mock lifecycle event 4",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 4",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/3",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:03:00-05:00",
+   "Description": "Log Entry 3",
+   "EntryType": "Oem",
+   "Id": "3",
+   "Message": "mock lifecycle event 3",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 3",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/2",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:02:00-05:00",
+   "Description": "Log Entry 2",
+   "EntryType": "Oem",
+   "Id": "2",
+   "Message": "mock lifecycle event 2",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 2",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  },
+  {
+   "@odata.id": "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries/1",
+   "@odata.type": "#LogEntry.v1_16_1.LogEntry",
+   "Created": "2026-09-01T00:01:00-05:00",
+   "Description": "Log Entry 1",
+   "EntryType": "Oem",
+   "Id": "1",
+   "Message": "mock lifecycle event 1",
+   "MessageArgs": [],
+   "MessageArgs@odata.count": 0,
+   "MessageId": "IDRAC.2.9.USR0030",
+   "Name": "Log Entry 1",
+   "Oem": {
+    "Dell": {
+     "@odata.type": "#DellLCLogEntry.v1_1_0.DellLCLogEntry",
+     "Category": "Audit",
+     "Comment": null,
+     "LastUpdatedByUser": null
+    }
+   },
+   "OemRecordFormat": "Dell",
+   "Severity": "OK"
+  }
+ ],
+ "Members@odata.count": 9,
+ "Name": "Log Entry Collection"
+}

@@ -25,10 +25,10 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 	Context("Normal case", func() {
 		var metricsLines []string
 		It("put metrics at failed case", func() {
-			counterRequestFailed.WithLabelValues("ABC123X").Inc()
+			counterRequestFailed.WithLabelValues("ABC123X", metricLogTypeSel).Inc()
 		})
 		It("get metrics at success case", func() {
-			counterRequestSuccess.WithLabelValues("ABC123X").Inc()
+			counterRequestSuccess.WithLabelValues("ABC123X", metricLogTypeSel).Inc()
 		})
 		It("get metrics", func() {
 			url := "http://localhost" + metricsPort + metricsPath
@@ -50,7 +50,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_failed_total Failed count of accessing BMC to get the system event log")).To(BeTrue())
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_failed_total Failed count of accessing BMC to get the hardware log")).To(BeTrue())
 		})
 		It("verify TYPE line in metrics", func() {
 			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_failed_total counter")).To(BeTrue())
@@ -94,7 +94,7 @@ var _ = Describe("Get Metrics export", Ordered, func() {
 		})
 
 		It("verify HELP line in metrics", func() {
-			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_success_total Succeeded count of accessing BMC to get the system event log")).To(BeTrue())
+			Expect(searchMetricsComment(metricsLines, "# HELP bmc_log_requests_success_total Succeeded count of accessing BMC to get the hardware log")).To(BeTrue())
 		})
 		It("verify TYPE line in metrics", func() {
 			Expect(searchMetricsComment(metricsLines, "# TYPE bmc_log_requests_success_total counter")).To(BeTrue())

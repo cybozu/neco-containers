@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
@@ -14,6 +15,12 @@ type LastPointer struct {
 	LastError          string // for TCP Error
 	LastHttpStatusCode int    // for HTTP Error
 	FirstCreateTime    int64
+
+	// Lifecycle log; zero in the files written by older versions
+	LcLastReadId         int    // BMC LC log Id
+	LcLastReadCreateTime int64  // Created time of the LcLastReadId entry, to detect log clear
+	LcLastError          string // for TCP Error
+	LcLastHttpStatusCode int    // for HTTP Error
 }
 
 func checkAndCreatePointerFile(filePath string) error {
@@ -41,6 +48,14 @@ func checkAndCreatePointerFile(filePath string) error {
 		return err
 	}
 	return err
+}
+
+// saveLastPointer writes the pointer file of a machine. A failure is only
+// logged: the position not persisted is retried in the next cycle.
+func saveLastPointer(lastPtr LastPointer, filePath, serial string) {
+	if err := updateLastPointer(lastPtr, filePath); err != nil {
+		slog.Error("failed to write a pointer file.", "err", err, "serial", serial, "filePath", filePath)
+	}
 }
 
 func updateLastPointer(lptr LastPointer, filePath string) error {
@@ -73,6 +88,19 @@ func updateLastPointer(lptr LastPointer, filePath string) error {
 		return err
 	}
 	return nil
+}
+
+// loadLastPointer reads the pointer file of a machine, creating an empty one
+// when the machine is seen for the first time.
+func loadLastPointer(filePath string) (LastPointer, error) {
+	if err := checkAndCreatePointerFile(filePath); err != nil {
+		return LastPointer{}, fmt.Errorf("check pointer file: %w", err)
+	}
+	lastPtr, err := readLastPointer(filePath)
+	if err != nil {
+		return LastPointer{}, fmt.Errorf("read pointer file: %w", err)
+	}
+	return lastPtr, nil
 }
 
 func readLastPointer(filePath string) (LastPointer, error) {

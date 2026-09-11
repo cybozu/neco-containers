@@ -21,7 +21,7 @@ type bmcLogWriter interface {
 	write(stringJson string, serial string) (err error)
 }
 
-func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
+func doLogScrapingLoop(config logCollector, logWriter bmcLogWriter) {
 	config.httpClient = &http.Client{
 		Timeout: 120 * time.Second,
 		Transport: &http.Transport{
@@ -66,10 +66,13 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				slog.Error("can't read the machine list", "err", err, "path", config.machinesListDir)
 				return
 			}
-			// Start log collector workers by BMCs
+			// Start log collector workers by BMCs.
+			// Collect the logs sequentially in a worker to avoid
+			// concurrent accesses to the same iDRAC.
 			for _, m := range machinesList {
 				wg.Go(func() {
 					config.collectSystemEventLog(ctx, m, logWriter)
+					config.collectLifecycleLog(ctx, m, logWriter)
 				})
 			}
 			wg.Wait()
@@ -109,6 +112,11 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stderr, opts))
 	slog.SetDefault(logger)
 
+	if *flgScrapingIntervalTime < 1 {
+		slog.Error("scraping-interval-time must be 1 or larger", "scraping-interval-time", *flgScrapingIntervalTime)
+		os.Exit(1)
+	}
+
 	// Read user & password for BMC
 	user, err := LoadBMCUserConfig(*flgUserFile)
 	if err != nil {
@@ -117,9 +125,10 @@ func main() {
 	}
 
 	// Setup log scraping loop
-	configLc := selCollector{
+	configLc := logCollector{
 		machinesListDir: *flgMachineList,
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
+		rfLcPath:        "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Lclog/Entries",
 		ptrDir:          *flgPointerDir,
 		username:        *flgUserId,
 		password:        user.Support.Password.Raw,
