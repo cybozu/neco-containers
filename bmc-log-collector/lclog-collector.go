@@ -189,16 +189,8 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 // and has grown beyond the pointer since then). entries must be sorted in
 // the ascending order of the Id and not empty.
 func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
-	if lastPtr.LcLastReadId == 0 {
-		// The first collection for the machine
-		return false, nil
-	}
 	if entries[len(entries)-1].idNum < lastPtr.LcLastReadId {
 		return true, nil
-	}
-	if lastPtr.LcLastReadCreateTime == 0 {
-		// The pointer file was written by an older version
-		return false, nil
 	}
 	for _, e := range entries {
 		if e.idNum != lastPtr.LcLastReadId {
