@@ -6,7 +6,7 @@ bmc-log-collector
 The following products are assumed as BMC.
 - DELL integrated Dell Remote Access Controller (iDRAC) 
 
-This program reads the "machineslist.json" and retrieves the System Event Log (SEL) and the Lifecycle (LC) log from each BMC. "bmc-log-collector" adds the serial, the node IP, and the log type (`SEL` or `LCLog`) to each entry and writes it to stdout.
+This program reads the "machineslist.json" and retrieves the System Event Log (SEL) and the Lifecycle (LC) log from each BMC. "bmc-log-collector" adds the serial, the BMC IP, the node IP, and the log type (`SEL` or `LCLog`) to each entry and writes it to stdout.
 
 The LC log endpoint of iDRAC returns only the latest 50 entries. The collector emits the entries of that page which are newer than the one read in the previous cycle; the entries that fell off the page since then are not collected (the LC log grows only a few entries per day in our fleet).
 

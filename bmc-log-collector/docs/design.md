@@ -61,6 +61,8 @@ The LC log is collected in the same way as the SEL with the following difference
    The clear is detected when the newest ID is smaller than the pointer, or when
    the entry with the ID recorded in the pointer file has a different creation time.
    In both cases the collector emits the whole latest page, as on the first collection.
+   An empty LC log is not treated as a clear: nothing is collected and the pointer is
+   kept, so the clear is detected by the ID when new entries arrive.
    The SEL uses the creation time of the oldest entry for this purpose, but the oldest
    entry of the LC log page changes every cycle, so the creation time of the pointered
    entry is recorded in the pointer file instead.
