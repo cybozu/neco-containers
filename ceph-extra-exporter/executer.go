@@ -13,8 +13,10 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
-const executionInterval time.Duration = 300 * time.Second
-const commandTimeout time.Duration = 60 * time.Second
+const (
+	executionInterval time.Duration = 300 * time.Second
+	commandTimeout    time.Duration = 60 * time.Second
+)
 
 type metric struct {
 	metricType prometheus.ValueType

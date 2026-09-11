@@ -122,7 +122,7 @@ func startServer(rules []rule, port uint, reg prometheus.Registerer, options exp
 		cancel()
 		wg.Wait()
 	}()
-	for i := 0; i < len(rules); i++ {
+	for i := range len(rules) {
 		if !options.enabled(rules[i].target) {
 			continue
 		}
