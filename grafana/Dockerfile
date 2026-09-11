@@ -1,26 +1,41 @@
+# syntax=docker/dockerfile:1
 # Grafana container
+
+ARG GRAFANA_VERSION=13.1.0
+# Follow the major version of JS_IMAGE (node:24-alpine) in the upstream Dockerfile.
+ARG NODE_VERSION=24.20.0
+
+FROM scratch AS grafana-src
+ARG GRAFANA_VERSION
+ADD --checksum=sha256:3fdc33bce23123b5da795f985df22f047aafe62c4915bb5567fd374e5570418c \
+    https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz /grafana.tar.gz
+
+FROM scratch AS node-download
+ARG NODE_VERSION
+ADD --checksum=sha256:855d581f8a4eb1a8117e3426de25fe02770592febcfb31369aee1ffbfee9e8ec \
+    https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG GRAFANA_VERSION=13.1.0
+ARG NODE_VERSION
 
 ENV NODE_OPTIONS=--max_old_space_size=8000
 
 WORKDIR /work/grafana
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-RUN curl -sSLf https://github.com/grafana/grafana/archive/v${GRAFANA_VERSION}.tar.gz | \
-    tar zxf - --strip-components 1 -C /work/grafana
+RUN --mount=type=bind,from=grafana-src,source=/grafana.tar.gz,target=/tmp/grafana.tar.gz \
+    tar zxf /tmp/grafana.tar.gz --strip-components 1 -C /work/grafana
 COPY *.patch /work/
 RUN patch -p1 < /work/viewers_can_explore.patch
 RUN patch -p1 < /work/disable-unversioned-plugin-install.patch
 
-# Install Node.js 24.x & yarn
-# https://nodesource.com/products/distributions
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/* \
-    && npm install --global yarn@1.22.22
-    # `node` container image, which is used to build this product in the upsteram, includes yarn 1.22.22 at this time.
+# Install Node.js (SHA256-pinned tarball, no curl | bash) & yarn
+RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
+    tar xf /tmp/node.tar.gz -C /opt
+ENV PATH="/opt/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
+# `node` container image, which is used to build this product in the upstream, includes yarn 1.22.22 at this time.
+# The actual build uses Yarn 4 via yarnPath in the upstream .yarnrc.yml; this classic yarn only bootstraps it.
+RUN npm install --global --ignore-scripts yarn@1.22.22
 
 RUN yarn install --immutable
 ENV NODE_ENV=production

@@ -719,8 +719,10 @@ Manual update
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/grafana/grafana/blob/vX.Y.Z/Dockerfile`
    - Check `JS_IMAGE` in the Dockerfile
-3. Update `GRAFANA_VERSION` in `Dockerfile`.
-4. Update installation of Node.js in `Dockerfile` according to `JS_IMAGE` if necessary.
+3. Update `GRAFANA_VERSION` in `Dockerfile` and the `--checksum` of the Grafana source tarball.
+   - `curl -fsSL https://github.com/grafana/grafana/archive/vX.Y.Z.tar.gz | sha256sum`
+4. Update `NODE_VERSION` in `Dockerfile` according to `JS_IMAGE` if necessary, together with the `--checksum` of the Node.js tarball.
+   - `https://nodejs.org/dist/vA.B.C/SHASUMS256.txt` (the `node-vA.B.C-linux-x64.tar.gz` line)
 5. Update `TAG`.
 
 ## grafana-operator
