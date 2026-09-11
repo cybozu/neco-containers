@@ -35,7 +35,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 COPY --from=source /pomerium.tar.gz /tmp/pomerium.tar.gz
 RUN tar zxf /tmp/pomerium.tar.gz --strip-components 1 && rm /tmp/pomerium.tar.gz
 
-RUN cd ui; npm ci
+# esbuild's postinstall is only an optional optimization, so skipping scripts is safe.
+RUN cd ui; npm ci --ignore-scripts
 RUN make build-ui
 
 RUN go mod download
