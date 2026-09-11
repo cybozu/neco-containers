@@ -33,11 +33,10 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	machineBadEntry := Machine{Serial: "LCLOG07", BmcIP: "127.0.0.1:9780", NodeIP: "10.69.0.10"}
 	machineWriteFail := Machine{Serial: "LCLOG08", BmcIP: "127.0.0.1:9980", NodeIP: "10.69.0.12"}
 	machineBadInitial := Machine{Serial: "LCLOG09", BmcIP: "127.0.0.1:10080", NodeIP: "10.69.0.13"}
-	machineOutOfOrder := Machine{Serial: "LCLOG11", BmcIP: "127.0.0.1:10280", NodeIP: "10.69.0.15"}
 	machineBadCreated := Machine{Serial: "LCLOG12", BmcIP: "127.0.0.1:10380", NodeIP: "10.69.0.16"}
 	machineEmpty := Machine{Serial: "LCLOG13", BmcIP: "127.0.0.1:10480", NodeIP: "10.69.0.17"}
 	machineBadNewestCreated := Machine{Serial: "LCLOG14", BmcIP: "127.0.0.1:10580", NodeIP: "10.69.0.18"}
-	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineOutOfOrder, machineBadCreated, machineEmpty, machineBadNewestCreated}
+	machines := []Machine{machineBasic, machineGap, machineMismatch, machineNoLcLog, machineBadEntry, machineWriteFail, machineBadInitial, machineBadCreated, machineEmpty, machineBadNewestCreated}
 
 	logWriter := logTest{outputDir: testOutputDir}
 
@@ -109,12 +108,6 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				host:    machineBadInitial.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG09-lc-1.json", "LCLOG09-lc-2.json"},
-			},
-			{
-				// The entries of the page are not in the newest-first order
-				host:    machineOutOfOrder.BmcIP,
-				resDir:  "testdata/redfish_response",
-				lcFiles: []string{"LCLOG11-lc-1.json", "LCLOG11-lc-2.json"},
 			},
 			{
 				// The creation time of the last read entry becomes unparsable, then the device recovers
@@ -352,26 +345,6 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				Expect(result.Id).To(Equal(id))
 			}
 			Expect(lcLastReadId(machineBadInitial.Serial)).To(Equal(3))
-			file.Close()
-		}, SpecTimeout(30*time.Second))
-	})
-
-	Context("the entries of the page are not in the newest-first order", func() {
-		It("emits them in the ascending order of the Id", func(ctx SpecContext) {
-			lc.collectLifecycleLog(ctx, machineOutOfOrder, logWriter)
-
-			file, err := OpenTestResultLog(path.Join(testOutputDir, machineOutOfOrder.Serial))
-			Expect(err).NotTo(HaveOccurred())
-			reader := bufio.NewReaderSize(file, 4096)
-			// The page holds Id 5, 3, 4 in this order
-			for _, id := range []string{"3", "4", "5"} {
-				result := readNextLcLog(reader)
-				Expect(result.Id).To(Equal(id))
-			}
-			Expect(lcLastReadId(machineOutOfOrder.Serial)).To(Equal(5))
-
-			lc.collectLifecycleLog(ctx, machineOutOfOrder, logWriter)
-			Expect(lcLastReadId(machineOutOfOrder.Serial)).To(Equal(5))
 			file.Close()
 		}, SpecTimeout(30*time.Second))
 	})

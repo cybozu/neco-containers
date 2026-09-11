@@ -1,7 +1,6 @@
 package main
 
 import (
-	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -122,10 +121,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
-	// Emit in the ascending order of the Id. The real iDRAC returns the
-	// entries newest first, but the order is not relied on.
-	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.idNum, b.idNum) })
-	oldest, newest := entries[0], entries[len(entries)-1]
+	newest, oldest := entries[0], entries[len(entries)-1]
 
 	// The creation time of the newest entry is recorded for the clear detection
 	createTime, err := time.Parse(time.RFC3339, newest.Create)
@@ -147,7 +143,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		slog.Warn("the entries between the last read entry and the latest page were not collected", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "oldestId", oldest.idNum, "newestId", newest.idNum)
 	}
 
-	for _, e := range entries {
+	for _, e := range slices.Backward(entries) {
 		// Emit the entries newer than the pointer. After a log clear the
 		// whole page is emitted, as the Ids restarted; the entries that were
 		// emitted before the clear may be duplicated, as with the SEL.
@@ -186,10 +182,10 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 // previous cycle. The entry Id restarts from 1 on a clear, so the log was
 // cleared when the newest Id is smaller than the pointer, or when the entry
 // with the pointered Id has a different creation time (the log was cleared
-// and has grown beyond the pointer since then). entries must be sorted in
-// the ascending order of the Id and not empty.
+// and has grown beyond the pointer since then). entries must be in the
+// newest-first order, as returned by iDRAC, and not empty.
 func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
-	if entries[len(entries)-1].idNum < lastPtr.LcLastReadId {
+	if entries[0].idNum < lastPtr.LcLastReadId {
 		return true, nil
 	}
 	for _, e := range entries {
