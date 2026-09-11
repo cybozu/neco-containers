@@ -74,13 +74,9 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
 	byteJSON, err := c.requestBmcLog(ctx, m, bmcUrl, metricLogTypeSel, &lastPtr.LastHttpStatusCode, &lastPtr.LastError)
 	if err != nil {
-		// The failure has been reported; record the request status and keep
-		// the read position unchanged so that the next cycle retries
 		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
-	// Clear the failure status so that the same failure after a recovery is
-	// reported again instead of being suppressed by the deduplication
 	lastPtr.LastHttpStatusCode = http.StatusOK
 	lastPtr.LastError = ""
 
@@ -96,9 +92,7 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		return
 	}
 
-	// The Id is the basis of the pointer management. Validate all the Ids
-	// before writing any entry: aborting after some entries were written
-	// would re-emit them every cycle while a malformed entry persists.
+	// Validate all the Ids before writing so that the cycle does not abort halfway
 	for _, v := range response.Sel {
 		if _, err := strconv.Atoi(v.Id); err != nil {
 			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
@@ -135,8 +129,6 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 			if err != nil {
-				// Abort without updating the pointer file so that the entry is
-				// not lost; the next cycle re-emits from the last persisted Id
 				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
 				return
 			}
@@ -155,8 +147,6 @@ func (c *logCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 				// Output duplicate log, after log reset in iDRAC
 				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 				if err != nil {
-					// Abort without updating the pointer file so that the entry is
-					// not lost; the next cycle re-emits from the last persisted Id
 					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
 					return
 				}

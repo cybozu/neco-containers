@@ -16,8 +16,7 @@ type LastPointer struct {
 	LastHttpStatusCode int    // for HTTP Error
 	FirstCreateTime    int64
 
-	// Lifecycle log (files written by older versions lack these fields,
-	// so they are loaded as zero values and the LC log starts fresh)
+	// Lifecycle log; zero in the files written by older versions
 	LcLastReadId         int    // BMC LC log Id
 	LcLastReadCreateTime int64  // Created time of the LcLastReadId entry, to detect log clear
 	LcLastError          string // for TCP Error
@@ -51,9 +50,8 @@ func checkAndCreatePointerFile(filePath string) error {
 	return err
 }
 
-// saveLastPointer writes the pointer file of a machine and reports a failure.
-// The collectors call it wherever the cycle ends; the read position that is
-// not persisted is retried in the next cycle, so a failure only needs a log.
+// saveLastPointer writes the pointer file of a machine. A failure is only
+// logged: the position not persisted is retried in the next cycle.
 func saveLastPointer(lastPtr LastPointer, filePath, serial string) {
 	if err := updateLastPointer(lastPtr, filePath); err != nil {
 		slog.Error("failed to write a pointer file.", "err", err, "serial", serial, "filePath", filePath)

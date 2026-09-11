@@ -9,9 +9,8 @@ import (
 	"slices"
 )
 
-// errBMCRequestFailed is returned by requestBmcLog when the request failed.
-// The failure has already been counted, recorded in the pointer status, and
-// reported, so the caller only aborts the current cycle.
+// errBMCRequestFailed is returned by requestBmcLog after the failure was counted,
+// recorded and reported.
 var errBMCRequestFailed = errors.New("request to the BMC failed")
 
 // Get from Redfish API on BMC REST service
@@ -36,16 +35,11 @@ func requestToBmc(ctx context.Context, username string, password string, client 
 	return buf, resp.StatusCode, nil
 }
 
-// requestBmcLog requests the entries of a BMC log service. The request metrics
-// of logType are counted, and a failure is recorded in the pointer status
-// fields of the log type and reported only when it differs from the recorded
-// one, so that a persistent failure does not flood the log. The caller
-// clears the recorded status once the collection succeeds. The body is
-// returned only for a 200 reply; any failure is errBMCRequestFailed.
-//
-// A status listed in notImplemented means that the BMC lacks the log
-// service: it is reported as a warning and not counted as a failure, to
-// avoid a permanent false alarm.
+// requestBmcLog requests the entries of a BMC log service and counts the request
+// metrics of logType. A failure is recorded in lastHttpStatusCode/lastError and
+// reported only when it differs from the recorded one; the caller clears them on
+// success. A status in notImplemented (the BMC lacks the log service) is a
+// warning, not a failure.
 func (c *logCollector) requestBmcLog(ctx context.Context, m Machine, url, logType string, lastHttpStatusCode *int, lastError *string, notImplemented ...int) ([]byte, error) {
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, url)
 	if err != nil {
