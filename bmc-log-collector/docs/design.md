@@ -77,9 +77,9 @@ The LC log is collected in the same way as the SEL with the following difference
 7. The pointer is advanced in the same way as the SEL: when an entry ID cannot be parsed
    or an entry cannot be written, the collector aborts the cycle without advancing the
    pointer and retries in the next cycle; an entry that cannot be marshaled is skipped.
-   A creation time that cannot be parsed does not abort the cycle either: the clear
-   detection by the creation time is skipped, or the creation time is recorded as
-   unknown when it is the newest entry, and the collection goes on by the ID.
+   A creation time that the clear detection depends on (the newest entry, and the
+   pointered entry when it is on the page) that cannot be parsed aborts the cycle in
+   the same way, as the SEL does with the creation time of the oldest entry.
 8. The numeric, monotonically increasing entry ID is a Dell iDRAC implementation
    behavior, not a Redfish specification guarantee (DSP0266 defines Id only as an
    opaque unique string). This collector is Dell-specific and relies on it, the same

@@ -117,10 +117,10 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				lcFiles: []string{"LCLOG11-lc-1.json", "LCLOG11-lc-2.json"},
 			},
 			{
-				// The creation time of the last read entry becomes unparsable
+				// The creation time of the last read entry becomes unparsable, then the device recovers
 				host:    machineBadCreated.BmcIP,
 				resDir:  "testdata/redfish_response",
-				lcFiles: []string{"LCLOG12-lc-1.json", "LCLOG12-lc-2.json"},
+				lcFiles: []string{"LCLOG12-lc-1.json", "LCLOG12-lc-2.json", "LCLOG12-lc-3.json"},
 			},
 			{
 				// The LC log becomes empty (e.g. just cleared), then grows again
@@ -129,7 +129,7 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 				lcFiles: []string{"LCLOG08-lc-1.json", "LCLOG-lc-empty.json", "LCLOG03-lc-2.json"},
 			},
 			{
-				// The creation time of the newest entry is unparsable
+				// The creation time of the newest entry is unparsable, then the device recovers
 				host:    machineBadNewestCreated.BmcIP,
 				resDir:  "testdata/redfish_response",
 				lcFiles: []string{"LCLOG14-lc-1.json", "LCLOG14-lc-2.json"},
@@ -377,11 +377,15 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	})
 
 	Context("the creation time of the last read entry cannot be parsed", func() {
-		It("collects the new entries as if the log was not cleared", func(ctx SpecContext) {
+		It("aborts the cycle and keeps the pointer unchanged, then retries in the next cycle", func(ctx SpecContext) {
 			lc.collectLifecycleLog(ctx, machineBadCreated, logWriter)
 			Expect(lcLastReadId(machineBadCreated.Serial)).To(Equal(2))
 
 			// The page holds Id 4, 3, 2; the Created of Id 2 is not a time
+			lc.collectLifecycleLog(ctx, machineBadCreated, logWriter)
+			Expect(lcLastReadId(machineBadCreated.Serial)).To(Equal(2))
+
+			// The Created of Id 2 is a time again
 			lc.collectLifecycleLog(ctx, machineBadCreated, logWriter)
 			file, err := OpenTestResultLog(path.Join(testOutputDir, machineBadCreated.Serial))
 			Expect(err).NotTo(HaveOccurred())
@@ -396,24 +400,22 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 	})
 
 	Context("the creation time of the newest entry cannot be parsed", func() {
-		It("collects the entries and records the creation time as unknown", func(ctx SpecContext) {
+		It("aborts the cycle and keeps the pointer unchanged, then retries in the next cycle", func(ctx SpecContext) {
+			lc.collectLifecycleLog(ctx, machineBadNewestCreated, logWriter)
+			ptr, err := readLastPointer(path.Join(testPointerDir, machineBadNewestCreated.Serial))
+			Expect(err).NotTo(HaveOccurred())
+			Expect(ptr.LcLastReadId).To(Equal(0))
+			Expect(ptr.LcLastReadCreateTime).To(Equal(int64(0)))
+
+			// The newest entry Id 3 has a valid Created
 			lc.collectLifecycleLog(ctx, machineBadNewestCreated, logWriter)
 			file, err := OpenTestResultLog(path.Join(testOutputDir, machineBadNewestCreated.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			reader := bufio.NewReaderSize(file, 4096)
-			for _, id := range []string{"1", "2"} {
+			for _, id := range []string{"1", "2", "3"} {
 				result := readNextLcLog(reader)
 				Expect(result.Id).To(Equal(id))
 			}
-			ptr, err := readLastPointer(path.Join(testPointerDir, machineBadNewestCreated.Serial))
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.LcLastReadId).To(Equal(2))
-			Expect(ptr.LcLastReadCreateTime).To(Equal(int64(0)))
-
-			// The next cycle goes on by the Id and records the creation time again
-			lc.collectLifecycleLog(ctx, machineBadNewestCreated, logWriter)
-			result := readNextLcLog(reader)
-			Expect(result.Id).To(Equal("3"))
 			ptr, err = readLastPointer(path.Join(testPointerDir, machineBadNewestCreated.Serial))
 			Expect(err).NotTo(HaveOccurred())
 			Expect(ptr.LcLastReadId).To(Equal(3))

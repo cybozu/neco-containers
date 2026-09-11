@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"path"
@@ -126,18 +127,19 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	slices.SortFunc(entries, func(a, b lcEntry) int { return cmp.Compare(a.idNum, b.idNum) })
 	oldest, newest := entries[0], entries[len(entries)-1]
 
-	// The creation time of the newest entry is recorded for the clear
-	// detection. When it cannot be parsed, it is recorded as unknown (0) and
-	// the clear detection of the next cycle relies on the Id alone; a parse
-	// failure of the log content does not stop the collection.
-	var newestCreateTime int64
-	if t, err := time.Parse(time.RFC3339, newest.Create); err != nil {
-		slog.Warn("failed to parse for time of the newest entry; the creation time is not recorded", "err", err, "serial", m.Serial, "Id", newest.Id)
-	} else {
-		newestCreateTime = t.Unix()
+	// The creation time of the newest entry is recorded for the clear detection
+	createTime, err := time.Parse(time.RFC3339, newest.Create)
+	if err != nil {
+		slog.Error("failed to parse for time", "err", err, "serial", m.Serial, "Id", newest.Id)
+		return
 	}
+	newestCreateTime := createTime.Unix()
 
-	cleared := isLcLogCleared(m, lastPtr, entries)
+	cleared, err := isLcLogCleared(lastPtr, entries)
+	if err != nil {
+		slog.Error("failed to parse for time", "err", err, "serial", m.Serial)
+		return
+	}
 	if cleared {
 		slog.Warn("the lifecycle log was cleared in iDRAC; collecting the latest page", "serial", m.Serial, "lastReadId", lastPtr.LcLastReadId, "newestId", newest.idNum)
 	} else if lastPtr.LcLastReadId > 0 && oldest.idNum > lastPtr.LcLastReadId+1 {
@@ -186,22 +188,17 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 // with the pointered Id has a different creation time (the log was cleared
 // and has grown beyond the pointer since then). entries must be sorted in
 // the ascending order of the Id and not empty.
-//
-// A creation time that cannot be parsed is reported and treated as not
-// cleared, so that the collection goes on as with the SEL; the clear is
-// still detected by the Id in the following cycles.
-func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
+func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
 	if lastPtr.LcLastReadId == 0 {
 		// The first collection for the machine
-		return false
+		return false, nil
 	}
 	if entries[len(entries)-1].idNum < lastPtr.LcLastReadId {
-		return true
+		return true, nil
 	}
 	if lastPtr.LcLastReadCreateTime == 0 {
-		// The creation time is unknown: the pointer file was written by an
-		// older version, or the creation time could not be parsed
-		return false
+		// The pointer file was written by an older version
+		return false, nil
 	}
 	for _, e := range entries {
 		if e.idNum != lastPtr.LcLastReadId {
@@ -209,10 +206,9 @@ func isLcLogCleared(m Machine, lastPtr LastPointer, entries []lcEntry) bool {
 		}
 		createTime, err := time.Parse(time.RFC3339, e.Create)
 		if err != nil {
-			slog.Warn("failed to parse for time of the last read entry; assuming the lifecycle log was not cleared", "err", err, "serial", m.Serial, "Id", e.Id)
-			return false
+			return false, fmt.Errorf("parse the creation time of the last read entry Id %s: %w", e.Id, err)
 		}
-		return createTime.Unix() != lastPtr.LcLastReadCreateTime
+		return createTime.Unix() != lastPtr.LcLastReadCreateTime, nil
 	}
-	return false
+	return false, nil
 }
