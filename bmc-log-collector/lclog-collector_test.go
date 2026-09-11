@@ -41,12 +41,12 @@ var _ = Describe("gathering up lifecycle logs", Ordered, func() {
 
 	logWriter := logTest{outputDir: testOutputDir}
 
-	readNextLcLog := func(reader *bufio.Reader) LifeCycleLog {
+	readNextLcLog := func(reader *bufio.Reader) LifecycleLog {
 		GinkgoHelper()
 		stringJSON, err := ReadingTestResultLogNext(reader)
 		Expect(err).NotTo(HaveOccurred())
 		GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
-		var result LifeCycleLog
+		var result LifecycleLog
 		Expect(json.Unmarshal([]byte(stringJSON), &result)).To(Succeed())
 		return result
 	}

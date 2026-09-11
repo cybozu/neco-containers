@@ -12,9 +12,9 @@ import (
 	"time"
 )
 
-// LifeCycleLog is an entry of the iDRAC Lifecycle log as returned by Redfish,
+// LifecycleLog is an entry of the iDRAC Lifecycle log as returned by Redfish,
 // extended with the fields that identify the machine in the output.
-type LifeCycleLog struct {
+type LifecycleLog struct {
 	ODataID          string       `json:"@odata.id"`
 	ODataType        string       `json:"@odata.type"`
 	Create           string       `json:"Created"`
@@ -26,7 +26,7 @@ type LifeCycleLog struct {
 	MessageArgsCount int          `json:"MessageArgs@odata.count"`
 	MessageId        string       `json:"MessageId"`
 	Name             string       `json:"Name"`
-	Oem              LifeCycleOem `json:"Oem"`
+	Oem              LifecycleOem `json:"Oem"`
 	OemRecordFormat  string       `json:"OemRecordFormat"`
 	Severity         string       `json:"Severity"`
 	Serial           string
@@ -35,13 +35,13 @@ type LifeCycleLog struct {
 	LogType          string
 }
 
-// LifeCycleOem is the vendor-specific part of a Lifecycle log entry.
-type LifeCycleOem struct {
-	Dell LifeCycleOemDell `json:"Dell"`
+// LifecycleOem is the vendor-specific part of a Lifecycle log entry.
+type LifecycleOem struct {
+	Dell LifecycleOemDell `json:"Dell"`
 }
 
-// LifeCycleOemDell is the Dell-specific part of a Lifecycle log entry.
-type LifeCycleOemDell struct {
+// LifecycleOemDell is the Dell-specific part of a Lifecycle log entry.
+type LifecycleOemDell struct {
 	ODataType         string  `json:"@odata.type"`
 	Category          string  `json:"Category"`
 	Comment           *string `json:"Comment"`
@@ -57,13 +57,13 @@ type RedfishLcLogSchema struct {
 	Id          string         `json:"@odata.id"`
 	Type        string         `json:"@odata.type"`
 	Description string         `json:"Description"`
-	Members     []LifeCycleLog `json:"Members"`
+	Members     []LifecycleLog `json:"Members"`
 }
 
 // lcEntry is a Lifecycle log entry with its Id parsed as a number.
 type lcEntry struct {
 	idNum int
-	LifeCycleLog
+	LifecycleLog
 }
 
 // collectLifecycleLog collects the LC (Lifecycle) log from iDRAC in the same
@@ -113,7 +113,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 			slog.Error("failed to strconv; abort this cycle to keep the pointer unchanged", "err", err, "serial", m.Serial, "Id", v.Id, "ptrDir", c.ptrDir)
 			return
 		}
-		entries[i] = lcEntry{idNum: id, LifeCycleLog: v}
+		entries[i] = lcEntry{idNum: id, LifecycleLog: v}
 	}
 	if len(entries) == 0 {
 		// The LC log is empty; there is nothing to collect. A clear is
@@ -152,7 +152,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 		if e.idNum <= lastPtr.LcLastReadId && !cleared {
 			continue
 		}
-		v := e.LifeCycleLog
+		v := e.LifecycleLog
 		// Add the information to identify of the node
 		v.Serial = m.Serial
 		v.BmcIP = m.BmcIP
