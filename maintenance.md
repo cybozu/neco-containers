@@ -794,6 +794,7 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
 5. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
+   It also resolves with `minimumReleaseAge=4320` (3 days), so a version published less than 3 days ago is skipped in favor of an older one. If upstream requires such a version, wait, or pass `PNPM_MINIMUM_RELEASE_AGE=0` once and note it in the PR.
 
    ```sh
    cd hubble-ui
