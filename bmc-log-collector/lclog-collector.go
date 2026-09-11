@@ -89,9 +89,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	if err != nil {
 		// The failure has been reported; record the request status and keep
 		// the read position unchanged so that the next cycle retries
-		if err := updateLastPointer(lastPtr, filePath); err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
+		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
 	// Clear the failure status so that the same failure after a recovery is
@@ -120,9 +118,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	if len(entries) == 0 {
 		// The LC log is empty; there is nothing to collect. A clear is
 		// detected by the Id when new entries arrive.
-		if err := updateLastPointer(lastPtr, filePath); err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		}
+		saveLastPointer(lastPtr, filePath, m.Serial)
 		return
 	}
 	// Emit in the ascending order of the Id. The real iDRAC returns the
@@ -181,9 +177,7 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 
 	// All the entries up to the newest one were written
 	lastPtr.LcLastReadCreateTime = newestCreateTime
-	if err := updateLastPointer(lastPtr, filePath); err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-	}
+	saveLastPointer(lastPtr, filePath, m.Serial)
 }
 
 // isLcLogCleared reports whether the LC log was cleared in iDRAC since the
