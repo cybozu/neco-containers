@@ -9,20 +9,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
+// Values of the log_type metrics label
+const (
+	metricLogTypeSel = "sel"
+	metricLogTypeLc  = "lclog"
+)
+
 var counterRequestFailed = promauto.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "bmc_log_requests_failed_total",
-		Help: "Failed count of accessing BMC to get the system event log",
+		Help: "Failed count of accessing BMC to get the hardware log",
 	},
-	[]string{"serial"},
+	[]string{"serial", "log_type"},
 )
 
 var counterRequestSuccess = promauto.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "bmc_log_requests_success_total",
-		Help: "Succeeded count of accessing BMC to get the system event log",
+		Help: "Succeeded count of accessing BMC to get the hardware log",
 	},
-	[]string{"serial"},
+	[]string{"serial", "log_type"},
 )
 
 func metrics(path string, port string) {
@@ -42,6 +48,6 @@ func metrics(path string, port string) {
 }
 
 func deleteMetrics(serial string) {
-	counterRequestSuccess.DeleteLabelValues(serial)
-	counterRequestFailed.DeleteLabelValues(serial)
+	counterRequestSuccess.DeletePartialMatch(prometheus.Labels{"serial": serial})
+	counterRequestFailed.DeletePartialMatch(prometheus.Labels{"serial": serial})
 }

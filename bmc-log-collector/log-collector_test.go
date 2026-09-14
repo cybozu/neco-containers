@@ -20,7 +20,7 @@ import (
 Read the machines list and access iDRAC mock, and eliminate duplicated entry.
 */
 var _ = Describe("gathering up logs", Ordered, func() {
-	var lc selCollector
+	var lc logCollector
 	var cl *http.Client
 	testOutputDir := "testdata/output_log_collector"
 	testPointerDir := "testdata/pointers_log_collector"
@@ -80,7 +80,7 @@ var _ = Describe("gathering up logs", Ordered, func() {
 				}).DialContext,
 			},
 		}
-		lc = selCollector{
+		lc = logCollector{
 			machinesListDir: "testdata/configmap/log-collector-test.json",
 			rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
 			ptrDir:          testPointerDir,
@@ -194,4 +194,120 @@ var _ = Describe("gathering up logs", Ordered, func() {
 			file.Close()
 		}, SpecTimeout(10*time.Second))
 	})
+})
+
+/*
+An entry with a non-numeric Id appears in the SEL, then the device recovers.
+The collector aborts the cycle without updating the pointer file and
+retries in the next cycle (the same policy as the LC log collector).
+*/
+var _ = Describe("SEL entry with a non-numeric Id", Ordered, func() {
+	var lc logCollector
+	testOutputDir := "testdata/output_log_collector"
+	testPointerDir := "testdata/pointers_log_collector"
+	machine := Machine{Serial: "SELBAD01", BmcIP: "127.0.0.1:9880", NodeIP: "10.69.0.11"}
+	logWriter := logTest{outputDir: testOutputDir}
+
+	var file *os.File
+	var reader *bufio.Reader
+
+	readNextSel := func() SystemEventLog {
+		GinkgoHelper()
+		stringJSON, err := ReadingTestResultLogNext(reader)
+		Expect(err).NotTo(HaveOccurred())
+		GinkgoWriter.Println("**** Received stringJSON=", stringJSON)
+		var result SystemEventLog
+		Expect(json.Unmarshal([]byte(stringJSON), &result)).To(Succeed())
+		return result
+	}
+
+	selLastReadId := func() int {
+		GinkgoHelper()
+		ptr, err := readLastPointer(path.Join(testPointerDir, machine.Serial))
+		Expect(err).NotTo(HaveOccurred())
+		return ptr.LastReadId
+	}
+
+	BeforeAll(func(ctx SpecContext) {
+		os.Remove(path.Join(testOutputDir, machine.Serial))
+		os.Remove(path.Join(testPointerDir, machine.Serial))
+		err := os.MkdirAll(testOutputDir, 0o755)
+		Expect(err).NotTo(HaveOccurred())
+		err = os.MkdirAll(testPointerDir, 0o755)
+		Expect(err).NotTo(HaveOccurred())
+
+		bm := bmcMock{
+			host:          machine.BmcIP,
+			resDir:        "testdata/redfish_response",
+			files:         []string{"SELBAD01-1.json", "SELBAD01-2.json", "SELBAD01-3.json"},
+			accessCounter: make(map[string]int),
+			responseFiles: make(map[string][]string),
+			responseDir:   make(map[string]string),
+			isInitmap:     true,
+		}
+		bm.startMock()
+
+		By("Test stub web access " + bm.host)
+		Eventually(func(ctx SpecContext) error {
+			req, _ := http.NewRequest("GET", "http://"+bm.host+"/", nil)
+			client := &http.Client{Timeout: time.Duration(3) * time.Second}
+			_, err := client.Do(req)
+			return err
+		}).WithContext(ctx).Should(Succeed())
+
+		lc = logCollector{
+			rfSelPath: redfishPath,
+			ptrDir:    testPointerDir,
+			username:  "support",
+			password:  basicAuthPassword,
+			httpClient: &http.Client{
+				Timeout: time.Duration(10) * time.Second,
+				Transport: &http.Transport{
+					TLSClientConfig:     &tls.Config{InsecureSkipVerify: true},
+					DisableKeepAlives:   true,
+					TLSHandshakeTimeout: 20 * time.Second,
+					DialContext: (&net.Dialer{
+						Timeout: 15 * time.Second,
+					}).DialContext,
+				},
+			},
+		}
+	}, NodeTimeout(30*time.Second))
+
+	It("collect the first time", func(ctx SpecContext) {
+		lc.collectSystemEventLog(ctx, machine, logWriter)
+
+		var err error
+		file, err = OpenTestResultLog(path.Join(testOutputDir, machine.Serial))
+		Expect(err).NotTo(HaveOccurred())
+		reader = bufio.NewReaderSize(file, 4096)
+		for _, id := range []string{"1", "2"} {
+			Expect(readNextSel().Id).To(Equal(id))
+		}
+		Expect(selLastReadId()).To(Equal(2))
+
+		// A successful cycle clears the last error status
+		ptr, err := readLastPointer(path.Join(testPointerDir, machine.Serial))
+		Expect(err).NotTo(HaveOccurred())
+		Expect(ptr.LastHttpStatusCode).To(Equal(http.StatusOK))
+		Expect(ptr.LastError).To(BeEmpty())
+	}, SpecTimeout(30*time.Second))
+
+	It("abort the cycle and keep the pointer unchanged", func(ctx SpecContext) {
+		lc.collectSystemEventLog(ctx, machine, logWriter)
+		// All the Ids are validated before writing any entry, so nothing is
+		// emitted and the pointer stays; the next test case proves it by
+		// reading the recovered entries as the immediately following output.
+		Expect(selLastReadId()).To(Equal(2))
+	}, SpecTimeout(30*time.Second))
+
+	It("retry successfully in the next cycle", func(ctx SpecContext) {
+		lc.collectSystemEventLog(ctx, machine, logWriter)
+
+		for _, id := range []string{"3", "4"} {
+			Expect(readNextSel().Id).To(Equal(id))
+		}
+		Expect(selLastReadId()).To(Equal(4))
+		file.Close()
+	}, SpecTimeout(30*time.Second))
 })
