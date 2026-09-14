@@ -9,8 +9,7 @@ import (
 	"slices"
 )
 
-// errBMCRequestFailed is returned by requestBmcLog after the failure was counted,
-// recorded and reported.
+// errBMCRequestFailed is returned by requestBmcLog after the failure was counted and logged.
 var errBMCRequestFailed = errors.New("request to the BMC failed")
 
 // Get from Redfish API on BMC REST service
@@ -35,11 +34,8 @@ func requestToBmc(ctx context.Context, username string, password string, client 
 	return buf, resp.StatusCode, nil
 }
 
-// requestBmcLog requests the entries of a BMC log service and counts the request
-// metrics of logType. A failure is recorded in lastHttpStatusCode/lastError and
-// reported only when it differs from the recorded one; the caller clears them on
-// success. A status in notImplemented (the BMC lacks the log service) is a
-// warning, not a failure.
+// requestBmcLog fetches a page of a BMC log service and counts the request metrics of logType.
+// A failure is recorded in lastHttpStatusCode/lastError and logged only when it changes.
 func (c *logCollector) requestBmcLog(ctx context.Context, m Machine, url, logType string, lastHttpStatusCode *int, lastError *string, notImplemented ...int) ([]byte, error) {
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, url)
 	if err != nil {

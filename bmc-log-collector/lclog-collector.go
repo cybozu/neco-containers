@@ -65,8 +65,7 @@ type lcEntry struct {
 }
 
 // collectLifecycleLog collects the LC (Lifecycle) log in the same way as the SEL.
-// The endpoint returns only the latest page (50 entries); the entries that fell
-// off the page since the previous cycle are not collected (see docs/design.md).
+// Only the latest page is read; the entries that fell off it are skipped (see docs/design.md).
 func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
 	filePath := path.Join(c.ptrDir, m.Serial)
 
@@ -157,11 +156,8 @@ func (c *logCollector) collectLifecycleLog(ctx context.Context, m Machine, logWr
 	saveLastPointer(lastPtr, filePath, m.Serial)
 }
 
-// isLcLogCleared reports whether the LC log was cleared in iDRAC, which
-// restarts the Id from 1. The SEL compares the creation time of the oldest
-// entry, but the oldest entry of the LC log page slides, so the creation time
-// of the last read entry is compared instead. entries must be in the
-// newest-first order and not empty.
+// isLcLogCleared reports whether the LC log was cleared in iDRAC, restarting the Id from 1.
+// entries must be newest-first and not empty; why it differs from the SEL is in docs/design.md.
 func isLcLogCleared(lastPtr LastPointer, entries []lcEntry) (bool, error) {
 	if entries[0].idNum < lastPtr.LcLastReadId {
 		return true, nil

@@ -36,10 +36,8 @@ type bmcMock struct {
 	isInitmap     bool
 	mutex         sync.Mutex
 
-	// Lifecycle log mock: each file in lcFiles is a whole LC log snapshot
-	// (newest first) used for one scraping cycle. The handler serves only the
-	// newest lcPageSize entries of it, as the real iDRAC returns only the
-	// latest page of the LC log.
+	// Each file in lcFiles is a whole LC log snapshot (newest first) for one cycle;
+	// only its newest lcPageSize entries are served, as the real iDRAC does.
 	lcFiles    []string
 	lcPageSize int
 	lcCounter  int

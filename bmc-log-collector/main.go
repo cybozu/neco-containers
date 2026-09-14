@@ -67,8 +67,7 @@ func doLogScrapingLoop(config logCollector, logWriter bmcLogWriter) {
 				return
 			}
 			// Start log collector workers by BMCs.
-			// Collect the logs sequentially in a worker to avoid
-			// concurrent accesses to the same iDRAC.
+			// The two logs of a machine are collected sequentially to avoid concurrent accesses to the same iDRAC.
 			for _, m := range machinesList {
 				wg.Go(func() {
 					config.collectSystemEventLog(ctx, m, logWriter)
