@@ -157,7 +157,9 @@ ceph_extra_rbd_task_list_count{action="trash remove"} 2
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			go startServer(testRules, tc.port, prometheus.NewRegistry(), tc.options)
+			go func() {
+				_ = startServer(testRules, tc.port, prometheus.NewRegistry(), tc.options)
+			}()
 			url := fmt.Sprintf("http://localhost:%d/v1/metrics", tc.port)
 
 			assert.EventuallyWithT(t, func(c *assert.CollectT) {
