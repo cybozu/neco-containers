@@ -45,6 +45,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     env:
       go-version: "1.26.5"
     steps:
@@ -54,6 +55,7 @@ jobs:
         with:
           # A matrix entry may override the Go version via the "go-version" field.
           go-version: ${{ matrix.job.go-version || env.go-version }}
+          takumi-guard-bot-id: ${{ vars.TAKUMI_GUARD_BOT_ID }}
       - name: Disk cleanup
         if: ${{ matrix.job.disk-cleanup == 'true' }}
         run: |
@@ -120,6 +122,7 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       - name: Build container image
@@ -127,6 +130,7 @@ jobs:
         with:
           push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
           envoy_commit_sha: ef2d997c1b022cf8b849a1d3521fbf234d79ca26
+          takumi-guard-bot-id: ${{ vars.TAKUMI_GUARD_BOT_ID }}
 
   scan_envoy_image:
     uses: ./.github/workflows/scan.yaml
@@ -148,9 +152,11 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
     - name: Build ceph image
       uses: ./.github/actions/build_ceph
       with:
         push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
+        takumi-guard-bot-id: ${{ vars.TAKUMI_GUARD_BOT_ID }}
