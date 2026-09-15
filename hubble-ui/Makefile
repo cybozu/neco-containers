@@ -5,6 +5,9 @@ NGINX_COMMIT_HASH ?= c743d5145c69250f030934280b01b638d9d765ed
 PNPM_DIR ?= $(CURDIR)/.pnpm-bin
 PNPM_BIN ?= $(CURDIR)/.pnpm-bin/pnpm
 TAKUMI_GUARD_REGISTRY ?= https://npm.flatt.tech/
+# Do not resolve versions published less than 3 days (4320 minutes) ago.
+# Matches the company-wide npm / pnpm security guideline.
+PNPM_MINIMUM_RELEASE_AGE ?= 4320
 
 BACKEND_BUILDER_IMAGE_TAG ?= backend-builder:dev
 BACKEND_IMAGE_TAG ?= ghcr.io/cybozu/hubble-ui-backend:$(shell cat TAG)
@@ -84,10 +87,15 @@ check-takumi-guard: $(PNPM_BIN)
 #
 # A full install (not --lockfile-only) routes every tarball through Takumi
 # Guard so the new dep set is screened before the lockfile is committed.
+#
+# minimumReleaseAge is passed explicitly instead of relying on the pnpm 11
+# default (1 day) so the waiting period stays 3 days even if the default
+# changes. Upstream ships its own .npmrc, so we do not copy one in.
 .PHONY: import-lockfile
 import-lockfile: clean check-takumi-guard checkout
 	cp ./.pnpmfile.cjs src/hubble-ui/.pnpmfile.cjs
-	cd src/hubble-ui && $(PNPM_BIN) install --no-frozen-lockfile --ignore-scripts
+	cd src/hubble-ui && $(PNPM_BIN) install --no-frozen-lockfile --ignore-scripts \
+		--config.minimumReleaseAge=$(PNPM_MINIMUM_RELEASE_AGE)
 	cp src/hubble-ui/pnpm-lock.yaml ./pnpm-lock.yaml
 
 .PHONY: verify-lockfile

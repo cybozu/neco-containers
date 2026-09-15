@@ -76,7 +76,9 @@ ENV PATH="/opt/node-v${NODE_VERSION}-linux-x64/bin:${PATH}"
 
 RUN --mount=type=bind,from=pnpm-download,source=/pnpm,target=/tmp/pnpm \
     install -m 0755 /tmp/pnpm /usr/local/bin/pnpm && \
-    pnpm config set -g minimumReleaseAge 1440
+    # 3 days, per the company-wide npm / pnpm guideline. Only used if pnpm has to
+    # resolve versions; the frozen-lockfile install below does not resolve anything.
+    pnpm config set -g minimumReleaseAge 4320
 
 RUN apt-get update && apt-get install -y --no-install-recommends gpg && \
     # Unlike upstream, do not remove /usr/share/doc/* to preserve license files
