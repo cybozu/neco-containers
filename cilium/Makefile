@@ -1,6 +1,7 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
 CILIUM_UPSTREAM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
-CILIUM_TARGET ?= b6e8c3251f57689c552d454419e99e8d9a685d64
+CILIUM_FORK_BRANCH ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
+CILIUM_TARGET ?= ecb0ce48f2adb2f9ebe04d921141b9ce28c65ec2
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= 3caa2c416a912dce00e641dd89201975be8c9ce8
 
@@ -33,8 +34,21 @@ checkout-repo:
 		git checkout FETCH_HEAD 2>/dev/null; \
 	fi
 
+.PHONY: check-cilium-target
+check-cilium-target:
+	@LATEST=$$(git ls-remote $(CILIUM_REPO) refs/heads/$(CILIUM_FORK_BRANCH) | cut -f1); \
+	if [ -z "$$LATEST" ]; then \
+		echo "Failed to resolve branch $(CILIUM_FORK_BRANCH) on $(CILIUM_REPO)."; \
+		exit 1; \
+	fi; \
+	if [ "$$LATEST" != "$(CILIUM_TARGET)" ]; then \
+		echo "CILIUM_TARGET ($(CILIUM_TARGET)) is not the tip of $(CILIUM_FORK_BRANCH) ($$LATEST)."; \
+		echo "Update CILIUM_TARGET in cilium/Makefile to $$LATEST."; \
+		exit 1; \
+	fi
+
 .PHONY: checkout-cilium
-checkout-cilium:
+checkout-cilium: check-cilium-target
 	@CHECKOUT_DIR=src/cilium CHECKOUT_REPO=$(CILIUM_REPO) CHECKOUT_TARGET=$(CILIUM_TARGET) \
 	$(MAKE) --no-print-directory checkout-repo
 

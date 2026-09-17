@@ -469,6 +469,11 @@ gitGraph
    2. See [history](https://github.com/cilium/image-tools/commits/master/) of `image-tools` to find an appropriate SHA, that provides matching tools version (especially for LLVM/Clang).
 3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
    1. Run `make checkout` and download them under `neco-containers/cilium/src`.
+
+> [!Note]
+> `CILIUM_TARGET` in `neco-containers/cilium/Makefile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
+> If you push new commits to that branch (e.g. additional cherry-picked patches), you must update `CILIUM_TARGET` to the new commit SHA; it will not be picked up automatically.
+> `make checkout-cilium` (and therefore `make checkout`/`make build`) runs `check-cilium-target` first, which fails if `CILIUM_TARGET` is not the current tip of that branch, to catch this case.
 4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
    1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
    2. All the build specification is written in `neco-containers/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
