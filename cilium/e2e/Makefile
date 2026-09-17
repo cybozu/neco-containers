@@ -1,12 +1,17 @@
+GOARCH ?= $(shell go env GOARCH)
+OS := $(shell uname -s | tr '[:upper:]' '[:lower:]')
+
 SUDO ?= sudo
+BIN_DIR := bin
+CILIUM := $(BIN_DIR)/cilium
 CILIUM_DIR := ../src/cilium
 
 CILIUM_AGENT_IMAGE_TAG ?= ghcr.io/cybozu/cilium:$(shell cat ../TAG)
 HUBBLE_RELAY_IMAGE_TAG ?= ghcr.io/cybozu/hubble-relay:$(shell cat ../../hubble-relay/TAG)
+CILIUM_CLI_VERSION := 0.19.2
 
 .PHONY: setup
-setup:
-	aqua install
+setup: $(CILIUM)
 	helm repo add cilium https://helm.cilium.io/
 	helm repo update
 
@@ -25,7 +30,7 @@ upgrade-inotify:
 start:
 	cd $(CILIUM_DIR); ./contrib/scripts/kind.sh --xdp "" 3 "" "" "none" "ipv4"
 	kind load docker-image $(CILIUM_AGENT_IMAGE_TAG)
-	cilium install --wait \
+	$(CILIUM) install --wait \
 		--chart-directory=$(CILIUM_DIR)/install/kubernetes/cilium \
 		--values values.yaml \
 		--set image.repository=$(shell echo $(CILIUM_AGENT_IMAGE_TAG) | cut -d':' -f1) \
@@ -38,7 +43,7 @@ start-hubble-relay:
 	docker pull $${CILIUM_AGENT_IMAGE_TAG}; \
 	kind load docker-image $${CILIUM_AGENT_IMAGE_TAG}
 	kind load docker-image $(HUBBLE_RELAY_IMAGE_TAG)
-	cilium install --wait \
+	$(CILIUM) install --wait \
 		--chart-directory=$(CILIUM_DIR)/install/kubernetes/cilium \
 		--values values.yaml \
 		--set hubble.relay.image.repository=$(shell echo $(HUBBLE_RELAY_IMAGE_TAG) | cut -d':' -f1) \
@@ -53,7 +58,7 @@ start-hubble-relay:
 # when upgrading Cilium.
 .PHONY: test
 test:
-	cilium connectivity test \
+	$(CILIUM) connectivity test \
 		--external-ip 8.8.8.8 \
 		--external-other-ip 8.8.4.4 \
 		--external-cidr 8.8.0.0/16 \
@@ -62,3 +67,9 @@ test:
 .PHONY: stop
 stop:
 	kind delete cluster
+
+$(CILIUM): $(BIN_DIR)
+	curl -sL -o- https://github.com/cilium/cilium-cli/releases/download/v$(CILIUM_CLI_VERSION)/cilium-$(OS)-$(GOARCH).tar.gz | tar -xz -C $(BIN_DIR)
+
+$(BIN_DIR):
+	mkdir -p $@
