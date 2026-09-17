@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 ARG VERSION=0.6.9
 COPY plugin/ /work/plugin/
 RUN CGO_ENABLED=0 go install github.com/Hsn723/ct-monitor@v${VERSION} \

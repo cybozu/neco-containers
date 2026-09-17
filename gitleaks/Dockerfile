@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 ARG GITLEAKSS_COMMIT=83d9cd684c87d95d656c1458ef04895a7f1cbd8e # 8.30.1
 
 WORKDIR /work/gitleaks

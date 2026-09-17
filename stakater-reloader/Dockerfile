@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG RELOADER_SHA=430c1efb706b45c41b72f99abdffaa7d5df61620
 
