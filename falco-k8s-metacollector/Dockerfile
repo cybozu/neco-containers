@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG K8S_METACOLLECTOR_COMMIT=05e27f5b49d1a40da74453be5858d875e7ffda6c # v0.1.3
 

@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.25-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 COPY TAG /
 

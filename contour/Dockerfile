@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.24-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG CONTOUR_VERSION=1.33.7
 ARG CONTOUR_SHA=81c4e28c38177ed1f3a3265389a86f8926c332cb

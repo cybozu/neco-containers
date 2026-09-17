@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 # v1.14.2
 ARG COREDNS_COMMIT=dd1df4f5db93767a44e37638df44969503b320d2
