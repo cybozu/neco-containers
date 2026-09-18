@@ -5,7 +5,9 @@ ARG ARGOCD_VERSION=3.5.2
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
-ARG HELM_VERSION=4.2.1
+# Workaround: upstream uses Helm v4.2.1 which introduces breaking changes in conjunction with kustomize before v5.8.0, so we use v3.22.0 which keeps backward compatibilities.
+#             See. https://github.com/kubernetes-sigs/kustomize/issues/6013
+ARG HELM_VERSION=3.22.0
 ARG GIT_LFS_VERSION=3.7.1
 ARG NODE_VERSION=24.20.0
 ARG PNPM_VERSION=10.34.5
@@ -17,7 +19,7 @@ ADD --checksum=sha256:ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c89
 
 FROM scratch AS helm-download
 ARG HELM_VERSION
-ADD --checksum=sha256:479dca836e5b45e8bd222400c5591b0e3a647378f03ff96597180db97c17fdae \
+ADD --checksum=sha256:1e4ab49e429626cf6c6958d914248b78c9730803c2751b87627e171dc800e7bb \
     https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz /helm.tar.gz
 
 FROM scratch AS git-lfs-download
