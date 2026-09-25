@@ -1,0 +1,65 @@
+diff --git a/pkg/canary/comparator/comparator.go b/pkg/canary/comparator/comparator.go
+index a7b8f4a404..ac484a4417 100644
+--- a/pkg/canary/comparator/comparator.go
++++ b/pkg/canary/comparator/comparator.go
+@@ -40,6 +40,12 @@ var (
+ 		Name:      "out_of_order_entries_total",
+ 		Help:      "counts log entries received with a timestamp more recent than the others in the queue",
+ 	})
++	queryErrors = promauto.NewCounter(prometheus.CounterOpts{
++		// This counter may not count all query errors.
++		Namespace: "loki_canary",
++		Name:      "query_errors_total",
++		Help:      "counts query errors via both websocket and direct query",
++	})
+ 	wsMissingEntries = promauto.NewCounter(prometheus.CounterOpts{
+ 		Namespace: "loki_canary",
+ 		Name:      "websocket_missing_entries_total",
+@@ -402,6 +408,7 @@ func (c *Comparator) metricTest(currTime time.Time) {
+ 	metricTestLatency.Observe(time.Since(begin).Seconds())
+ 	if err != nil {
+ 		fmt.Fprintf(c.w, "error running metric query test: %s\n", err.Error())
++		queryErrors.Inc()
+ 		return
+ 	}
+ 	expectedCount := float64(adjustedRange.Milliseconds()) / float64(c.writeInterval.Milliseconds())
+@@ -452,6 +459,7 @@ func (c *Comparator) spotCheckEntries(currTime time.Time) {
+ 		spotTestLatency.Observe(time.Since(begin).Seconds())
+ 		if err != nil {
+ 			fmt.Fprintf(c.w, "error querying loki: %s\n", err)
++			queryErrors.Inc()
+ 			return
+ 		}
+ 
+@@ -535,6 +543,7 @@ func (c *Comparator) confirmMissing(currentTime time.Time) {
+ 	recvd, err := c.rdr.Query(start, end)
+ 	if err != nil {
+ 		fmt.Fprintf(c.w, "error querying loki: %s\n", err)
++		queryErrors.Inc()
+ 		return
+ 	}
+ 	// Now that query has returned, take out the lock on the missingEntries list so we can modify it
+diff --git a/pkg/canary/reader/reader.go b/pkg/canary/reader/reader.go
+index 0c4d4aeb90..835c1c7a00 100644
+--- a/pkg/canary/reader/reader.go
++++ b/pkg/canary/reader/reader.go
+@@ -40,6 +40,11 @@ var (
+ 		Name:      "ws_pings_total",
+ 		Help:      "counts every time the websocket receives a ping message",
+ 	})
++	wsConnectErrors = promauto.NewCounter(prometheus.CounterOpts{
++		Namespace: "loki_canary",
++		Name:      "websocket_connect_errors_total",
++		Help:      "counts connect errors via the websocket connection",
++	})
+ 	userAgent = fmt.Sprintf("loki-canary/%s", build.Version)
+ )
+ 
+@@ -487,6 +492,7 @@ func (r *Reader) closeAndReconnect() {
+ 		c, _, err := dialer.Dial(u.String(), r.header)
+ 		if err != nil {
+ 			fmt.Fprintf(r.w, "failed to connect to %s with err %s\n", u.String(), err)
++			wsConnectErrors.Inc()
+ 			<-time.After(10 * time.Second)
+ 			continue
+ 		}

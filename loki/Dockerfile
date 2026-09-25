@@ -10,6 +10,7 @@ WORKDIR /work/loki
 RUN patch -p1 < ../log-per-chunk-flush.patch
 RUN patch -p1 < ../objectbucket-list-trace.patch
 RUN patch -p1 < ../avoid-tailer-duplicate-close.patch
+RUN patch -p1 < ../loki-canary-query-error-metrics.patch
 RUN make BUILD_IN_CONTAINER=false loki logcli loki-canary
 
 FROM ghcr.io/cybozu/ubuntu:24.04
