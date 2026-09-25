@@ -1,23 +1,23 @@
 # Stage1: download teleport source code
 FROM scratch AS teleport-src
-ARG TELEPORT_VERSION=18.8.2
-ADD --checksum=sha256:4644696c879aa1c48aa2dc7153efd1510b0605de28b72d0a261b950b94e80740 \
+ARG TELEPORT_VERSION=18.10.0
+ADD --checksum=sha256:75a6018ebb6e7e5ffc9f74ee6a5352dc1d5a3390f5617945cbef4f1a45f614e5 \
     https://github.com/gravitational/teleport/archive/refs/tags/v${TELEPORT_VERSION}.tar.gz /src.tar.gz
 
 # Stage2: build from source
-FROM ghcr.io/cybozu/golang:1.25.10.1_noble@sha256:fde615f5be28b80b6a90b3b3bc8276093e7644b1832cbf7fb4ce03b0a703de33 AS build
+FROM ghcr.io/cybozu/golang:1.27.1.1_noble@sha256:e38fe3b72f61d034394ee2c2592d41fa753226718bbc111bb6bb9a21601f0859 AS build
 WORKDIR /work/teleport
 RUN --mount=type=bind,from=teleport-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
 RUN make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage3: setup runtime container
-FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260605@sha256:31a15c78ab811697dce30401a4ce9209f874a46a53bca3664eff583113fd660d
+FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260925@sha256:d6e4251ccefc7b3cba0af18549d98d4338ec7bfeab284d260e9000ee980f1216
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends screen tmux && \
-    rm -rf /var/lib/apt/lists/* 
+    rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /work/teleport/build/teleport /usr/local/teleport/bin/
 COPY --from=build /work/teleport/LICENSE /usr/local/teleport/
