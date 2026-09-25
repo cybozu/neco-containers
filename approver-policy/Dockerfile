@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26.5.2_noble@sha256:419e350acc85bb2603c45e15e12c3238a1ec765cb58f5eb14ef7adf8bea9748f AS build
+ENV GOPROXY=https://golang.flatt.tech
 ENV APPROVER_POLICY_HASH=6e921ad621d9c8b40638b3556c30f983b31f322ad3bc7c186124a1d6e61373f5
 
 COPY TAG /

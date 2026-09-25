@@ -72,6 +72,7 @@ RUN apt-get update && \
 # ------------------------------------------------------------------------------------------
 # https://github.com/cilium/cilium/blob/main/images/runtime/Dockerfile (AS gops-cni-builder)
 FROM ${GOLANG_IMAGE} AS gops-cni-builder
+ENV GOPROXY=https://golang.flatt.tech
 RUN apt-get update && apt-get install -y binutils-aarch64-linux-gnu binutils-x86-64-linux-gnu
 
 COPY src/cilium/images/runtime/build-gops.sh build-gops.sh
@@ -146,6 +147,7 @@ RUN mkdir -p /go
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
 ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
+ENV GOPROXY=https://golang.flatt.tech
 
 RUN CGO_ENABLED=0 go install github.com/go-delve/delve/cmd/dlv@v1.26.3
 

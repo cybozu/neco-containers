@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26.5.2_noble@sha256:419e350acc85bb2603c45e15e12c3238a1ec765cb58f5eb14ef7adf8bea9748f AS build
+ENV GOPROXY=https://golang.flatt.tech
 ENV EXTERNALDNS_HASH=78fd72654681bb6ebf13f1360551f8aafb08f2d0eeecdd6523a89c8631b5cf64
 
 ARG EXTERNALDNS_VERSION=0.21.0
