@@ -12,8 +12,7 @@ RUN --mount=type=bind,from=teleport-src,source=/src.tar.gz,target=/tmp/src.tar.g
 RUN make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage3: setup runtime container
-FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260911@sha256:8c1efb908576d0dc625711ae1ace7d71429ba36a3565c6f6a330a52db46db4eb
-LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
+FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260925@sha256:d6e4251ccefc7b3cba0af18549d98d4338ec7bfeab284d260e9000ee980f1216
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends screen tmux && \
