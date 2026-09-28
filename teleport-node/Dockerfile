@@ -5,7 +5,7 @@ ADD --checksum=sha256:75a6018ebb6e7e5ffc9f74ee6a5352dc1d5a3390f5617945cbef4f1a45
     https://github.com/gravitational/teleport/archive/refs/tags/v${TELEPORT_VERSION}.tar.gz /src.tar.gz
 
 # Stage2: build from source
-FROM ghcr.io/cybozu/golang:1.27.1.1_noble@sha256:e38fe3b72f61d034394ee2c2592d41fa753226718bbc111bb6bb9a21601f0859 AS build
+FROM ghcr.io/cybozu/golang:1.25.11.2_noble@sha256:6bca1e8b792037d5bd28ae3315dae20670521b208a53ec42e860a590d1e8792c AS build
 WORKDIR /work/teleport
 RUN --mount=type=bind,from=teleport-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
