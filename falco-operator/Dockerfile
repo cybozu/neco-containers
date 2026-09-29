@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG FALCO_OPERATOR_COMMIT=ddf43f9fc0f115a34246f6267ca088f7e51b08de # v0.4.1
 ARG ARTIFACT_OPERATOR_IMAGE=ghcr.io/cybozu/falco-artifact-operator:0.4.1.1

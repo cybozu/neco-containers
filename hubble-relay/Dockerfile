@@ -6,6 +6,7 @@ ARG CILIUM_SHA=95896696119f33a0f5d21019182192fcdab3600f
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} AS build
+ENV GOPROXY=https://golang.flatt.tech
 ARG CILIUM_SHA
 
 COPY TAG /

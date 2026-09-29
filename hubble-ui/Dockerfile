@@ -7,6 +7,7 @@ ARG PKG_RELEASE=1~noble
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
 FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS backend-builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /app
 COPY src/hubble-ui .

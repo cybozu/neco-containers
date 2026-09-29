@@ -1,5 +1,6 @@
 # Build stage
 FROM ghcr.io/cybozu/golang:1.26-noble AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /work
 COPY . .

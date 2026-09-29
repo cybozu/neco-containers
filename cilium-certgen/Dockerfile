@@ -3,6 +3,7 @@ ARG GOLANG_IMAGE=ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde636151
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
+ENV GOPROXY=https://golang.flatt.tech
 
 COPY TAG /
 

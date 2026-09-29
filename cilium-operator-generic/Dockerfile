@@ -4,6 +4,7 @@ ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be88
 
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
+ENV GOPROXY=https://golang.flatt.tech
 
 COPY TAG /
 

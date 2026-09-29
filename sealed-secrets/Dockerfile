@@ -1,5 +1,6 @@
 # Build stage
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG SEALED_SECRETS_VERSION=0.38.1
 ARG SEALED_SECRETS_COMMIT=706528904566e28373b584b5adb7e92ef8f81c1d

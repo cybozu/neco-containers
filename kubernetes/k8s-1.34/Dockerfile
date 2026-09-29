@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 # v1.34.12
 ARG K8S_COMMIT=26c89157669bdc7e3657302bc1abde758507095b
