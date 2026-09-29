@@ -118,7 +118,7 @@ runs:
         mv src/envoy/distribution/docker/docker-entrypoint.sh workspace/
     - name: Build and push
       if: steps.prepare.outputs.build == 'true'
-      uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
+      uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
       with:
         context: envoy
         platforms: "linux/amd64"
