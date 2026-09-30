@@ -40,7 +40,10 @@ wait-for-workloads:
 .PHONY: start
 start:
 	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --config=$(KIND_CONFIG)
-	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait
+	# Shorten identity GC to test the removal of metrics for deleted CiliumIdentities.
+	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait \
+		--set operator.identityGCInterval=10s \
+		--set operator.identityHeartbeatTimeout=20s
 
 .PHONY: stop
 stop:

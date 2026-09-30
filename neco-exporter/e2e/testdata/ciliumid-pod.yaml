@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: default
+  name: ciliumid-dynamic-label
+  labels:
+    identity.neco.cybozu.io/e2e-dynamic: first
+spec:
+  containers:
+    - name: ubuntu
+      args:
+        - pause
+      image: ghcr.io/cybozu/ubuntu-debug:24.04

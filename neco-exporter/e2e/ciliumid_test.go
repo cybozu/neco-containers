@@ -64,4 +64,84 @@ func testCiliumIDCollector() {
 			}
 		}).Should(Succeed())
 	})
+
+	It("should follow the lifecycle of CiliumIdentity with new security labels", func() {
+		// podName and labelKey should match testdata/ciliumid-pod.yaml
+		const (
+			podName    = "ciliumid-dynamic-label"
+			labelKey   = "identity.neco.cybozu.io/e2e-dynamic"
+			metricName = "label_k8s_identity_neco_cybozu_io_e2e_dynamic"
+		)
+		DeferCleanup(func() {
+			_, _, _ = kubectl(nil, "delete", "pod", podName, "--ignore-not-found", "--wait=false")
+		})
+
+		By("creating a Pod with a new identity-relevant label")
+		Eventually(func(g Gomega) {
+			kubectlSafe(g, nil, "apply", "-f", "testdata/ciliumid-pod.yaml")
+		}).Should(Succeed())
+
+		By("checking the label appears in identity_info")
+		firstID := expectDynamicLabel(labelKey, metricName, "first")
+
+		By("changing the label value to allocate another identity")
+		Eventually(func(g Gomega) {
+			kubectlSafe(g, nil, "label", "pod", podName, "--overwrite", labelKey+"=second")
+		}).Should(Succeed())
+
+		By("checking the new label value appears in identity_info")
+		secondID := expectDynamicLabel(labelKey, metricName, "second")
+
+		By("deleting the Pod to make the identities unused")
+		Eventually(func(g Gomega) {
+			kubectlSafe(g, nil, "delete", "pod", podName, "--ignore-not-found")
+		}).Should(Succeed())
+
+		By("checking identity_info is removed after Cilium garbage-collects the identities")
+		for _, id := range []string{firstID, secondID} {
+			Eventually(func(g Gomega) {
+				_, stderr, err := kubectl(nil, "get", "ciliumid", id)
+				g.Expect(err).To(HaveOccurred())
+				g.Expect(string(stderr)).To(ContainSubstring("NotFound"))
+
+				output := string(scrapeClusterLeader(g))
+				g.Expect(output).NotTo(ContainSubstring(fmt.Sprintf(`neco_cluster_ciliumid_identity_info{identity="%s",`, id)))
+			}).Should(Succeed())
+		}
+	})
+}
+
+// expectDynamicLabel waits for a CiliumIdentity having the security label "k8s:<labelKey>=<value>",
+// and checks that its identity_info series has the corresponding "<metricName>=<value>" label.
+// It returns the numeric identity.
+func expectDynamicLabel(labelKey, metricName, value string) string {
+	GinkgoHelper()
+	var identity string
+	Eventually(func(g Gomega) {
+		idList := kubectlGetSafe[unstructured.UnstructuredList](g, "ciliumid")
+
+		identity = ""
+		for _, id := range idList.Items {
+			v, ok, err := unstructured.NestedString(id.Object, "security-labels", "k8s:"+labelKey)
+			g.Expect(err).NotTo(HaveOccurred())
+			if ok && v == value {
+				identity = id.GetName()
+				break
+			}
+		}
+		g.Expect(identity).NotTo(BeEmpty(), "CiliumIdentity for %s=%s is not created yet", labelKey, value)
+
+		output := string(scrapeClusterLeader(g))
+		var line string
+		for l := range strings.Lines(output) {
+			if strings.HasPrefix(l, fmt.Sprintf(`neco_cluster_ciliumid_identity_info{identity="%s",`, identity)) {
+				line = l
+				break
+			}
+		}
+		g.Expect(line).NotTo(BeEmpty(), "identity_info not found for identity %s", identity)
+		g.Expect(line).To(ContainSubstring(fmt.Sprintf(`,%s="%s",`, metricName, value)))
+		g.Expect(line).To(ContainSubstring(`,namespace="default",`))
+	}).Should(Succeed())
+	return identity
 }
