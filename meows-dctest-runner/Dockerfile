@@ -62,8 +62,8 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
             lsb-release \
             openssh-client \
             picocom \
-            qemu \
-            qemu-kvm \
+            qemu-system-x86 \
+            qemu-utils \
             socat \
             squid \
             sudo \
