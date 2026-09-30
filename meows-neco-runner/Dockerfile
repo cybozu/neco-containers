@@ -7,15 +7,11 @@ FROM scratch AS awscli-download-amd64
 ARG AWSCLI_VERSION
 ADD --checksum=sha256:a904e314340ad4c4b62beb50e9259d4becb2acf3dffc86c96c553c834d7fdf7a \
     https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip /awscliv2.zip
-ADD --checksum=sha256:bb1cc030957e59c5681afad34ece0626536ac76881b703194ec0921d5b083204 \
-    https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${AWSCLI_VERSION}.zip.sig /awscliv2.sig
 
 FROM scratch AS awscli-download-arm64
 ARG AWSCLI_VERSION
 ADD --checksum=sha256:f26e08d0d64d9f35f304a9df94d63cbd11ffe8881c8b4bf60be934cf9e4d13a9 \
     https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWSCLI_VERSION}.zip /awscliv2.zip
-ADD --checksum=sha256:a0c326843a091cb907849f18aa4c720ef5a59a9eaa541c20a4c1f61c9814619d \
-    https://awscli.amazonaws.com/awscli-exe-linux-aarch64-${AWSCLI_VERSION}.zip.sig /awscliv2.sig
 
 FROM awscli-download-${TARGETARCH} AS awscli-download
 
@@ -47,8 +43,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         expect \
         file \
         gdb \
-        gpg \
-        gpg-agent \
         iperf3 \
         iproute2 \
         iputils-ping \
@@ -78,11 +72,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && setcap -r /usr/bin/ping
 
 WORKDIR /work
-COPY awscli-gpg-public-key.pub .
 RUN --mount=type=bind,from=awscli-download,source=/awscliv2.zip,target=/work/awscliv2.zip \
-    --mount=type=bind,from=awscli-download,source=/awscliv2.sig,target=/work/awscliv2.sig \
-    gpg --import awscli-gpg-public-key.pub && \
-    gpg --verify awscliv2.sig awscliv2.zip && \
     unzip awscliv2.zip && \
     ./aws/install && \
     rm -rf ./aws
