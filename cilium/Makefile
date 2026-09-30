@@ -1,6 +1,6 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
 CILIUM_UPSTREAM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
-CILIUM_TARGET ?= 04cb570860becd8e6252a298375a805e3f1830cd
+CILIUM_TARGET ?= 5dc1ce3e109526bc170351800379fdc9903c18be
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= eb5ebfccd515283c30aa7d08c114f1b047ff45b4
 
