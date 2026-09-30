@@ -17,6 +17,8 @@ import (
 
 const (
 	indexKey = "neco-exporter.ciliumid.namespace"
+
+	namespaceSecurityLabel = "k8s:io.kubernetes.pod.namespace"
 )
 
 func newCiliumIdentity() *unstructured.Unstructured {
@@ -40,7 +42,7 @@ func newCiliumIdentityList() *unstructured.UnstructuredList {
 }
 
 func getIdentityNamespace(id *unstructured.Unstructured) (string, error) {
-	ns, ok, err := unstructured.NestedString(id.Object, "security-labels", "k8s:io.kubernetes.pod.namespace")
+	ns, ok, err := unstructured.NestedString(id.Object, "security-labels", namespaceSecurityLabel)
 	switch {
 	case err != nil:
 		return "", err
@@ -67,24 +69,44 @@ func indexByNamespace(obj client.Object) []string {
 	return []string{ns}
 }
 
+type identityInfo struct {
+	uid            string
+	securityLabels map[string]string
+}
+
 type identityWatcher struct {
 	client client.Client
 
 	mu            sync.Mutex
 	identityCount map[string]int
+	identities    map[string]identityInfo
 }
 
 func newIdentityWatcher() *identityWatcher {
 	return &identityWatcher{
 		identityCount: make(map[string]int),
+		identities:    make(map[string]identityInfo),
 	}
 }
 
-func (w *identityWatcher) update(ctx context.Context, id *unstructured.Unstructured) {
+func (w *identityWatcher) update(ctx context.Context, id *unstructured.Unstructured, deleted bool) {
 	ns, err := getIdentityNamespace(id)
 	if err != nil {
 		slog.WarnContext(ctx, "failed to get CiliumIdentity namespace")
 		return
+	}
+
+	var info *identityInfo
+	if !deleted {
+		securityLabels, _, err := unstructured.NestedStringMap(id.Object, "security-labels")
+		if err != nil {
+			slog.WarnContext(ctx, "failed to get CiliumIdentity security labels", slog.Any("name", id.GetName()))
+		} else {
+			info = &identityInfo{
+				uid:            string(id.GetUID()),
+				securityLabels: securityLabels,
+			}
+		}
 	}
 
 	li := newCiliumIdentityList()
@@ -100,6 +122,12 @@ func (w *identityWatcher) update(ctx context.Context, id *unstructured.Unstructu
 	} else {
 		delete(w.identityCount, ns)
 	}
+
+	if info != nil {
+		w.identities[id.GetName()] = *info
+	} else {
+		delete(w.identities, id.GetName())
+	}
 }
 
 func (w *identityWatcher) getNamespaceIdentityCount() map[string]int {
@@ -109,19 +137,29 @@ func (w *identityWatcher) getNamespaceIdentityCount() map[string]int {
 	return maps.Clone(w.identityCount)
 }
 
+func (w *identityWatcher) getIdentities() map[string]identityInfo {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+
+	return maps.Clone(w.identities)
+}
+
 func (w *identityWatcher) setupWithManager(ctx context.Context, mgr ctrl.Manager) error {
 	indexer := mgr.GetFieldIndexer()
 	if err := indexer.IndexField(ctx, newCiliumIdentity(), indexKey, indexByNamespace); err != nil {
 		return err
 	}
 
-	handler := func(o any) {
+	handler := func(o any, deleted bool) {
+		if tombstone, ok := o.(cache.DeletedFinalStateUnknown); ok {
+			o = tombstone.Obj
+		}
 		id, ok := o.(*unstructured.Unstructured)
 		if !ok {
 			slog.WarnContext(ctx, "unknown object returned from informer")
 			return
 		}
-		w.update(ctx, id)
+		w.update(ctx, id, deleted)
 	}
 
 	w.client = mgr.GetClient()
@@ -131,9 +169,9 @@ func (w *identityWatcher) setupWithManager(ctx context.Context, mgr ctrl.Manager
 	}
 
 	_, err = informer.AddEventHandlerWithResyncPeriod(cache.ResourceEventHandlerFuncs{
-		AddFunc:    handler,
-		UpdateFunc: func(oldObj, newObj any) { handler(newObj) },
-		DeleteFunc: handler,
+		AddFunc:    func(obj any) { handler(obj, false) },
+		UpdateFunc: func(oldObj, newObj any) { handler(newObj, false) },
+		DeleteFunc: func(obj any) { handler(obj, true) },
 	}, time.Hour)
 	return err
 }
