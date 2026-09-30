@@ -59,9 +59,11 @@ func (c *ciliumIDCollector) Collect(ctx context.Context) ([]*exporter.Metric, er
 		labels := securityLabelsToPromLabels(info.securityLabels)
 		labels["identity"] = name
 		labels["uid"] = info.uid
+		labels["security_labels"] = formatSecurityLabels(info.securityLabels)
 		if ns, ok := info.securityLabels[namespaceSecurityLabel]; ok {
 			labels["namespace"] = ns
 		}
+
 		ret = append(ret, &exporter.Metric{
 			Name:   "identity_info",
 			Value:  1,

@@ -2,10 +2,13 @@ package e2e
 
 import (
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 )
 
@@ -59,8 +62,12 @@ func testCiliumIDCollector() {
 				g.Expect(err).NotTo(HaveOccurred())
 				if ns, ok := securityLabels["k8s:io.kubernetes.pod.namespace"]; ok {
 					g.Expect(line).To(ContainSubstring(fmt.Sprintf(`,namespace="%s"`, ns)))
-					g.Expect(line).To(ContainSubstring(fmt.Sprintf(`label_k8s_io_kubernetes_pod_namespace="%s"`, ns)))
 				}
+				// the namespace security label is exposed only as "namespace"
+				g.Expect(line).NotTo(ContainSubstring("label_k8s_io_kubernetes_pod_namespace="))
+
+				// the format of security_labels is checked against actual Hubble metrics in the test below
+				g.Expect(line).To(MatchRegexp(`,security_labels="[^"]+",`))
 			}
 		}).Should(Succeed())
 	})
@@ -109,6 +116,30 @@ func testCiliumIDCollector() {
 			}).Should(Succeed())
 		}
 	})
+
+	It("should report security_labels compatible with Hubble metrics", func() {
+		Eventually(func(g Gomega) {
+			pilotID := getEndpointIdentity(g, "default", "app=pilot")
+			exporterID := getEndpointIdentity(g, "neco-exporter", "app.kubernetes.io/name=neco-cluster-exporter")
+
+			// scraping the leader generates traffic from pilot to the exporter.
+			output := string(scrapeClusterLeader(g))
+			pilotLabels := findSecurityLabels(g, output, pilotID)
+			exporterLabels := findSecurityLabels(g, output, exporterID)
+
+			source := fmt.Sprintf(`source="%s"`, pilotLabels)
+			destination := fmt.Sprintf(`destination="%s"`, exporterLabels)
+			var found bool
+			for line := range strings.Lines(string(scrapeHubble(g))) {
+				if strings.HasPrefix(line, "hubble_flows_processed_total{") &&
+					strings.Contains(line, source) && strings.Contains(line, destination) {
+					found = true
+					break
+				}
+			}
+			g.Expect(found).To(BeTrue(), "no Hubble flow with %s and %s", source, destination)
+		}).Should(Succeed())
+	})
 }
 
 // expectDynamicLabel waits for a CiliumIdentity having the security label "k8s:<labelKey>=<value>",
@@ -142,6 +173,31 @@ func expectDynamicLabel(labelKey, metricName, value string) string {
 		g.Expect(line).NotTo(BeEmpty(), "identity_info not found for identity %s", identity)
 		g.Expect(line).To(ContainSubstring(fmt.Sprintf(`,%s="%s",`, metricName, value)))
 		g.Expect(line).To(ContainSubstring(`,namespace="default",`))
+		g.Expect(line).To(MatchRegexp(`,security_labels="[^"]*k8s:%s=%s[,"]`, regexp.QuoteMeta(labelKey), value))
 	}).Should(Succeed())
 	return identity
+}
+
+// getEndpointIdentity returns the numeric identity of the CiliumEndpoint of a Pod matching the selector.
+func getEndpointIdentity(g Gomega, namespace, selector string) string {
+	pods := kubectlGetSafe[corev1.PodList](g, "pod", "-n="+namespace, "-l="+selector)
+	g.Expect(pods.Items).NotTo(BeEmpty())
+
+	cep := kubectlGetSafe[unstructured.Unstructured](g, "ciliumendpoint", "-n="+namespace, pods.Items[0].Name)
+	id, ok, err := unstructured.NestedInt64(cep.Object, "status", "identity", "id")
+	g.Expect(err).NotTo(HaveOccurred())
+	g.Expect(ok).To(BeTrue(), "identity is not set for CiliumEndpoint %s/%s", namespace, pods.Items[0].Name)
+	return strconv.FormatInt(id, 10)
+}
+
+// findSecurityLabels returns the security_labels of the identity_info series for the identity.
+func findSecurityLabels(g Gomega, output, identity string) string {
+	re := regexp.MustCompile(fmt.Sprintf(`^neco_cluster_ciliumid_identity_info\{identity="%s",(?:.*,)?security_labels="([^"]*)",`, identity))
+	for line := range strings.Lines(output) {
+		if m := re.FindStringSubmatch(line); m != nil {
+			return m[1]
+		}
+	}
+	g.Expect(false).To(BeTrue(), "identity_info not found for identity %s", identity)
+	return ""
 }

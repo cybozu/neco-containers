@@ -1,8 +1,6 @@
 package ciliumid
 
 import (
-	"fmt"
-	"maps"
 	"slices"
 	"strings"
 )
@@ -22,23 +20,40 @@ func sanitizeLabelName(key string) string {
 	return b.String()
 }
 
+// conflictedLabelValue is set to a label when multiple security labels are converted to the same name.
+// It is not a valid Kubernetes label value, so it cannot be confused with an actual value.
+const conflictedLabelValue = "<CONFLICTED>"
+
 // securityLabelsToPromLabels converts security labels into Prometheus labels.
-// Keys are processed in sorted order, and a key whose sanitized name is already used
-// gets a "_conflict<N>" suffix so that the result is deterministic.
+// The namespace security label is skipped because it is exposed as the "namespace" label.
+// If multiple keys are converted to the same name, the value of the label becomes conflictedLabelValue.
 func securityLabelsToPromLabels(securityLabels map[string]string) map[string]string {
-	ret := make(map[string]string, len(securityLabels))
-	for _, k := range slices.Sorted(maps.Keys(securityLabels)) {
-		name := sanitizeLabelName(k)
-		if _, ok := ret[name]; ok {
-			for i := 1; ; i++ {
-				candidate := fmt.Sprintf("%s_conflict%d", name, i)
-				if _, ok := ret[candidate]; !ok {
-					name = candidate
-					break
-				}
-			}
+	labels := make(map[string]string, len(securityLabels))
+	for k, v := range securityLabels {
+		if k == namespaceSecurityLabel {
+			continue
 		}
-		ret[name] = securityLabels[k]
+		name := sanitizeLabelName(k)
+		if _, ok := labels[name]; ok {
+			v = conflictedLabelValue
+		}
+		labels[name] = v
 	}
-	return ret
+	return labels
+}
+
+// formatSecurityLabels formats security labels in the same way as Hubble metrics with
+// the "identity" context, i.e. sorted "<source>:<key>=<value>" (or "<source>:<key>" if the
+// value is empty) joined by commas.
+func formatSecurityLabels(securityLabels map[string]string) string {
+	entries := make([]string, 0, len(securityLabels))
+	for k, v := range securityLabels {
+		if v == "" {
+			entries = append(entries, k)
+		} else {
+			entries = append(entries, k+"="+v)
+		}
+	}
+	slices.Sort(entries)
+	return strings.Join(entries, ",")
 }
