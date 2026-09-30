@@ -24,6 +24,7 @@
 /falco/                           @cybozu/neco
 /falco-k8s-metacollector/         @cybozu/neco
 /falco-operator/                  @cybozu/neco
+/falcosidekick/                   @cybozu/neco
 /gitleaks/                        @cybozu/neco
 /kube-metrics-adapter/            @cybozu/neco
 /kubernetes/                      @cybozu/neco
