@@ -23,11 +23,6 @@ func TestBuildMetricName(t *testing.T) {
 			labels:   map[string]string{"b": "2", "a": "1"},
 			expected: `neco_cluster_test_metric{a="1",b="2"}`,
 		},
-		{
-			name:     "escaped values",
-			labels:   map[string]string{"a": `x\y"z` + "\n"},
-			expected: `neco_cluster_test_metric{a="x\\y\"z\n"}`,
-		},
 	}
 
 	for _, tc := range testCases {
@@ -36,6 +31,19 @@ func TestBuildMetricName(t *testing.T) {
 			if actual != tc.expected {
 				t.Errorf("expected %s, got %s", tc.expected, actual)
 			}
+		})
+	}
+}
+
+func TestBuildMetricNamePanic(t *testing.T) {
+	for _, v := range []string{`x\y`, `x"y`, "x\ny"} {
+		t.Run(v, func(t *testing.T) {
+			defer func() {
+				if recover() == nil {
+					t.Errorf("expected panic for %q", v)
+				}
+			}()
+			BuildMetricName("cluster", "test", "metric", map[string]string{"a": v})
 		})
 	}
 }
