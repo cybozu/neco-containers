@@ -9,6 +9,7 @@ Each collector's scope should match `--scope` to use.
 | [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
 | [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
 | [`ciliumid`](#ciliumid)               | `cluster` | Count and describe CiliumIdentity resources |
+| [`cpupinning`](#cpupinning)           | `node`    | Report CPUs exclusively allocated to containers |
 | [`kubelet`](#kubelet)                 | `node`    | Report kubelet's systemReserved cpu/memory |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
 | [`nicirq`](#nicirq)                   | `node`    | Report which CPU handles each NIC queue interrupt |
@@ -88,6 +89,31 @@ For example, `k8s:identity.neco.cybozu.io/app` becomes `label_k8s_identity_neco_
 `k8s:io.kubernetes.pod.namespace` is not converted because it is exposed as `namespace`.
 If multiple keys are converted to the same name, the value of the label becomes `<CONFLICTED>`.
 This cannot be an actual Kubernetes label value. The original values are still available in `security_labels`.
+
+## cpupinning
+
+### `cpupinning_info`
+
+Info metric with a constant value of `1` for each CPU exclusively allocated to a container by kubelet's static CPU manager policy.
+It is read from `List` of kubelet's PodResources API (`/var/lib/kubelet/pod-resources/kubelet.sock`).
+Containers in the shared pool have no series.
+
+| Label              | Description                                        |
+| ------------------ | -------------------------------------------------- |
+| `node`             | Node name (from the `NODE_NAME` env var)           |
+| `pinned_namespace` | Namespace of the Pod                               |
+| `pinned_pod`       | Name of the Pod                                    |
+| `pinned_container` | Name of the container                              |
+| `cpu`              | Logical CPU number, same as `cpu` of node_exporter |
+
+The labels are prefixed with `pinned_` so as not to collide with the target labels of neco-exporter itself.
+Join with node_exporter to get the usage of the pinned CPUs, e.g. when its series have the `node` label:
+
+```promql
+sum without (mode) (rate(node_cpu_seconds_total{mode!~"idle|iowait"}[5m]))
+  * on (node, cpu) group_left (pinned_namespace, pinned_pod, pinned_container)
+    neco_node_cpupinning_info
+```
 
 ## kubelet
 

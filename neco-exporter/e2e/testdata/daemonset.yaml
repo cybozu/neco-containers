@@ -20,7 +20,7 @@ spec:
           name: exporter
           args:
             - --scope=node
-            - --collectors=bpf,kubelet,nicirq
+            - --collectors=bpf,cpupinning,kubelet,nicirq
             - --interval=10s
           env:
             - name: NODE_NAME
@@ -32,6 +32,9 @@ spec:
               mountPath: /var/run/cilium
             - name: kubelet-config
               mountPath: /var/lib/kubelet/config.yaml
+              readOnly: true
+            - name: pod-resources
+              mountPath: /var/lib/kubelet/pod-resources
               readOnly: true
           securityContext:
             capabilities:
@@ -49,3 +52,7 @@ spec:
           hostPath:
             path: /var/lib/kubelet/config.yaml
             type: File
+        - name: pod-resources
+          hostPath:
+            path: /var/lib/kubelet/pod-resources
+            type: Directory
