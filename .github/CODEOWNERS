@@ -48,15 +48,13 @@
 /cep-checker/                     @cybozu/neco
 /cert-manager/                    @cybozu/neco
 /chrony/                          @cybozu/neco
-/cilium/                          @cybozu/neco
+/cilium-1.17/                     @cybozu/neco
+/cilium-1.18/                     @cybozu/neco
 /cilium-certgen/                  @cybozu/neco
-/cilium-operator-generic/         @cybozu/neco
 /contour/                         @cybozu/neco
 /ct-monitor/                      @cybozu/neco
 /envoy/                           @cybozu/neco
 /external-dns/                    @cybozu/neco
-/hubble/                          @cybozu/neco
-/hubble-relay/                    @cybozu/neco
 /hubble-ui/                       @cybozu/neco
 /neco-exporter/                   @cybozu/neco
 /spiffe-csi-driver/               @cybozu/neco

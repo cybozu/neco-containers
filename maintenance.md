@@ -463,22 +463,50 @@ gitGraph
 
 ![Regular Update](./regular_update.svg)
 
+Cilium images are split into per-minor-version directories (e.g. `cilium-1.18/`).
+Each `cilium-X.Y/` directory contains the images that must match the Cilium minor version:
+
+- `cilium-X.Y/cilium`
+- `cilium-X.Y/cilium-operator-generic`
+- `cilium-X.Y/hubble-relay`
+- `cilium-X.Y/hubble`
+
+[cilium-certgen](#cilium-certgen) and [hubble-ui](#hubble-ui) are shared by all Cilium versions and live in top-level directories.
+
+To update an existing minor version, follow the steps below inside `cilium-X.Y/`.
+
+To add a new minor version:
+
+1. Copy the latest `cilium-X.Y/` directory to `cilium-X.Y'/`.
+2. Update the four images following each section. Update the `BRANCH` (`X.Y'`) and `TAG` files of all of them.
+3. Update `scan.identifier` in `cilium/build-targets.yaml` and `hubble-relay/build-targets.yaml` to `ghcr.io/cybozu/<image>:X.Y'`.
+4. Add `/cilium-X.Y'/` to `.github/CODEOWNERS`.
+
+To remove an old minor version, check that no cluster uses it, then delete `cilium-X.Y/` and its CODEOWNERS entry.
+
+> [!Note]
+> Changes that are not specific to a Cilium version (e.g. pinning base images, CI-related settings) should be applied to all `cilium-X.Y/` directories in the same PR.
+
+To update the cilium image:
+
 1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `neco-containers/cilium/Makefile`. This is a commit SHA of <https://github.com/cilium/image-tools> .
+2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `cilium-X.Y/cilium/Makefile`. This is a commit SHA of <https://github.com/cilium/image-tools> .
    1. Run `make IMAGE_TAG=quay.io/cilium/cilium:vX.Y.Z test` to see tools versions upstream uses.
    2. See [history](https://github.com/cilium/image-tools/commits/master/) of `image-tools` to find an appropriate SHA, that provides matching tools version (especially for LLVM/Clang).
 3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
-   1. Run `make checkout` and download them under `neco-containers/cilium/src`.
+   1. Run `make checkout` and download them under `cilium-X.Y/cilium/src`.
 
 > [!Note]
-> `CILIUM_TARGET` in `neco-containers/cilium/Makefile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
+> `CILIUM_TARGET` in `cilium-X.Y/cilium/Makefile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
 > If you push new commits to that branch (e.g. additional cherry-picked patches), you must update `CILIUM_TARGET` to the new commit SHA; it will not be picked up automatically.
-> `make checkout-cilium` (and therefore `make checkout`/`make build`) runs `check-cilium-target` first, which fails if `CILIUM_TARGET` is not the current tip of that branch, to catch this case.
-4. Check the upstream `Dockerfile`s to make necessary changes for `neco-containers/cilium`.
+> In `cilium-1.17`, `make checkout-cilium` (and therefore `make checkout`/`make build`) runs `check-cilium-target` first, which fails if `CILIUM_TARGET` is not the current tip of that branch, to catch this case.
+4. Check the upstream `Dockerfile`s to make necessary changes for `cilium-X.Y/cilium`.
    1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
-   2. All the build specification is written in `neco-containers/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
+   2. All the build specification is written in `cilium-X.Y/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
    3. Update github.com/go-delve/delve/cmd/dlv version. Upstream may be using @latest but we must specify a version.
-5. Update cilium-cli version in `e2e/Makefile`. See cilium-cli's [README](https://github.com/cilium/cilium-cli?tab=readme-ov-file#releases) to make sure that the cilium-cli version is compatible with the cilium version.
+5. Update the cilium-cli version used by the e2e test. See cilium-cli's [README](https://github.com/cilium/cilium-cli?tab=readme-ov-file#releases) to make sure that the cilium-cli version is compatible with the cilium version.
+   - Cilium 1.17: `CILIUM_CLI_VERSION` in `e2e/Makefile`.
+   - Cilium 1.18 or later: `cilium/cilium-cli` in `aqua.yaml`, then run `aqua update-checksum -prune`.
 6. Build `ghcr.io/cybozu/cilium` and see the result.
    1. Run `make build` to build.
    2. Run `make test` to make sanity check.
@@ -488,11 +516,13 @@ gitGraph
    4. If any problem found, `dive ghcr.io/cybozu/cilium:$(cat TAG)` will help.
 
 > [!Note]
-> The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image for consistency.
+> The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
 
 ## cilium-certgen
 
 ![Regular Update](./regular_update.svg)
+
+This image is shared by all supported Cilium versions.
 
 1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
@@ -509,7 +539,7 @@ gitGraph
 3. Update the `BRANCH` and `TAG` files accordingly.
 
 > [!Note]
-> The cilium-operator-generic image should be updated at the same time as the cilium image for consistency.
+> The cilium-operator-generic image should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
 
 ## contour
 
@@ -766,6 +796,10 @@ Manual update
 
 ![Regular Update](./regular_update.svg)
 
+> [!Note]
+> Although the upstream says the Hubble CLI is backward compatible with all supported Cilium releases, we have seen errors with Cilium 1.17 and Hubble 1.19.
+> Keep the Hubble CLI on the same minor version as Cilium in each `cilium-X.Y/hubble`.
+
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
 2. Update `HUBBLE_SHA` in `Dockerfile` with the commit SHA of the new release tag.
 3. Update the `BRANCH` and `TAG` files accordingly.
@@ -783,11 +817,13 @@ Hubble image is no longer built by the upstream. If failing to build the image, 
 4. Update the `BRANCH` and `TAG` files accordingly.
 
 > [!Note]
-> The hubble-relay image should be updated at the same time as the cilium image for consistency.
+> The hubble-relay image should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
 
 ## hubble-ui
 
 ![Regular Update](./regular_update.svg)
+
+This image is shared by all supported Cilium versions.
 
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
 2. Update the `BRANCH` and `TAG` files accordingly.

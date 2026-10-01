@@ -7,3 +7,4 @@
   scan:
     enabled: true
     team: neco
+    identifier: "ghcr.io/cybozu/cilium:1.17"
