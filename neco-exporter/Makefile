@@ -19,8 +19,13 @@ build:
 e2e-prepare:
 	$(MAKE) -C e2e prepare
 
+# Exclude ./e2e, which requires a running cluster.
+.PHONY: unit-test
+unit-test:
+	go test -v -race ./pkg/...
+
 .PHONY: test
-test:
+test: unit-test
 	$(MAKE) -C e2e setup
 	$(MAKE) -C e2e start
 	$(MAKE) -C e2e install

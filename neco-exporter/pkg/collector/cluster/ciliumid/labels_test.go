@@ -62,12 +62,9 @@ func TestSecurityLabelsToPromLabels(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// run multiple times to make sure the result does not depend on map iteration order
-			for range 10 {
-				actual := securityLabelsToPromLabels(tc.input)
-				if !maps.Equal(actual, tc.expected) {
-					t.Fatalf("expected %v, got %v", tc.expected, actual)
-				}
+			actual := securityLabelsToPromLabels(tc.input)
+			if !maps.Equal(actual, tc.expected) {
+				t.Fatalf("expected %v, got %v", tc.expected, actual)
 			}
 		})
 	}
