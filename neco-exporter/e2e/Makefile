@@ -40,7 +40,12 @@ wait-for-workloads:
 .PHONY: start
 start:
 	$(KIND) create cluster --name=$(KIND_CLUSTER_NAME) --image=$(E2ETEST_K8S_IMAGE) --config=$(KIND_CONFIG)
-	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait
+	# Shorten identity GC to test the removal of metrics for deleted CiliumIdentities.
+	# Enable Hubble flow metrics with identity context to test compatibility with ciliumid_identity_info.
+	$(CILIUM_CLI) install --version $(CILIUM_VERSION) --wait \
+		--set operator.identityGCInterval=10s \
+		--set operator.identityHeartbeatTimeout=20s \
+		--set hubble.metrics.enabled="{flow:sourceContext=identity;destinationContext=identity}"
 
 .PHONY: stop
 stop:

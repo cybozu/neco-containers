@@ -8,7 +8,7 @@ Each collector's scope should match `--scope` to use.
 | ------------------------- | --------- | ----------------------------------- |
 | [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
 | [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
-| [`ciliumid`](#ciliumid)               | `cluster` | Count CiliumIdentity resources      |
+| [`ciliumid`](#ciliumid)               | `cluster` | Count and describe CiliumIdentity resources |
 | [`kubelet`](#kubelet)                 | `node`    | Report kubelet's systemReserved cpu/memory |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
 | [`nicirq`](#nicirq)                   | `node`    | Report which CPU handles each NIC queue interrupt |
@@ -58,6 +58,36 @@ Number of `CiliumIdentity` resources for the namespace.
 | Label       | Description           |
 | ----------- | --------------------- |
 | `namespace` | Namespace of Identity |
+
+### `ciliumid_identity_info`
+
+Info metric with a constant value of `1` for each `CiliumIdentity` resource.
+It exposes the `security-labels` of the identity, i.e. the labels Cilium used to allocate the identity.
+
+| Label                  | Condition  | Description                                                                 |
+| ---------------------- | ---------- | --------------------------------------------------------------------------- |
+| `identity`             | (Always)   | Numeric identity (name of `CiliumIdentity`)                                 |
+| `uid`                  | (Always)   | UID of `CiliumIdentity`                                                     |
+| `namespace`            | Namespaced | Value of `k8s:io.kubernetes.pod.namespace` security label                   |
+| `security_labels`      | (Always)   | All security labels in the same format as Hubble metrics' `identity` context |
+| `label_<source>_<key>` | (Dynamic)  | One label for each security label; the set differs between identities       |
+
+`security_labels` is the sorted list of `<source>:<key>=<value>` (or `<source>:<key>` if the value is empty) joined by `,`.
+This is identical to the value of `source` / `destination` labels of Hubble metrics with `sourceContext=identity` / `destinationContext=identity`,
+so it can be used to join them, e.g.:
+
+```promql
+hubble_flows_processed_total
+  * on (source) group_left (identity, namespace)
+    label_replace(neco_cluster_ciliumid_identity_info, "source", "$1", "security_labels", "(.*)")
+```
+
+Security label keys (`<source>:<key>`) are converted to `label_*` names by prefixing `label_` and
+replacing every character other than `[a-zA-Z0-9_]` with `_`.
+For example, `k8s:identity.neco.cybozu.io/app` becomes `label_k8s_identity_neco_cybozu_io_app`.
+`k8s:io.kubernetes.pod.namespace` is not converted because it is exposed as `namespace`.
+If multiple keys are converted to the same name, the value of the label becomes `<CONFLICTED>`.
+This cannot be an actual Kubernetes label value. The original values are still available in `security_labels`.
 
 ## kubelet
 

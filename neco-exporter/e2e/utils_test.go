@@ -122,6 +122,13 @@ func scrapeNode(g Gomega) []byte {
 	return scrape(g, "neco-node-exporter.neco-exporter.svc")
 }
 
+// scrapeHubble scrapes Hubble metrics served by cilium-agent on the host network.
+func scrapeHubble(g Gomega) []byte {
+	agents := kubectlGetSafe[corev1.PodList](g, "pod", "-n=kube-system", "-l=k8s-app=cilium")
+	g.Expect(agents.Items).To(HaveLen(1))
+	return scrape(g, agents.Items[0].Status.HostIP+":9965")
+}
+
 func getNodeName(g Gomega) string {
 	nodes := kubectlGetSafe[corev1.NodeList](g, "node")
 	g.Expect(nodes.Items).To(HaveLen(1))
