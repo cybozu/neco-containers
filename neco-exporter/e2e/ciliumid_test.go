@@ -37,7 +37,7 @@ func testCiliumIDCollector() {
 			var infoLines []string
 			for line := range strings.Lines(output) {
 				if strings.HasPrefix(line, "neco_cluster_ciliumid_identity_info{") {
-					infoLines = append(infoLines, line)
+					infoLines = append(infoLines, strings.TrimSpace(line))
 				}
 			}
 
@@ -56,7 +56,7 @@ func testCiliumIDCollector() {
 				}
 				g.Expect(line).NotTo(BeEmpty(), "identity_info not found for %s", id.GetName())
 				g.Expect(line).To(ContainSubstring(fmt.Sprintf(`uid="%s"`, id.GetUID())))
-				g.Expect(line).To(HaveSuffix("} 1\n"))
+				g.Expect(line).To(HaveSuffix("} 1"))
 
 				securityLabels, _, err := unstructured.NestedStringMap(id.Object, "security-labels")
 				g.Expect(err).NotTo(HaveOccurred())
