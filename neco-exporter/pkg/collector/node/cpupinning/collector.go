@@ -20,6 +20,9 @@ const (
 	defaultSocketPath = "/var/lib/kubelet/pod-resources/kubelet.sock"
 	nodeNameEnv       = "NODE_NAME"
 	listTimeout       = 10 * time.Second
+	// List returns the whole node's resources including devices, so the gRPC default of 4 MiB is too small.
+	// 16 MiB is the same as the Kubernetes node e2e tests.
+	maxRecvMsgSize = 16 * 1024 * 1024
 )
 
 type cpuPinningCollector struct {
@@ -62,7 +65,10 @@ func (c *cpuPinningCollector) Collect(ctx context.Context) ([]*exporter.Metric, 
 	ctx, cancel := context.WithTimeout(ctx, listTimeout)
 	defer cancel()
 
-	conn, err := grpc.NewClient("unix://"+c.socketPath, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient("unix://"+c.socketPath,
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxRecvMsgSize)),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create PodResources client for %s: %w", c.socketPath, err)
 	}

@@ -4,12 +4,14 @@ import (
 	"cmp"
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"path/filepath"
 	"slices"
 	"testing"
 
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 	podresourcesv1 "k8s.io/kubelet/pkg/apis/podresources/v1"
 
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
@@ -159,6 +161,30 @@ func TestCollect(t *testing.T) {
 				t.Errorf("Collect() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestCollectLargeResponse(t *testing.T) {
+	t.Parallel()
+
+	// Shared pool containers with long names push the response over the gRPC default limit of 4 MiB.
+	pods := []*podresourcesv1.PodResources{pod("app-a", "moco-db-0", container("mysqld", 4))}
+	for i := range 20000 {
+		pods = append(pods, pod("default", fmt.Sprintf("%0250d", i), container("main")))
+	}
+	resp := &podresourcesv1.ListPodResourcesResponse{PodResources: pods}
+	if size := proto.Size(resp); size <= 4*1024*1024 || size > maxRecvMsgSize {
+		t.Fatalf("response size = %d, want between 4 MiB and %d", size, maxRecvMsgSize)
+	}
+
+	c := &cpuPinningCollector{node: "10.69.6.203", socketPath: startServer(t, &fakeServer{resp: resp})}
+	ms, err := c.Collect(t.Context())
+	if err != nil {
+		t.Fatalf("Collect() error = %v", err)
+	}
+	want := []sample{{"app-a", "moco-db-0", "mysqld", "4"}}
+	if got := toSamples(t, "10.69.6.203", ms); !slices.Equal(got, want) {
+		t.Errorf("Collect() = %v, want %v", got, want)
 	}
 }
 
