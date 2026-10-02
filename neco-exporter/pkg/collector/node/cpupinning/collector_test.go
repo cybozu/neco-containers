@@ -76,9 +76,9 @@ func toSamples(t *testing.T, node string, ms []*exporter.Metric) []sample {
 			t.Errorf("unexpected labels %v", m.Labels)
 		}
 		ret = append(ret, sample{
-			namespace: m.Labels["pinned_namespace"],
-			pod:       m.Labels["pinned_pod"],
-			container: m.Labels["pinned_container"],
+			namespace: m.Labels["namespace"],
+			pod:       m.Labels["pod"],
+			container: m.Labels["container"],
 			cpu:       m.Labels["cpu"],
 		})
 	}

@@ -54,7 +54,7 @@ func testCPUPinningCollector() {
 			_, err := strconv.Atoi(cpu)
 			g.Expect(err).NotTo(HaveOccurred(), "cpuset is not a single CPU: %s", cpu)
 
-			expected := fmt.Sprintf(`neco_node_cpupinning_info{cpu="%s",node="%s",pinned_container="main",pinned_namespace="default",pinned_pod="%s"} 1`, cpu, getNodeName(g), podName)
+			expected := fmt.Sprintf(`neco_node_cpupinning_info{container="main",cpu="%s",namespace="default",node="%s",pod="%s"} 1`, cpu, getNodeName(g), podName)
 			g.Expect(cpuPinningInfoLines(scrapeNode(g))).To(ConsistOf(expected))
 		}).Should(Succeed())
 

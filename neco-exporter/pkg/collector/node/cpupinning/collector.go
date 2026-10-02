@@ -87,11 +87,11 @@ func (c *cpuPinningCollector) Collect(ctx context.Context) ([]*exporter.Metric, 
 					Name:  "info",
 					Value: 1,
 					Labels: map[string]string{
-						"node":             c.node,
-						"pinned_namespace": pod.GetNamespace(),
-						"pinned_pod":       pod.GetName(),
-						"pinned_container": container.GetName(),
-						"cpu":              strconv.FormatInt(cpu, 10),
+						"node":      c.node,
+						"namespace": pod.GetNamespace(),
+						"pod":       pod.GetName(),
+						"container": container.GetName(),
+						"cpu":       strconv.FormatInt(cpu, 10),
 					},
 				})
 			}

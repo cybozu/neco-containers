@@ -98,20 +98,19 @@ Info metric with a constant value of `1` for each CPU exclusively allocated to a
 It is read from `List` of kubelet's PodResources API (`/var/lib/kubelet/pod-resources/kubelet.sock`).
 Containers in the shared pool have no series.
 
-| Label              | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| `node`             | Node name (from the `NODE_NAME` env var)           |
-| `pinned_namespace` | Namespace of the Pod                               |
-| `pinned_pod`       | Name of the Pod                                    |
-| `pinned_container` | Name of the container                              |
-| `cpu`              | Logical CPU number, same as `cpu` of node_exporter |
+| Label       | Description                                        |
+| ----------- | -------------------------------------------------- |
+| `node`      | Node name (from the `NODE_NAME` env var)           |
+| `namespace` | Namespace of the Pod                               |
+| `pod`       | Name of the Pod                                    |
+| `container` | Name of the container                              |
+| `cpu`       | Logical CPU number, same as `cpu` of node_exporter |
 
-The labels are prefixed with `pinned_` so as not to collide with the target labels of neco-exporter itself.
 Join with node_exporter to get the usage of the pinned CPUs, e.g. when its series have the `node` label:
 
 ```promql
 sum without (mode) (rate(node_cpu_seconds_total{mode!~"idle|iowait"}[5m]))
-  * on (node, cpu) group_left (pinned_namespace, pinned_pod, pinned_container)
+  * on (node, cpu) group_left (namespace, pod, container)
     neco_node_cpupinning_info
 ```
 
