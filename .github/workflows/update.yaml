@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
-      UBUNTU_VERSIONS: "22.04 24.04"
+      UBUNTU_VERSIONS: "22.04 24.04 26.04"
       GO_MAJOR_VERSIONS: "1.26 1.27"
       GO_ARCHES: "amd64 arm64"
     permissions:
@@ -79,6 +79,8 @@ jobs:
               CODENAME=jammy
             elif [[ "${ubuntu_version}" = "24.04" ]]; then
               CODENAME=noble
+            elif [[ "${ubuntu_version}" = "26.04" ]]; then
+              CODENAME=resolute
             else
               echo "::error:: Unknown Ubuntu version: ${ubuntu_version}"
               continue
