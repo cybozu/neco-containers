@@ -1,3 +1,4 @@
 - container-image: "cilium-operator-generic"
+  make-targets: "check-cilium-target"
   scan:
     enabled: false
