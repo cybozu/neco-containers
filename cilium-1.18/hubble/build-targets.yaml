@@ -1,0 +1,3 @@
+- container-image: "hubble"
+  scan:
+    enabled: false
