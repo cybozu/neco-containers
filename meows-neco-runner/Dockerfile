@@ -32,7 +32,7 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 USER root
 
 # Install debug tools.
-# https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile
+# https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apache2-utils \
         bash-completion \
@@ -55,6 +55,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         net-tools \
         openssh-client \
         perl-modules \
+        python3-requests \
         rclone \
         rsync \
         s3cmd \
