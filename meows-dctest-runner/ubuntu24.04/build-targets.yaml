@@ -1,0 +1,5 @@
+- container-image: "meows-dctest-runner"
+  scan:
+    enabled: true
+    team: pdx
+    identifier: "ghcr.io/cybozu/meows-dctest-runner:ubuntu24.04"

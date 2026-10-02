@@ -2,3 +2,4 @@
   scan:
     enabled: true
     team: pdx
+    identifier: "ghcr.io/cybozu/meows-neco-runner:ubuntu24.04"

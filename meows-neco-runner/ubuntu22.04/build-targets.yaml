@@ -1,0 +1,5 @@
+- container-image: "meows-neco-runner"
+  scan:
+    enabled: true
+    team: pdx
+    identifier: "ghcr.io/cybozu/meows-neco-runner:ubuntu22.04"

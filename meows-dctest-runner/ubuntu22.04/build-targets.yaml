@@ -2,3 +2,4 @@
   scan:
     enabled: true
     team: pdx
+    identifier: "ghcr.io/cybozu/meows-dctest-runner:ubuntu22.04"
