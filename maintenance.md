@@ -797,7 +797,6 @@ Manual update
 ![Regular Update](./regular_update.svg)
 
 > [!Note]
-> Although the upstream says the Hubble CLI is backward compatible with all supported Cilium releases, we have seen errors with Cilium 1.17 and Hubble 1.19.
 > Keep the Hubble CLI on the same minor version as Cilium in each `cilium-X.Y/hubble`.
 
 1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
