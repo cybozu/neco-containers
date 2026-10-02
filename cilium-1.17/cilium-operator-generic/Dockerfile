@@ -5,14 +5,16 @@ ARG UBUNTU_IMAGE=ghcr.io/cybozu/ubuntu:24.04
 # Stage1: build
 FROM ${GOLANG_IMAGE} as build
 
-COPY TAG /
-
 # LICENSE.all
 WORKDIR /go/src/github.com/cybozu-go/
-RUN VERSION=$(cut -d \. -f 1,2,3 < /TAG ) \
-    && BRANCH=v${VERSION}-cybozu \
-    && git clone --depth 1 --branch ${BRANCH} https://github.com/cybozu-go/cilium \
+ENV CILIUM_REPOSITORY=https://github.com/cybozu-go/cilium
+ENV CILIUM_SHA=3e401f859afa255e6156f0e1d45adf086a80285b
+RUN mkdir cilium \
     && cd cilium \
+    && git init 2>/dev/null \
+    && git remote add origin ${CILIUM_REPOSITORY} \
+    && git fetch --depth 1 origin ${CILIUM_SHA} \
+    && git checkout FETCH_HEAD 2>/dev/null \
     && make licenses-all \
     && apt-get update \
     && apt-get install -y --no-install-recommends binutils-aarch64-linux-gnu \
