@@ -7,6 +7,7 @@ ADD --checksum=sha256:fdc98abb490a21f32dcb4020ef662401279aedfa2daf4aca983e84570c
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG REDIS_EXPORTER_VERSION
 
@@ -20,7 +21,8 @@ COPY --from=redis-exporter-src /src.tar.gz /src.tar.gz
 #   - `-extldflags "-static"` is removed since it is not necessary when CGO_ENABLED=0.
 #   - `-X main.BuildCommitSha=$SHA1` is removed since it is not necessary for our use case.
 #   - `-trimpath` is added to remove all file system paths from the compiled executable to make it more reproducible.
-RUN tar -x -z --strip-components 1 -f /src.tar.gz \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    tar -x -z --strip-components 1 -f /src.tar.gz \
  && BUILD_DATE=$(date +%F-%T) CGO_ENABLED=0 go build -trimpath -o redis_exporter \
     -ldflags="-X main.BuildVersion=v${REDIS_EXPORTER_VERSION} -X main.BuildDate=$BUILD_DATE"  .
 

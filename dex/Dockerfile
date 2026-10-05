@@ -3,6 +3,7 @@
 # Note: Upstream tools (xx, stager, gomplate, config.docker.yaml, docker-entrypoint)
 #       are intentionally excluded since they are unnecessary here.
 FROM ghcr.io/cybozu/golang:1.26.4.1_noble@sha256:add9d704d4b75df2c51328615be89b61a3e71e4833321aa02c3f325a30d3eb8f AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG DEX_VERSION=2.45.1
 
@@ -16,7 +17,8 @@ RUN tar -x -z --strip-components 1 -f /tmp/dex.tar.gz -C /work/dex
 
 ENV CGO_ENABLED=1
 
-RUN make release-binary VERSION=v${DEX_VERSION}
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    make release-binary VERSION=v${DEX_VERSION}
 
 FROM ghcr.io/cybozu/ubuntu:24.04.20260604@sha256:c7c519ae7504df61e01495635ebda9c8698f2d221cd3fcf6e9500ad97b9d2421
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

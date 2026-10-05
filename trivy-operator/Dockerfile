@@ -11,6 +11,7 @@ ADD --checksum=sha256:${TRIVY_OPERATOR_SHA256} \
     https://github.com/aquasecurity/trivy-operator/archive/refs/tags/v${TRIVY_OPERATOR_VERSION}.tar.gz /src.tar.gz
 
 FROM ghcr.io/cybozu/golang:1.26.4.1_noble@sha256:add9d704d4b75df2c51328615be89b61a3e71e4833321aa02c3f325a30d3eb8f AS builder
+ENV GOPROXY=https://golang.flatt.tech
 ARG TRIVY_OPERATOR_VERSION
 
 WORKDIR /work/trivy-operator
@@ -18,7 +19,8 @@ WORKDIR /work/trivy-operator
 RUN --mount=type=bind,from=trivy-operator-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
 
-RUN go mod download
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go mod download
 
 ENV CGO_ENABLED=0
 ENV GOEXPERIMENT=jsonv2

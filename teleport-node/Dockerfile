@@ -6,10 +6,12 @@ ADD --checksum=sha256:75a6018ebb6e7e5ffc9f74ee6a5352dc1d5a3390f5617945cbef4f1a45
 
 # Stage2: build from source
 FROM ghcr.io/cybozu/golang:1.25.11.2_noble@sha256:6bca1e8b792037d5bd28ae3315dae20670521b208a53ec42e860a590d1e8792c AS build
+ENV GOPROXY=https://golang.flatt.tech
 WORKDIR /work/teleport
 RUN --mount=type=bind,from=teleport-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
-RUN make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage3: setup runtime container
 FROM ghcr.io/cybozu/ubuntu-debug:24.04.20260925@sha256:d6e4251ccefc7b3cba0af18549d98d4338ec7bfeab284d260e9000ee980f1216

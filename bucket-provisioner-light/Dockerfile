@@ -1,9 +1,11 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /workspace
 
 COPY go.mod go.sum ./
-RUN go mod download
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go mod download
 
 COPY . .
 
