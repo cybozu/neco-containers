@@ -2,12 +2,14 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 COPY . /work
 
 WORKDIR /work
 
-RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/machines-endpoints
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/machines-endpoints
 
 # Stage2: setup runtime container
 FROM scratch

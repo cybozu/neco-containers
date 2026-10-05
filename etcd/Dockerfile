@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 # v3.6.11
 ARG ETCD_COMMIT=ec166e2292a58365c90e96fcd206b3b74938d49d
@@ -12,7 +13,8 @@ RUN curl -sSLf https://github.com/etcd-io/etcd/archive/${ETCD_COMMIT}.tar.gz | \
     && mv etcd-${ETCD_COMMIT} etcd
 
 WORKDIR /work/etcd
-RUN ./scripts/build.sh
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    ./scripts/build.sh
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04
