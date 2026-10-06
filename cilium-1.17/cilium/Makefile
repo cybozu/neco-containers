@@ -1,7 +1,7 @@
 CILIUM_REPO ?= https://github.com/cybozu-go/cilium.git
 CILIUM_UPSTREAM_TARGET ?= v$(shell cat TAG | cut -d'.' -f1-3)
 CILIUM_FORK_BRANCH ?= v$(shell cat TAG | cut -d'.' -f1-3)-cybozu
-CILIUM_TARGET ?= ecb0ce48f2adb2f9ebe04d921141b9ce28c65ec2
+CILIUM_TARGET ?= 3e401f859afa255e6156f0e1d45adf086a80285b
 CILIUM_IMAGE_TOOLS_REPO ?= https://github.com/cilium/image-tools.git
 CILIUM_IMAGE_TOOLS_TARGET ?= 3caa2c416a912dce00e641dd89201975be8c9ce8
 
