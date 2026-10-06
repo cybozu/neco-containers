@@ -1,10 +1,10 @@
 diff --git a/internal/component/loki/process/stages/cri.go b/internal/component/loki/process/stages/cri.go
-index 63b5f2f..ac2330d 100644
+index 934031ed9..a3f5be2a6 100644
 --- a/internal/component/loki/process/stages/cri.go
 +++ b/internal/component/loki/process/stages/cri.go
-@@ -18,9 +18,10 @@ import (
- // CRIConfig is an empty struct that is used to enable a pre-defined pipeline
- // for decoding entries that are using the CRI logging format.
+@@ -17,9 +17,10 @@ import (
+ )
+ 
  type CRIConfig struct {
 -	MaxPartialLines            int    `alloy:"max_partial_lines,attr,optional"`
 -	MaxPartialLineSize         uint64 `alloy:"max_partial_line_size,attr,optional"`
@@ -16,7 +16,7 @@ index 63b5f2f..ac2330d 100644
  }
  
  var (
-@@ -33,6 +34,7 @@ var DefaultCRIConfig = CRIConfig{
+@@ -31,6 +32,7 @@ var defaultCRIConfig = CRIConfig{
  	MaxPartialLines:            100,
  	MaxPartialLineSize:         0,
  	MaxPartialLineSizeTruncate: false,
@@ -24,26 +24,26 @@ index 63b5f2f..ac2330d 100644
  }
  
  // SetToDefault implements syntax.Defaulter.
-@@ -45,6 +47,9 @@ func (args *CRIConfig) Validate() error {
+@@ -43,6 +45,9 @@ func (args *CRIConfig) Validate() error {
  	if args.MaxPartialLines <= 0 {
  		return fmt.Errorf("max_partial_lines must be greater than 0")
  	}
 +	if args.MaxPartialLineAge <= time.Duration(0) {
 +		return fmt.Errorf("max_partial_line_age must be greater than 0")
 +	}
- 
  	return nil
  }
-@@ -95,7 +100,7 @@ const (
+ 
+@@ -111,7 +116,7 @@ const (
  )
  
- func (c *cri) Run(in chan Entry) chan Entry {
+ func (c *criStage) Run(in chan Entry) chan Entry {
 -	return RunWithSkipOrSendMany(in, func(e Entry) ([]Entry, bool) {
 +	return RunWithSkipOrSendManyWithTick(in, func(e Entry) ([]Entry, bool) {
  		parsed, ok := crip.ParseCRI(e.Line)
  		if !ok {
  			return []Entry{e}, false
-@@ -170,6 +175,23 @@ func (c *cri) Run(in chan Entry) chan Entry {
+@@ -157,6 +162,23 @@ func (c *criStage) Run(in chan Entry) chan Entry {
  		}
  
  		return []Entry{e}, false
@@ -55,7 +55,7 @@ index 63b5f2f..ac2330d 100644
 +		fingerprints := make([]model.Fingerprint, 0)
 +		for k, v := range c.partialLines {
 +			if v.Timestamp.Before(threshold) {
-+				c.logger.Warn("flushing partial line due to max age", "labels", v.Labels)
++				c.logger.Warn("msg", "cri stage: flushing partial line due to max age", "labels", v.Labels)
 +				entries = append(entries, v)
 +				fingerprints = append(fingerprints, k)
 +			}
@@ -68,7 +68,7 @@ index 63b5f2f..ac2330d 100644
  }
  
 diff --git a/internal/component/loki/process/stages/pipeline.go b/internal/component/loki/process/stages/pipeline.go
-index 38532f4..2629b84 100644
+index 30f1b3565..af48c57ea 100644
 --- a/internal/component/loki/process/stages/pipeline.go
 +++ b/internal/component/loki/process/stages/pipeline.go
 @@ -5,6 +5,7 @@ import (
@@ -79,7 +79,7 @@ index 38532f4..2629b84 100644
  
  	"github.com/prometheus/client_golang/prometheus"
  
-@@ -185,3 +186,36 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
+@@ -191,3 +192,36 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
  
  	return out
  }
