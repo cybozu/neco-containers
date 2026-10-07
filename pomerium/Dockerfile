@@ -1,23 +1,23 @@
 # syntax=docker/dockerfile:1
 
 # Follow upstream's major/minor version, but refer latest patch version.
-# https://github.com/pomerium/pomerium/blob/01af7466fa3b26b5e5369df49f367737d81ad18e/.tool-versions
-ARG NODE_VERSION=24.19.0
+# https://github.com/pomerium/pomerium/blob/5cd94927fee53f35a2bbd77797cc9524094bff78/.tool-versions
+ARG NODE_VERSION=24.21.0
 
 FROM scratch AS source
-ARG POMERIUM_VERSION=0.33.1
-ARG POMERIUM_CHECKSUM=fefa6c314d72f8baa17d1736a53840b39fddefe57c3a22ca6bf71a0d3d7091df
+ARG POMERIUM_VERSION=0.33.4
+ARG POMERIUM_CHECKSUM=477bb4909f44b32c73d30655ef21478bd5b403922cf2bbc1549c97286ff2658f
 ADD --checksum=sha256:${POMERIUM_CHECKSUM} \
     https://github.com/pomerium/pomerium/archive/v${POMERIUM_VERSION}.tar.gz /pomerium.tar.gz
 
 FROM scratch AS node-amd64
 ARG NODE_VERSION
-ADD --checksum=sha256:f625d97cd707df4ff96254916fbc5ff014f09c09effe5a1e0ca8f6d41a8789d4 \
+ADD --checksum=sha256:6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS node-arm64
 ARG NODE_VERSION
-ADD --checksum=sha256:d28c8a5bf0a808f0ed434a1dce8c54ae98f0371c0bd86ac58abc613f73e6643f \
+ADD --checksum=sha256:724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-arm64.tar.gz /node.tar.gz
 
 # Select the right download stage based on the target architecture
@@ -44,7 +44,7 @@ RUN go mod download
 RUN make build-go NAME=pomerium
 RUN touch /config.yaml
 
-# ref: https://github.com/pomerium/pomerium/blob/01af7466fa3b26b5e5369df49f367737d81ad18e/.github/Dockerfile-release
+# ref: https://github.com/pomerium/pomerium/blob/5cd94927fee53f35a2bbd77797cc9524094bff78/.github/Dockerfile-release
 FROM gcr.io/distroless/base-nossl-debian12:latest@sha256:e35893f8ca1cabfbd60394af94899c20930c4615355adf97c5da660a51b61bca
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
