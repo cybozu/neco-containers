@@ -10,11 +10,14 @@ WORKDIR /work
 RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./pkg/probe
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20260731@sha256:1b00ea85de4e622400e23054583f3f63f88b559bc04aadc599e124cfb59e0469
+# Upstream uses the `nonroot` tag (UID 65532) for its distroless image.
+# https://github.com/envoyproxy/envoy/blob/ef2d997c1b022cf8b849a1d3521fbf234d79ca26/distribution/docker/Dockerfile-envoy#L62
+# We use the `latest` tag instead and run Envoy as the non-privileged `nobody` user
+# (UID 65534) via `USER nobody` below, keeping the same UID as the previous image.
+FROM gcr.io/distroless/base-nossl-debian12:latest@sha256:e35893f8ca1cabfbd60394af94899c20930c4615355adf97c5da660a51b61bca
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY workspace/envoy /usr/local/bin/envoy
-COPY workspace/docker-entrypoint.sh /docker-entrypoint.sh
 COPY workspace/LICENSE /usr/local/share/doc/envoy/LICENSE
 COPY envoy.yaml /etc/envoy/envoy.yaml
 COPY --from=build /go/bin/probe /usr/local/bin/probe
@@ -22,5 +25,5 @@ COPY --from=build /go/bin/probe /usr/local/bin/probe
 EXPOSE 9901
 
 USER nobody
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["envoy", "-c", "/etc/envoy/envoy.yaml"]
+ENTRYPOINT ["/usr/local/bin/envoy"]
+CMD ["-c", "/etc/envoy/envoy.yaml"]

@@ -115,7 +115,6 @@ runs:
         mkdir -p workspace
         mv src/envoy/bazel-bin/source/exe/envoy-static.stripped workspace/envoy
         mv src/envoy/LICENSE workspace/
-        mv src/envoy/distribution/docker/docker-entrypoint.sh workspace/
     - name: Build and push
       if: steps.prepare.outputs.build == 'true'
       uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -130,4 +129,4 @@ runs:
       shell: bash
       env:
         IMAGE: ${{ fromJSON(steps.prepare.outputs.plan).tags[0] }}
-      run: docker run --rm --pull=never "$IMAGE" envoy --version
+      run: docker run --rm --pull=never "$IMAGE" --version
