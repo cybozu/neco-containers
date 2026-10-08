@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.5.2
+ARG ARGOCD_VERSION=3.5.4
 # Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
 ARG KUSTOMIZE_VERSION=5.7.1
@@ -9,8 +9,8 @@ ARG KUSTOMIZE_VERSION=5.7.1
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6013
 ARG HELM_VERSION=3.22.0
 ARG GIT_LFS_VERSION=3.7.1
-ARG NODE_VERSION=24.20.0
-ARG PNPM_VERSION=10.34.5
+ARG NODE_VERSION=24.21.0
+ARG PNPM_VERSION=10.34.6
 
 FROM scratch AS kustomize-download
 ARG KUSTOMIZE_VERSION
@@ -29,21 +29,21 @@ ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5
 
 FROM scratch AS node-download
 ARG NODE_VERSION
-ADD --checksum=sha256:855d581f8a4eb1a8117e3426de25fe02770592febcfb31369aee1ffbfee9e8ec \
+ADD --checksum=sha256:6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:8236a02fefd9cc349b6bf2ce554713c47a58e3f4ce498ee0208504c8873ef2a8 \
+ADD --checksum=sha256:3c346ebbc871ac5d22d1fea01b83bf26905594b85f6d93ebe6b1cf64def10826 \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
 FROM scratch AS pnpm-download
 ARG PNPM_VERSION
-ADD --checksum=sha256:69a535476f407fb0f64427913c2b592ca2ed6bf93f92e2cb82a32349e31f36eb \
+ADD --checksum=sha256:1bdfa04c3acbbf019befa4cf51f73f1de2729f4a513f737d1295905277f3b9cf \
     https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64 /pnpm
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20260902@sha256:182a16198fafecbce2f813a07de269d28efb885aa4843e611ce44c25ce46cc2b AS cybozu-ubuntu
-    
+FROM ghcr.io/cybozu/ubuntu:24.04.20261005@sha256:848752a739357921bbbe0780e9f86cb91ffcbeed490882ac550e30e425063be1 AS cybozu-ubuntu
+
 # Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder
 WORKDIR /tmp
@@ -63,7 +63,7 @@ RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/g
     tar xf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.26.8.1_noble@sha256:fcdd7870a523950129a6afc09e03c035796446ac7c1b2f84994e4a7920042879 AS argocd-build
+FROM ghcr.io/cybozu/golang:1.27.1.1_noble@sha256:e38fe3b72f61d034394ee2c2592d41fa753226718bbc111bb6bb9a21601f0859 AS argocd-build
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
