@@ -3,6 +3,7 @@ ARG MEOWS_RUNNER_TAG=2.337.0-ubuntu22.04-meows0.28.0
 ARG MEOWS_RUNNER_CHECKSUM=sha256:11e7e08526aacb6ffd8c4cee3429882f473dbba0a0c30ab5bcd0fee0d5485ca4
 
 FROM ghcr.io/cybozu/golang:1.26.4.2_jammy@sha256:64a799f1c3aa5d91c0c73bb629c4a712bd3ea11157e233887092186f0577648c AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.9.3
@@ -10,7 +11,8 @@ ARG GRPCURL_SHA256=bb555087f279af156159c86d4d3d5dd3f2991129e4cd6b09114e6851a6793
 ADD --checksum=sha256:${GRPCURL_SHA256} \
     "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
     grpcurl.tar.gz
-RUN tar -x -z --strip-components 1 -f grpcurl.tar.gz \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -ldflags "-X \"main.version=${GRPCURL_VERSION}\"" -o /go/bin/grpcurl ./cmd/grpcurl
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@${MEOWS_RUNNER_CHECKSUM}

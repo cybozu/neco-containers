@@ -28,6 +28,7 @@ ADD --checksum=sha256:a0c326843a091cb907849f18aa4c720ef5a59a9eaa541c20a4c1f61c98
 FROM awscli-download-${TARGETARCH} AS awscli-download
 
 FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG TARGETOS=linux
 ARG TARGETARCH=amd64
@@ -38,7 +39,8 @@ WORKDIR /work/argocd-image-updater
 RUN --mount=type=bind,from=argocd-image-updater-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
 
-RUN mkdir -p dist && \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    mkdir -p dist && \
     OS=${TARGETOS} ARCH=${TARGETARCH} make build GIT_COMMIT=${ARGOCD_IMAGE_UPDATER_GIT_COMMIT}
 
 FROM ghcr.io/cybozu/ubuntu:24.04.20260902@sha256:182a16198fafecbce2f813a07de269d28efb885aa4843e611ce44c25ce46cc2b

@@ -24,6 +24,7 @@ ADD --checksum=sha256:724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095ea
 FROM node-${TARGETARCH} AS node-download
 
 FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
     mkdir -p /opt/node \
@@ -40,7 +41,8 @@ ENV NPM_CONFIG_IGNORE_SCRIPTS=true
 RUN cd ui; npm ci
 RUN make build-ui
 
-RUN go mod download
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go mod download
 RUN make build-go NAME=pomerium
 RUN touch /config.yaml
 

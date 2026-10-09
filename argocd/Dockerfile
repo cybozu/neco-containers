@@ -64,6 +64,7 @@ RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/g
 
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.27.1.1_noble@sha256:e38fe3b72f61d034394ee2c2592d41fa753226718bbc111bb6bb9a21601f0859 AS argocd-build
+ENV GOPROXY=https://golang.flatt.tech
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
@@ -99,7 +100,8 @@ RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_
 
 # Perform the build
 WORKDIR /go/src/github.com/argoproj/argo-cd
-RUN make argocd-all
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    make argocd-all
 
 # Final image
 FROM cybozu-ubuntu

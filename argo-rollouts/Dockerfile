@@ -10,13 +10,15 @@ ADD --checksum=sha256:843109c33b1fea73475c5d56255ea00149663964c5c02382832a1dcf51
     https://github.com/argoproj/argo-rollouts/archive/refs/tags/v${ARGO_ROLLOUTS_VERSION}.tar.gz /src.tar.gz
 
 FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /work/argo-rollouts
 
 RUN --mount=type=bind,from=argo-rollouts-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xzf /tmp/src.tar.gz --strip-components=1 -C .
 
-RUN go mod download
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go mod download
 
 RUN make controller
 
