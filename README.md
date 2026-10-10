@@ -92,6 +92,25 @@ In this example, the consistency check for branch `1.2` is performed as usual, w
 The ability to specify multiple branch names is provided only for limited use cases such as the `latest` tag.
 Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
 
+## Takumi Guard
+
+Some Dockerfiles fetch Go modules via Takumi Guard ([setup-takumi-guard-golang](https://github.com/flatt-security/setup-takumi-guard-golang))
+by setting `GOPROXY=https://golang.flatt.tech` in their build stage.
+The credentials are passed as a BuildKit secret with the ID `netrc`, and mounted only in the `RUN` instructions that need them:
+
+```dockerfile
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    go mod download
+```
+
+In GitHub Actions, the `setup` action writes the credentials to `~/.netrc` and the `build_push` action passes it to the build.
+To build such images locally with your Takumi Guard credentials, pass your `~/.netrc` explicitly
+(without it, Go modules are fetched from Takumi Guard anonymously):
+
+```sh
+docker buildx build --secret id=netrc,src=$HOME/.netrc <dir>
+```
+
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/
 

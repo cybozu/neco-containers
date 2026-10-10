@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 # v1.14.2
 ARG COREDNS_COMMIT=dd1df4f5db93767a44e37638df44969503b320d2
@@ -10,7 +11,8 @@ RUN curl -sSLf https://github.com/coredns/coredns/archive/${COREDNS_COMMIT}.tar.
     && mv coredns-${COREDNS_COMMIT} /go/src/github.com/coredns/coredns
 
 WORKDIR /go/src/github.com/coredns/coredns/
-RUN make
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    make
 
 FROM ghcr.io/cybozu/ubuntu:24.04
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

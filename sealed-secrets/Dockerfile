@@ -1,10 +1,12 @@
 # Build stage
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG SEALED_SECRETS_VERSION=0.38.1
 ARG SEALED_SECRETS_COMMIT=706528904566e28373b584b5adb7e92ef8f81c1d
 
-RUN curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami/sealed-secrets/archive/${SEALED_SECRETS_COMMIT}.tar.gz \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami/sealed-secrets/archive/${SEALED_SECRETS_COMMIT}.tar.gz \
     && tar --strip-components=1 -xzf sealed-secrets.tar.gz \
     && rm sealed-secrets.tar.gz \
     && make TAG=${SEALED_SECRETS_VERSION} controller-static
