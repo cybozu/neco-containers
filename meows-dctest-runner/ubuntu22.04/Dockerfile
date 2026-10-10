@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
-ARG MEOWS_RUNNER_TAG=2.337.0-ubuntu22.04-meows0.28.0
-ARG MEOWS_RUNNER_CHECKSUM=sha256:11e7e08526aacb6ffd8c4cee3429882f473dbba0a0c30ab5bcd0fee0d5485ca4
+ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu22.04-meows0.28.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:398b35ec5abb65f353244243bdb11318a552fd821e4fff22ee4e2f28cc7d14ac
 
 FROM scratch AS go-download
 ADD --checksum=sha256:1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f \
