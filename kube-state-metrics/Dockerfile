@@ -2,6 +2,7 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 # v2.18.0
 ARG KUBE_STATE_METRICS_COMMIT=ab562f78ebf4cb97cc2f87c1235e457076035d16
@@ -9,7 +10,8 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -fsSL https://github.com/kubernetes/kube-state-metrics/archive/${KUBE_STATE_METRICS_COMMIT}.tar.gz | \
     tar --strip-components=1 -xzf -
 
-RUN make build-local
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    make build-local
 
 # Stage2: setup runtime container
 FROM scratch

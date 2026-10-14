@@ -1,4 +1,5 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 ARG GITLEAKSS_COMMIT=83d9cd684c87d95d656c1458ef04895a7f1cbd8e # 8.30.1
 
 WORKDIR /work/gitleaks
@@ -8,7 +9,8 @@ RUN curl -sLf -o gitleaks.tar.gz https://github.com/gitleaks/gitleaks/archive/${
     && tar --strip-components=1 -xzf gitleaks.tar.gz -C /work/gitleaks \
     && rm gitleaks.tar.gz
 
-RUN CGO_ENABLED=0 go build -ldflags '-w -s' -o bin/gitleaks
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    CGO_ENABLED=0 go build -ldflags '-w -s' -o bin/gitleaks
 
 FROM scratch
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

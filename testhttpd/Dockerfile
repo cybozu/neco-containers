@@ -2,9 +2,11 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 COPY src /work/src
 WORKDIR /work/src
-RUN CGO_ENABLED=0 go install -ldflags="-w -s" ./testhttpd
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    CGO_ENABLED=0 go install -ldflags="-w -s" ./testhttpd
 
 # Stage2: setup runtime container
 FROM ghcr.io/cybozu/ubuntu:24.04

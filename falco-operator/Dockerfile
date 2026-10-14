@@ -1,11 +1,13 @@
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG FALCO_OPERATOR_COMMIT=ddf43f9fc0f115a34246f6267ca088f7e51b08de # v0.4.1
 ARG ARTIFACT_OPERATOR_IMAGE=ghcr.io/cybozu/falco-artifact-operator:0.4.1.1
 ARG PROJECT=github.com/falcosecurity/falco-operator
 
 WORKDIR /work/falco-operator
-RUN curl -fsSL -o /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz https://github.com/falcosecurity/falco-operator/archive/${FALCO_OPERATOR_COMMIT}.tar.gz && \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    curl -fsSL -o /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz https://github.com/falcosecurity/falco-operator/archive/${FALCO_OPERATOR_COMMIT}.tar.gz && \
     tar -xzf /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz --strip-components=1 && \
     rm /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz && \
     CGO_ENABLED=0 go build -ldflags \

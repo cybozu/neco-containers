@@ -2,10 +2,12 @@
 
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
+ENV GOPROXY=https://golang.flatt.tech
 
 ARG VAULT_COMMIT=7193f9a48ff6093ca61b3b627a8671e770428ba6 # 2.0.3
 
-RUN git clone --depth 1 https://github.com/hashicorp/vault . \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    git clone --depth 1 https://github.com/hashicorp/vault . \
     && git fetch --depth 1 origin ${VAULT_COMMIT} \
     && git checkout FETCH_HEAD \
     && make bootstrap \
