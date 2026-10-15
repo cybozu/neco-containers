@@ -31,18 +31,27 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 
 USER root
 
-# Install debug tools.
-# https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile
+# Disable gh telemetry: https://cli.github.com/telemetry
+ENV GH_TELEMETRY=false
+ENV DO_NOT_TRACK=true
+
+RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
         apache2-utils \
         bash-completion \
         bind9-dnsutils \
         binutils \
         bsdmainutils \
+        build-essential \
         conntrack \
         expect \
         file \
         gdb \
+        gh \
+        git \
         iperf3 \
         iproute2 \
         iputils-ping \

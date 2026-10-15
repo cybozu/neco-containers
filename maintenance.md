@@ -1022,7 +1022,7 @@ The directory is split into per-OS subdirectories (`meows-neco-runner/ubuntu22.0
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile` (for `ubuntu22.04/`)
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu24.04/Dockerfile` (for `ubuntu24.04/`)
-3. Update the `Dockerfile` to install the same tools as ubuntu-debug.
+3. Update the `Dockerfile` to install any tools that are in ubuntu-debug but missing from meows-neco-runner.
    - Also update `GRPCURL_VERSION`, if there are any changes.
    - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6> (for `ubuntu22.04/`)
    - <https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile#L6> (for `ubuntu24.04/`)
