@@ -8,7 +8,7 @@ FROM ${GOLANG_IMAGE} as build
 # LICENSE.all
 WORKDIR /go/src/github.com/cybozu-go/
 ENV CILIUM_REPOSITORY=https://github.com/cybozu-go/cilium
-ENV CILIUM_SHA=5dc1ce3e109526bc170351800379fdc9903c18be
+ENV CILIUM_SHA=85724f07d5d6454106957318e71ead2ce5373f41
 RUN mkdir cilium \
     && cd cilium \
     && git init 2>/dev/null \
