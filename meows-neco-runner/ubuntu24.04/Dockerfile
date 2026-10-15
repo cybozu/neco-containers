@@ -39,19 +39,16 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
     && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
     && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN COMMON_PACKAGES=" \
         apache2-utils \
         bash-completion \
         bind9-dnsutils \
         binutils \
         bsdmainutils \
-        build-essential \
         conntrack \
         expect \
         file \
         gdb \
-        gh \
-        git \
         iperf3 \
         iproute2 \
         iputils-ping \
@@ -78,6 +75,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         traceroute \
         unzip \
         vim \
+    " \
+    CUSTOM_PACKAGES=" \
+        build-essential \
+        gh \
+        git \
+    " \
+    && apt-get update && apt-get install -y --no-install-recommends $COMMON_PACKAGES $CUSTOM_PACKAGES \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
 
