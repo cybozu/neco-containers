@@ -2,4 +2,4 @@
   scan:
     enabled: true
     team: pdx
-    identifier: "ghcr.io/cybozu/argocd:3.5"
+    identifier: "ghcr.io/cybozu/argocd:3.3"
