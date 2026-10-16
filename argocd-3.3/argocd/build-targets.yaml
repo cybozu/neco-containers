@@ -1,0 +1,5 @@
+- container-image: "argocd"
+  scan:
+    enabled: true
+    team: pdx
+    identifier: "ghcr.io/cybozu/argocd:3.5"
