@@ -1,0 +1,3 @@
+- container-image: "redis_exporter"
+  scan:
+    enabled: false
