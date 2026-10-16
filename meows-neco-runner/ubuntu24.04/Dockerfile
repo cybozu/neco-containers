@@ -31,9 +31,15 @@ LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers
 
 USER root
 
-# Install debug tools.
-# https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Disable gh telemetry: https://cli.github.com/telemetry
+ENV GH_TELEMETRY=false
+ENV DO_NOT_TRACK=true
+
+RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && chmod go+r /etc/apt/keyrings/githubcli-archive-keyring.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" > /etc/apt/sources.list.d/github-cli.list
+
+RUN COMMON_PACKAGES=" \
         apache2-utils \
         bash-completion \
         bind9-dnsutils \
@@ -69,6 +75,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         traceroute \
         unzip \
         vim \
+    " \
+    CUSTOM_PACKAGES=" \
+        build-essential \
+        gh \
+        git \
+    " \
+    && apt-get update && apt-get install -y --no-install-recommends $COMMON_PACKAGES $CUSTOM_PACKAGES \
     && rm -rf /var/lib/apt/lists/* \
     && setcap -r /usr/bin/ping
 
