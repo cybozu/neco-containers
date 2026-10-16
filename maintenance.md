@@ -499,7 +499,7 @@ To update the cilium image:
 
 > [!Note]
 > `CILIUM_TARGET` in `cilium-X.Y/cilium/Makefile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
-> If you push new commits to that branch (e.g. additional cherry-picked patches), you must update `CILIUM_TARGET` to the new commit SHA; it will not be picked up automatically.
+> Changes to that branch must go through a pull request. After merging one (e.g. additional cherry-picked patches), you must update `CILIUM_TARGET` to the new commit SHA; it will not be picked up automatically.
 > In `cilium-1.17`, `make checkout-cilium` (and therefore `make checkout`/`make build`) runs `check-cilium-target` first, which fails if `CILIUM_TARGET` is not the current tip of that branch, to catch this case.
 4. Check the upstream `Dockerfile`s to make necessary changes for `cilium-X.Y/cilium`.
    1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
@@ -540,7 +540,7 @@ This image is shared by all supported Cilium versions.
 
 > [!Note]
 > `ENV CILIUM_SHA` in `neco-containers/cilium-X.Y/cilium-operator-generic/Dockerfile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
-> If you push new commits to that branch (e.g. additional cherry-picked patches), you must update `CILIUM_SHA` to the new commit SHA; it will not be picked up automatically.
+> Changes to that branch must go through a pull request. After merging one (e.g. additional cherry-picked patches), you must update `CILIUM_SHA` to the new commit SHA; it will not be picked up automatically.
 > `make check-cilium-target` (run by CI before the image build) fails if `CILIUM_SHA` is not the current tip of that branch, to catch this case.
 
 3. Update the `BRANCH` and `TAG` files accordingly.
