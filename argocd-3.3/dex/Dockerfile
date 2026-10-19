@@ -13,7 +13,7 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ADD --checksum=sha256:6dc9bf768d67723d8117268d5177c7450519608f5403cd10e857c89465fa2b9e \
     https://github.com/dexidp/dex/archive/v${DEX_VERSION}.tar.gz /tmp/dex.tar.gz
 
-RUN tar -x -z --strip-components 1 -f /tmp/dex.tar.gz -C /work/dex 
+RUN tar -x -z --strip-components 1 -f /tmp/dex.tar.gz -C /work/dex
 
 ENV CGO_ENABLED=1
 
