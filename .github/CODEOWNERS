@@ -74,8 +74,6 @@
 
 # ---- PDX (@cybozu/pdx) ----
 /argocd/                          @cybozu/pdx
-/argocd-3.3/                      @cybozu/pdx
-/argocd-3.5/                      @cybozu/pdx
 /argocd-image-updater/            @cybozu/pdx
 /argo-rollouts/                   @cybozu/pdx
 /bucket-provisioner-light/        @cybozu/pdx
