@@ -16,6 +16,7 @@ ADD --checksum=sha256:f26e08d0d64d9f35f304a9df94d63cbd11ffe8881c8b4bf60be934cf9e
 FROM awscli-download-${TARGETARCH} AS awscli-download
 
 FROM ghcr.io/cybozu/golang:1.26.4.2_noble@sha256:7a29c153fea6357a7b6498ca1989a77a18ea9b97cfd1a3b3dff90cf434d59ae9 AS builder
+ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
 ARG GRPCURL_VERSION=1.9.3
@@ -23,7 +24,8 @@ ARG GRPCURL_SHA256=bb555087f279af156159c86d4d3d5dd3f2991129e4cd6b09114e6851a6793
 ADD --checksum=sha256:${GRPCURL_SHA256} \
     "https://github.com/fullstorydev/grpcurl/archive/v${GRPCURL_VERSION}.tar.gz" \
     grpcurl.tar.gz
-RUN tar -x -z --strip-components 1 -f grpcurl.tar.gz \
+RUN --mount=type=secret,id=netrc,target=/root/.netrc \
+    tar -x -z --strip-components 1 -f grpcurl.tar.gz \
     && GOARCH=${TARGETARCH} CGO_ENABLED=0 go build -ldflags "-X \"main.version=${GRPCURL_VERSION}\"" -o /go/bin/grpcurl ./cmd/grpcurl
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@${MEOWS_RUNNER_CHECKSUM}
