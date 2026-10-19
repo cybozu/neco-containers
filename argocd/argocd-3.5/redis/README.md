@@ -31,6 +31,6 @@ A copy of the GNU Affero General Public License v3.0 is included in this reposit
 Corresponding Source for the Redis component is available at:
 
 - Upstream Redis source releases: <https://github.com/redis/redis/releases>
-- Build recipe (Dockerfile) and any patches applied by Cybozu: <https://github.com/cybozu/neco-containers/tree/main/redis>
+- Build recipe (Dockerfile) and any patches applied by Cybozu: <https://github.com/cybozu/neco-containers/tree/argocd/argocd-3.5/redis>
 
 The exact Redis version and the checksum of the source tarball used to build this image are specified in the Dockerfile in this repository. See the `REDIS_VERSION`, `REDIS_DOWNLOAD_URL`, and `REDIS_DOWNLOAD_SHA` build arguments.
