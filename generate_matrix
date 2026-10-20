@@ -43,7 +43,7 @@ MATRIX_FILE=".github/outputs/__build_targets.yaml"
 while IFS= read -r f; do
     d="$(dirname "${f#./}")"
     yq ".[] |= (.dir = \"./${d}\")" "$f" >> "${MATRIX_FILE}"
-done < <(find . -mindepth 2 -maxdepth 3 -name build-targets.yaml -not -path './.github/*' -not -path './.git/*' | sort)
+done < <(find . -mindepth 2 -maxdepth 4 -name build-targets.yaml -not -path './.github/*' -not -path './.git/*' | sort)
 JSON_MATRIX="$(yq -ojson '.' "${MATRIX_FILE}")"
 OUTPUT_MATRIX='[]'
 for i in $(seq $(echo "${JSON_MATRIX}" | jq length)); do
