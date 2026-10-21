@@ -6,7 +6,7 @@ ADD --checksum=sha256:fdc98abb490a21f32dcb4020ef662401279aedfa2daf4aca983e84570c
     https://github.com/oliver006/redis_exporter/archive/v${REDIS_EXPORTER_VERSION}.tar.gz /src.tar.gz
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS build
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS build
 ENV GOPROXY=https://golang.flatt.tech
 
 ARG REDIS_EXPORTER_VERSION
