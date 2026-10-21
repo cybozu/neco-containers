@@ -1,9 +1,9 @@
 # squid container
 
-ARG SQUID_VERSION=7.6
+ARG SQUID_VERSION=7.7
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261021@sha256:e8cea4ac6112e219658cda415a875c72d5ae9ed8a6c7df4a070e7777a558bb80 AS build
 
 ARG SQUID_VERSION
 
@@ -19,7 +19,7 @@ RUN curl -sfLO https://github.com/squid-cache/squid/releases/download/SQUID_$(ec
     && make install
 
 # Stage1: build from source without avx2 optimization
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS build-dev
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261021@sha256:e8cea4ac6112e219658cda415a875c72d5ae9ed8a6c7df4a070e7777a558bb80 AS build-dev
 
 ARG SQUID_VERSION
 
@@ -35,7 +35,7 @@ RUN curl -sfLO https://github.com/squid-cache/squid/releases/download/SQUID_$(ec
     && make install
 
 # stage2: production image
-FROM ghcr.io/cybozu/ubuntu:24.04 AS squid
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02 AS squid
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/squid /usr/local/squid
@@ -62,7 +62,7 @@ EXPOSE 3128
 ENTRYPOINT ["/usr/local/squid/sbin/squid", "-N"]
 
 # stage2: production image without avx2 optimization
-FROM ghcr.io/cybozu/ubuntu:24.04 AS squid-dev
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02 AS squid-dev
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build-dev /usr/local/squid /usr/local/squid
