@@ -17,7 +17,7 @@ ADD --checksum=sha256:${GO_ARM64_SHA256} \
 
 FROM go-dist-${TARGETARCH} AS go-dist
 
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260422@sha256:d9dcc6f47039bbd1faeb6dcdc75f3e469756e481abbf8535201783fc68ff611d
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261021@sha256:96f5e68ff021457cf07c82510d5be3c3c69bf20c1109e32c604b0b516de7eec6
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 ARG TARGETARCH
 ENV GOARCH=${TARGETARCH}
