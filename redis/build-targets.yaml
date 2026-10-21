@@ -1,4 +1,0 @@
-- container-image: "redis"
-  scan:
-    enabled: true
-    team: pdx
