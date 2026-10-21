@@ -8,4 +8,4 @@ registries:
 - type: standard
   ref: v4.492.0
 packages:
-- name: golangci/golangci-lint@v2.12.2
+- name: golangci/golangci-lint@v2.15.0

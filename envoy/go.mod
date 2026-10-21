@@ -1,6 +1,6 @@
 module github.com/cybozu/neco-containers/envoy
 
-go 1.26.5
+go 1.27.3
 
 require (
 	github.com/cybozu-go/log v1.7.0
