@@ -23,7 +23,7 @@ ADD --checksum=sha256:724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095ea
 # Select the right download stage based on the target architecture
 FROM node-${TARGETARCH} AS node-download
 
-FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS build
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS build
 ENV GOPROXY=https://golang.flatt.tech
 
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
