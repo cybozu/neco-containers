@@ -1,9 +1,9 @@
 # chrony container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260709@sha256:139cb9a6a1e020636de498e78cd528ca5a8cffa7cf48af30031cac4e44c69363 AS build
-ENV CHRONY_VERSION=4.8
-ENV CHRONY_HASH=33ea8eb2a4daeaa506e8fcafd5d6d89027ed6f2f0609645c6f149b560d301706
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261021@sha256:e8cea4ac6112e219658cda415a875c72d5ae9ed8a6c7df4a070e7777a558bb80 AS build
+ENV CHRONY_VERSION=4.9
+ENV CHRONY_HASH=4924c6f530105bcd5b9e9e33c48a2ae1bfd889222c8480bc41601110efc864d0
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir /work \
@@ -22,7 +22,7 @@ RUN ./configure --exec-prefix=/usr/local/chrony --with-pidfile=/run/chrony/chron
 
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20260709@sha256:f91f1884f5b8dbe44e224306b5dc7bfd4d420f5c73aea1d32a71c6474361fb0f
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
