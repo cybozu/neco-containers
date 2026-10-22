@@ -10,7 +10,7 @@ ARG TRIVY_OPERATOR_SHA256
 ADD --checksum=sha256:${TRIVY_OPERATOR_SHA256} \
     https://github.com/aquasecurity/trivy-operator/archive/refs/tags/v${TRIVY_OPERATOR_VERSION}.tar.gz /src.tar.gz
 
-FROM ghcr.io/cybozu/golang:1.26.4.1_noble@sha256:add9d704d4b75df2c51328615be89b61a3e71e4833321aa02c3f325a30d3eb8f AS builder
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS builder
 ENV GOPROXY=https://golang.flatt.tech
 ARG TRIVY_OPERATOR_VERSION
 
