@@ -2,7 +2,7 @@
 
 # Follow upstream's major/minor version, but refer latest patch version.
 # https://github.com/pomerium/pomerium/blob/5cd94927fee53f35a2bbd77797cc9524094bff78/.tool-versions
-ARG NODE_VERSION=24.21.0
+ARG NODE_VERSION=24.22.1
 
 FROM scratch AS source
 ARG POMERIUM_VERSION=0.33.4
@@ -12,12 +12,12 @@ ADD --checksum=sha256:${POMERIUM_CHECKSUM} \
 
 FROM scratch AS node-amd64
 ARG NODE_VERSION
-ADD --checksum=sha256:6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff \
+ADD --checksum=sha256:eb6728e77c576a35162c122c45ccadf224d89ff00abc8dae46cc2897c6002d7c \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS node-arm64
 ARG NODE_VERSION
-ADD --checksum=sha256:724282c3b43aec998aa9527380465b45d229e021b58035f5f4f63095eabfe5d5 \
+ADD --checksum=sha256:33c37be234ba8bee041961047b19160f4d7d0f164e8e246f78bdd10feff148b3 \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-arm64.tar.gz /node.tar.gz
 
 # Select the right download stage based on the target architecture
