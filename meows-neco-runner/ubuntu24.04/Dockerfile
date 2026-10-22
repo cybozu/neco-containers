@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu24.04-meows0.28.0
-ARG MEOWS_RUNNER_CHECKSUM=sha256:7b4fdd750c85c0f2d2b079e1410585f91d02d3e9cfcae9282f14d93dcadc4c17
+ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu24.04-meows0.29.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:32f136465780c253a2538b2b8fb6bbd9a79f44eee3c465aed81a642b44ea3f98
 ARG AWSCLI_VERSION=2.36.40
 
 FROM scratch AS awscli-download-amd64
@@ -15,7 +15,7 @@ ADD --checksum=sha256:f26e08d0d64d9f35f304a9df94d63cbd11ffe8881c8b4bf60be934cf9e
 
 FROM awscli-download-${TARGETARCH} AS awscli-download
 
-FROM ghcr.io/cybozu/golang:1.26.4.2_noble@sha256:7a29c153fea6357a7b6498ca1989a77a18ea9b97cfd1a3b3dff90cf434d59ae9 AS builder
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS builder
 ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
