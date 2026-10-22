@@ -9,7 +9,7 @@ ARG ARGO_ROLLOUTS_VERSION=1.10.0
 ADD --checksum=sha256:843109c33b1fea73475c5d56255ea00149663964c5c02382832a1dcf51d5219a \
     https://github.com/argoproj/argo-rollouts/archive/refs/tags/v${ARGO_ROLLOUTS_VERSION}.tar.gz /src.tar.gz
 
-FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS builder
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS builder
 ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /work/argo-rollouts
