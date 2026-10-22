@@ -1,9 +1,9 @@
 # stakater/Reloader container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS build
 
-ARG RELOADER_SHA=430c1efb706b45c41b72f99abdffaa7d5df61620
+ARG RELOADER_SHA=93bac9d625556bdbd7323616fe1b05072072cdda
 
 COPY TAG /
 WORKDIR /workspace
