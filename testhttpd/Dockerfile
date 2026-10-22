@@ -1,7 +1,7 @@
 # testhttpd container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS build
 ENV GOPROXY=https://golang.flatt.tech
 COPY src /work/src
 WORKDIR /work/src
