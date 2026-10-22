@@ -1,4 +1,0 @@
-- container-image: "haproxy"
-  scan:
-    enabled: true
-    team: neco

@@ -77,14 +77,10 @@
 /argocd-image-updater/            @cybozu/pdx
 /argo-rollouts/                   @cybozu/pdx
 /bucket-provisioner-light/        @cybozu/pdx
-/dex/                             @cybozu/pdx
 /golang-all/                      @cybozu/pdx
-/haproxy/                         @cybozu/pdx
 /meows-dctest-runner/             @cybozu/pdx
 /meows-neco-runner/               @cybozu/pdx
 /pomerium/                        @cybozu/pdx
-/redis/                           @cybozu/pdx
-/redis_exporter/                  @cybozu/pdx
 /teleport-node/                   @cybozu/pdx
 /trivy-operator/                  @cybozu/pdx
 .github/workflows/update.yaml     @cybozu/pdx
