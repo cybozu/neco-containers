@@ -9,7 +9,7 @@ ARG KUSTOMIZE_VERSION=5.7.1
 #             See. https://github.com/kubernetes-sigs/kustomize/issues/6013
 ARG HELM_VERSION=3.22.0
 ARG GIT_LFS_VERSION=3.7.1
-ARG NODE_VERSION=24.21.0
+ARG NODE_VERSION=24.22.1
 ARG PNPM_VERSION=10.34.6
 
 FROM scratch AS kustomize-download
@@ -29,7 +29,7 @@ ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5
 
 FROM scratch AS node-download
 ARG NODE_VERSION
-ADD --checksum=sha256:6e1db87ef58b8819e5d5402eff1536491b18edd8eb7bee5ef7897876e88dc5ff \
+ADD --checksum=sha256:eb6728e77c576a35162c122c45ccadf224d89ff00abc8dae46cc2897c6002d7c \
     https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz /node.tar.gz
 
 FROM scratch AS argocd-src
