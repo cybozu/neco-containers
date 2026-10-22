@@ -24,7 +24,7 @@ COPY --from=build /work/falco-operator/LICENSE /usr/local/falco-operator/LICENSE
 USER 65532:65532
 ENTRYPOINT ["/usr/bin/manager"]
 
-FROM ghcr.io/cybozu/ubuntu:24.04 AS falco-artifact-operator
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9 AS falco-artifact-operator
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/bin/falco-artifact-operator /usr/bin/manager
