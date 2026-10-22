@@ -1,12 +1,12 @@
-ARG NODE_VERSION=24.14.1
-ARG NODE_SHA=84d38715d449447117d05c3e71acd78daa49d5b1bfa8aacf610303920c3322be
-ARG NGINX_VERSION=1.29.8
-ARG NJS_VERSION=0.9.6
-ARG PKG_RELEASE=1~noble
+ARG NODE_VERSION=24.22.1
+ARG NODE_SHA=6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6
+ARG NGINX_VERSION=1.31.8
+ARG NJS_VERSION=1.0.2
+ARG PKG_RELEASE=1~resolute
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS backend-builder
+FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -22,7 +22,7 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.26.7.1_noble@sha256:678dffc420bde6361513f3c63a5c9018f3e8f4ec7480a94f57c2397a81c7da51 AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS frontend-builder
 ARG NODE_VERSION
 ARG NODE_SHA
 
@@ -52,7 +52,7 @@ RUN pnpm run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template
-FROM ghcr.io/cybozu/ubuntu:24.04.20260825@sha256:8ff055df3303693be8822fd555cc2cda4f2b16ecc71c6ffdad8c5c74ff054ba7 AS frontend
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02 AS frontend
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 ARG NGINX_VERSION
 ARG NJS_VERSION
@@ -96,7 +96,7 @@ RUN set -x \
     && case "$dpkgArch" in \
         amd64|arm64) \
 # arches officialy built by upstream
-            echo "deb [signed-by=$NGINX_GPGKEY_PATH] https://nginx.org/packages/mainline/ubuntu/ noble nginx" >> /etc/apt/sources.list.d/nginx.list \
+            echo "deb [signed-by=$NGINX_GPGKEY_PATH] https://nginx.org/packages/mainline/ubuntu/ resolute nginx" >> /etc/apt/sources.list.d/nginx.list \
             && apt-get update \
             ;; \
         *) \
