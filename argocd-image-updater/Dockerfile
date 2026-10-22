@@ -27,7 +27,7 @@ ADD --checksum=sha256:a0c326843a091cb907849f18aa4c720ef5a59a9eaa541c20a4c1f61c98
 
 FROM awscli-download-${TARGETARCH} AS awscli-download
 
-FROM ghcr.io/cybozu/golang:1.26.8.2_noble@sha256:e7d0eca1aa1de90597d2c7deeeaa7c93bc7605c51af380ccfc6776c892252a37 AS builder
+FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS builder
 ENV GOPROXY=https://golang.flatt.tech
 
 ARG TARGETOS=linux
@@ -43,7 +43,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     mkdir -p dist && \
     OS=${TARGETOS} ARCH=${TARGETARCH} make build GIT_COMMIT=${ARGOCD_IMAGE_UPDATER_GIT_COMMIT}
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20260902@sha256:182a16198fafecbce2f813a07de269d28efb885aa4843e611ce44c25ce46cc2b
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN groupadd -g 10000 argocd && \
