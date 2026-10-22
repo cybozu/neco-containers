@@ -1,7 +1,7 @@
 TRUST_MANAGER_VERSION := $(shell cat TAG | cut -d'.' -f1-3)
 TRUST_MANAGER_HASH := e4f05f49c662efa7c1df3a333d8b812f2972fbb8701352bc6607ae4120034a05
 TRUST_MANAGER_SOURCE := trust-manager-source
-UBUNTU_IMAGE := ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
+UBUNTU_IMAGE := ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02
 
 .PHONY: clean
 clean:
