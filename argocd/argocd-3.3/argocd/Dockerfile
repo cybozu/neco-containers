@@ -34,7 +34,7 @@ ARG ARGOCD_VERSION
 ADD --checksum=sha256:3694e46538e3b8e2292a1eb2134bdde4e506ecc17d7675d07b3269330145265f \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261015@sha256:f2a8761af61a6f23e6b47bea5ab3e9d0e43b75a84e70e3bc1e125ab1a9b8dfda AS cybozu-ubuntu
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9 AS cybozu-ubuntu
 
 # Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder
@@ -51,7 +51,7 @@ RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.ta
     tar xf /tmp/helm.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.27.2.1_noble@sha256:97d3922724bfe7b7993d8325556864905b05d14fb81dd6983ce27eea9148703c AS argocd-build
+FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS argocd-build
 ENV GOPROXY=https://golang.flatt.tech
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}

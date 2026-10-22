@@ -42,7 +42,7 @@ ARG PNPM_VERSION
 ADD --checksum=sha256:1bdfa04c3acbbf019befa4cf51f73f1de2729f4a513f737d1295905277f3b9cf \
     https://github.com/pnpm/pnpm/releases/download/v${PNPM_VERSION}/pnpm-linux-x64 /pnpm
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261005@sha256:848752a739357921bbbe0780e9f86cb91ffcbeed490882ac550e30e425063be1 AS cybozu-ubuntu
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9 AS cybozu-ubuntu
 
 # Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder
@@ -63,7 +63,7 @@ RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/g
     tar xf /tmp/git-lfs.tar.gz -C /usr/local/bin --strip-components 1
 
 # Stage2; Argo CD Build Stage
-FROM ghcr.io/cybozu/golang:1.27.1.1_noble@sha256:e38fe3b72f61d034394ee2c2592d41fa753226718bbc111bb6bb9a21601f0859 AS argocd-build
+FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS argocd-build
 ENV GOPROXY=https://golang.flatt.tech
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
