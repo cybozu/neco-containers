@@ -9,8 +9,8 @@
 const PHANTOM_DEV_DEPS = {
   '@protobuf-ts/runtime': '2.11.1',
   '@protobuf-ts/runtime-rpc': '2.11.1',
-  '@types/node': '24.1.0',
-  'mobx-react-lite': '4.1.0',
+  '@types/node': '25.6.0',
+  'mobx-react-lite': '5.0.3',
 };
 const OVERRIDE = {
   sass: '1.103.1',
@@ -19,6 +19,8 @@ const OVERRIDE = {
   // Pin to the versions resolved by upstream's package-lock.json.
   '@types/d3-selection': '3.0.11',
   '@types/d3-zoom': '3.0.8',
+  // mobx-react 10 depends on mobx-react-lite 5; pin to upstream's resolved version.
+  'mobx-react-lite': '5.0.3',
 };
 
 const DEP_FIELDS = ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies'];

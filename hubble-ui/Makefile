@@ -118,3 +118,12 @@ verify-lockfile: clean $(PNPM_BIN) checkout
 
 	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
 	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts
+
+# Report peer dependency issues in the committed lockfile. Upstream's own
+# dependency tree has unmet peers (e.g. babel 8 vs. 7.x syntax plugins), so
+# this is informational: look for issues caused by PHANTOM_DEV_DEPS/OVERRIDE
+# in .pnpmfile.cjs and fix them there.
+.PHONY: check-peers
+check-peers: $(PNPM_BIN) checkout
+	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
+	cd src/hubble-ui && $(PNPM_BIN) peers check --lockfile-only || true

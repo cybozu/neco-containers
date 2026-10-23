@@ -863,6 +863,7 @@ This image is shared by all supported Cilium versions.
    ```
 
    If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, add `<pkg>: '<version>'` to `PHANTOM_DEV_DEPS` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`. For `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add an entry to `DEDUPE` in `hubble-ui/.pnpmfile.cjs`.
+   Keep the versions in `PHANTOM_DEV_DEPS` and `OVERRIDE` in sync with the versions resolved in the upstream `package-lock.json` of the release, and run `make check-peers` to find peer dependency issues caused by them (issues inherited from upstream's own dependency tree can be ignored).
 
    Review the diff:
    - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
