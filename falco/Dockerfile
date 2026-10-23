@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/ubuntu-dev:24.04 AS builder
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261021@sha256:96f5e68ff021457cf07c82510d5be3c3c69bf20c1109e32c604b0b516de7eec6 AS builder
 
 ARG FALCO_VERSION=0.44.1
 ARG FALCO_COMMIT=f1ac5eb1a1c9da9f797f799121ab700263621443 # 0.44.1
@@ -58,7 +58,7 @@ RUN ARCH=$(uname -m) && \
            /install/usr/bin/falcoctl \
            /install/etc/falcoctl
 
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /install/ /

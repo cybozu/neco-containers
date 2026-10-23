@@ -1,7 +1,7 @@
 # testhttpd container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS build
 ENV GOPROXY=https://golang.flatt.tech
 COPY src /work/src
 WORKDIR /work/src
@@ -9,7 +9,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     CGO_ENABLED=0 go install -ldflags="-w -s" ./testhttpd
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04
+FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 RUN apt update && \
 	apt install -y iproute2 tcpdump iputils-ping inetutils-traceroute && \
