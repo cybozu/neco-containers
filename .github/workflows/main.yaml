@@ -129,7 +129,7 @@ jobs:
         uses: ./.github/actions/build_envoy
         with:
           push: ${{ github.event_name == 'push' && github.ref_name == 'main' }}
-          envoy_commit_sha: ef2d997c1b022cf8b849a1d3521fbf234d79ca26
+          envoy_commit_sha: d098c69f64497010931e92fb6f580ee67638fa51
           takumi-guard-bot-id: ${{ vars.TAKUMI_GUARD_BOT_ID }}
 
   scan_envoy_image:
