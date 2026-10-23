@@ -82,7 +82,6 @@
 /meows-neco-runner/               @cybozu/pdx
 /pomerium/                        @cybozu/pdx
 /teleport-node/                   @cybozu/pdx
-/trivy-operator/                  @cybozu/pdx
 .github/workflows/update.yaml     @cybozu/pdx
 
 # ---- DAP (@cybozu/landsat) ----
