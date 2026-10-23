@@ -1,8 +1,8 @@
 # syntax=docker/dockerfile:1
-ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu22.04-meows0.28.0
-ARG MEOWS_RUNNER_CHECKSUM=sha256:398b35ec5abb65f353244243bdb11318a552fd821e4fff22ee4e2f28cc7d14ac
+ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu22.04-meows0.29.0
+ARG MEOWS_RUNNER_CHECKSUM=sha256:ebe206540895c64ef999afc78e2691551fb183b6f456bd2ea197c8fe19a0e3b1
 
-FROM ghcr.io/cybozu/golang:1.26.4.2_jammy@sha256:64a799f1c3aa5d91c0c73bb629c4a712bd3ea11157e233887092186f0577648c AS builder
+FROM ghcr.io/cybozu/golang:1.26.10.2_jammy@sha256:3eef041d10b4e256fdec45b12a1ede21dab502c254f3da7e2bdcf3cb2ec7e718 AS builder
 ENV GOPROXY=https://golang.flatt.tech
 
 WORKDIR /go/src/github.com/fullstorydev/grpcurl
