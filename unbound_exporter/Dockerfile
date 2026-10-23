@@ -1,12 +1,12 @@
 # unbound_exporter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.3.1_resolute@sha256:56354d624535147898457543f53b6b42bebd671817e0ec322b610b1370c98f2c AS build
 
 #ARG UNBOUND_EXPORTER_REPO=letsencrypt/unbound_exporter
 ARG UNBOUND_EXPORTER_REPO=cybozu-go/unbound_exporter
-# v0.5.0-neco.1
-ARG UNBOUND_EXPORTER_COMMIT=65fa9cc4e4a102be370f3eebd64395691fddf6b4
+# v0.6.0-neco.1
+ARG UNBOUND_EXPORTER_COMMIT=6ec84a9db54b143ad0e89cfdd6f625dcbbd39d00
 
 WORKDIR /work
 
