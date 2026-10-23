@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
-ARG MEOWS_RUNNER_TAG=2.338.0-ubuntu22.04-meows0.29.0
-ARG MEOWS_RUNNER_CHECKSUM=sha256:ebe206540895c64ef999afc78e2691551fb183b6f456bd2ea197c8fe19a0e3b1
+ARG MEOWS_RUNNER_TAG=2.338.1-ubuntu22.04-meows0.29.1
+ARG MEOWS_RUNNER_CHECKSUM=sha256:e1b900a5b1720235b0c5c77bf9539aaa867c367e0a2858007ffd9849fa033623
 
 FROM ghcr.io/cybozu/golang:1.26.10.2_jammy@sha256:3eef041d10b4e256fdec45b12a1ede21dab502c254f3da7e2bdcf3cb2ec7e718 AS builder
 ENV GOPROXY=https://golang.flatt.tech
