@@ -2,6 +2,7 @@
 
 # Follow upstream's major/minor version, but refer latest patch version.
 # https://github.com/pomerium/pomerium/blob/5cd94927fee53f35a2bbd77797cc9524094bff78/.tool-versions
+# Exception: Use 24.22.1 for the root certificate store update (eMudhra), which is not available in 24.21.x.
 ARG NODE_VERSION=24.22.1
 
 FROM scratch AS source
