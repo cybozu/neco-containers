@@ -1,8 +1,8 @@
-FROM ghcr.io/cybozu/golang:1.26.10.1_resolute@sha256:7aa0ee1eb4549f2673e0c5389ef10c3abd2ece859d48036b1b0c283415bd274e AS build
+FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS build
 # https://github.com/cert-manager/cert-manager
 ENV CERT_MANAGER_REPOSITORY=https://github.com/cybozu-go/cert-manager
-# v1.21.2-neco.1
-ENV CERT_MANAGER_SHA=aadb4a01f7cbe0b249154b6e71a6665689554fc7
+# v1.21.3-neco.1
+ENV CERT_MANAGER_SHA=ff37b908adbbff4647cc3c822f8d380156b05a84
 RUN mkdir cert-manager \
     && cd cert-manager \
     && git init 2>/dev/null \
@@ -19,7 +19,7 @@ RUN cd cert-manager \
     && mv _bin/server/cainjector-linux-amd64 /work/cainjector \
     && mv LICENSE /work
 
-FROM gcr.io/distroless/static-debian13:latest@sha256:9e0130bec991f471279b70f1630ada11e46dad439ef2949544f96001225329fb
+FROM gcr.io/distroless/static-debian13:latest@sha256:15f8637509792e05b97d83451b0b6ccfa4abd548f997e406ac1e72c87fe1fa78
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/webhook /usr/local/bin/webhook
