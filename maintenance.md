@@ -29,7 +29,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [blackbox\_exporter](#blackbox_exporter)
 - [bmc-log-collector](#bmc-log-collector)
 - [bmc-reverse-proxy](#bmc-reverse-proxy)
-- [bpf-map-pressure-exporter](#bpf-map-pressure-exporter)
 - [bpftrace](#bpftrace)
 - [cadvisor](#cadvisor)
 - [cep-checker](#cep-checker)
@@ -312,14 +311,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 3. Update image tag in `bmc-reverse-proxy.yaml`.
 4. Update `TAG` file.
-
-## bpf-map-pressure-exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Upgrade base images in `Dockerfile`.
-3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## bpftrace
 
