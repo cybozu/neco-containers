@@ -854,7 +854,7 @@ This image is shared by all supported Cilium versions.
    - Update `NGINX_COMMIT_HASH` in `Makefile`.
       - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
       - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-5. Regenerate `pnpm-lock.yaml`. Phantom deps (e.g. `@protobuf-ts/runtime`) and dep dedupes (e.g. `sass`) are injected via `hubble-ui/.pnpmfile.cjs` at manifest-read time, so the committed lockfile pins their transitive deps and the Docker build runs with `--frozen-lockfile`. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
+5. Regenerate `pnpm-lock.yaml`. `hubble-ui/.pnpmfile.cjs` pins two lists of packages to the versions in upstream's `package-lock.json` (checked out in `src/hubble-ui`): `PHANTOM`, packages upstream imports but does not declare, and `OVERRIDE`, packages that would otherwise resolve to a version different from upstream's. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
    It also resolves with `minimumReleaseAge=4320` (3 days), so a version published less than 3 days ago is skipped in favor of an older one. If upstream requires such a version, wait, or pass `PNPM_MINIMUM_RELEASE_AGE=0` once and note it in the PR.
 
    ```sh
@@ -862,12 +862,24 @@ This image is shared by all supported Cilium versions.
    make import-lockfile
    ```
 
-   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, or with `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add `<pkg>` to `PINNED` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`.
-   Only package names are listed there; the versions are read from the upstream `package-lock.json` of the checked-out release, so they always match upstream's own build. When upstream moves one of them, `make verify-lockfile` (also run in CI) fails with `ERR_PNPM_OUTDATED_LOCKFILE` until the lockfile is regenerated with `make import-lockfile`. If `make import-lockfile` fails with `<pkg> not found in upstream package-lock.json`, upstream no longer resolves that package at the top level (declared it properly or dropped it); remove it from `PINNED`.
+   Re-run it whenever `HUBBLE_UI_COMMIT_HASH` changes. With a stale lockfile, `make verify-lockfile` (also run in CI) and the Docker build fail with `ERR_PNPM_OUTDATED_LOCKFILE`.
+   If it fails with `<pkg> is now declared in upstream package.json`, remove `<pkg>` from `PHANTOM`; with `<pkg> not found in upstream package-lock.json`, remove `<pkg>` from whichever list has it.
+
+   If `make build-frontend` fails at `pnpm run build`, edit `hubble-ui/.pnpmfile.cjs` and run `make import-lockfile` again:
+   - `Module not found: Can't resolve '<pkg>'`: add `<pkg>` to `PHANTOM`.
+   - `instanceof` or type errors from `<pkg>` whose version in `pnpm-lock.yaml` differs from `src/hubble-ui/package-lock.json`: add `<pkg>` to `OVERRIDE`.
 
    Review the diff:
    - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
-   - `grep -c '"hasInstallScript": true' src/hubble-ui/package-lock.json` should return `4` (root + `core-js` + `@parcel/watcher` + `fsevents`). `--ignore-scripts` blocks these at install time, but a deviation signals new upstream exec surface worth auditing before bumping `TAG`.
+   - Packages with install scripts: compare with the previous release and review any new or bumped one before merging. `--ignore-scripts` keeps dependency scripts from running during the build; upstream's own `postinstall` (`patch-package` + `scripts/post-install.sh`) is run on purpose, so review changes to those as well.
+
+     ```sh
+     PREV=  # HUBBLE_UI_COMMIT_HASH before this update
+     cd src/hubble-ui
+     git fetch --depth 1 origin ${PREV}
+     diff <(git show ${PREV}:package-lock.json | jq -r '.packages | to_entries[] | select(.key != "" and .value.hasInstallScript) | "\(.key)@\(.value.version)"') \
+          <(jq -r '.packages | to_entries[] | select(.key != "" and .value.hasInstallScript) | "\(.key)@\(.value.version)"' package-lock.json)
+     ```
 6. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
 
    ```sh

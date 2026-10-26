@@ -77,14 +77,11 @@ check-takumi-guard: $(PNPM_BIN)
 		exit 1; \
 	fi
 
-# .pnpmfile.cjs injects phantom devDeps and dedupes sass etc. at manifest-read
-# time, so the lockfile pins every transitive dep and Dockerfile can run
-# with --frozen-lockfile. The injected versions are read from upstream's
-# package-lock.json in src/hubble-ui, so they follow HUBBLE_UI_COMMIT_HASH.
+# .pnpmfile.cjs pins packages to src/hubble-ui/package-lock.json (see its
+# header), so the lockfile follows HUBBLE_UI_COMMIT_HASH and Dockerfile can
+# run with --frozen-lockfile.
 #
-# `clean` is a hard dep: pnpm/pnpm#5670 — `--lockfile-only` with readPackage
-# rewrites the local package.json on disk, so reusing src/hubble-ui across
-# runs would let the mutation accumulate. Always start from a fresh checkout.
+# `clean` is a hard dep so that every run resolves from a fresh checkout.
 #
 # A full install (not --lockfile-only) routes every tarball through Takumi
 # Guard so the new dep set is screened before the lockfile is committed.

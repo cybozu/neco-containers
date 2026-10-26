@@ -41,9 +41,8 @@ RUN curl -fsSL -O https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}
     && rm node-v${NODE_VERSION}-linux-x64.tar.xz
 ENV PATH="/opt/node/bin:${PATH}"
 
-# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
-# time. --ignore-scripts blocks dep lifecycle scripts; root postinstall
-# (patch-package + ./scripts/post-install.sh) is invoked explicitly.
+# --ignore-scripts skips all install-time scripts, including upstream's own
+# postinstall, so that one is run explicitly.
 RUN pnpm install --frozen-lockfile --ignore-scripts \
     && pnpm run postinstall
 
