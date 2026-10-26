@@ -77,9 +77,10 @@ check-takumi-guard: $(PNPM_BIN)
 		exit 1; \
 	fi
 
-# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
+# .pnpmfile.cjs injects phantom devDeps and dedupes sass etc. at manifest-read
 # time, so the lockfile pins every transitive dep and Dockerfile can run
-# with --frozen-lockfile.
+# with --frozen-lockfile. The injected versions are read from upstream's
+# package-lock.json in src/hubble-ui, so they follow HUBBLE_UI_COMMIT_HASH.
 #
 # `clean` is a hard dep: pnpm/pnpm#5670 — `--lockfile-only` with readPackage
 # rewrites the local package.json on disk, so reusing src/hubble-ui across
@@ -118,12 +119,3 @@ verify-lockfile: clean $(PNPM_BIN) checkout
 
 	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
 	cd src/hubble-ui && $(PNPM_BIN) install --frozen-lockfile --lockfile-only --ignore-scripts
-
-# Report peer dependency issues in the committed lockfile. Upstream's own
-# dependency tree has unmet peers (e.g. babel 8 vs. 7.x syntax plugins), so
-# this is informational: look for issues caused by PHANTOM_DEV_DEPS/OVERRIDE
-# in .pnpmfile.cjs and fix them there.
-.PHONY: check-peers
-check-peers: $(PNPM_BIN) checkout
-	cp ./pnpm-lock.yaml ./.pnpmfile.cjs src/hubble-ui/
-	cd src/hubble-ui && $(PNPM_BIN) peers check --lockfile-only || true

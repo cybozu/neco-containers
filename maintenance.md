@@ -862,8 +862,8 @@ This image is shared by all supported Cilium versions.
    make import-lockfile
    ```
 
-   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, add `<pkg>: '<version>'` to `PHANTOM_DEV_DEPS` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`. For `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add an entry to `DEDUPE` in `hubble-ui/.pnpmfile.cjs`.
-   Keep the versions in `PHANTOM_DEV_DEPS` and `OVERRIDE` in sync with the versions resolved in the upstream `package-lock.json` of the release, and run `make check-peers` to find peer dependency issues caused by them (issues inherited from upstream's own dependency tree can be ignored).
+   If `pnpm run build` fails with `Module not found: Can't resolve '<pkg>'`, or with `instanceof` type-mismatch errors (e.g. `is not a sass.Value`), add `<pkg>` to `PINNED` in `hubble-ui/.pnpmfile.cjs`, then re-run `make import-lockfile`.
+   Only package names are listed there; the versions are read from the upstream `package-lock.json` of the checked-out release, so they always match upstream's own build. When upstream moves one of them, `make verify-lockfile` (also run in CI) fails with `ERR_PNPM_OUTDATED_LOCKFILE` until the lockfile is regenerated with `make import-lockfile`. If `make import-lockfile` fails with `<pkg> not found in upstream package-lock.json`, upstream no longer resolves that package at the top level (declared it properly or dropped it); remove it from `PINNED`.
 
    Review the diff:
    - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
