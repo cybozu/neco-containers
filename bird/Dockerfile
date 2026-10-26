@@ -1,10 +1,10 @@
 # BIRD container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20260710@sha256:e779b8941433835b11adf9140f12bb5486168486592063339bacf4cc8ab4ef65 AS build
-ENV BIRD_HASH=5b275f0f91c063bd0369a2996982f8f578736eb9b4b5c0fb62a275ec663f74df
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261021@sha256:e8cea4ac6112e219658cda415a875c72d5ae9ed8a6c7df4a070e7777a558bb80 AS build
+ENV BIRD_HASH=ee8900c98de7b4da0f2b5480eb66adc3aca6961baeba4ac949481ccac3ed365f
 
-ARG BIRD_VERSION=3.2.2
+ARG BIRD_VERSION=3.4.0
 WORKDIR /work
 
 RUN apt-get update \
@@ -34,7 +34,7 @@ COPY bird-copyright /usr/local/bird/copyright
 
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20260710@sha256:3f0d95a6fd61317a3eb6ea9e47391aacd7f4129f12a7092e20729e16157ab83b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
@@ -44,7 +44,8 @@ RUN apt-get update \
 
 COPY --from=build /usr/local/bird /usr/local/bird/
 COPY --from=build /etc/bird /etc/bird/
-COPY --from=build /etc/iproute2 /etc/iproute2/
+# iproute2 >= 6.x (Ubuntu 26.04) installs its config files under /usr/share/iproute2
+COPY --from=build /usr/share/iproute2 /etc/iproute2/
 
 ENV PATH=/usr/local/bird/sbin:"$PATH"
 
