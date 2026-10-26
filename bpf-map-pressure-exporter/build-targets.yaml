@@ -1,4 +1,0 @@
-- container-image: "bpf-map-pressure-exporter"
-  make-targets: "lint check-generate test"
-  scan:
-    enabled: false
