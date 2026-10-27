@@ -1,5 +1,5 @@
 # ==================== bpftrace-builder image ====================
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261009@sha256:5e3fa6ff0bf54f7d7de98a91022e41ae590ccf79c0912d95fb24a695dd84c890 AS builder
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261021@sha256:e8cea4ac6112e219658cda415a875c72d5ae9ed8a6c7df4a070e7777a558bb80 AS builder
 
 # https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu
 # Added: libcurl4-openssl-dev and libedit-dev
@@ -57,9 +57,9 @@ RUN apt-get install -y --no-install-recommends \
         flex \
         git \
         libedit-dev \
-        libllvm18 \
-        llvm-18-dev \
-        libclang-18-dev \
+        libllvm21 \
+        llvm-21-dev \
+        libclang-21-dev \
         python3 \
         zlib1g-dev \
         libelf-dev \
@@ -67,7 +67,7 @@ RUN apt-get install -y --no-install-recommends \
         python3-setuptools \
         liblzma-dev \
         libdebuginfod-dev \
-        libpolly-18-dev
+        libpolly-21-dev
 
 # Missing -DREVISION causes an error, although it is not documented
 # ref. https://github.com/iovisor/bcc/blob/master/cmake/version.cmake
@@ -98,7 +98,7 @@ RUN cp src/stdlib/include/linux/bpf.h /usr/include/linux/bpf.h && \
 
 # ==================== bpftrace image ====================
 # We cannot use ghcr.io/cybozu/ubuntu-debug, because it has libbpf1 installed
-FROM ghcr.io/cybozu/ubuntu:24.04.20261009@sha256:c6bbb53d0a384ef2a88218c33f438ca000d8baecab440451dfef031069c542b5
+FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 ENV PATH=/opt/bin:"$PATH"
