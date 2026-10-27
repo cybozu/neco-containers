@@ -2,9 +2,9 @@ package registry
 
 import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/cert"
-	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/ciliumid"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/mock"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/networkfence"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/hybrid/ciliumid"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/bpf"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/cpupinning"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/kubeletconfig"
@@ -18,7 +18,6 @@ func init() {
 	collectors = []exporter.Collector{
 		// scope: cluster
 		cert.NewCollector(),
-		ciliumid.NewCollector(),
 		mock.NewCollector(),
 		networkfence.NewCollector(),
 
@@ -27,6 +26,9 @@ func init() {
 		cpupinning.NewCollector(),
 		kubeletconfig.NewCollector(),
 		nicirq.NewCollector(),
+
+		// scope: hybrid
+		ciliumid.NewCollector(),
 	}
 }
 

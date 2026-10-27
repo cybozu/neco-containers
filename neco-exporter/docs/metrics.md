@@ -8,7 +8,7 @@ Each collector's scope should match `--scope` to use.
 | ------------------------- | --------- | ----------------------------------- |
 | [`bpf`](#bpf)                         | `node`    | Measure BPF Program performance     |
 | [`cert`](#cert)                       | `cluster` | Monitor TLS certificate expiration  |
-| [`ciliumid`](#ciliumid)               | `cluster` | Count and describe CiliumIdentity resources |
+| [`ciliumid`](#ciliumid)               | (both)    | Count and describe Cilium identities |
 | [`cpupinning`](#cpupinning)           | `node`    | Report CPUs exclusively allocated to containers |
 | [`kubelet`](#kubelet)                 | `node`    | Report kubelet's systemReserved cpu/memory |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
@@ -52,7 +52,11 @@ It appears only for Kubernetes Secrets not maintained by cert-manager.
 
 ## ciliumid
 
+The `cluster` scope reports `CiliumIdentity` resources, and the `node` scope reports identities of Pods on the node.
+
 ### `ciliumid_identity_count`
+
+Scope: `cluster`
 
 Number of `CiliumIdentity` resources for the namespace.
 
@@ -61,6 +65,8 @@ Number of `CiliumIdentity` resources for the namespace.
 | `namespace` | Namespace of Identity |
 
 ### `ciliumid_identity_info`
+
+Scope: `cluster`
 
 Info metric with a constant value of `1` for each `CiliumIdentity` resource.
 It exposes the `security-labels` of the identity, i.e. the labels Cilium used to allocate the identity.
@@ -89,6 +95,21 @@ For example, `k8s:identity.neco.cybozu.io/app` becomes `label_k8s_identity_neco_
 `k8s:io.kubernetes.pod.namespace` is not converted because it is exposed as `namespace`.
 If multiple keys are converted to the same name, the value of the label becomes `<CONFLICTED>`.
 This cannot be an actual Kubernetes label value. The original values are still available in `security_labels`.
+
+### `ciliumid_identity_pods`
+
+Scope: `node`
+
+Number of Pods on the node having the identity, as reported by the local cilium-agent.
+When no Pod on the node has the identity, the series disappears instead of becoming `0`,
+so `unless ... offset <duration>` can detect identities newly appearing on the node.
+
+Endpoints that are not Pods (e.g. the host) and Pods with a reserved identity (e.g. `reserved:init`) are not counted.
+
+| Label             | Description                                                                     |
+| ----------------- | ------------------------------------------------------------------------------- |
+| `node`            | Name of the node                                                                |
+| `security_labels` | Security labels of the identity, identical to `security_labels` of `ciliumid_identity_info` |
 
 ## cpupinning
 

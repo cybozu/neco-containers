@@ -10,6 +10,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/registry"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/option"
 )
@@ -53,7 +54,7 @@ func runMain() error {
 		}
 
 		c := candidates[index]
-		if option.Scope != c.Scope() {
+		if c.Scope() != option.Scope && c.Scope() != constants.ScopeHybrid {
 			return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
 		}
 		if err := c.Setup(ctx); err != nil {
