@@ -1,5 +1,5 @@
-E2ETEST_K8S_VERSION := 1.35.1
-E2ETEST_K8S_IMAGE   := kindest/node:v1.35.1@sha256:05d7bcdefbda08b4e038f644c4df690cdac3fba8b06f8289f30e10026720a1ab
+E2ETEST_K8S_VERSION := 1.35.8
+E2ETEST_K8S_IMAGE   := kindest/node:v1.35.8@sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0
 CILIUM_VERSION := $(shell go list -m -f '{{.Version}}' github.com/cilium/cilium | cut -c2-)
 
 PROJECT_DIR := $(CURDIR)/../
