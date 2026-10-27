@@ -1,7 +1,7 @@
 HUBBLE_UI_REPO ?= https://github.com/cilium/hubble-ui.git
-HUBBLE_UI_COMMIT_HASH ?= 47edb389de8870defe1bb511e931dbc164866bac
+HUBBLE_UI_COMMIT_HASH ?= d6eb0dd9ff8e684a6a6bd6da7b6cb304497a2e26
 NGINX_REPO ?= https://github.com/nginx/docker-nginx-unprivileged.git
-NGINX_COMMIT_HASH ?= c743d5145c69250f030934280b01b638d9d765ed
+NGINX_COMMIT_HASH ?= ecb807035c7963a87b2a88d339460b1e8eeaec2f
 PNPM_DIR ?= $(CURDIR)/.pnpm-bin
 PNPM_BIN ?= $(CURDIR)/.pnpm-bin/pnpm
 TAKUMI_GUARD_REGISTRY ?= https://npm.flatt.tech/
@@ -77,13 +77,11 @@ check-takumi-guard: $(PNPM_BIN)
 		exit 1; \
 	fi
 
-# .pnpmfile.cjs injects phantom devDeps and dedupes sass at manifest-read
-# time, so the lockfile pins every transitive dep and Dockerfile can run
-# with --frozen-lockfile.
+# .pnpmfile.cjs pins packages to src/hubble-ui/package-lock.json (see its
+# header), so the lockfile follows HUBBLE_UI_COMMIT_HASH and Dockerfile can
+# run with --frozen-lockfile.
 #
-# `clean` is a hard dep: pnpm/pnpm#5670 — `--lockfile-only` with readPackage
-# rewrites the local package.json on disk, so reusing src/hubble-ui across
-# runs would let the mutation accumulate. Always start from a fresh checkout.
+# `clean` is a hard dep so that every run resolves from a fresh checkout.
 #
 # A full install (not --lockfile-only) routes every tarball through Takumi
 # Guard so the new dep set is screened before the lockfile is committed.
