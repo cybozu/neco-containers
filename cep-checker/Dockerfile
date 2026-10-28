@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.26.5.2_noble@sha256:419e350acc85bb2603c45e15e12c3238a1ec765cb58f5eb14ef7adf8bea9748f AS build
+FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS build
 COPY . /work/src
 WORKDIR /work/src
 RUN CGO_ENABLED=0 go build -ldflags="-w -s" -o cep-checker
