@@ -2,9 +2,9 @@ BCC_REPO ?= https://github.com/iovisor/bcc.git
 BCC_VERSION ?= 0.37.0  # used as -DREVISION in cmake to build bcc
 BCC_SHA ?= 306a2819f73d9525430693e6399d58caf6e12b3b  # v0.37.0
 LIBBPF_REPO ?= https://github.com/libbpf/libbpf.git
-LIBBPF_SHA ?= f5dcbae736e5d7f83a35718e01be1a8e3010fa39  # v1.7.0
+LIBBPF_SHA ?= 85c0d575a447651bbeb8e2376eacd64c30dce9a6  # v1.8.0
 BPFTRACE_REPO ?= https://github.com/bpftrace/bpftrace.git
-BPFTRACE_SHA ?= 1bac8a8daad6e0aa579980e877d0c9d5fc296593  # v0.26.1
+BPFTRACE_SHA ?= 24e9fe60faffcbed50b44428067fcd9b03770584  # v0.27.1
 
 BUILDER_IMAGE_TAG ?= bpftrace-builder:dev
 IMAGE_TAG ?= ghcr.io/cybozu/bpftrace:$(shell cat TAG)
