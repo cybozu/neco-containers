@@ -1,26 +1,26 @@
 # syntax=docker/dockerfile:1
 
-ARG MEOWS_RUNNER_TAG=2.338.1-ubuntu24.04-meows0.29.1
-ARG MEOWS_RUNNER_CHECKSUM=sha256:f55776fd3a8c2fb65214da44de25e6cd9d59a351a50c1315e51c268fcc1a9adc
+ARG MEOWS_RUNNER_TAG=2.338.2-ubuntu24.04-meows0.29.1
+ARG MEOWS_RUNNER_CHECKSUM=sha256:ce96b2f0ca6007ca473711f8e53ee1e6a2a24d4877b9fb3069176e7e6bcf024b
 
 FROM scratch AS go-download
-ADD --checksum=sha256:1153d3d50e0ac764b447adfe05c2bcf08e889d42a02e0fe0259bd47f6733ad7f \
-    https://dl.google.com/go/go1.26.4.linux-amd64.tar.gz /go.tar.gz
+ADD --checksum=sha256:ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab3b20c5 \
+    https://dl.google.com/go/go1.26.10.linux-amd64.tar.gz /go.tar.gz
 
 FROM scratch AS placemat-download
 ADD --checksum=sha256:9f5aa812d00d4fa47dad391e99a85793d6e3b7f7b7b375743d0a56cb8e275186 \
     https://github.com/cybozu-go/placemat/releases/download/v2.5.1/placemat2_2.5.1_amd64.deb /placemat2.deb
 
 FROM scratch AS aqua-installer-download
-ADD --checksum=sha256:451028d56959cc738564885b1dbebc2691ea038ffde04e2472e4d486a3591146 \
-    https://raw.githubusercontent.com/aquaproj/aqua-installer/v4.0.5/aqua-installer /aqua-installer
+ADD --checksum=sha256:c0acde4802a1edd8b8201fd4cc1f0e52700cd4feb875f9c9793381b5b0ca2065 \
+    https://raw.githubusercontent.com/aquaproj/aqua-installer/v4.1.1/aqua-installer /aqua-installer
 
 FROM ghcr.io/cybozu-go/meows-runner:${MEOWS_RUNNER_TAG}@${MEOWS_RUNNER_CHECKSUM}
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 USER root
 
-ARG AQUA_VERSION=v2.60.1
+ARG AQUA_VERSION=v2.65.2
 
 ENV HOME=/home/actions
 ENV GOPATH=${HOME}/go
