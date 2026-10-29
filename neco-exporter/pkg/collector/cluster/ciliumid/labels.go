@@ -1,7 +1,6 @@
 package ciliumid
 
 import (
-	"slices"
 	"strings"
 )
 
@@ -40,20 +39,4 @@ func securityLabelsToPromLabels(securityLabels map[string]string) map[string]str
 		labels[name] = v
 	}
 	return labels
-}
-
-// formatSecurityLabels formats security labels in the same way as Hubble metrics with
-// the "identity" context, i.e. sorted "<source>:<key>=<value>" (or "<source>:<key>" if the
-// value is empty) joined by commas.
-func formatSecurityLabels(securityLabels map[string]string) string {
-	entries := make([]string, 0, len(securityLabels))
-	for k, v := range securityLabels {
-		if v == "" {
-			entries = append(entries, k)
-		} else {
-			entries = append(entries, k+"="+v)
-		}
-	}
-	slices.Sort(entries)
-	return strings.Join(entries, ",")
 }

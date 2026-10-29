@@ -140,6 +140,39 @@ func testCiliumIDCollector() {
 			g.Expect(found).To(BeTrue(), "no Hubble flow with %s and %s", source, destination)
 		}).Should(Succeed())
 	})
+
+	It("should report the number of Pods per identity on the node", func() {
+		// selector should match testdata/ciliumid-deployment.yaml
+		const selector = "identity.neco.cybozu.io/e2e-node=pods"
+		DeferCleanup(func() {
+			_, _, _ = kubectl(nil, "delete", "-f", "testdata/ciliumid-deployment.yaml", "--ignore-not-found", "--wait=false")
+		})
+
+		By("creating 2 Pods sharing an identity")
+		Eventually(func(g Gomega) {
+			kubectlSafe(g, nil, "apply", "-f", "testdata/ciliumid-deployment.yaml")
+		}).Should(Succeed())
+
+		By("checking the Pods are counted with the same security_labels as identity_info")
+		var securityLabels string
+		Eventually(func(g Gomega) {
+			id := getEndpointIdentity(g, "default", selector)
+			securityLabels = findSecurityLabels(g, string(scrapeClusterLeader(g)), id)
+
+			expected := fmt.Sprintf(`neco_node_ciliumid_identity_pods{node="%s",security_labels="%s"} 2`, getNodeName(g), securityLabels)
+			g.Expect(string(scrapeNode(g))).To(ContainSubstring(expected))
+		}).Should(Succeed())
+
+		By("deleting the Pods")
+		Eventually(func(g Gomega) {
+			kubectlSafe(g, nil, "delete", "-f", "testdata/ciliumid-deployment.yaml", "--ignore-not-found")
+		}).Should(Succeed())
+
+		By("checking the metric disappears instead of becoming 0")
+		Eventually(func(g Gomega) {
+			g.Expect(string(scrapeNode(g))).NotTo(ContainSubstring(fmt.Sprintf(`security_labels="%s"`, securityLabels)))
+		}).Should(Succeed())
+	})
 }
 
 // expectDynamicLabel waits for a CiliumIdentity having the security label "k8s:<labelKey>=<value>",
