@@ -78,6 +78,7 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
 - [pomerium](#pomerium)
+- [pomerium-ingress-controller](#pomerium-ingress-controller)
 - [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [pushgateway](#pushgateway)
@@ -1100,6 +1101,28 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 
 3. Update `Dockerfile`.
    - Pomerium version
+   - Golang version
+   - Node.js version
+4. Update `TAG` file.
+
+## pomerium-ingress-controller
+
+![Regular Update](./regular_update.svg)
+
+Update this together with [pomerium](#pomerium) and use the same version.
+
+1. Check the release page.
+   - <https://github.com/pomerium/ingress-controller/releases>
+2. Check the diff of the Dockerfile and the Makefile.
+
+   ```bash
+   cd /path/to/ingress-controller
+   git switch --detach v${NewVersion}
+   git diff v${CurrentVersion} Dockerfile Makefile .tool-versions
+   ```
+
+3. Update `Dockerfile`.
+   - `INGRESS_CONTROLLER_VERSION`, `INGRESS_CONTROLLER_CHECKSUM` and `INGRESS_CONTROLLER_COMMIT`
    - Golang version
    - Node.js version
 4. Update `TAG` file.

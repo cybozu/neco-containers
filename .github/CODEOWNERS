@@ -80,6 +80,7 @@
 /meows-dctest-runner/             @cybozu/pdx
 /meows-neco-runner/               @cybozu/pdx
 /pomerium/                        @cybozu/pdx
+/pomerium-ingress-controller/     @cybozu/pdx
 /teleport-node/                   @cybozu/pdx
 .github/workflows/update.yaml     @cybozu/pdx
 
