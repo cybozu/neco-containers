@@ -1,0 +1,57 @@
+diff --git a/modules/ingester/flush.go b/modules/ingester/flush.go
+index 6db7fc8fc..8315332d4 100644
+--- a/modules/ingester/flush.go
++++ b/modules/ingester/flush.go
+@@ -178,6 +178,12 @@ func (i *Ingester) cutAllInstancesToWal() {
+ }
+ 
+ func (i *Ingester) cutOneInstanceToWal(instance *instance, immediate bool) {
++	startTime := time.Now()
++	defer func() {
++		duration := time.Since(startTime).Seconds()
++		instance.cutToWalDuration.WithLabelValues(strconv.FormatBool(immediate)).Observe(duration)
++	}()
++
+ 	// cut traces internally
+ 	err := instance.CutCompleteTraces(i.cfg.MaxTraceIdle, i.cfg.MaxTraceLive, immediate)
+ 	if err != nil {
+diff --git a/modules/ingester/instance.go b/modules/ingester/instance.go
+index c324b88e6..a9478be29 100644
+--- a/modules/ingester/instance.go
++++ b/modules/ingester/instance.go
+@@ -74,6 +74,19 @@ var (
+ 		Name:      "ingester_replay_errors_total",
+ 		Help:      "The total number of replay errors received per tenant.",
+ 	}, []string{"tenant"})
++	metricCutToWalDuration = promauto.NewHistogramVec(prometheus.HistogramOpts{
++		Namespace: "tempo",
++		Name:      "ingester_cut_traces_to_wal_duration_seconds",
++		Help:      "Time spent cutting traces to wal",
++		// These buckets are configured to keep the duration shorter than 30s (flush_check_period).
++		Buckets: []float64{
++			1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0, 4.5,
++			5.0, 6.0, 7.0, 8.0, 9.0,
++			10.0, 11.0, 12.0, 13.0, 14.0, 15.0,
++			16.0, 18.0, 20.0, 22.0, 24.0, 26.0, 28.0,
++			30.0, 35.0, 40.0, 45.0, 50.0, 55.0, 60.0,
++		},
++	}, []string{"tenant", "immediate"})
+ )
+ 
+ type instance struct {
+@@ -94,6 +107,7 @@ type instance struct {
+ 	instanceID         string
+ 	tracesCreatedTotal prometheus.Counter
+ 	bytesReceivedTotal *prometheus.CounterVec
++	cutToWalDuration   prometheus.ObserverVec
+ 	limiter            Limiter
+ 	writer             tempodb.Writer
+ 
+@@ -117,6 +131,7 @@ func newInstance(instanceID string, limiter Limiter, overrides ingesterOverrides
+ 		instanceID:         instanceID,
+ 		tracesCreatedTotal: metricTracesCreatedTotal.WithLabelValues(instanceID),
+ 		bytesReceivedTotal: metricBytesReceivedTotal,
++		cutToWalDuration:   metricCutToWalDuration.MustCurryWith(prometheus.Labels{"tenant": instanceID}),
+ 		limiter:            limiter,
+ 		writer:             writer,
+ 
