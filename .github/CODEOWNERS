@@ -99,6 +99,7 @@
 /pushgateway/                     @cybozu/landsat
 /pyroscope/                       @cybozu/landsat
 /tempo/                           @cybozu/landsat
+/tempo2/                          @cybozu/landsat
 /victoriametrics/                 @cybozu/landsat
 /victoriametrics-operator/        @cybozu/landsat
 
