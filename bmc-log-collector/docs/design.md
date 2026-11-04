@@ -115,8 +115,10 @@ With the current number of BMCs, load is not a problem.
 
 ### Decision and Reason
 Method 2.
-The collected logs are used only for reference, so some duplicates or losses are acceptable.
-If the startup lookback is long enough, no logs are lost by a normal rolling update.
+The collected logs are used only for reference, so losses while bmc-log-collector is down for a long time are acceptable.
+The startup lookback (default 24h) is long enough that no logs are lost by a normal rolling update.
+Duplicates are handled outside bmc-log-collector: the log collector uses `Created` of each entry as the timestamp,
+and the log viewer deduplicates the entries.
 
 
 ## Risks

@@ -92,7 +92,7 @@ var (
 	flgUserFile             *string        = pflag.String("bmc-user-json", "/users/neco/bmc-user.json", "User and password of BMC")
 	flgUserId               *string        = pflag.String("user-id", "support", "User ID of bmc-user-json JSON file")
 	flgMachineList          *string        = pflag.String("machine-list-json", "/config/machineslist.json", "Target machines list of log scraping")
-	flgStartupLookback      *time.Duration = pflag.Duration("startup-lookback", time.Hour, "On start, output only SEL entries created within this duration before the first request to each BMC")
+	flgStartupLookback      *time.Duration = pflag.Duration("startup-lookback", 24*time.Hour, "On start, output only SEL entries created within this duration before the first request to each BMC")
 	flgScrapingIntervalTime *int           = pflag.Int("scraping-interval-time", 300, "Timer(sec) of scraping interval time")
 )
 

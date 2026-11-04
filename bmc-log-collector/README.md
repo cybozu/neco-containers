@@ -48,7 +48,7 @@ Usage of ./bmc-log-collector:
       --bmc-user-json string          User and password of BMC (default "/users/neco/bmc-user.json")
       --machine-list-json string      Target machines list of log scraping (default "/config/machineslist.json")
       --scraping-interval-time int    Timer(sec) of scraping interval time (default 300)
-      --startup-lookback duration     On start, output only SEL entries created within this duration before the first request to each BMC (default 1h0m0s)
+      --startup-lookback duration     On start, output only SEL entries created within this duration before the first request to each BMC (default 24h0m0s)
       --user-id string                User ID of bmc-user-json JSON file (default "support")
 ```
 
@@ -63,4 +63,8 @@ As a result, around a restart:
 - Entries created within `--startup-lookback` before the restart may be output twice.
 - Entries are lost if bmc-log-collector stays down for longer than `--startup-lookback`, or if the clock of the BMC is wrong.
 
-Set `--startup-lookback` long enough to cover the downtime of a rolling update plus the scraping interval.
+Set `--startup-lookback` long enough to cover the downtime of a rolling update plus the scraping interval,
+so that no entries are lost normally. Losses are acceptable only when bmc-log-collector stays down for a long time.
+
+To handle the duplicates, use the `Created` field of each entry as the timestamp of the log in the log collector,
+and deduplicate the entries with the same timestamp and content in the log viewer.
