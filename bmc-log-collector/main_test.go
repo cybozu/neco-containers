@@ -18,7 +18,6 @@ import (
 
 var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	testOutputDir := "testdata/output_main_test"
-	testPointerDir := "testdata/pointers_main_test"
 	serial1 := "683FPQ3" // basic test case1
 	serial2 := "HN3CLP3" // basic test case2
 	serial3 := "J7N6MW3" // the log reset test case
@@ -28,19 +27,12 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 	BeforeAll(func(ctx SpecContext) {
 		GinkgoWriter.Println("start BMC stub servers")
 		os.Remove(path.Join(testOutputDir, serial1))
-		os.Remove(path.Join(testPointerDir, serial1))
 		os.Remove(path.Join(testOutputDir, serial2))
-		os.Remove(path.Join(testPointerDir, serial2))
 		os.Remove(path.Join(testOutputDir, serial3))
-		os.Remove(path.Join(testPointerDir, serial3))
 		os.Remove(path.Join(testOutputDir, serial4))
-		os.Remove(path.Join(testPointerDir, serial4))
 		os.Remove(path.Join(testOutputDir, serial5))
-		os.Remove(path.Join(testPointerDir, serial5))
 
-		err := os.MkdirAll(testPointerDir, 0o750)
-		Expect(err).ToNot(HaveOccurred())
-		err = os.MkdirAll(testOutputDir, 0o750)
+		err := os.MkdirAll(testOutputDir, 0o750)
 		Expect(err).ToNot(HaveOccurred())
 
 		bm1 := bmcMock{
@@ -147,7 +139,8 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			lcConfig := selCollector{
 				machinesListDir: "testdata/configmap/serverlist2.json",
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-				ptrStore:        newFilePointerStore(testPointerDir),
+				ptrStore:        newPointerStore(),
+				startupLookback: lookbackForAllEntries,
 				username:        "support",
 				intervalTime:    intervalTime,
 			}

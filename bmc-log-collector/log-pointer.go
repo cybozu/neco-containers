@@ -1,12 +1,7 @@
 package main
 
 import (
-	"encoding/json"
-	"io"
-	"log/slog"
-	"os"
-	"path"
-	"path/filepath"
+	"sync"
 )
 
 type LastPointer struct {
@@ -14,112 +9,48 @@ type LastPointer struct {
 	LastError          string // for TCP Error
 	LastHttpStatusCode int    // for HTTP Error
 	FirstCreateTime    int64
+	// SelRead is true after SEL of the machine has been read once by this process.
+	SelRead bool
 }
 
-func checkAndCreatePointerFile(filePath string) error {
-	var lptr LastPointer
-
-	// If the pointer file does not exist, create a new one.
-	_, err := os.Stat(filePath)
-	if !os.IsNotExist(err) {
-		return nil
-	}
-
-	byteJSON, err := json.Marshal(lptr)
-	if err != nil {
-		return err
-	}
-
-	fd, err := os.Create(filePath)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	_, err = fd.WriteString(string(byteJSON))
-	if err != nil {
-		return err
-	}
-	return err
+// pointerStore keeps the pointers of each machine in memory.
+// The pointers are not persisted. After restart, the collector outputs only the entries created
+// within the startup lookback, so some entries may be output twice or lost.
+type pointerStore struct {
+	mu       sync.Mutex
+	pointers map[string]LastPointer
 }
 
-func updateLastPointer(lptr LastPointer, filePath string) error {
-	byteJSON, err := json.Marshal(lptr)
-	if err != nil {
-		return err
-	}
-
-	fileName := filepath.Base(filePath)
-	dirName := filepath.Dir(filePath)
-	tmpPath := dirName + "/_" + fileName
-	fd, err := os.Create(tmpPath)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-
-	_, err = fd.WriteString(string(byteJSON))
-	if err != nil {
-		return err
-	}
-
-	err = fd.Sync()
-	if err != nil {
-		return err
-	}
-
-	err = os.Rename(tmpPath, filePath)
-	if err != nil {
-		return err
-	}
-	return nil
+func newPointerStore() *pointerStore {
+	return &pointerStore{pointers: make(map[string]LastPointer)}
 }
 
-func readLastPointer(filePath string) (LastPointer, error) {
-	var lptr LastPointer
-	fd, err := os.Open(filePath)
-	if err != nil {
-		return lptr, err
-	}
-	defer fd.Close()
-	byteJSON, err := io.ReadAll(fd)
-	if err != nil {
-		return lptr, err
-	}
-	err = json.Unmarshal(byteJSON, &lptr)
-	if err != nil {
-		return lptr, err
-	}
-	return lptr, err
+// get returns the pointer of the serial, or the zero value if there is none.
+func (s *pointerStore) get(serial string) LastPointer {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.pointers[serial]
 }
 
-// Delete pointer files when disappear at machines list which from ConfigMap
-func deletePtrFileDisappearedSerial(ptrDir string, machinesList []Machine) error {
+func (s *pointerStore) put(serial string, ptr LastPointer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.pointers[serial] = ptr
+}
+
+// deleteDisappeared removes the pointers and metrics of the machines that disappeared from machinesList.
+func (s *pointerStore) deleteDisappeared(machinesList []Machine) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	machineExist := make(map[string]bool, len(machinesList))
 	for _, m := range machinesList {
 		machineExist[m.Serial] = true
 	}
-
-	files, err := os.ReadDir(ptrDir)
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		// Remove the pointer file and metrics
-		if !machineExist[file.Name()] {
-			// Remove the pointer file
-			filePath := path.Join(ptrDir, file.Name())
-			err = os.Remove(filePath)
-			if err != nil {
-				slog.Error("failed to remove the pointer file", "err", err, "file", filePath)
-			}
-			// Clear metrics counter
-			deleteMetrics(file.Name())
+	for serial := range s.pointers {
+		if !machineExist[serial] {
+			delete(s.pointers, serial)
+			deleteMetrics(serial)
 		}
 	}
-	return nil
 }

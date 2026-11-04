@@ -46,7 +46,8 @@ type RedfishJsonSchema struct {
 type selCollector struct {
 	machinesListDir string        // Directory of the machines list
 	rfSelPath       string        // SEL path of Redfish API address
-	ptrStore        pointerStore  // Pointer store
+	ptrStore        *pointerStore // Pointers of each machine
+	startupLookback time.Duration // On the first read of a machine, output only entries created within this duration
 	username        string        // iDRAC username
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
@@ -54,11 +55,8 @@ type selCollector struct {
 }
 
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	lastPtr, err := c.ptrStore.get(m.Serial)
-	if err != nil {
-		slog.Error("can't read a pointer.", "err", err, "serial", m.Serial)
-		return
-	}
+	lastPtr := c.ptrStore.get(m.Serial)
+	requestTime := time.Now()
 
 	bmcUrl := "https://" + m.BmcIP + c.rfSelPath
 	byteJSON, statusCode, err := requestToBmc(ctx, c.username, c.password, c.httpClient, bmcUrl)
@@ -71,10 +69,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		}
 		lastPtr.LastHttpStatusCode = 0
 		lastPtr.LastError = err.Error()
-		err = c.ptrStore.put(m.Serial, lastPtr)
-		if err != nil {
-			slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial)
-		}
+		c.ptrStore.put(m.Serial, lastPtr)
 		return
 	}
 	if statusCode != 200 {
@@ -86,10 +81,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		}
 		lastPtr.LastHttpStatusCode = statusCode
 		lastPtr.LastError = ""
-		err = c.ptrStore.put(m.Serial, lastPtr)
-		if err != nil {
-			slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial)
-		}
+		c.ptrStore.put(m.Serial, lastPtr)
 		return
 	}
 
@@ -126,6 +118,23 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		v.BmcIP = m.BmcIP
 		v.NodeIP = m.NodeIP
 
+		// The pointer is not persisted, so on the first read after start, output only recent entries.
+		// Duplicates and losses around restart are acceptable.
+		if !lastPtr.SelRead {
+			if c.isRecent(v, requestTime) {
+				bmcByteJsonLog, err := json.Marshal(v)
+				if err != nil {
+					slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "currentLastReadId", currentId)
+				}
+				err = logWriter.write(string(bmcByteJsonLog), m.Serial)
+				if err != nil {
+					slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
+				}
+			}
+			lastPtr.LastReadId = currentId
+			continue
+		}
+
 		if lastPtr.LastReadId < currentId {
 			bmcByteJsonLog, err := json.Marshal(v)
 			if err != nil {
@@ -159,9 +168,16 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	lastPtr.FirstCreateTime = firstCreateTime
-	err = c.ptrStore.put(m.Serial, lastPtr)
+	lastPtr.SelRead = true
+	c.ptrStore.put(m.Serial, lastPtr)
+}
+
+// isRecent reports whether the entry was created within the startup lookback before requestTime.
+// An entry whose created time can't be parsed is treated as recent.
+func (c *selCollector) isRecent(v SystemEventLog, requestTime time.Time) bool {
+	created, err := time.Parse(time.RFC3339, v.Create)
 	if err != nil {
-		slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial, "firstCreateTime", firstCreateTime)
-		return
+		return true
 	}
+	return !created.Before(requestTime.Add(-c.startupLookback))
 }

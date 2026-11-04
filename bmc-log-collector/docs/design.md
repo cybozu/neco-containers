@@ -18,14 +18,14 @@ The following figure shows an architectural diagram of BMC Log Collector.
 
 ```mermaid
 flowchart TB
-  PS[(Pointer File Store)] <---> LC
+  PS[(Pointer in memory)] <---> LC
   CF[JSON File]-->LC[Log Collector]
   BMC[BMC]-->LC
   LC-->LS[Stdout]
 ```
 
 1. "JSON File" has BMC IP list, server identity string, server's IP address.
-2. "Pointer File Store" has latest pointer information for each BMC. It is a directory of files or a ConfigMap (see [README.md](../README.md#pointer-store)).
+2. "Pointer in memory" has latest pointer information for each BMC. It is not persisted.
 5. "BMC" is Baseboard Management Controller that has IP address and serves Redfish API.
 
 ## How “BMC Log Collector” works
@@ -36,7 +36,7 @@ flowchart TB
 4. Convert the received JSON data into a Go language structure and inspect for duplicates.
 5. Compare the ID of the log received last time with the ID of the log received this time. If the ID of the log received this time is larger, it is considered the latest event.
 6. If the ID is smaller than the previous one, the timestamp is compare with pointer file, and if it is not qual the first timestamp, it is considered as the latest log.
-7. Write ID, time stamp, and identification string in the pointer store. The identification string is the file name or the ConfigMap key, and a separate entry is created for each BMC.
+7. Keep ID and time stamp in memory for each BMC. On the first read after start, only the entries created within the startup lookback are considered as the latest events.
 8. The latest events in the event log are output in JSON format to standard output.
 9. Perform tasks 1 through 8 above, at intervals of a few minutes.
 10. Continue this cycle while the “BMC Log Collector” is running.
@@ -93,6 +93,30 @@ There are two possible methods to obtain event logs from the BMC.
 Method 2
 With the current number of BMCs, load is not a problem.
 
+
+
+### ADR3. Persistence of the pointers
+
+- Method 1: Store the pointers in a persistent volume or a Kubernetes object.
+- Method 2: Keep the pointers only in memory. On start, output the entries created within a fixed duration (startup lookback).
+
+#### Advantages of Method 1
+- No duplicates or losses of logs around restart
+
+#### Disadvantages of Method 1
+- Needs storage or Kubernetes API access, which makes deployment, testing on real machines and library updates harder
+- Kubernetes objects are for configurations, not for state that changes dynamically
+
+#### Advantages of Method 2
+- No dependency on storage or Kubernetes
+
+#### Disadvantages of Method 2
+- Logs may be duplicated or lost around restart
+
+### Decision and Reason
+Method 2.
+The collected logs are used only for reference, so some duplicates or losses are acceptable.
+If the startup lookback is long enough, no logs are lost by a normal rolling update.
 
 
 ## Risks

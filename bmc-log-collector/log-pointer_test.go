@@ -1,101 +1,36 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"os"
-	"path"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 )
 
-var _ = Describe("Get Machines List", Ordered, func() {
-	var ptr LastPointer
-	var err error
-	testPointerDir := "testdata/pointers_get_machines"
-	serialNormal := "ABCDEF"
-	serialForDelete := "WITHDRAWED"
-	var ml []Machine
+var _ = Describe("pointer store", func() {
+	It("keeps pointers and removes the ones of disappeared machines", func() {
+		store := newPointerStore()
+		Expect(store.get("ABCDEF")).To(Equal(LastPointer{}))
 
-	BeforeAll(func() {
-		err := os.Mkdir(testPointerDir, 0o766)
+		store.put("ABCDEF", LastPointer{LastReadId: 1, SelRead: true})
+		store.put("WITHDRAWED", LastPointer{LastReadId: 2, SelRead: true})
+		Expect(store.get("ABCDEF")).To(Equal(LastPointer{LastReadId: 1, SelRead: true}))
+
+		store.deleteDisappeared([]Machine{{Serial: "ABCDEF", BmcIP: "10.0.0.1", NodeIP: "10.1.0.1"}})
+		Expect(store.get("ABCDEF")).To(Equal(LastPointer{LastReadId: 1, SelRead: true}))
+		Expect(store.get("WITHDRAWED")).To(Equal(LastPointer{}))
+	})
+})
+
+var _ = Describe("startup lookback", func() {
+	It("treats entries created within the lookback as recent", func() {
+		c := selCollector{startupLookback: time.Hour}
+		requestTime, err := time.Parse(time.RFC3339, "2024-01-01T12:00:00Z")
 		Expect(err).NotTo(HaveOccurred())
-		os.Remove(path.Join(testPointerDir, serialNormal))
-		os.Remove(path.Join(testPointerDir, serialForDelete))
 
-		// Create pointer file for delete test
-		fd, _ := os.Create(path.Join(testPointerDir, serialForDelete))
-		lptr := LastPointer{
-			LastReadId:      0,
-			FirstCreateTime: 0,
-		}
-		byteJSON, _ := json.Marshal(lptr)
-		_, err = fd.WriteString(string(byteJSON))
-		Expect(err).NotTo(HaveOccurred())
-		fd.Close()
-
-		// Create machines list for delete test
-		m0 := Machine{
-			Serial: "ABCDEF",
-			BmcIP:  "10.0.0.1",
-			NodeIP: "10.1.0.1",
-		}
-		ml = append(ml, m0)
-	})
-
-	Context("create the pointer file", func() {
-		filePath := path.Join(testPointerDir, serialNormal)
-
-		It("check and create pointer file", func() {
-			err := checkAndCreatePointerFile(filePath)
-			Expect(err).NotTo(HaveOccurred())
-		})
-		It("read ptr file", func() {
-			ptr, err = readLastPointer(filePath)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.LastReadId).To(Equal(0))
-			Expect(ptr.FirstCreateTime).To(Equal(int64(0)))
-			GinkgoWriter.Println(ptr)
-		})
-		It("update ptr", func() {
-			ptr.LastReadId = 1
-			err := updateLastPointer(ptr, filePath)
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Context("update the pointer file", func() {
-		filePath := path.Join(testPointerDir, serialNormal)
-
-		It("check and create pointer file", func() {
-			err := checkAndCreatePointerFile(filePath)
-			Expect(err).NotTo(HaveOccurred())
-		})
-		It("read ptr file", func() {
-			ptr, err = readLastPointer(filePath)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(ptr.LastReadId).To(Equal(1))
-			Expect(ptr.FirstCreateTime).To(Equal(int64(0)))
-			GinkgoWriter.Println(ptr)
-		})
-		It("update ptr", func() {
-			ptr.LastReadId = 2
-			err := updateLastPointer(ptr, filePath)
-			Expect(err).NotTo(HaveOccurred())
-		})
-	})
-
-	Context("delete retired server ptr file", func() {
-		It("do delete", func() {
-			fmt.Println("ML=", ml)
-			err := deletePtrFileDisappearedSerial(testPointerDir, ml)
-			Expect(err).NotTo(HaveOccurred())
-		})
-		It("check that file has been deleted", func() {
-			filePath := path.Join(testPointerDir, serialForDelete)
-			_, err := os.Open(filePath)
-			Expect(err).To(HaveOccurred())
-		})
+		Expect(c.isRecent(SystemEventLog{Create: "2024-01-01T11:30:00Z"}, requestTime)).To(BeTrue())
+		Expect(c.isRecent(SystemEventLog{Create: "2024-01-01T11:00:00Z"}, requestTime)).To(BeTrue())
+		Expect(c.isRecent(SystemEventLog{Create: "2024-01-01T05:59:59-05:00"}, requestTime)).To(BeFalse())
+		Expect(c.isRecent(SystemEventLog{Create: "broken"}, requestTime)).To(BeTrue())
 	})
 })
