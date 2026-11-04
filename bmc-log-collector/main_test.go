@@ -147,7 +147,7 @@ var _ = Describe("Collecting iDRAC Logs", Ordered, func() {
 			lcConfig := selCollector{
 				machinesListDir: "testdata/configmap/serverlist2.json",
 				rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-				ptrDir:          testPointerDir,
+				ptrStore:        newFilePointerStore(testPointerDir),
 				username:        "support",
 				intervalTime:    intervalTime,
 			}

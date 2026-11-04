@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
-	"path"
 	"slices"
 	"strconv"
 	"time"
@@ -47,7 +46,7 @@ type RedfishJsonSchema struct {
 type selCollector struct {
 	machinesListDir string        // Directory of the machines list
 	rfSelPath       string        // SEL path of Redfish API address
-	ptrDir          string        // Pointer store
+	ptrStore        pointerStore  // Pointer store
 	username        string        // iDRAC username
 	password        string        // iDRAC password
 	httpClient      *http.Client  // to reuse HTTP transport
@@ -55,17 +54,9 @@ type selCollector struct {
 }
 
 func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, logWriter bmcLogWriter) {
-	filePath := path.Join(c.ptrDir, m.Serial)
-
-	err := checkAndCreatePointerFile(filePath)
+	lastPtr, err := c.ptrStore.get(m.Serial)
 	if err != nil {
-		slog.Error("can't check a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
-		return
-	}
-
-	lastPtr, err := readLastPointer(filePath)
-	if err != nil {
-		slog.Error("can't read a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+		slog.Error("can't read a pointer.", "err", err, "serial", m.Serial)
 		return
 	}
 
@@ -80,9 +71,9 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		}
 		lastPtr.LastHttpStatusCode = 0
 		lastPtr.LastError = err.Error()
-		err = updateLastPointer(lastPtr, filePath)
+		err = c.ptrStore.put(m.Serial, lastPtr)
 		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+			slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial)
 		}
 		return
 	}
@@ -95,9 +86,9 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		}
 		lastPtr.LastHttpStatusCode = statusCode
 		lastPtr.LastError = ""
-		err = updateLastPointer(lastPtr, filePath)
+		err = c.ptrStore.put(m.Serial, lastPtr)
 		if err != nil {
-			slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "filePath", filePath)
+			slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial)
 		}
 		return
 	}
@@ -107,7 +98,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 
 	var response RedfishJsonSchema
 	if err := json.Unmarshal(byteJSON, &response); err != nil {
-		slog.Error("failed to translate JSON to go struct.", "err", err, "serial", m.Serial, "ptrDir", c.ptrDir)
+		slog.Error("failed to translate JSON to go struct.", "err", err, "serial", m.Serial)
 		return
 	}
 
@@ -127,7 +118,7 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	for i, v := range slices.Backward(response.Sel) {
 		currentId, err := strconv.Atoi(v.Id)
 		if err != nil {
-			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId, "ptrDir", c.ptrDir)
+			slog.Error("failed to strconv", "err", err, "serial", m.Serial, "LastReadId", currentId)
 			continue
 		}
 		// Add the information to identify of the node
@@ -138,12 +129,12 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 		if lastPtr.LastReadId < currentId {
 			bmcByteJsonLog, err := json.Marshal(v)
 			if err != nil {
-				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				slog.Error("failed to marshal the system event log", "err", err, "serial", m.Serial, "lastPtr.LastReadId", lastPtr.LastReadId, "currentLastReadId", currentId)
 			}
 
 			err = logWriter.write(string(bmcByteJsonLog), m.Serial)
 			if err != nil {
-				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId, "ptrDir", c.ptrDir)
+				slog.Error("failed to output log", "err", err, "serial", m.Serial, "bmcByteJsonLog", string(bmcByteJsonLog), "currentLastReadId", currentId)
 			}
 
 			lastPtr.LastReadId = currentId
@@ -168,9 +159,9 @@ func (c *selCollector) collectSystemEventLog(ctx context.Context, m Machine, log
 	}
 
 	lastPtr.FirstCreateTime = firstCreateTime
-	err = updateLastPointer(lastPtr, filePath)
+	err = c.ptrStore.put(m.Serial, lastPtr)
 	if err != nil {
-		slog.Error("failed to write a pointer file.", "err", err, "serial", m.Serial, "firstCreateTime", firstCreateTime, "filePath", filePath)
+		slog.Error("failed to write a pointer.", "err", err, "serial", m.Serial, "firstCreateTime", firstCreateTime)
 		return
 	}
 }

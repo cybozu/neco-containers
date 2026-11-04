@@ -10,11 +10,14 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 
 	"github.com/spf13/pflag"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 )
 
 type bmcLogWriter interface {
@@ -73,10 +76,10 @@ func doLogScrapingLoop(config selCollector, logWriter bmcLogWriter) {
 				})
 			}
 			wg.Wait()
-			// Remove ptr files that disappeared the serial in machineList
-			err = deletePtrFileDisappearedSerial(config.ptrDir, machinesList)
+			// Remove pointers of the serials that disappeared in machineList, and persist pointers
+			err = config.ptrStore.sync(ctx, machinesList)
 			if err != nil {
-				slog.Error("failed remove the pointer file", "err", err, "path", config.ptrDir)
+				slog.Error("failed to sync the pointers", "err", err)
 			}
 		}
 	}
@@ -95,9 +98,42 @@ var (
 	flgUserFile             *string = pflag.String("bmc-user-json", "/users/neco/bmc-user.json", "User and password of BMC")
 	flgUserId               *string = pflag.String("user-id", "support", "User ID of bmc-user-json JSON file")
 	flgMachineList          *string = pflag.String("machine-list-json", "/config/machineslist.json", "Target machines list of log scraping")
-	flgPointerDir           *string = pflag.String("pointer-dir-path", "/data/pointers", "Data directory of pointer management")
+	flgPointerStore         *string = pflag.String("pointer-store", pointerStoreFile, `Where to store pointers: "file" or "configmap"`)
+	flgPointerDir           *string = pflag.String("pointer-dir-path", "/data/pointers", "Data directory of pointer management (for --pointer-store=file)")
+	flgPointerConfigMap     *string = pflag.String("pointer-configmap", "bmc-log-collector-pointers", "Name of the ConfigMap in the namespace of the pod to store pointers (for --pointer-store=configmap)")
 	flgScrapingIntervalTime *int    = pflag.Int("scraping-interval-time", 300, "Timer(sec) of scraping interval time")
 )
+
+const (
+	pointerStoreFile      = "file"
+	pointerStoreConfigMap = "configmap"
+
+	serviceAccountNamespaceFile = "/var/run/secrets/kubernetes.io/serviceaccount/namespace"
+)
+
+func newPointerStore(ctx context.Context) (pointerStore, error) {
+	switch *flgPointerStore {
+	case pointerStoreFile:
+		return newFilePointerStore(*flgPointerDir), nil
+	case pointerStoreConfigMap:
+		namespace, err := os.ReadFile(serviceAccountNamespaceFile)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read the namespace: %w", err)
+		}
+		restConfig, err := rest.InClusterConfig()
+		if err != nil {
+			return nil, err
+		}
+		clientset, err := kubernetes.NewForConfig(restConfig)
+		if err != nil {
+			return nil, err
+		}
+		ns := strings.TrimSpace(string(namespace))
+		return newConfigMapPointerStore(ctx, clientset.CoreV1().ConfigMaps(ns), ns, *flgPointerConfigMap)
+	default:
+		return nil, fmt.Errorf("unknown pointer store: %q", *flgPointerStore)
+	}
+}
 
 func main() {
 	pflag.Parse()
@@ -116,11 +152,17 @@ func main() {
 		os.Exit(1)
 	}
 
+	ptrStore, err := newPointerStore(context.Background())
+	if err != nil {
+		slog.Error("Can't set up the pointer store", "err", err, "pointer-store", *flgPointerStore)
+		os.Exit(1)
+	}
+
 	// Setup log scraping loop
 	configLc := selCollector{
 		machinesListDir: *flgMachineList,
 		rfSelPath:       "/redfish/v1/Managers/iDRAC.Embedded.1/LogServices/Sel/Entries",
-		ptrDir:          *flgPointerDir,
+		ptrStore:        ptrStore,
 		username:        *flgUserId,
 		password:        user.Support.Password.Raw,
 		intervalTime:    time.Duration(*flgScrapingIntervalTime) * time.Second,

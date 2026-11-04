@@ -25,7 +25,7 @@ flowchart TB
 ```
 
 1. "JSON File" has BMC IP list, server identity string, server's IP address.
-2. "Pointer File Store" has latest pointer information for each BMC.
+2. "Pointer File Store" has latest pointer information for each BMC. It is a directory of files or a ConfigMap (see [README.md](../README.md#pointer-store)).
 5. "BMC" is Baseboard Management Controller that has IP address and serves Redfish API.
 
 ## How “BMC Log Collector” works
@@ -36,7 +36,7 @@ flowchart TB
 4. Convert the received JSON data into a Go language structure and inspect for duplicates.
 5. Compare the ID of the log received last time with the ID of the log received this time. If the ID of the log received this time is larger, it is considered the latest event.
 6. If the ID is smaller than the previous one, the timestamp is compare with pointer file, and if it is not qual the first timestamp, it is considered as the latest log.
-7. Write ID, time stamp, and identification string in the file. The file name is the identification string, and a separate file is created for each BMC.
+7. Write ID, time stamp, and identification string in the pointer store. The identification string is the file name or the ConfigMap key, and a separate entry is created for each BMC.
 8. The latest events in the event log are output in JSON format to standard output.
 9. Perform tasks 1 through 8 above, at intervals of a few minutes.
 10. Continue this cycle while the “BMC Log Collector” is running.
