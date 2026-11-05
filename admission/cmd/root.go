@@ -23,7 +23,6 @@ var config struct {
 	configPath                 string
 	validImagePrefixes         []string
 	imagePermissive            bool
-	repositoryPermissive       bool
 	ephemeralStoragePermissive bool
 	cpuRequestReducerEnabled   bool
 	zapOpts                    zap.Options
@@ -82,7 +81,6 @@ func init() {
 	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
 	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
-	config.repositoryPermissive = os.Getenv("VAPPLICATION_REPOSITORY_PERMISSIVE") == "true"
 	config.ephemeralStoragePermissive = os.Getenv("VPOD_EPHEMERAL_STORAGE_PERMISSIVE") == "true"
 	config.cpuRequestReducerEnabled = os.Getenv("VPOD_CPU_REQUEST_REDUCE_ENABLE") == "true"
 
