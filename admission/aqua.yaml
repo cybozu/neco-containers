@@ -15,4 +15,4 @@ packages:
 - name: kubernetes-sigs/controller-tools/controller-gen@v0.20.1
 # align with controller-runtime version in go.mod
 - name: kubernetes-sigs/controller-runtime/setup-envtest@v0.23.3
-- name: dominikh/go-tools/staticcheck@2026.1
+- name: dominikh/go-tools/staticcheck@2026.2.2
