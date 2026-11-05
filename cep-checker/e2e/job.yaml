@@ -8,7 +8,7 @@ spec:
     spec:
       containers:
       - name: ubuntu
-        image: ghcr.io/cybozu/ubuntu:22.04
+        image: ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
         command: ["/bin/sleep", "10m"]
       restartPolicy: Never
   backoffLimit: 4
