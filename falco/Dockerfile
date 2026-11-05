@@ -1,7 +1,7 @@
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261021@sha256:96f5e68ff021457cf07c82510d5be3c3c69bf20c1109e32c604b0b516de7eec6 AS builder
+FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261104@sha256:f7e031a6c04507d34e085b97dd7b1dc485996a5e53348d1f5dc73ce6bc159817 AS builder
 
-ARG FALCO_VERSION=0.44.1
-ARG FALCO_COMMIT=f1ac5eb1a1c9da9f797f799121ab700263621443 # 0.44.1
+ARG FALCO_VERSION=0.45.1
+ARG FALCO_COMMIT=2869c4b133333006059fae181ecfee7772ab0463 # 0.45.1
 ARG BPFTOOL_COMMIT=134c34d987b1a301ffbbc22a51b31502befbeafe # v7.3.0
 
 # reference: https://github.com/falcosecurity/falco/blob/master/.github/workflows/reusable_build_packages.yaml
@@ -58,7 +58,7 @@ RUN ARCH=$(uname -m) && \
            /install/usr/bin/falcoctl \
            /install/etc/falcoctl
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
+FROM ghcr.io/cybozu/ubuntu:24.04.20261104@sha256:d352ea0ca39845d0c724bcb974826bb530ea3879e7d1637e8b3d27797adcfa0d
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /install/ /
