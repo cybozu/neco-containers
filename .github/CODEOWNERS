@@ -6,6 +6,7 @@
 #   @cybozu/pdx
 #   @cybozu/landsat
 #   @cybozu/csa
+#   @cybozu/iam
 #
 # Usage:
 #   - Assign an owning team per top-level directory.
@@ -57,11 +58,6 @@
 /external-dns/                    @cybozu/neco
 /hubble-ui/                       @cybozu/neco
 /neco-exporter/                   @cybozu/neco
-/spiffe-csi-driver/               @cybozu/neco
-/spiffe-test/                     @cybozu/neco
-/spire-agent/                     @cybozu/neco
-/spire-controller-manager/        @cybozu/neco
-/spire-server/                    @cybozu/neco
 /squid/                           @cybozu/neco
 /squid-exporter/                  @cybozu/neco
 /stakater-reloader/               @cybozu/neco
@@ -117,3 +113,10 @@
 /csi-snapshotter/                 @cybozu/csa
 /local-pv-provisioner/            @cybozu/csa
 /rook/                            @cybozu/csa
+
+# ---- IAM (@cybozu/iam) ----
+/spiffe-csi-driver/               @cybozu/iam
+/spiffe-test/                     @cybozu/iam
+/spire-agent/                     @cybozu/iam
+/spire-controller-manager/        @cybozu/iam
+/spire-server/                    @cybozu/iam
