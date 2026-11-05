@@ -1,5 +1,5 @@
 diff --git a/pkg/services/pluginsintegration/plugininstaller/service.go b/pkg/services/pluginsintegration/plugininstaller/service.go
-index 32189b5b..2ee7e56f 100644
+index 32189b5bd6d..2ee7e56f09f 100644
 --- a/pkg/services/pluginsintegration/plugininstaller/service.go
 +++ b/pkg/services/pluginsintegration/plugininstaller/service.go
 @@ -120,6 +120,9 @@ func (s *Service) installPlugins(ctx context.Context, pluginsToInstall []setting
@@ -13,21 +13,33 @@ index 32189b5b..2ee7e56f 100644
  		ctx = repo.WithRequestOrigin(ctx, "preinstall")
  		compatOpts := plugins.NewAddOpts(s.cfg.BuildVersion, runtime.GOOS, runtime.GOARCH, installPlugin.URL)
 diff --git a/pkg/setting/setting_plugins.go b/pkg/setting/setting_plugins.go
-index 42166aff..268be282 100644
+index fc967ec59c3..d164936a652 100644
 --- a/pkg/setting/setting_plugins.go
 +++ b/pkg/setting/setting_plugins.go
-@@ -32,15 +32,7 @@ func extractPluginSettings(sections []*ini.Section) config.PluginSettings {
+@@ -32,27 +32,7 @@ func extractPluginSettings(sections []*ini.Section) config.PluginSettings {
  }
  
  var (
 -	defaultPreinstallPlugins = map[string]InstallPlugin{
 -		// Default preinstalled plugins
--		"grafana-lokiexplore-app":      {ID: "grafana-lokiexplore-app"},
--		"grafana-pyroscope-app":        {ID: "grafana-pyroscope-app"},
--		"grafana-exploretraces-app":    {ID: "grafana-exploretraces-app"},
--		"grafana-metricsdrilldown-app": {ID: "grafana-metricsdrilldown-app"},
--		"elasticsearch":                {ID: "elasticsearch"},
--		"zipkin":                       {ID: "zipkin"},
+-		"grafana-lokiexplore-app":       {ID: "grafana-lokiexplore-app"},
+-		"grafana-pyroscope-app":         {ID: "grafana-pyroscope-app"},
+-		"grafana-exploretraces-app":     {ID: "grafana-exploretraces-app"},
+-		"grafana-metricsdrilldown-app":  {ID: "grafana-metricsdrilldown-app"},
+-		"elasticsearch":                 {ID: "elasticsearch"},
+-		"prometheus":                    {ID: "prometheus"},
+-		"tempo":                         {ID: "tempo"},
+-		"zipkin":                        {ID: "zipkin"},
+-		"opentsdb":                      {ID: "opentsdb"},
+-		"stackdriver":                   {ID: "stackdriver"},
+-		"mssql":                         {ID: "mssql"},
+-		"jaeger":                        {ID: "jaeger"},
+-		"loki":                          {ID: "loki"},
+-		"mysql":                         {ID: "mysql"},
+-		"influxdb":                      {ID: "influxdb"},
+-		"grafana-advisor-app":           {ID: "grafana-advisor-app"},
+-		"grafana-postgresql-datasource": {ID: "grafana-postgresql-datasource"},
+-		"grafana-pyroscope-datasource":  {ID: "grafana-pyroscope-datasource"},
 -	}
 +	defaultPreinstallPlugins = map[string]InstallPlugin{}
  )
