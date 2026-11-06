@@ -14,7 +14,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     && make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
+FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/bin /usr/local/vault/bin

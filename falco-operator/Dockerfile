@@ -2,7 +2,7 @@ FROM ghcr.io/cybozu/golang:1.26-noble AS build
 ENV GOPROXY=https://golang.flatt.tech
 
 ARG FALCO_OPERATOR_COMMIT=ddf43f9fc0f115a34246f6267ca088f7e51b08de # v0.4.1
-ARG ARTIFACT_OPERATOR_IMAGE=ghcr.io/cybozu/falco-artifact-operator:0.4.1.1
+ARG ARTIFACT_OPERATOR_IMAGE=ghcr.io/cybozu/falco-artifact-operator:0.4.1.3
 ARG PROJECT=github.com/falcosecurity/falco-operator
 
 WORKDIR /work/falco-operator
@@ -24,7 +24,7 @@ COPY --from=build /work/falco-operator/LICENSE /usr/local/falco-operator/LICENSE
 USER 65532:65532
 ENTRYPOINT ["/usr/bin/manager"]
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9 AS falco-artifact-operator
+FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b AS falco-artifact-operator
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /usr/local/bin/falco-artifact-operator /usr/bin/manager
