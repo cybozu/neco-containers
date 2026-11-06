@@ -6,6 +6,7 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/mock"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/cluster/networkfence"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/bpf"
+	nodeciliumid "github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/ciliumid"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/cpupinning"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/kubeletconfig"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/nicirq"
@@ -24,6 +25,7 @@ func init() {
 
 		// scope: node
 		bpf.NewCollector(),
+		nodeciliumid.NewCollector(),
 		cpupinning.NewCollector(),
 		kubeletconfig.NewCollector(),
 		nicirq.NewCollector(),

@@ -45,17 +45,18 @@ func runMain() error {
 	candidates := registry.All()
 	collectors := make([]exporter.Collector, 0)
 	for _, name := range option.CollectorNames {
+		// The same name can be used by collectors in different scopes (e.g. ciliumid).
 		index := slices.IndexFunc(candidates, func(c exporter.Collector) bool {
-			return name == c.MetricsPrefix()
+			return name == c.MetricsPrefix() && option.Scope == c.Scope()
 		})
 		if index < 0 {
+			if slices.ContainsFunc(candidates, func(c exporter.Collector) bool { return name == c.MetricsPrefix() }) {
+				return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
+			}
 			return fmt.Errorf("unknown collector name: %s", name)
 		}
 
 		c := candidates[index]
-		if option.Scope != c.Scope() {
-			return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
-		}
 		if err := c.Setup(ctx); err != nil {
 			return fmt.Errorf("failed to setup %s collector: %w", name, err)
 		}

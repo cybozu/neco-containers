@@ -6,6 +6,7 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/manager"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/securitylabels"
 )
 
 type ciliumIDCollector struct {
@@ -59,7 +60,7 @@ func (c *ciliumIDCollector) Collect(ctx context.Context) ([]*exporter.Metric, er
 		labels := securityLabelsToPromLabels(info.securityLabels)
 		labels["identity"] = name
 		labels["uid"] = info.uid
-		labels["security_labels"] = formatSecurityLabels(info.securityLabels)
+		labels["security_labels"] = securitylabels.Format(info.securityLabels)
 		if ns, ok := info.securityLabels[namespaceSecurityLabel]; ok {
 			labels["namespace"] = ns
 		}
