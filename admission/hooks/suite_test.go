@@ -39,7 +39,6 @@ var (
 	podValidatingWebhookPath                       = "/validate-pod"
 	contourMutatingWebhookPath                     = "/mutate-projectcontour-io-httpproxy"
 	contourValidateWebhookPath                     = "/validate-projectcontour-io-httpproxy"
-	argocdValidateWebhookPath                      = "/validate-argoproj-io-application"
 	grafanaDashboardValidateWebhookPath            = "/validate-grafana-integreatly-org-grafanadashboard"
 	deleteValidateWebhookPath                      = "/validate-delete"
 	preventDeleteValidateWebhookPath               = "/validate-preventdelete"
@@ -145,7 +144,6 @@ var _ = BeforeSuite(func() {
 		wh.Register(contourMutatingWebhookPath, NewContourHTTPProxyMutator(mgr.GetClient(), dec, "secured", httpproxyMutatorConfig))
 	}
 	wh.Register(contourValidateWebhookPath, NewContourHTTPProxyValidator(mgr.GetClient(), dec))
-	wh.Register(argocdValidateWebhookPath, NewArgoCDApplicationValidator(mgr.GetClient(), dec, applicationValidatorConfig, permissive))
 	wh.Register(grafanaDashboardValidateWebhookPath, NewGrafanaDashboardValidator(mgr.GetClient(), dec))
 	wh.Register(deleteValidateWebhookPath, NewDeleteValidator(mgr.GetClient(), dec))
 	wh.Register(preventDeleteValidateWebhookPath, NewPreventDeleteValidator(mgr.GetClient(), dec))

@@ -1,7 +1,5 @@
 # Contour v1.33.7
 CONTOUR_COMMIT_HASH := 81c4e28c38177ed1f3a3265389a86f8926c332cb
-# Argo CD v3.5.4
-ARGOCD_COMMIT_HASH := d6d5b248ce00e1a2c512068002a93d3319767087
 # Grafana Operator v5.18.0
 GRAFANA_OPERATOR_COMMIT_HASH := de1156accb9c4529cbdb536a054b9c4bb5ee759d
 
@@ -19,7 +17,6 @@ all: build
 crds:
 	mkdir -p config/crd/bases
 	curl -fsL -o config/crd/bases/contour.yaml https://raw.githubusercontent.com/projectcontour/contour/$(CONTOUR_COMMIT_HASH)/examples/contour/01-crds.yaml
-	curl -fsL -o config/crd/bases/application.yaml https://raw.githubusercontent.com/argoproj/argo-cd/$(ARGOCD_COMMIT_HASH)/manifests/crds/application-crd.yaml
 	curl -fsL -o config/crd/bases/grafana-operator.yaml https://raw.githubusercontent.com/grafana/grafana-operator/$(GRAFANA_OPERATOR_COMMIT_HASH)/deploy/kustomize/base/crds.yaml
 
 # Run tests, and set up envtest if not done already.
