@@ -111,6 +111,39 @@ To build such images locally with your Takumi Guard credentials, pass your `~/.n
 docker buildx build --secret id=netrc,src=$HOME/.netrc <dir>
 ```
 
+Likewise, some Dockerfiles fetch npm packages via Takumi Guard ([setup-takumi-guard-npm](https://github.com/flatt-security/setup-takumi-guard-npm))
+by setting `NPM_CONFIG_REGISTRY=https://npm.flatt.tech/` in their build stage.
+The environment variable takes precedence over any `.npmrc`, so packages are always fetched from Takumi Guard.
+The credentials are passed as a BuildKit secret with the ID `npmrc`, and mounted only in the `RUN` instructions that install packages:
+
+```dockerfile
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    npm ci
+```
+
+In GitHub Actions, the `setup` action writes the credentials to `${RUNNER_TEMP}/.npmrc` and the `build_push` action passes it to the build.
+To build such images locally with your Takumi Guard credentials, pass your `.npmrc` that contains
+`//npm.flatt.tech/:_authToken=<token>` explicitly (without it, npm packages are fetched from Takumi Guard anonymously):
+
+```sh
+docker buildx build --secret id=netrc,src=$HOME/.netrc --secret id=npmrc,src=$HOME/.npmrc <dir>
+```
+
+Yarn Classic (1.x) needs two extra steps in the Dockerfile:
+
+- It downloads tarballs from the URLs recorded in `yarn.lock` regardless of the configured registry,
+  so rewrite them to `https://npm.flatt.tech/` before installing. The integrity hashes are unchanged.
+- It sends the token only for scoped packages unless `always-auth` is set,
+  so add it to the project `.npmrc` (not to the secret, so that local builds work the same way).
+
+```dockerfile
+RUN sed -i -e 's#"https://registry.yarnpkg.com/#"https://npm.flatt.tech/#' \
+           -e 's#"https://registry.npmjs.org/#"https://npm.flatt.tech/#' yarn.lock && \
+    echo '//npm.flatt.tech/:always-auth=true' >> .npmrc
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    yarn install --frozen-lockfile
+```
+
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/
 

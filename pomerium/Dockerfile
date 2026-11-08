@@ -38,6 +38,9 @@ RUN --mount=type=tmpfs,target=/var/cache/apt \
 
 FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4d21714dfaf8c679935afa668ca0993a0e4 AS build
 ENV GOPROXY=https://golang.flatt.tech
+# Fetch npm packages via Takumi Guard. The environment variable takes precedence over
+# any .npmrc (including one passed as the npmrc secret), so the registry is always the proxy.
+ENV NPM_CONFIG_REGISTRY=https://npm.flatt.tech/
 
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
     mkdir -p /opt/node \
@@ -51,8 +54,11 @@ RUN tar zxf /tmp/pomerium.tar.gz --strip-components 1 && rm /tmp/pomerium.tar.gz
 
 # Env var so that the npm ci inside `make build-ui` skips scripts too (esbuild's postinstall is only an optional optimization).
 ENV NPM_CONFIG_IGNORE_SCRIPTS=true
-RUN cd ui; npm ci
-RUN make build-ui
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    cd ui; npm ci
+# `make build-ui` runs `npm ci` again, so it needs the credentials too.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    make build-ui
 
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     go mod download
