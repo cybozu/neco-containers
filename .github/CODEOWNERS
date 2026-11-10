@@ -3,6 +3,8 @@
 #
 # Teams:
 #   @cybozu/neco
+#   @cybozu/neco-infrastructure
+#   @cybozu/neco-network
 #   @cybozu/pdx
 #   @cybozu/landsat
 #   @cybozu/csa
@@ -15,57 +17,57 @@
 # Default fallback: Neco owns any path not matched by a more specific rule below.
 * @cybozu/neco
 
-# ---- Neco Infrastructure (@cybozu/neco) ----
-/admission/                       @cybozu/neco
-/bmc-log-collector/               @cybozu/neco
-/bmc-reverse-proxy/               @cybozu/neco
-/cadvisor/                        @cybozu/neco
-/coredns/                         @cybozu/neco
-/etcd/                            @cybozu/neco
-/falco/                           @cybozu/neco
-/falco-k8s-metacollector/         @cybozu/neco
-/falco-operator/                  @cybozu/neco
-/falcosidekick/                   @cybozu/neco
-/gitleaks/                        @cybozu/neco
-/kube-metrics-adapter/            @cybozu/neco
-/kubernetes/                      @cybozu/neco
-/kube-state-metrics/              @cybozu/neco
-/kube-storage-version-migrator/   @cybozu/neco
-/machines-endpoints/              @cybozu/neco
-/pause/                           @cybozu/neco
-/prometheus-adapter/              @cybozu/neco
-/registry/                        @cybozu/neco
-/s3gw/                            @cybozu/neco
-/sealed-secrets/                  @cybozu/neco
-/serf/                            @cybozu/neco
-/spegel/                          @cybozu/neco
-/testhttpd/                       @cybozu/neco
-/vault/                           @cybozu/neco
+# ---- Neco Infrastructure (@cybozu/neco-infrastructure) ----
+/admission/                       @cybozu/neco-infrastructure
+/bmc-log-collector/               @cybozu/neco-infrastructure
+/bmc-reverse-proxy/               @cybozu/neco-infrastructure
+/cadvisor/                        @cybozu/neco-infrastructure
+/coredns/                         @cybozu/neco-infrastructure
+/etcd/                            @cybozu/neco-infrastructure
+/falco/                           @cybozu/neco-infrastructure
+/falco-k8s-metacollector/         @cybozu/neco-infrastructure
+/falco-operator/                  @cybozu/neco-infrastructure
+/falcosidekick/                   @cybozu/neco-infrastructure
+/gitleaks/                        @cybozu/neco-infrastructure
+/kube-metrics-adapter/            @cybozu/neco-infrastructure
+/kubernetes/                      @cybozu/neco-infrastructure
+/kube-state-metrics/              @cybozu/neco-infrastructure
+/kube-storage-version-migrator/   @cybozu/neco-infrastructure
+/machines-endpoints/              @cybozu/neco-infrastructure
+/pause/                           @cybozu/neco-infrastructure
+/prometheus-adapter/              @cybozu/neco-infrastructure
+/registry/                        @cybozu/neco-infrastructure
+/s3gw/                            @cybozu/neco-infrastructure
+/sealed-secrets/                  @cybozu/neco-infrastructure
+/serf/                            @cybozu/neco-infrastructure
+/spegel/                          @cybozu/neco-infrastructure
+/testhttpd/                       @cybozu/neco-infrastructure
+/vault/                           @cybozu/neco-infrastructure
 
-# ---- Neco Network (@cybozu/neco) ----
-/approver-policy/                 @cybozu/neco
-/bird/                            @cybozu/neco
-/bpftrace/                        @cybozu/neco
-/cep-checker/                     @cybozu/neco
-/cert-manager/                    @cybozu/neco
-/chrony/                          @cybozu/neco
-/cilium-1.17/                     @cybozu/neco
-/cilium-1.18/                     @cybozu/neco
-/cilium-certgen/                  @cybozu/neco
-/contour/                         @cybozu/neco
-/ct-monitor/                      @cybozu/neco
-/envoy/                           @cybozu/neco
-/external-dns/                    @cybozu/neco
-/hubble-ui/                       @cybozu/neco
-/neco-exporter/                   @cybozu/neco
-/squid/                           @cybozu/neco
-/squid-exporter/                  @cybozu/neco
-/stakater-reloader/               @cybozu/neco
-/tcp-keepalive/                   @cybozu/neco
-/trust-manager/                   @cybozu/neco
-/trust-packages/                  @cybozu/neco
-/unbound/                         @cybozu/neco
-/unbound_exporter/                @cybozu/neco
+# ---- Neco Network (@cybozu/neco-network) ----
+/approver-policy/                 @cybozu/neco-network
+/bird/                            @cybozu/neco-network
+/bpftrace/                        @cybozu/neco-network
+/cep-checker/                     @cybozu/neco-network
+/cert-manager/                    @cybozu/neco-network
+/chrony/                          @cybozu/neco-network
+/cilium-1.17/                     @cybozu/neco-network
+/cilium-1.18/                     @cybozu/neco-network
+/cilium-certgen/                  @cybozu/neco-network
+/contour/                         @cybozu/neco-network
+/ct-monitor/                      @cybozu/neco-network
+/envoy/                           @cybozu/neco-network
+/external-dns/                    @cybozu/neco-network
+/hubble-ui/                       @cybozu/neco-network
+/neco-exporter/                   @cybozu/neco-network
+/squid/                           @cybozu/neco-network
+/squid-exporter/                  @cybozu/neco-network
+/stakater-reloader/               @cybozu/neco-network
+/tcp-keepalive/                   @cybozu/neco-network
+/trust-manager/                   @cybozu/neco-network
+/trust-packages/                  @cybozu/neco-network
+/unbound/                         @cybozu/neco-network
+/unbound_exporter/                @cybozu/neco-network
 
 # ---- PDX (@cybozu/pdx) ----
 /argocd/                          @cybozu/pdx
