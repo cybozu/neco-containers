@@ -715,7 +715,7 @@ func testDo() {
 					HaveField("Name", "local-192.168.0.1-sda"),
 					HaveField("Name", "local-192.168.0.1-sdb")))
 				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.VolumeMode", ptr.To(corev1.PersistentVolumeFilesystem))))
-				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.Local.FSType", ptr.To("ext4"))))
+				g.Expect(pvList.Items).To(HaveEach(HaveField("Spec.Local.FSType", new("ext4"))))
 			},
 		),
 		Entry(
