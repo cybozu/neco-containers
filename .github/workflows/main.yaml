@@ -118,7 +118,7 @@ jobs:
       yamory-token: ${{ secrets[format('YAMORY_TOKEN_TEAM_{0}', matrix.scan.team)] }}
 
   build_envoy:
-    runs-on: neco-containers-ubuntu-22.04
+    runs-on: neco-containers-ubuntu-24.04
     permissions:
       contents: read
       packages: write

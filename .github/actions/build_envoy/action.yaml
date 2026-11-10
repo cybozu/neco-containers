@@ -77,13 +77,19 @@ runs:
         cd src
         
         # Install Build dependencies
-        # LLVM 18.1.8 is built for ubuntu 18.04 and requires libtinfo.so.5,
-        # while GitHub runners use ubuntu 22.04 which only has libtinfo.so.6.
-        # We need to install libtinfo5 explicitly.
+        # Envoy v1.38 uses the hermetic LLVM 18.1.8 toolchain (bazel/toolchains.bzl),
+        # which is the upstream release built for ubuntu 18.04 and requires libtinfo.so.5.
+        # The runner (ubuntu 24.04) no longer provides the libtinfo5 package, so install
+        # the Debian package the same way as the upstream build image does.
         # https://github.com/llvm/llvm-project/issues/75490
-        # https://github.com/envoyproxy/envoy/pull/39264
-        sudo apt-get update
-        sudo apt-get install -y libtinfo5
+        # https://github.com/envoyproxy/toolshed/blob/7e0344e0ddd6ee5e56105172f7dd17346049c0df/docker/build/linux/debian/fun.sh
+        # Upstream main has moved to LLVM 22.1.8 built by envoy_toolshed (MODULE.bazel).
+        # When updating envoy, check whether this workaround is still needed.
+        LIBTINFO5_DEB=libtinfo5_6.4-4_amd64.deb
+        curl -fsSLO "http://deb.debian.org/debian/pool/main/n/ncurses/${LIBTINFO5_DEB}"
+        echo "dd347f794e651039e7b4c391f86c674fed7f415b3dca6b0937beb0d470f09c1a  ${LIBTINFO5_DEB}" | sha256sum --check
+        sudo dpkg -i "${LIBTINFO5_DEB}"
+        rm "${LIBTINFO5_DEB}"
 
         # Clone Envoy repository
         git init envoy; cd envoy;
