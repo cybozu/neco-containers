@@ -41,6 +41,10 @@ rm debian/libcephfs-java.jlibs debian/libcephfs-jni.install debian/ceph-mgr-dash
 # To avoid OOM killer, use 10 parallelism instead of 20 (max vCPU).
 dpkg-buildpackage --build=binary -uc -us -j10
 rm ../*-dbg_*.deb ../ceph-test_*.deb
+# ceph-resource-agents depends on resource-agents, which does not exist on
+# Ubuntu 24.04 (it was split into resource-agents-base and others).
+# Rook does not use these OCF resource agents for Pacemaker, so drop it.
+rm ../ceph-resource-agents_*.deb
 mv ../*.deb ../workspace/
 mv COPYING* ../workspace
 

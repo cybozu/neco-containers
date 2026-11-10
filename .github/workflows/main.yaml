@@ -148,7 +148,7 @@ jobs:
       yamory-token: ${{ secrets.YAMORY_TOKEN_TEAM_NECO }}
 
   build_ceph:
-    runs-on: neco-containers-ubuntu-22.04
+    runs-on: neco-containers-ubuntu-24.04
     permissions:
       contents: read
       packages: write
