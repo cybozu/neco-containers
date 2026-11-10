@@ -312,22 +312,22 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 	}
 
 	op, err := ctrl.CreateOrUpdate(ctx, dd.Client, pv, func() error {
-		if pv.ObjectMeta.Labels == nil {
-			pv.ObjectMeta.Labels = make(map[string]string)
+		if pv.Labels == nil {
+			pv.Labels = make(map[string]string)
 		}
-		pv.ObjectMeta.Labels[lppLegacyLabelKey] = node.Name
-		pv.ObjectMeta.Labels[lppAnnotNode] = node.Name
+		pv.Labels[lppLegacyLabelKey] = node.Name
+		pv.Labels[lppAnnotNode] = node.Name
 
-		if pv.ObjectMeta.Annotations == nil {
-			pv.ObjectMeta.Annotations = make(map[string]string)
+		if pv.Annotations == nil {
+			pv.Annotations = make(map[string]string)
 		}
-		pv.ObjectMeta.Annotations[lppAnnotStorageClassName] = pvSpec.storageClassName
-		pv.ObjectMeta.Annotations[lppAnnotVolumeMode] = pvSpec.volumeMode
+		pv.Annotations[lppAnnotStorageClassName] = pvSpec.storageClassName
+		pv.Annotations[lppAnnotVolumeMode] = pvSpec.volumeMode
 		if isFilesystem(pvSpec.volumeMode) {
-			pv.ObjectMeta.Annotations[lppAnnotFSType] = pvSpec.fsType
+			pv.Annotations[lppAnnotFSType] = pvSpec.fsType
 		}
-		pv.ObjectMeta.Annotations[lppAnnotDeviceDir] = pvSpec.deviceDir
-		pv.ObjectMeta.Annotations[lppAnnotDeviceNameFilter] = pvSpec.deviceNameFilter
+		pv.Annotations[lppAnnotDeviceDir] = pvSpec.deviceDir
+		pv.Annotations[lppAnnotDeviceNameFilter] = pvSpec.deviceNameFilter
 
 		pv.Spec.AccessModes = []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce}
 
@@ -354,7 +354,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 			Local: &corev1.LocalVolumeSource{Path: dev.Path},
 		}
 		if isFilesystem(pvSpec.volumeMode) {
-			pv.Spec.PersistentVolumeSource.Local.FSType = ptr.To(pvSpec.fsType)
+			pv.Spec.Local.FSType = ptr.To(pvSpec.fsType)
 		}
 		pv.Spec.StorageClassName = pvSpec.storageClassName
 		pv.Spec.VolumeMode = &pvMode

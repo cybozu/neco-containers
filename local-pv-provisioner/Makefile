@@ -23,7 +23,7 @@ all: build
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: manifests generate simple-test
+test: manifests generate lint
 	go test -race -v -count 1 ./...
 
 .PHONY: ci-e2e-test
@@ -32,11 +32,10 @@ ci-e2e-test:
 	$(MAKE) -C e2etest setup
 	$(MAKE) -C e2etest test
 
-.PHONY: simple-test
-simple-test: staticcheck
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	$(STATICCHECK) ./...
-	go vet ./...
+.PHONY: lint
+lint:
+	aqua install
+	golangci-lint run
 
 .PHONY: check-generate
 check-generate:

@@ -22,10 +22,12 @@ import (
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
 // http://onsi.github.io/ginkgo/ to learn more about Ginkgo.
 
-var k8sClient client.Client
-var testEnv *envtest.Environment
-var testCtx = context.Background()
-var testCancel context.CancelFunc
+var (
+	k8sClient  client.Client
+	testEnv    *envtest.Environment
+	testCtx    = context.Background()
+	testCancel context.CancelFunc
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -79,7 +81,6 @@ var _ = BeforeSuite(func() {
 			Expect(err).NotTo(HaveOccurred())
 		}
 	}()
-
 })
 
 var _ = AfterSuite(func() {
@@ -114,9 +115,11 @@ func (fs *testFS) Open(name string) (file, error) { return fs.realFS.Open(fs.get
 func (fs *testFS) Stat(name string) (FileInfo, error) {
 	return fs.realFS.Stat(fs.getPath(name))
 }
+
 func (fs *testFS) OpenFile(name string, flag int, perm FileMode) (file, error) {
 	return fs.realFS.OpenFile(fs.getPath(name), flag, perm)
 }
+
 func (fs *testFS) Walk(root string, f func(path string, info FileInfo, err error) error) error {
 	return fs.realFS.Walk(fs.getPath(root), func(path string, info FileInfo, err error) error {
 		testFSPath, err2 := filepath.Rel(fs.pathPrefix, path)
@@ -127,9 +130,11 @@ func (fs *testFS) Walk(root string, f func(path string, info FileInfo, err error
 		return f(testFSPath, info, err)
 	})
 }
+
 func (fs *testFS) MkdirAll(path string, perm FileMode) error {
 	return fs.realFS.MkdirAll(fs.getPath(path), perm)
 }
+
 func (fs *testFS) Remove(name string) error {
 	return fs.realFS.Remove(fs.getPath(name))
 }
@@ -154,10 +159,10 @@ func useTestFS(files map[string]string, f func()) {
 		if !filepath.IsAbs(path) {
 			panic("Not every path of files is absolute: " + path)
 		}
-		if err := fs.MkdirAll(filepath.Dir(path), 0700); err != nil {
+		if err := fs.MkdirAll(filepath.Dir(path), 0o700); err != nil {
 			panic("tmpFS.MkdirAll failed: " + path)
 		}
-		file, err := fs.OpenFile(path, O_WRONLY|O_CREATE, 0600)
+		file, err := fs.OpenFile(path, O_WRONLY|O_CREATE, 0o600)
 		if err != nil {
 			panic("fs.OpenFile failed: " + path)
 		}
