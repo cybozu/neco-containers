@@ -65,6 +65,9 @@ RUN --mount=type=bind,from=git-lfs-download,source=/git-lfs.tar.gz,target=/tmp/g
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS argocd-build
 ENV GOPROXY=https://golang.flatt.tech
+# Fetch npm packages via Takumi Guard. The environment variable takes precedence over
+# any .npmrc (including one passed as the npmrc secret), so the registry is always the proxy.
+ENV NPM_CONFIG_REGISTRY=https://npm.flatt.tech/
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
@@ -93,7 +96,8 @@ RUN --mount=type=bind,from=argocd-src,source=/src.tar.gz,target=/tmp/src.tar.gz 
 
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    pnpm install --frozen-lockfile
 
 ENV ARGO_VERSION=${ARGOCD_VERSION}
 RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 pnpm build

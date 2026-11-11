@@ -53,6 +53,9 @@ RUN --mount=type=bind,from=helm-download,source=/helm.tar.gz,target=/tmp/helm.ta
 # Stage2; Argo CD Build Stage
 FROM ghcr.io/cybozu/golang:1.27.3.2_noble@sha256:d78937fddb26c4350824d4022f5c9dfe20bf762811ea31065f8c6d467c58bc30 AS argocd-build
 ENV GOPROXY=https://golang.flatt.tech
+# Fetch npm packages via Takumi Guard. The environment variable takes precedence over
+# any .npmrc (including one passed as the npmrc secret), so the registry is always the proxy.
+ENV NPM_CONFIG_REGISTRY=https://npm.flatt.tech/
 ARG ARGOCD_VERSION
 ENV ARGOCD_VERSION=${ARGOCD_VERSION}
 ENV PACKAGE=github.com/argoproj/argo-cd
@@ -76,7 +79,14 @@ RUN --mount=type=bind,from=argocd-src,source=/src.tar.gz,target=/tmp/src.tar.gz 
 
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
-RUN yarn install --frozen-lockfile --ignore-scripts
+# Yarn Classic downloads tarballs from the URLs recorded in yarn.lock regardless of the
+# configured registry, so point them to Takumi Guard. The integrity hashes are unchanged.
+# Yarn Classic also sends the token only for scoped packages unless always-auth is set.
+RUN sed -i -e 's#"https://registry.yarnpkg.com/#"https://npm.flatt.tech/#' \
+           -e 's#"https://registry.npmjs.org/#"https://npm.flatt.tech/#' yarn.lock && \
+    echo '//npm.flatt.tech/:always-auth=true' >> .npmrc
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    yarn install --frozen-lockfile --ignore-scripts
 
 ENV ARGO_VERSION=${ARGOCD_VERSION}
 RUN NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 yarn build

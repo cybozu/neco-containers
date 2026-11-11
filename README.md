@@ -111,6 +111,24 @@ To build such images locally with your Takumi Guard credentials, pass your `~/.n
 docker buildx build --secret id=netrc,src=$HOME/.netrc <dir>
 ```
 
+Some Dockerfiles fetch npm packages via Takumi Guard.
+To build these images locally with your Takumi Guard credentials, add the following to your `~/.npmrc`:
+
+```text
+//npm.flatt.tech/:_authToken=<token>
+```
+
+Then pass it as a BuildKit secret:
+
+```bash
+docker buildx build \
+  --secret id=netrc,src=$HOME/.netrc \
+  --secret id=npmrc,src=$HOME/.npmrc \
+  <dir>
+```
+
+Without the npmrc secret, npm registry packages are fetched from Takumi Guard anonymously.
+
 [ghcr]: https://github.com/orgs/cybozu/packages
 [semver]: https://semver.org/
 

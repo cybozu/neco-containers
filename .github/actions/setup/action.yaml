@@ -34,9 +34,17 @@ runs:
       with:
         go-version: ${{ inputs.go-version }}
         go-version-file: ${{ inputs.go-version-file }}
-    - name:  Setup Takumi Guard
+
+    - name: Setup Takumi Guard for go
       uses: flatt-security/setup-takumi-guard-golang@37631ecffa6faf06754444a4807451b7a55c64b5 # v1.2.0
       with:
         bot-id: ${{ inputs.takumi-guard-bot-id }}
+    - name: Setup Takumi Guard for npm
+      # Writes the registry and token to ${RUNNER_TEMP}/.npmrc and exports its path
+      # as NPM_CONFIG_USERCONFIG. The build_push action passes it to the build.
+      uses: flatt-security/setup-takumi-guard-npm@14f07d0cbc739b42a1b7c70a04c2b84cd1318ddd # v1.4.0
+      with:
+        bot-id: ${{ inputs.takumi-guard-bot-id }}
+
     - name: Setup tools with aqua
       uses: ./.github/actions/aqua
