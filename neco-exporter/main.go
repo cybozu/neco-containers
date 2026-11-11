@@ -10,6 +10,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/registry"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/option"
 )
@@ -42,20 +43,28 @@ func main() {
 func runMain() error {
 	ctx := ctrl.SetupSignalHandler()
 
+	if option.Scope != constants.ScopeCluster && option.Scope != constants.ScopeNode {
+		return fmt.Errorf("invalid scope: %s", option.Scope)
+	}
+
 	candidates := registry.All()
 	collectors := make([]exporter.Collector, 0)
 	for _, name := range option.CollectorNames {
-		index := slices.IndexFunc(candidates, func(c exporter.Collector) bool {
+		if !slices.ContainsFunc(candidates, func(c exporter.Collector) bool {
 			return name == c.MetricsPrefix()
-		})
-		if index < 0 {
+		}) {
 			return fmt.Errorf("unknown collector name: %s", name)
 		}
 
-		c := candidates[index]
-		if option.Scope != c.Scope() {
+		// A collector may be registered for each scope under the same name.
+		index := slices.IndexFunc(candidates, func(c exporter.Collector) bool {
+			return name == c.MetricsPrefix() && option.Scope == c.Scope()
+		})
+		if index < 0 {
 			return fmt.Errorf("%s collector is not available in %s-scope", name, option.Scope)
 		}
+
+		c := candidates[index]
 		if err := c.Setup(ctx); err != nil {
 			return fmt.Errorf("failed to setup %s collector: %w", name, err)
 		}
