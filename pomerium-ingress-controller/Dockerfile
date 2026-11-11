@@ -38,6 +38,9 @@ FROM ghcr.io/cybozu/golang:1.26.10.2_noble@sha256:8d900a9ee78c02dbe4e2d2e23800c4
 ARG INGRESS_CONTROLLER_VERSION=0.33.6
 ARG INGRESS_CONTROLLER_COMMIT=9b075d643f3a00c13424fe3508a5afd360a6e9aa
 ENV GOPROXY=https://golang.flatt.tech
+# Fetch npm packages via Takumi Guard. The environment variable takes precedence over
+# any .npmrc (including one passed as the npmrc secret), so the registry is always the proxy.
+ENV NPM_CONFIG_REGISTRY=https://npm.flatt.tech/
 
 RUN --mount=type=bind,from=node-download,source=/node.tar.gz,target=/tmp/node.tar.gz \
     mkdir -p /opt/node \
@@ -55,7 +58,9 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
 # The UI of pomerium core is copied from the Go module and embedded into the binary.
 # Env var so that `npm ci` skips scripts (esbuild's postinstall is only an optional optimization).
 ENV NPM_CONFIG_IGNORE_SCRIPTS=true
-RUN make pomerium-ui
+# `make pomerium-ui` runs `npm ci`, so it needs the credentials.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    make pomerium-ui
 
 # The source tarball has no git metadata, so give the version and the commit explicitly.
 RUN make build-go VERSION=v${INGRESS_CONTROLLER_VERSION} GITCOMMIT=${INGRESS_CONTROLLER_COMMIT:0:7}
