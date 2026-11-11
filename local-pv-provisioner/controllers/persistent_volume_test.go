@@ -15,8 +15,7 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-type deleterMock struct {
-}
+type deleterMock struct{}
 
 func (deleterMock) Delete(path string) error {
 	if path == "/dev/crypt-disk/lun-0-broken" {
@@ -118,7 +117,7 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) 
 	}
 
 	if witoutLabel {
-		pv.ObjectMeta.Labels = nil
+		pv.Labels = nil
 	}
 
 	if broken {
@@ -128,7 +127,7 @@ func prepareLocalPV(ctx context.Context, node string, witoutLabel, broken bool) 
 	err := k8sClient.Create(ctx, &pv)
 	Expect(err).ShouldNot(HaveOccurred())
 
-	pv.ObjectMeta.Finalizers = []string{}
+	pv.Finalizers = []string{}
 	err = k8sClient.Update(ctx, &pv)
 	Expect(err).ShouldNot(HaveOccurred())
 

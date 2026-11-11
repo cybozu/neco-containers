@@ -3,6 +3,7 @@ package controllers
 import (
 	"context"
 	"fmt"
+	"maps"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -122,7 +123,7 @@ func testDo() {
 			return err
 		}
 		for _, pv := range pvList.Items {
-			pv.ObjectMeta.Finalizers = []string{}
+			pv.Finalizers = []string{}
 			if err := k8sClient.Update(ctx, &pv); err != nil {
 				return err
 			}
@@ -164,7 +165,7 @@ func testDo() {
 		func(ctx context.Context, cmSrc *pvSpec, expectedPVNameSuffixes []string) {
 			var err error
 
-			expectedPVNames := []interface{}{}
+			expectedPVNames := []any{}
 			for _, suffix := range expectedPVNameSuffixes {
 				expectedPVNames = append(expectedPVNames, fmt.Sprintf("local-%s-%s", node1.GetName(), suffix))
 			}
@@ -224,8 +225,8 @@ func testDo() {
 	)
 
 	// Perform tests that use only 1 node.
-	generateOneNodeTestEntries := func(node, cmName string) []interface{} {
-		return []interface{}{
+	generateOneNodeTestEntries := func(node, cmName string) []any {
+		return []any{
 			Entry(
 				"Using correct configmap (Block)",
 				node,
@@ -394,7 +395,7 @@ func testDo() {
 	}
 
 	// oneNodeTestEntries is a array to be used as an argument of DescribeTable.
-	oneNodeTestEntries := []interface{}{
+	oneNodeTestEntries := []any{
 		// This function should be applied to every test case in DescribeTable.
 		// In the function, we first create the PV Spec ConfigMap. After that,
 		// we call do() for either the node1, which has the PV Spec ConfigMap annotation,
@@ -548,8 +549,8 @@ func testDo() {
 			}, "1s", "2s").Should(Succeed())
 
 			// Annotate the existing PVs
-			ctrl.CreateOrUpdate(ctx, k8sClient, pv, func() error {
-				pv.ObjectMeta.Annotations = map[string]string{
+			_, err = ctrl.CreateOrUpdate(ctx, k8sClient, pv, func() error {
+				pv.Annotations = map[string]string{
 					lppAnnotStorageClassName: storageClassName,
 					lppAnnotVolumeMode:       "Block",
 					lppAnnotDeviceDir:        "/dev",
@@ -557,6 +558,7 @@ func testDo() {
 				}
 				return nil
 			})
+			Expect(err).NotTo(HaveOccurred())
 
 			dd1.do(ctx)
 
@@ -646,7 +648,7 @@ func testDo() {
 				err = k8sClient.List(ctx, &pvList)
 				Expect(err).NotTo(HaveOccurred())
 				for _, pv := range pvList.Items {
-					pv.ObjectMeta.Finalizers = []string{}
+					pv.Finalizers = []string{}
 					err = k8sClient.Update(ctx, &pv)
 					Expect(err).NotTo(HaveOccurred())
 					err = k8sClient.Delete(ctx, &pv)
@@ -834,9 +836,7 @@ func testHasAnnotsSetByAnotherConfiguration() {
 		alreadyCreatedPVs := []corev1.PersistentVolume{}
 		for _, annotSrc := range alreadyCreatedPVsAnnotations {
 			annot := map[string]string{}
-			for k, v := range annotSrc {
-				annot[k] = v
-			}
+			maps.Copy(annot, annotSrc)
 			alreadyCreatedPVs = append(alreadyCreatedPVs, corev1.PersistentVolume{
 				ObjectMeta: metav1.ObjectMeta{
 					Annotations: annot,
@@ -980,7 +980,7 @@ func testParsePVSpecConfigMap() {
 				Data: data,
 			}
 			pvSpec, err := parsePVSpecConfigMap(&cm)
-			Expect(err).To(BeNil())
+			Expect(err).ToNot(HaveOccurred())
 			Expect(pvSpec.volumeMode).To(Equal(expectedPVSpec.volumeMode))
 			Expect(pvSpec.fsType).To(Equal(expectedPVSpec.fsType))
 			Expect(pvSpec.deviceDir).To(Equal(expectedPVSpec.deviceDir))
@@ -1013,7 +1013,7 @@ func testParsePVSpecConfigMap() {
 			}
 			pvSpec, err := parsePVSpecConfigMap(&cm)
 			Expect(pvSpec).To(BeNil())
-			Expect(err).NotTo(BeNil())
+			Expect(err).To(HaveOccurred())
 		})
 	},
 		Entry(
@@ -1125,7 +1125,7 @@ func testDeviceDetectorCreatePV() {
 			Expect(string(*pv.Spec.VolumeMode)).To(Equal(tt.volumeMode))
 
 			By("checking PV source")
-			localVolume := pv.Spec.PersistentVolumeSource.Local
+			localVolume := pv.Spec.Local
 			Expect(localVolume).NotTo(BeNil())
 			Expect(localVolume.Path).To(Equal(device.Path))
 			if tt.volumeMode == "Filesystem" {

@@ -36,7 +36,7 @@ func (r *PersistentVolumeReconciler) Reconcile(ctx context.Context, req ctrl.Req
 		return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
 
-	if name, ok := pv.ObjectMeta.Labels[lppLegacyLabelKey]; !ok || name != r.NodeName {
+	if name, ok := pv.Labels[lppLegacyLabelKey]; !ok || name != r.NodeName {
 		return ctrl.Result{}, nil
 	}
 

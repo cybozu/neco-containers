@@ -13,8 +13,8 @@ import (
 
 func testFillDeleter() {
 	var Ki int64 = 1024
-	var Mi int64 = 1024 * Ki
-	var Gi int64 = 1024 * Mi
+	Mi := 1024 * Ki
+	Gi := 1024 * Mi
 
 	It("should fill first specified bytes with zero", func() {
 		tmpFile, _ := os.CreateTemp("", "deleter")
@@ -26,12 +26,14 @@ func testFillDeleter() {
 			FillBlockSize: 1024,
 			FillCount:     10,
 		}
-		deleter.Delete(tmpFile.Name())
+		err = deleter.Delete(tmpFile.Name())
+		Expect(err).ShouldNot(HaveOccurred())
 
 		zeroBlock := make([]byte, deleter.FillBlockSize)
 		buffer := make([]byte, deleter.FillBlockSize)
 		for _, position := range []int64{0, 1 * Gi} {
-			tmpFile.Seek(position, 0)
+			_, err = tmpFile.Seek(position, 0)
+			Expect(err).ShouldNot(HaveOccurred())
 			for i := uint(0); i < deleter.FillCount; i++ {
 				_, err := tmpFile.Read(buffer)
 				Expect(err).ShouldNot(HaveOccurred())

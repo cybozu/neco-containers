@@ -34,18 +34,25 @@ func (osFS) Stat(name string) (FileInfo, error) { return os.Stat(name) }
 func (osFS) OpenFile(name string, flag int, perm FileMode) (file, error) {
 	return os.OpenFile(name, flag, perm)
 }
+
 func (osFS) Walk(root string, f func(path string, info FileInfo, err error) error) error {
 	return filepath.Walk(root, f)
 }
+
 func (osFS) MkdirAll(path string, perm FileMode) error {
 	return os.MkdirAll(path, perm)
 }
+
 func (osFS) Remove(name string) error {
 	return os.Remove(name)
 }
 
-const O_WRONLY = os.O_WRONLY
-const O_CREATE = os.O_CREATE
+const (
+	O_WRONLY = os.O_WRONLY
+	O_CREATE = os.O_CREATE
+)
 
-type FileInfo = os.FileInfo
-type FileMode = os.FileMode
+type (
+	FileInfo = os.FileInfo
+	FileMode = os.FileMode
+)
