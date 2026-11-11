@@ -1,7 +1,5 @@
 # alloy
 
-![Regular Update](../regular_update.svg)
-
 Alloy contains two versions, one for alloy and the other for libsystemd.
 The libsystemd version should be the same with the one running on [the stable Flatcar OS](https://www.flatcar.org/releases).
 

@@ -1,7 +1,5 @@
 # external-dns
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
 2. Check the upstream `.ko.yaml`. If there are any updates, update our `Dockerfile`.
    - `https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/.ko.yaml`

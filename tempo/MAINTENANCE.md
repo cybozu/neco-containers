@@ -1,7 +1,5 @@
 # tempo
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/grafana/tempo/releases).
 2. Check the upstream `Makefile` and `cmd/tempo//Dockerfile`. If they have been updated significantly, update our `Dockerfile`.
    - `https://github.com/grafana/tempo/blob/vX.Y.Z/Makefile`

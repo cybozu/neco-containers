@@ -1,7 +1,5 @@
 # spiffe-csi-driver
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/spiffe/spiffe-csi/releases).
 2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/spiffe/spiffe-csi/blob/vX.Y.Z/Dockerfile`

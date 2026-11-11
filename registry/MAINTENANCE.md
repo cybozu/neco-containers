@@ -1,7 +1,5 @@
 # registry
 
-![Regular Update](../regular_update.svg)
-
 1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - <https://github.com/distribution/distribution/blob/main/Dockerfile>

@@ -1,7 +1,5 @@
 # ct-monitor
 
-![Regular Update](../regular_update.svg)
-
 1. Check [releases](https://github.com/Hsn723/ct-monitor/releases) for changes.
 2. Update `ARG VERSION` in `Dockerfile`.
 3. Update `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE`, `CERT_MANAGER_VERSION` in `e2e/Makefile` and kind/kubectl versions in `e2e/aqua.yaml` if necessary.

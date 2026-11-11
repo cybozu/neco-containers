@@ -1,7 +1,5 @@
 # serf
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/hashicorp/serf/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile`

@@ -1,7 +1,5 @@
 # s3gw
 
-![Regular Update](../regular_update.svg)
-
 Only the base image and module dependency should be updated.
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.

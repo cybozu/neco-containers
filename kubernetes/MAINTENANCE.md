@@ -1,7 +1,5 @@
 # kubernetes
 
-![Kubernetes Update](../kubernetes_update.svg)
-
 The kubernetes directory is split into per-minor-version subdirectories (e.g. `kubernetes/k8s-1.35/`).
 
 To update an existing minor version:

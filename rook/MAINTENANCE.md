@@ -1,7 +1,5 @@
 # rook
 
-![CSA Update](../csa_update.svg)
-
 > [!Note]
 > A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
 > 

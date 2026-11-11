@@ -1,7 +1,5 @@
 # local-pv-provisioner
 
-![CSA Update](../csa_update.svg)
-
 1. Update version variables in `Makefile` and `e2etest/Makefile`.
    - `Makefile`: `CONTROLLER_TOOLS_VERSION` and `ENVTEST_K8S_VERSION`
    - `e2etest/Makefile`: `KUBERNETES_VERSION` and `MINIKUBE_VERSION`

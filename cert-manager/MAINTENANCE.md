@@ -1,7 +1,5 @@
 # cert-manager
 
-![Regular Update](../regular_update.svg)
-
 1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
 2. Check whether manually applied patches have been included in the new release and remove them accordingly.
    1. If patches are still needed, synchronize the forked repository (<https://github.com/cybozu-go/cert-manager>).

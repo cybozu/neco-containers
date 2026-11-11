@@ -1,7 +1,5 @@
 # prometheus-config-reloader
 
-![Regular Update](../regular_update.svg)
-
 This is a part of [prometheus-operator](https://github.com/prometheus-operator/prometheus-operator/).
 This is used as a sidecar of Alloy Pod now.
 

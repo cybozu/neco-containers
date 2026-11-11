@@ -1,7 +1,5 @@
 # stakater/Reloader
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/stakater/Reloader/releases).
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile`

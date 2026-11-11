@@ -1,7 +1,5 @@
 # vault
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/hashicorp/vault/releases) and these notes:
     - <https://www.vaultproject.io/docs/upgrading>
     - <https://www.vaultproject.io/docs/release-notes>

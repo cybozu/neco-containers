@@ -1,7 +1,5 @@
 # neco-exporter
 
-![Regular Update](../regular_update.svg)
-
 1. Update the software versions in the following files to the ones used by neco.
    - `Dockerfile`
    - `Makefile`

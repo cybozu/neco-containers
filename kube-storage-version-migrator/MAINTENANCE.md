@@ -1,7 +1,5 @@
 # kube-storage-version-migrator
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/kubernetes-sigs/kube-storage-version-migrator/releases).
 2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
    - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/Makefile`

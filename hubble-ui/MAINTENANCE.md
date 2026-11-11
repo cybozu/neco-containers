@@ -1,7 +1,5 @@
 # hubble-ui
 
-![Regular Update](../regular_update.svg)
-
 This image is shared by all supported Cilium versions.
 
 1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.

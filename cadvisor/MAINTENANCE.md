@@ -1,7 +1,5 @@
 # cadvisor
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/google/cadvisor/releases).
 2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
    - `https://github.com/google/cadvisor/blob/vX.Y.Z/Makefile`

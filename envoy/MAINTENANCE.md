@@ -1,7 +1,5 @@
 # envoy
 
-![Regular Update](../regular_update.svg)
-
 > [!Note]
 > Envoy is managed by [Contour](../contour/MAINTENANCE.md) so update to the supported version. See the below.
 >

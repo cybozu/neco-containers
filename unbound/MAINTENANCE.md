@@ -1,7 +1,5 @@
 # unbound
 
-![Kubernetes Update](../kubernetes_update.svg)
-
 1. Check the [download page](https://www.nlnetlabs.nl/projects/unbound/download/).
 2. Run `make update-root-hints`.
 3. Update `UNBOUND_VERSION` in `Dockerfile`.

@@ -1,7 +1,5 @@
 # argocd
 
-![Regular Update](../regular_update.svg)
-
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
 2. Check `hack/tool-versions.sh` for the tools versions.
     - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh`

@@ -1,7 +1,5 @@
 # falco-operator
 
-![No Need Update](../no_need_update.svg)
-
 Used as a PoC, so regular updates are not required.
 
 A single `Dockerfile` builds two images from the `falcosecurity/falco-operator` repository:

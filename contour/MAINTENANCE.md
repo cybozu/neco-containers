@@ -1,7 +1,5 @@
 # contour
 
-![Regular Update](../regular_update.svg)
-
 > [!Note]
 > Contour uses Envoy as a "data plane." Keep version correspondence between the contour and [envoy](../envoy/MAINTENANCE.md) images. Check the compatibility matrix below.
 >

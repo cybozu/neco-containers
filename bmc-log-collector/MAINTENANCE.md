@@ -1,7 +1,5 @@
 # bmc-log-collector
 
-![Regular Update](../regular_update.svg)
-
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test are pass.
 

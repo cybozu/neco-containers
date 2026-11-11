@@ -1,7 +1,5 @@
 # argocd-image-updater
 
-![Regular Update](../regular_update.svg)
-
 1. Check [releases](https://github.com/argoproj-labs/argocd-image-updater/releases) for changes.
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - `https://github.com/argoproj-labs/argocd-image-updater/blob/vX.Y.Z/Dockerfile`

@@ -1,8 +1,6 @@
 # admission (neco-admission)
 
-![Kubernetes Update](../kubernetes_update.svg)
-
-In Kubernetes update:
+## Kubernetes Update
 
 1. Update the following version variables in `Makefile`.
    - `ENVTEST_K8S_VERSION`
@@ -26,9 +24,9 @@ In Kubernetes update:
 
 6. Update `TAG` file.
 
-![Regular Update](../regular_update.svg)
+## Regular Update
 
-In Regular update, do the following as part of the update of each CRD-providing product:
+Do the following as part of the update of each CRD-providing product:
 
 1. Update the matching commit hash variables and comments from the following in `Makefile`.
    - `CONTOUR_COMMIT_HASH`

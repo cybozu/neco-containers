@@ -1,7 +1,5 @@
 # falco-k8s-metacollector
 
-![No Need Update](../no_need_update.svg)
-
 Used as a PoC, so regular updates are not required.
 
 1. Check the [release page](https://github.com/falcosecurity/k8s-metacollector/releases).

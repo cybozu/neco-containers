@@ -1,7 +1,5 @@
 # cilium-certgen
 
-![Regular Update](../regular_update.svg)
-
 This image is shared by all supported Cilium versions.
 
 1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.

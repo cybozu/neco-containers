@@ -1,7 +1,5 @@
 # cephcsi
 
-![CSA Update](../csa_update.svg)
-
 1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of cephcsi.
 2. Update `CSI_IMAGE_VERSION` in Dockerfile with the value which you checked in the previous step.
 3. Update `BASE_IMAGE` in Dockerfile if necessary.

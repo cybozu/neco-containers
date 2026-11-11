@@ -1,7 +1,5 @@
 # machines-endpoints
 
-![Kubernetes Update](../kubernetes_update.svg)
-
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test is green.
 

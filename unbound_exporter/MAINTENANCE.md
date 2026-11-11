@@ -1,7 +1,5 @@
 # unbound_exporter
 
-![Kubernetes Update](../kubernetes_update.svg)
-
 1. Check the [release page](https://github.com/letsencrypt/unbound_exporter/releases)
 2. Update our forked repository. We apply a patch to the original unbound\_exporter to support `SO_REUSEPORT`. This patch helps the restart of unbound\_exporter in a Pod where `hostNetwork` is set to `true`.
     1. Set up a local copy of the unbound\_exporter repository if you have not yet.

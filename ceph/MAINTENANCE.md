@@ -1,7 +1,5 @@
 # ceph
 
-![CSA Update](../csa_update.svg)
-
 1. Check the [release page](https://docs.ceph.com/en/latest/releases/).
 2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
    1. If other instructions are needed for `ceph/build.sh`, add the instructions.

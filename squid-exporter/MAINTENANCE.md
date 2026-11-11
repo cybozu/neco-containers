@@ -1,7 +1,5 @@
 # squid-exporter
 
-![Regular Update](../regular_update.svg)
-
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update squid version in `Makefile` and `e2e/pod.yaml` if there are any updates.
 3. Update `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE` (image digest) in `e2e/Makefile` and kind/kubectl versions in `e2e/aqua.yaml` if necessary.

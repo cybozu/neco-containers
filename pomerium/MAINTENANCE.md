@@ -1,7 +1,5 @@
 # pomerium
 
-![Regular Update](../regular_update.svg)
-
 1. Check the release page and upgrade guide.
    - <https://github.com/pomerium/pomerium/releases>
    - <https://www.pomerium.com/docs/core/upgrading>

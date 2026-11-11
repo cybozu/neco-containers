@@ -1,7 +1,5 @@
 # victoriametrics
 
-![Regular Update](../regular_update.svg)
-
 1. Check the [release page](https://github.com/VictoriaMetrics/VictoriaMetrics/releases).
 2. Check upstream `Makefile` and `Dockerfile`, and update our `Dockerfile` if needed.
    - `https://github.com/VictoriaMetrics/VictoriaMetrics/blob/vX.Y.Z/Makefile`

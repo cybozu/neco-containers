@@ -1,7 +1,5 @@
 # golang-all (golang for combinations of versions and platforms)
 
-![Regular Update](../regular_update.svg)
-
 Automated by `.github/workflows/update.yaml`.
 
 Manual update

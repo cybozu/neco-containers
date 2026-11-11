@@ -1,7 +1,5 @@
 # meows-neco-runner
 
-![Regular Update](../regular_update.svg)
-
 The directory is split into per-OS subdirectories (`meows-neco-runner/ubuntu22.04/`, `meows-neco-runner/ubuntu24.04/`). Repeat the following steps for each subdirectory.
 
 1. Check the [release page](https://github.com/cybozu-go/meows/releases) and [runner image release](https://github.com/cybozu-go/meows/pkgs/container/meows-runner).

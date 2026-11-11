@@ -1,7 +1,5 @@
 # alertmanager
 
-![Regular Update](../regular_update.svg)
-
 1. Check the release page.
    - <https://github.com/prometheus/alertmanager/releases>
 2. Check the upstream Makefile and Dockerfile. If there are any updates, update our `Dockerfile`.
