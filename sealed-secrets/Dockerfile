@@ -1,9 +1,9 @@
 # Build stage
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-ARG SEALED_SECRETS_VERSION=0.38.1
-ARG SEALED_SECRETS_COMMIT=706528904566e28373b584b5adb7e92ef8f81c1d
+ARG SEALED_SECRETS_VERSION=0.41.2
+ARG SEALED_SECRETS_COMMIT=51799eb6dd970239e356c1ccffd354fe74408700
 
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     curl -sLf -o sealed-secrets.tar.gz https://github.com/bitnami/sealed-secrets/archive/${SEALED_SECRETS_COMMIT}.tar.gz \
