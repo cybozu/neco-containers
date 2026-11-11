@@ -18,17 +18,16 @@ func init() {
 	collectors = []exporter.Collector{
 		// scope: cluster
 		cert.NewCollector(),
+		ciliumid.NewClusterCollector(),
 		mock.NewCollector(),
 		networkfence.NewCollector(),
 
 		// scope: node
 		bpf.NewCollector(),
+		ciliumid.NewNodeCollector(),
 		cpupinning.NewCollector(),
 		kubeletconfig.NewCollector(),
 		nicirq.NewCollector(),
-
-		// scope: hybrid
-		ciliumid.NewCollector(),
 	}
 }
 

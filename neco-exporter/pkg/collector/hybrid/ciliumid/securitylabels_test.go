@@ -95,7 +95,7 @@ func TestParseSecurityLabels(t *testing.T) {
 	}
 }
 
-// TestRoundTrip makes sure that labels reported by Cilium's endpoint API are formatted
+// TestSecurityLabelsRoundTrip makes sure that labels reported by Cilium's endpoint API are formatted
 // the same as the CiliumIdentity security-labels, i.e. the same as Label.String() joined by commas.
 func TestSecurityLabelsRoundTrip(t *testing.T) {
 	input := []string{"k8s:zoo", "k8s:app=bar", "k8s:io.kubernetes.pod.namespace=default"}

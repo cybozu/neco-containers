@@ -10,6 +10,7 @@ import (
 	"github.com/cilium/cilium/pkg/client"
 	"github.com/cilium/cilium/pkg/identity"
 
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
@@ -22,17 +23,25 @@ type nodeCollector struct {
 	ciliumClient *client.Client
 }
 
-var _ scopedCollector = &nodeCollector{}
+var _ exporter.Collector = &nodeCollector{}
 
-func newNodeCollector() *nodeCollector {
+func NewNodeCollector() exporter.Collector {
 	return &nodeCollector{}
 }
 
-func (c *nodeCollector) isLeaderMetrics() bool {
+func (c *nodeCollector) Scope() string {
+	return constants.ScopeNode
+}
+
+func (c *nodeCollector) MetricsPrefix() string {
+	return metricsPrefix
+}
+
+func (c *nodeCollector) IsLeaderMetrics() bool {
 	return false
 }
 
-func (c *nodeCollector) setup(_ context.Context) error {
+func (c *nodeCollector) Setup(_ context.Context) error {
 	node := os.Getenv(nodeNameEnv)
 	if node == "" {
 		return fmt.Errorf("%s environment variable is not set", nodeNameEnv)
@@ -48,7 +57,7 @@ func (c *nodeCollector) setup(_ context.Context) error {
 	return nil
 }
 
-func (c *nodeCollector) collect(_ context.Context) ([]*exporter.Metric, error) {
+func (c *nodeCollector) Collect(_ context.Context) ([]*exporter.Metric, error) {
 	response, err := c.ciliumClient.Endpoint.GetEndpoint(&endpoint.GetEndpointParams{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to list Cilium endpoints: %w", err)

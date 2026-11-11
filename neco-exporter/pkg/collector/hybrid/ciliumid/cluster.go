@@ -3,6 +3,7 @@ package ciliumid
 import (
 	"context"
 
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/constants"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/manager"
 )
@@ -12,19 +13,27 @@ type clusterCollector struct {
 	watcher *identityWatcher
 }
 
-var _ scopedCollector = &clusterCollector{}
+var _ exporter.Collector = &clusterCollector{}
 
-func newClusterCollector() *clusterCollector {
+func NewClusterCollector() exporter.Collector {
 	return &clusterCollector{
 		watcher: newIdentityWatcher(),
 	}
 }
 
-func (c *clusterCollector) isLeaderMetrics() bool {
+func (c *clusterCollector) Scope() string {
+	return constants.ScopeCluster
+}
+
+func (c *clusterCollector) MetricsPrefix() string {
+	return metricsPrefix
+}
+
+func (c *clusterCollector) IsLeaderMetrics() bool {
 	return true
 }
 
-func (c *clusterCollector) setup(ctx context.Context) error {
+func (c *clusterCollector) Setup(ctx context.Context) error {
 	ctrl, err := manager.EnsureManager()
 	if err != nil {
 		return err
@@ -32,7 +41,7 @@ func (c *clusterCollector) setup(ctx context.Context) error {
 	return c.watcher.setupWithManager(ctx, ctrl)
 }
 
-func (c *clusterCollector) collect(ctx context.Context) ([]*exporter.Metric, error) {
+func (c *clusterCollector) Collect(ctx context.Context) ([]*exporter.Metric, error) {
 	m := c.watcher.getNamespaceIdentityCount()
 	ret := make([]*exporter.Metric, 0, len(m))
 	for k, v := range m {
