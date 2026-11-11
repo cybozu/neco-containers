@@ -89,11 +89,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [sealed-secrets](#sealed-secrets)
 - [serf](#serf)
 - [spegel](#spegel)
-- [spiffe-csi-driver](#spiffe-csi-driver)
-- [spiffe-test](#spiffe-test)
-- [spire-agent](#spire-agent)
-- [spire-server](#spire-server)
-- [spire-controller-manager](#spire-controller-manager)
 - [squid](#squid)
 - [squid-exporter](#squid-exporter)
 - [stakater/Reloader](#stakaterreloader)
@@ -1247,63 +1242,6 @@ Only the base image and module dependency should be updated.
 ![Regular Update](./regular_update.svg)
 1. Check the [release page](https://github.com/spegel-org/spegel/releases).
 2. Update `SPEGEL_COMMIT` in `Dockerfile`.
-3. Update `TAG` file.
-
-## spiffe-csi-driver
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/spiffe/spiffe-csi/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/spiffe/spiffe-csi/blob/vX.Y.Z/Dockerfile`
-   - `https://github.com/spiffe/spiffe-csi/blob/vX.Y.Z/Makefile`
-3. Update `TAG` file.
-
-> [!Note]
-> The spire-server, spire-agent, and spiffe-csi-driver images should be updated at the same time for consistency.
-
-## spiffe-test
-
-![Regular Update](./regular_update.svg)
-
-1. Update the base image in `Dockerfile`.
-2. Update Go dependencies in the `spiffe-test` directory.
-3. Update `TAG` and `BRANCH` files.
-
-## spire-agent
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/spiffe/spire/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/spiffe/spire/blob/vX.Y.Z/Dockerfile`
-   - `https://github.com/spiffe/spire/blob/vX.Y.Z/Makefile`
-3. Update `TAG` file.
-
-> [!Note]
-> The spire-server, spire-agent, and spiffe-csi-driver images should be updated at the same time for consistency.
-
-## spire-server
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/spiffe/spire/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/spiffe/spire/blob/vX.Y.Z/Dockerfile`
-   - `https://github.com/spiffe/spire/blob/vX.Y.Z/Makefile`
-3. Update `TAG` file.
-
-> [!Note]
-> The spire-server, spire-agent, and spiffe-csi-driver images should be updated at the same time for consistency.
-
-## spire-controller-manager
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/spiffe/spire-controller-manager/releases).
-2. Check the upstream Dockerfile and Makefile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/spiffe/spire-controller-manager/blob/vX.Y.Z/Dockerfile`
-   - `https://github.com/spiffe/spire-controller-manager/blob/vX.Y.Z/Makefile`
 3. Update `TAG` file.
 
 ## squid
