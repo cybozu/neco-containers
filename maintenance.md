@@ -21,35 +21,22 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [admission (neco-admission)](#admission-neco-admission)
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
-- [approver-policy](#approver-policy)
 - [argo-rollouts](#argo-rollouts)
 - [argocd](#argocd)
 - [argocd-image-updater](#argocd-image-updater)
-- [bird](#bird)
 - [blackbox\_exporter](#blackbox_exporter)
 - [bmc-log-collector](#bmc-log-collector)
 - [bmc-reverse-proxy](#bmc-reverse-proxy)
-- [bpftrace](#bpftrace)
 - [cadvisor](#cadvisor)
-- [cep-checker](#cep-checker)
 - [ceph](#ceph)
   - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
 - [ceph-csi-operator](#ceph-csi-operator)
 - [ceph-extra-exporter](#ceph-extra-exporter)
 - [cephcsi](#cephcsi)
-- [cert-manager](#cert-manager)
-- [chrony](#chrony)
-- [cilium](#cilium)
-- [cilium-certgen](#cilium-certgen)
-- [cilium-operator-generic](#cilium-operator-generic)
-- [contour](#contour)
 - [coredns](#coredns)
 - [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
-- [ct-monitor](#ct-monitor)
 - [dex](#dex)
-- [envoy](#envoy)
 - [etcd](#etcd)
-- [external-dns](#external-dns)
 - [falco](#falco)
 - [falco-k8s-metacollector](#falco-k8s-metacollector)
 - [falco-operator](#falco-operator)
@@ -60,9 +47,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
 - [haproxy](#haproxy)
-- [hubble](#hubble)
-- [hubble-relay](#hubble-relay)
-- [hubble-ui](#hubble-ui)
 - [kube-metrics-adapter](#kube-metrics-adapter)
 - [kube-state-metrics](#kube-state-metrics)
 - [kube-storage-version-migrator](#kube-storage-version-migrator)
@@ -74,7 +58,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [memcached\_exporter](#memcached_exporter)
 - [meows-dctest-runner](#meows-dctest-runner)
 - [meows-neco-runner](#meows-neco-runner)
-- [neco-exporter](#neco-exporter)
 - [opentelemetry-collector](#opentelemetry-collector)
 - [pause](#pause)
 - [pomerium](#pomerium)
@@ -89,23 +72,14 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [sealed-secrets](#sealed-secrets)
 - [serf](#serf)
 - [spegel](#spegel)
-- [squid](#squid)
-- [squid-exporter](#squid-exporter)
-- [stakater/Reloader](#stakaterreloader)
-- [tcp-keepalive](#tcp-keepalive)
 - [teleport-node](#teleport-node)
 - [tempo](#tempo)
 - [testhttpd](#testhttpd)
-- [trust-manager](#trust-manager)
-- [trust-packages](#trust-packages)
-- [unbound](#unbound)
-- [unbound\_exporter](#unbound_exporter)
 - [vault](#vault)
 - [victoriametrics](#victoriametrics)
 - [victoriametrics-operator](#victoriametrics-operator)
 
 ---
-
 ## admission (neco-admission)
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -197,15 +171,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 4. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 5. Update `TAG` file.
 
-## approver-policy
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/cert-manager/approver-policy/releases).
-2. Update base image in `Dockerfile`.
-3. Update `APPROVER_POLICY_HASH` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## argo-rollouts
 
 ![Regular Update](./regular_update.svg)
@@ -258,18 +223,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
     - Update `ARGOCD_IMAGE_UPDATER_VERSION`.
 4. Update `TAG` file.
 
-## bird
-
-![Regular Update](./regular_update.svg)
-
-1. Check the latest version on the [download page](https://bird.nic.cz/download/) of the official website.
-2. Check the `https://gitlab.nic.cz/labs/bird/-/blob/vX.Y.Z/NEWS` in the official GitLab repository at the specified version tag for release notes.
-3. Check the release announcement from the [news page](https://bird.nic.cz/news/) on the official website.
-4. Update base image in `Dockerfile`.
-5. Update `BIRD_VERSION` and `BIRD_HASH` variables in `Dockerfile`.
-6. Update image tag in `README.md`.
-6. Update `BRANCH` and `TAG` files.
-
 ## blackbox_exporter
 
 ![Regular Update](./regular_update.svg)
@@ -306,17 +259,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update image tag in `bmc-reverse-proxy.yaml`.
 4. Update `TAG` file.
 
-## bpftrace
-
-![Regular Update](./regular_update.svg)
-
-1. Check the bpftrace [release page](https://github.com/bpftrace/bpftrace/releases).
-2. Check the bpftrace [Dockerfile](https://github.com/bpftrace/bpftrace/blob/master/docker/Dockerfile.ubuntu) of the latest release version.
-3. Check the bcc [release page](https://github.com/iovisor/bcc/releases) and update `BCC_VERSION` and `BCC_SHA` in the `Makefile` to its latest version.
-4. Check the libbpf [release page](https://github.com/libbpf/libbpf/releases) and update `LIBBPF_SHA` in the `Makefile` to its latest version.
-5. Update `BPFTRACE_SHA` in the `Makefile`.
-6. Update `TAG` file.
-
 ## cadvisor
 
 ![Regular Update](./regular_update.svg)
@@ -329,18 +271,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
    - `https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile`
 3. Update `CADVISOR_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
 4. Update `TAG` file.
-
-## cep-checker
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update versions in `e2e/Makefile`, `e2e/aqua.yaml`, and `go.mod` to the versions used by neco.
-   - Cilium: `CILIUM_VERSION` in `e2e/Makefile`
-   - cilium-cli: version in `e2e/aqua.yaml`
-   - Kubernetes (if needed): `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE` (image digest) in `e2e/Makefile`, kind and kubectl versions in `e2e/aqua.yaml`
-3. Run `aqua update-checksum -prune` in `e2e` if `e2e/aqua.yaml` is updated.
-4. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## ceph
 
@@ -420,141 +350,6 @@ gitGraph
 > [!Note]
 > Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
 
-## cert-manager
-
-![Regular Update](./regular_update.svg)
-
-1. Check [releases](https://github.com/jetstack/cert-manager/releases) for changes.
-2. Check whether manually applied patches have been included in the new release and remove them accordingly.
-   1. If patches are still needed, synchronize the forked repository (<https://github.com/cybozu-go/cert-manager>).
-   2. Create and checkout a new branch named `vX.Y.Z-neco` from the tag named `vX.Y.Z`.
-   3. Cherry-pick the commit included patches and create a new tag named `vX.Y.Z-neco.1`.
-   4. Push it.
-3. Update base images in `Dockerfile`.
-4. Update `CERT_MANAGER_SHA` in `Dockerfile`.
-5. Update image tag in `README.md`.
-6. Update `BRANCH` and `TAG` files.
-
-## chrony
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release note](https://chrony.tuxfamily.org/news.html).
-2. Update base images in `Dockerfile`.
-3. Update `CHRONY_VERSION` and `CHRONY_HASH` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
-## cilium
-
-![Regular Update](./regular_update.svg)
-
-Cilium images are split into per-minor-version directories (e.g. `cilium-1.18/`).
-Each `cilium-X.Y/` directory contains the images that must match the Cilium minor version:
-
-- `cilium-X.Y/cilium`
-- `cilium-X.Y/cilium-operator-generic`
-- `cilium-X.Y/hubble-relay`
-- `cilium-X.Y/hubble`
-
-[cilium-certgen](#cilium-certgen) and [hubble-ui](#hubble-ui) are shared by all Cilium versions and live in top-level directories.
-
-To update an existing minor version, follow the steps below inside `cilium-X.Y/`.
-
-To add a new minor version:
-
-1. Copy the latest `cilium-X.Y/` directory to `cilium-X.Y'/`.
-2. Update the four images following each section. Update the `BRANCH` (`X.Y'`) and `TAG` files of all of them.
-3. Update `scan.identifier` in `cilium/build-targets.yaml` and `hubble-relay/build-targets.yaml` to `ghcr.io/cybozu/<image>:X.Y'`.
-4. Add `/cilium-X.Y'/` to `.github/CODEOWNERS`.
-
-To remove an old minor version, check that no cluster uses it, then delete `cilium-X.Y/` and its CODEOWNERS entry.
-
-> [!Note]
-> Changes that are not specific to a Cilium version (e.g. pinning base images, CI-related settings) should be applied to all `cilium-X.Y/` directories in the same PR.
-
-To update the cilium image:
-
-1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Update `CILIUM_IMAGE_TOOLS_TARGET` in `cilium-X.Y/cilium/Makefile`. This is a commit SHA of <https://github.com/cilium/image-tools> .
-   1. Run `make IMAGE_TAG=quay.io/cilium/cilium:vX.Y.Z test` to see tools versions upstream uses.
-   2. See [history](https://github.com/cilium/image-tools/commits/master/) of `image-tools` to find an appropriate SHA, that provides matching tools version (especially for LLVM/Clang).
-3. Checkout `cilium/cilium` and `cilium/image-tools` at the relevant SHA.
-   1. Run `make checkout` and download them under `cilium-X.Y/cilium/src`.
-
-> [!Note]
-> `CILIUM_TARGET` in `cilium-X.Y/cilium/Makefile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
-> Changes to that branch must go through a pull request. After merging one (e.g. additional cherry-picked patches), you must update `CILIUM_TARGET` to the new commit SHA; it will not be picked up automatically.
-> In `cilium-1.17`, `make checkout-cilium` (and therefore `make checkout`/`make build`) runs `check-cilium-target` first, which fails if `CILIUM_TARGET` is not the current tip of that branch, to catch this case.
-4. Check the upstream `Dockerfile`s to make necessary changes for `cilium-X.Y/cilium`.
-   1. Run `make urls`. It displays all the URLs of the upstream `Dockerfile`s.
-   2. All the build specification is written in `cilium-X.Y/cilium/Dockerfile`. Please check the header comment of the file to find the mapping of our build targets and the upstream ones.
-   3. Update github.com/go-delve/delve/cmd/dlv version. Upstream may be using @latest but we must specify a version.
-5. Update the cilium-cli version used by the e2e test. See cilium-cli's [README](https://github.com/cilium/cilium-cli?tab=readme-ov-file#releases) to make sure that the cilium-cli version is compatible with the cilium version.
-   - Cilium 1.17: `CILIUM_CLI_VERSION` in `e2e/Makefile`.
-   - Cilium 1.18 or later: `cilium/cilium-cli` in `aqua.yaml`, then run `aqua update-checksum -prune`.
-6. Build `ghcr.io/cybozu/cilium` and see the result.
-   1. Run `make build` to build.
-   2. Run `make test` to make sanity check.
-   3. Run `make test-e2e` to run the standard connectivity test.
-      - `check-log-errors` has often been disabled to work around minor known issues.
-      Check the logs for significant errors manually and consider re-enabling it.
-   4. If any problem found, `dive ghcr.io/cybozu/cilium:$(cat TAG)` will help.
-
-> [!Note]
-> The cilium-operator-generic and hubble-relay images should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
-
-## cilium-certgen
-
-![Regular Update](./regular_update.svg)
-
-This image is shared by all supported Cilium versions.
-
-1. Check the [releases](https://github.com/cilium/certgen/releases) page for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/certgen/blob/vX.Y.Z/Dockerfile`
-3. Update the `BRANCH` and `TAG` files accordingly.
-
-## cilium-operator-generic
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/operator/Dockerfile`
-
-> [!Note]
-> `ENV CILIUM_SHA` in `neco-containers/cilium-X.Y/cilium-operator-generic/Dockerfile` pins a specific commit SHA of the `cybozu-go/cilium` fork branch (e.g. `vX.Y.Z-cybozu`), not the branch tip.
-> Changes to that branch must go through a pull request. After merging one (e.g. additional cherry-picked patches), you must update `CILIUM_SHA` to the new commit SHA; it will not be picked up automatically.
-> `make check-cilium-target` (run by CI before the image build) fails if `CILIUM_SHA` is not the current tip of that branch, to catch this case.
-
-3. Update the `BRANCH` and `TAG` files accordingly.
-
-> [!Note]
-> The cilium-operator-generic image should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
-
-## contour
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> Contour uses Envoy as a "data plane." Keep version correspondence between the contour and [envoy](#envoy) images. Check the compatibility matrix below.
->
-> - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
-
-1. Check the [release page](https://github.com/projectcontour/contour/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/projectcontour/contour/blob/vX.Y.Z/Dockerfile`
-3. Update `CONTOUR_VERSION` and `CONTOUR_SHA` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-6. Update `CONTOUR_VERSION` in `admission/Makefile`.
-7. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
-
-> [!Note]
-> Contour's HTTPProxy objects are validated by [neco-admission](#admission-neco-admission).
-> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
-
 ## coredns
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -602,18 +397,6 @@ This section applies to the following containers. These containers are maintaine
 > [!Note]
 > You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
 
-## ct-monitor
-
-![Regular Update](./regular_update.svg)
-
-1. Check [releases](https://github.com/Hsn723/ct-monitor/releases) for changes.
-2. Update `ARG VERSION` in `Dockerfile`.
-3. Update `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE`, `CERT_MANAGER_VERSION` in `e2e/Makefile` and kind/kubectl versions in `e2e/aqua.yaml` if necessary.
-4. Run `aqua update-checksum -prune` in `e2e` if `e2e/aqua.yaml` is updated.
-5. Upgrade direct dependencies in `go.mod` (for e2e test) and run `go mod tidy`.
-6. Upgrade direct dependencies in `plugin/incluster-filter/go.mod` and run `go mod tidy` in `plugin/incluster-filter/`.
-7. Update `TAG` file.
-
 ## dex
 
 ![Regular Update](./regular_update.svg)
@@ -631,21 +414,6 @@ This section applies to the following containers. These containers are maintaine
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## envoy
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> Envoy is managed by [Contour](#contour) so update to the supported version. See the below.
->
-> - [Contour Compatibility Matrix](https://projectcontour.io/resources/compatibility-matrix/)
-
-1. Check the [release page](https://github.com/envoyproxy/envoy/releases).
-2. Update `envoy_commit_sha` in [`.github/workflows/main.yaml`](/.github/workflows/main.yaml).
-3. Update image tag in `README.md`.
-4. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-5. Update `BRANCH` and `TAG` files.
-
 ## etcd
 
 ![Kubernetes Update](./kubernetes_update.svg)
@@ -656,18 +424,6 @@ This section applies to the following containers. These containers are maintaine
 3. Update `ETCD_COMMIT` in `Dockerfile`.
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
-
-## external-dns
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/kubernetes-sigs/external-dns/releases).
-2. Check the upstream `.ko.yaml`. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/kubernetes-sigs/external-dns/blob/vX.Y.Z/.ko.yaml`
-3. Update base image in `Dockerfile`.
-4. Update `EXTERNALDNS_VERSION` and `EXTERNALDNS_HASH` in `Dockerfile`.
-5. Update image tag in `README.md`.
-6. Update `TAG` file.
 
 ## falco
 
@@ -795,92 +551,6 @@ Manual update
    - v2.6.x: <https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile>
 2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in <http://www.haproxy.org/download>
 3. Update `BRANCH` and `TAG` files.
-
-## hubble
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> Keep the Hubble CLI on the same minor version as Cilium in each `cilium-X.Y/hubble`.
-
-1. Check the [releases](https://github.com/cilium/hubble/releases) page for changes.
-2. Update `HUBBLE_SHA` in `Dockerfile` with the commit SHA of the new release tag.
-3. Update the `BRANCH` and `TAG` files accordingly.
-
-Hubble image is no longer built by the upstream. If failing to build the image, check upstream changes.
-
-## hubble-relay
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [releases](https://github.com/cilium/cilium/releases) page for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/cilium/blob/vX.Y.Z/images/hubble-relay/Dockerfile`
-3. Update `CILIUM_SHA` in `Dockerfile`.
-4. Update the `BRANCH` and `TAG` files accordingly.
-
-> [!Note]
-> The hubble-relay image should be updated at the same time as the cilium image in the same `cilium-X.Y/` directory for consistency.
-
-## hubble-ui
-
-![Regular Update](./regular_update.svg)
-
-This image is shared by all supported Cilium versions.
-
-1. Check the [releases](https://github.com/cilium/hubble-ui/releases) page for changes.
-2. Update the `BRANCH` and `TAG` files accordingly.
-3. Update `aqua.yaml` and run `aqua update-checksum -prune`.
-4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cilium/hubble-ui/blob/vX.Y.Z/Dockerfile` (replace `vX.Y.Z` with the tag from `TAG`)
-   - Update `NODE_VERSION` (full patch version, e.g. `22.22.2`) and `NODE_SHA` in `Dockerfile`. Get the SHA256 from `https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt` for `node-v${NODE_VERSION}-linux-x64.tar.xz`.
-   - Update `NGINX_VERSION` in `Dockerfile`.
-   - Update `HUBBLE_UI_COMMIT_HASH` in `Makefile`.
-   - Update `NGINX_COMMIT_HASH` in `Makefile`.
-      - Browse <https://github.com/nginx/docker-nginx-unprivileged/commits/main/> .
-      - `NGINX_COMMIT_HASH` should be the one referencing the commit "Update mainline NGINX to <NGINX_VERSION>".
-5. Regenerate `pnpm-lock.yaml`. `hubble-ui/.pnpmfile.cjs` pins two lists of packages to the versions in upstream's `package-lock.json` (checked out in `src/hubble-ui`): `PHANTOM`, packages upstream imports but does not declare, and `OVERRIDE`, packages that would otherwise resolve to a version different from upstream's. `make import-lockfile` requires [Takumi Guard](https://shisho.dev/docs/ja/t/guard/quickstart/npm/) configured locally — every new tarball is fetched through the proxy for supply-chain screening, and the target refuses to start otherwise.
-   It also resolves with `minimumReleaseAge=4320` (3 days), so a version published less than 3 days ago is skipped in favor of an older one. If upstream requires such a version, wait, or pass `PNPM_MINIMUM_RELEASE_AGE=0` once and note it in the PR.
-
-   ```sh
-   cd hubble-ui
-   make import-lockfile
-   ```
-
-   Re-run it whenever `HUBBLE_UI_COMMIT_HASH` changes. With a stale lockfile, `make verify-lockfile` (also run in CI) and the Docker build fail with `ERR_PNPM_OUTDATED_LOCKFILE`.
-   If it fails with `<pkg> is now declared in upstream package.json`, remove `<pkg>` from `PHANTOM`; with `<pkg> not found in upstream package-lock.json`, remove `<pkg>` from whichever list has it.
-
-   If `make build-frontend` fails at `pnpm run build`, edit `hubble-ui/.pnpmfile.cjs` and run `make import-lockfile` again:
-   - `Module not found: Can't resolve '<pkg>'`: add `<pkg>` to `PHANTOM`.
-   - `instanceof` or type errors from `<pkg>` whose version in `pnpm-lock.yaml` differs from `src/hubble-ui/package-lock.json`: add `<pkg>` to `OVERRIDE`.
-
-   Review the diff:
-   - `pnpm-lock.yaml` — check new entries and integrity hashes for anomalies.
-   - Packages with install scripts: compare with the previous release and review any new or bumped one before merging. `--ignore-scripts` keeps dependency scripts from running during the build; upstream's own `postinstall` (`patch-package` + `scripts/post-install.sh`) is run on purpose, so review changes to those as well.
-
-     ```sh
-     PREV=  # HUBBLE_UI_COMMIT_HASH before this update
-     cd src/hubble-ui
-     git fetch --depth 1 origin ${PREV}
-     diff <(git show ${PREV}:package-lock.json | jq -r '.packages | to_entries[] | select(.key != "" and .value.hasInstallScript) | "\(.key)@\(.value.version)"') \
-          <(jq -r '.packages | to_entries[] | select(.key != "" and .value.hasInstallScript) | "\(.key)@\(.value.version)"' package-lock.json)
-     ```
-6. Check the upstream [Dockerfile](https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template) for unprivileged version of nginx.
-
-   ```sh
-   OLD_NGINX_VERSION=
-   NEW_NGINX_VERSION=
-
-   diff --side-by-side -W300 \
-   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${OLD_NGINX_VERSION}/Dockerfile-debian.template) \
-   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
-
-   diff --side-by-side -W300 \
-   <(cat hubble-ui/Dockerfile) \
-   <(curl -sL https://raw.githubusercontent.com/nginx/docker-nginx-unprivileged/refs/tags/${NEW_NGINX_VERSION}/Dockerfile-debian.template)
-   ```
-
-7. Update `NJS_VERSION` and `PKG_RELEASE` in `Dockerfile`.
 
 ## kube-metrics-adapter
 
@@ -1040,19 +710,6 @@ The directory is split into per-OS subdirectories (`meows-neco-runner/ubuntu22.0
      - <https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile#L6> (for `ubuntu24.04/`)
 4. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
 5. Update `BRANCH` and `TAG` files.
-
-## neco-exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Update the software versions in the following files to the ones used by neco.
-   - `Dockerfile`
-   - `Makefile`
-   - `e2e/Makefile`
-   - `go.mod`
-   - `e2e/aqua.yaml`
-2. Run `aqua update-checksum -prune` in `e2e` if `e2e/aqua.yaml` is updated.
-3. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
 
 ## opentelemetry-collector
 
@@ -1244,47 +901,6 @@ Only the base image and module dependency should be updated.
 2. Update `SPEGEL_COMMIT` in `Dockerfile`.
 3. Update `TAG` file.
 
-## squid
-
-![Regular Update](./regular_update.svg)
-
-1. Check the latest **stable** version at <http://www.squid-cache.org/Versions/>
-2. Check release notes if a new version is released.
-    - e.g., `https://github.com/squid-cache/squid/releases/tag/SQUID_X_Y`
-3. Update `SQUID_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
-## squid-exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update squid version in `Makefile` and `e2e/pod.yaml` if there are any updates.
-3. Update `E2ETEST_K8S_VERSION`, `E2ETEST_K8S_IMAGE` (image digest) in `e2e/Makefile` and kind/kubectl versions in `e2e/aqua.yaml` if necessary.
-4. Run `aqua update-checksum -prune` in `e2e` if `e2e/aqua.yaml` is updated.
-5. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
-
-> [!Note]
-> The squid images should be updated at the same time as the squid-exporter image for consistency.
-
-## stakater/Reloader
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/stakater/Reloader/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/stakater/Reloader/blob/vX.Y.Z/Dockerfile`
-3. Update `RELOADER_SHA` in `Dockerfile` with the commit SHA of the new release tag.
-4. Update `BRANCH` and `TAG` files.
-
-## tcp-keepalive
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Upgrade base images in `Dockerfile`.
-3. Update `BRANCH` and `TAG` files.
-
 ## teleport-node
 
 ![Regular Update](./regular_update.svg)
@@ -1313,104 +929,6 @@ Only the base image and module dependency should be updated.
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Update `BRANCH` and `TAG` files.
-
-## trust-manager
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
-2. Update base image in `Dockerfile`.
-3. Update `TRUST_MAHAGER_HASH` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
-## trust-packages
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/cert-manager/trust-manager/releases).
-2. Update `TRUST_MANAGER_HASH` and `UBUNTU_IMAGE` in `Makefile`.
-3. Update base image and `TRUST_MANAGER_HASH` in `Dockerfile`.
-4. Update `TAG` file.
-5. Verify that the new `trust-packages` version matches the `trust-manager` version.
-
-## unbound
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [download page](https://www.nlnetlabs.nl/projects/unbound/download/).
-2. Run `make update-root-hints`.
-3. Update `UNBOUND_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
-## unbound_exporter
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/letsencrypt/unbound_exporter/releases)
-2. Update our forked repository. We apply a patch to the original unbound\_exporter to support `SO_REUSEPORT`. This patch helps the restart of unbound\_exporter in a Pod where `hostNetwork` is set to `true`.
-    1. Set up a local copy of the unbound\_exporter repository if you have not yet.
-
-        ```bash
-        $ cd github.com/letsencrypt
-        $ git clone https://github.com/letsencrypt/unbound_exporter.git
-        $ cd unbound_exporter
-        $ git remote add fork ssh://gh/cybozu-go/unbound_exporter
-        ```
-
-    2. Update our forked repository.
-
-        ```bash
-        $ cd github.com/letsencrypt/unbound_exporter
-        $ git checkout main
-        $ git pull
-        $ git fetch fork
-        $ git push fork main
-        ```
-
-    3. Find a commit of our patch in the old tag.
-
-        ```bash
-        $ git log vx.y.z-neco.w
-        ```
-
-    4. Apply our patch to the copy of the latest tag.
-
-        ```bash
-        $ git checkout -b neco-vX.Y.Z-patch vX.Y.Z
-        $ git cherry-pick <commit>
-
-        If it causes conflicts:
-        $ (edit to resolve conflicts)
-        $ git add foobar
-        $ git cherry-pick --continue
-        ```
-
-    5. Test the patched branch.
-
-        ```bash
-        $ staticcheck ./...
-        # staticcheck will fail due to ST1005, which points out that error strings should not be capitalized.
-        # $ staticcheck --checks inherit,-ST1005 ./...
-        $ go vet ./...
-        $ go test ./...
-        ```
-
-    6. Push the patched branch.
-
-        ```bash
-        $ git push -u fork neco-vX.Y.Z-patch
-        ```
-
-    7. Create and push a tag.
-
-        ```bash
-        $ git tag -a -m "reuse-port" vX.Y.Z-neco.1
-        $ git push fork tag vX.Y.Z-neco.1
-        ```
-
-3. Update `UNBOUND_EXPORTER_COMMIT` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
 
 ## vault
 
