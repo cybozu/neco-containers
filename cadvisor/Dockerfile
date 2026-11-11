@@ -1,10 +1,10 @@
 # cadvisor container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-ARG CADVISOR_COMMIT=9c3903ca474779a5f5f9c7b3af9868c566a85f4e
+ARG CADVISOR_COMMIT=5bf5d43ac6f60d7ee36a13b4d5b4a78ad2d0abc7
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
