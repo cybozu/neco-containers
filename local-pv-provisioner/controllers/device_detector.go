@@ -19,7 +19,6 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -354,7 +353,7 @@ func (dd *DeviceDetector) createPV(ctx context.Context, dev Device, node *corev1
 			Local: &corev1.LocalVolumeSource{Path: dev.Path},
 		}
 		if isFilesystem(pvSpec.volumeMode) {
-			pv.Spec.Local.FSType = ptr.To(pvSpec.fsType)
+			pv.Spec.Local.FSType = new(pvSpec.fsType)
 		}
 		pv.Spec.StorageClassName = pvSpec.storageClassName
 		pv.Spec.VolumeMode = &pvMode

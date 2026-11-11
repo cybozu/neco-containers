@@ -1,6 +1,6 @@
-KUBERNETES_VERSION := 1.35.4
+KUBERNETES_VERSION := 1.36.0
 # https://github.com/kubernetes/minikube/releases
-MINIKUBE_VERSION := 1.38.1
+MINIKUBE_VERSION := 1.39.0
 
 # Tools versions which are defined in go.mod
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
@@ -64,6 +64,7 @@ launch-cluster:
 		$(MINIKUBE) start \
 			--kubernetes-version="v$(KUBERNETES_VERSION)" \
 			--driver=kvm2 \
+			--container-runtime=docker \
 			--memory=8g \
 			--cpus=4 \
 			--extra-config=kubeadm.node-name=$(NODE_NAME) \
