@@ -8,8 +8,8 @@ ADD --checksum=sha256:ccfe7ae822d2c2f41f4fe7c956199967a4dac22d0ee0d2b2bfdb440aab
     https://dl.google.com/go/go1.26.10.linux-amd64.tar.gz /go.tar.gz
 
 FROM scratch AS placemat-download
-ADD --checksum=sha256:9f5aa812d00d4fa47dad391e99a85793d6e3b7f7b7b375743d0a56cb8e275186 \
-    https://github.com/cybozu-go/placemat/releases/download/v2.5.1/placemat2_2.5.1_amd64.deb /placemat2.deb
+ADD --checksum=sha256:655b84737ea48a59f348ad5f32c3c2f9c04ecfdf44a6a43da9ad34311c4e3eed \
+    https://github.com/cybozu-go/placemat/releases/download/v2.7.2/placemat2_2.7.2_amd64.deb /placemat2.deb
 
 FROM scratch AS aqua-installer-download
 ADD --checksum=sha256:c0acde4802a1edd8b8201fd4cc1f0e52700cd4feb875f9c9793381b5b0ca2065 \
