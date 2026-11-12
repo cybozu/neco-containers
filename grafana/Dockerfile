@@ -14,6 +14,12 @@ COPY *.patch /work/
 RUN patch -p1 < /work/viewers_can_explore.patch
 RUN patch -p1 < /work/disable-unversioned-plugin-install.patch
 
+# install unzip (required for download-catalog-plugins.sh)
+RUN apt update && apt install -y --no-install-recommends unzip && rm -rf /var/lib/apt/lists/*
+COPY catalog-plugins-defaults /work/grafana/scripts/catalog-plugins-defaults
+RUN mkdir -p data/plugins-bundled
+RUN scripts/download-catalog-plugins.sh --os $(go env GOOS) --arch $(go env GOARCH)
+
 # Install Node.js 24.x & yarn
 # https://nodesource.com/products/distributions
 RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
@@ -71,6 +77,7 @@ COPY --from=build /work/grafana/bin/grafana* /work/grafana/bin/*/grafana* ./bin/
 COPY --from=build /work/grafana/public ./public
 COPY --from=build /work/grafana/LICENSE ./LICENSE
 COPY --from=build /work/grafana/conf/defaults.ini ./conf/defaults.ini
+COPY --from=build /work/grafana/data/plugins-bundled /usr/share/grafana/data/plugins-bundled
 
 EXPOSE 3000
 
