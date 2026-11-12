@@ -1,10 +1,10 @@
 # serf container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-ARG SERF_COMMIT=5eba0bee43709508be4adc92112eb0f1c6a0e669
+ARG SERF_COMMIT=fe2acb9e90d89e27409a88d086553a2ad429cb8b
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN mkdir -p /go/src/github.com/hashicorp/serf \
@@ -14,10 +14,10 @@ tar -x -z -f - --strip-components 1 -C /go/src/github.com/hashicorp/serf
 WORKDIR /go/src/github.com/hashicorp/serf
 
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
-    go install -ldflags="-w -s" -tags hashicorpmetrics ./...
+    go install -ldflags="-w -s" ./...
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261111@sha256:4c899d982515115b4de5821fbd6a2208fec224244b2d6e9bb1afc396d199632f
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
