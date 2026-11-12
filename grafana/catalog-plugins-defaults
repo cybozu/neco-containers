@@ -1,0 +1,13 @@
+# Catalog plugin IDs to bundle under data/plugins-bundled (one per line).
+# Optional pin: id:version.
+prometheus:13.2.5
+loki:13.2.5
+tempo:13.4.2
+grafana-pyroscope-datasource:13.0.10
+
+victoriametrics-metrics-datasource:0.25.2
+
+grafana-metricsdrilldown-app:2.2.0
+grafana-lokiexplore-app:2.1.5
+grafana-exploretraces-app:2.1.0
+grafana-pyroscope-app:2.1.0
