@@ -1,32 +1,4 @@
 apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: bmc-reverse-proxy
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: Role
-metadata:
-  name: bmc-reverse-proxy
-rules:
-  - apiGroups: [""]
-    resources:
-      - configmaps
-    verbs: ["get"]
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: RoleBinding
-metadata:
-  name: bmc-reverse-proxy
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: bmc-reverse-proxy
-subjects:
-  - kind: ServiceAccount
-    name: bmc-reverse-proxy
-    namespace: default
----
-apiVersion: v1
 kind: Service
 metadata:
   name: bmc-reverse-proxy
@@ -58,9 +30,10 @@ spec:
   issuerRef:
     kind: ClusterIssuer
     name: clouddns
-  commonName: "*.bmc.gcp0.dev-ne.co"
+  # replace with the actual domain for BMCs
+  commonName: "*.bmc.example.com"
   dnsNames:
-    - "*.bmc.gcp0.dev-ne.co"
+    - "*.bmc.example.com"
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -73,29 +46,103 @@ spec:
     matchLabels:
       app.kubernetes.io/name: bmc-reverse-proxy
   replicas: 2
-  strategy:
-    type: RollingUpdate
   template:
     metadata:
       labels:
         app.kubernetes.io/name: bmc-reverse-proxy
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+      # Spread the replicas across nodes. With externalTrafficPolicy: Local,
+      # only the nodes running the Pods receive traffic.
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: kubernetes.io/hostname
+          whenUnsatisfiable: DoNotSchedule
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/name: bmc-reverse-proxy
+      # Allow active requests such as uploading firmware images to finish on shutdown.
+      terminationGracePeriodSeconds: 120
+      initContainers:
+        # Native sidecar (Kubernetes 1.29+): starts before and stops after bmc-reverse-proxy.
+        - name: update-resolve-map
+          image: ghcr.io/cybozu/bmc-reverse-proxy:0.2.0
+          restartPolicy: Always
+          command: ["/update-resolve-map"]
+          args:
+            - -sabakan-address=<SABAKAN_ADDRESS>:10080  # replace with the sabakan address and its GraphQL port
+          volumeMounts:
+            - name: resolve-map
+              mountPath: /var/lib/resolve-map
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
       containers:
-      - image: ghcr.io/cybozu/bmc-reverse-proxy:0.1.35
-        name: bmc-reverse-proxy
-        volumeMounts:
-        - name: secret-fs
-          mountPath: "/etc/bmc-reverse-proxy"
-          readOnly: true
-        ports:
-        - name: web
-          containerPort: 8443
-          protocol: TCP
-        - name: virtual-console
-          containerPort: 5900
-          protocol: TCP
+        - name: bmc-reverse-proxy
+          image: ghcr.io/cybozu/bmc-reverse-proxy:0.2.0
+          volumeMounts:
+            - name: tls
+              mountPath: /etc/tls
+              readOnly: true
+            - name: resolve-map
+              mountPath: /var/lib/resolve-map
+              readOnly: true
+          ports:
+            - name: web
+              containerPort: 8443
+              protocol: TCP
+            - name: virtual-console
+              containerPort: 5900
+              protocol: TCP
+            - name: probe
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: probe
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: probe
+          lifecycle:
+            # Wait for the Pod to be removed from the endpoints of the Service
+            # before closing the listeners (Kubernetes 1.30+).
+            preStop:
+              sleep:
+                seconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 64Mi
+          securityContext:
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
       volumes:
-      - name: secret-fs
-        secret:
-          secretName: bmc-reverse-proxy-tls
-      serviceAccountName: bmc-reverse-proxy
+        - name: tls
+          secret:
+            secretName: bmc-reverse-proxy-tls
+        - name: resolve-map
+          emptyDir: {}
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: bmc-reverse-proxy
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: bmc-reverse-proxy

@@ -248,12 +248,13 @@ The libsystemd version should be the same with the one running on [the stable Fl
 
 ## bmc-reverse-proxy
 
-![Kubernetes Update](./kubernetes_update.svg)
+![Regular Update](./regular_update.svg)
 
 1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
 2. Confirm test are green.
 
    ```bash
+   make setup
    make test
    ```
 

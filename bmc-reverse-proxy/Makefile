@@ -1,27 +1,24 @@
-SUDO = sudo
-SUDO_GO = $(SUDO) $(shell which go)
-
 .PHONY: all
-all: check-generate test
+all: check-generated test
 
 .PHONY: setup
 setup:
 	aqua i -l
 
-.PHONY: check-generate
-check-generate:
+.PHONY: check-generated
+check-generated:
 	go mod tidy
 	git diff --exit-code --name-only
 
 .PHONY: lint
 lint:
-	golangci-lint run ./... -vvv
+	aqua exec -- golangci-lint run ./... -vvv
 
 .PHONY: lint-fix
 lint-fix:
-	golangci-lint run ./... -vvv --fix
+	aqua exec -- golangci-lint run ./... -vvv --fix
 
 .PHONY: test
 test:
 	$(MAKE) lint
-	$(SUDO_GO) test -race -v ./...
+	go test -race -v ./...
