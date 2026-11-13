@@ -14,7 +14,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     make build/teleport OS=linux WEBASSETS_SKIP_BUILD=1
 
 # Stage3: setup runtime container
-FROM ghcr.io/cybozu/ubuntu-debug:24.04.20261022@sha256:ca40efcb3c9675220306fa72d6c1f6ab00d906e95d696f833fc0e95fd96f68fb
+FROM ghcr.io/cybozu/ubuntu-debug:24.04.20261113@sha256:ac771362359ae72326b532f146ea31b595a01f92a6ecd402db6b27ef88a8a091
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && \
