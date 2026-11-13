@@ -41,7 +41,6 @@
 /sealed-secrets/                  @cybozu/neco-infrastructure
 /serf/                            @cybozu/neco-infrastructure
 /spegel/                          @cybozu/neco-infrastructure
-/testhttpd/                       @cybozu/neco-infrastructure
 /vault/                           @cybozu/neco-infrastructure
 
 # ---- Neco Network (@cybozu/neco-network) ----
@@ -64,6 +63,7 @@
 /squid-exporter/                  @cybozu/neco-network
 /stakater-reloader/               @cybozu/neco-network
 /tcp-keepalive/                   @cybozu/neco-network
+/testhttpd/                       @cybozu/neco-network
 /trust-manager/                   @cybozu/neco-network
 /trust-packages/                  @cybozu/neco-network
 /unbound/                         @cybozu/neco-network
