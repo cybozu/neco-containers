@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/golang:1.26-noble AS builder
+FROM ghcr.io/cybozu/golang:1.27-resolute AS builder
 ENV GOPROXY=https://golang.flatt.tech
-ARG SPEGEL_COMMIT=53483664231780f113ac434e82960677993bc0b7
+ARG SPEGEL_COMMIT=7e2e042fa5a6858276b12bbd0be586b788dfa121 # v0.8.1
 
 WORKDIR /work/spegel
 
