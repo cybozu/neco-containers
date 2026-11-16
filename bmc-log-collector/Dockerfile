@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
 COPY . /work
