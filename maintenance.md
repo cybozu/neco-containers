@@ -20,9 +20,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
-- [argo-rollouts](#argo-rollouts)
-- [argocd](#argocd)
-- [argocd-image-updater](#argocd-image-updater)
 - [blackbox\_exporter](#blackbox_exporter)
 - [ceph](#ceph)
   - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
@@ -30,27 +27,18 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [ceph-extra-exporter](#ceph-extra-exporter)
 - [cephcsi](#cephcsi)
 - [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
-- [dex](#dex)
 - [fluent-bit](#fluent-bit)
-- [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
-- [haproxy](#haproxy)
 - [local-pv-provisioner](#local-pv-provisioner)
 - [loki](#loki)
 - [memcached](#memcached)
 - [memcached\_exporter](#memcached_exporter)
-- [meows-dctest-runner](#meows-dctest-runner)
-- [meows-neco-runner](#meows-neco-runner)
 - [opentelemetry-collector](#opentelemetry-collector)
-- [pomerium](#pomerium)
-- [pomerium-ingress-controller](#pomerium-ingress-controller)
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [pushgateway](#pushgateway)
 - [pyroscope](#pyroscope)
-- [redis](#redis)
 - [rook](#rook)
-- [teleport-node](#teleport-node)
 - [tempo](#tempo)
 - [victoriametrics](#victoriametrics)
 - [victoriametrics-operator](#victoriametrics-operator)
@@ -87,58 +75,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 3. Update `ALLOY_VERSION` in `Dockerfile`.
 4. Update `SYSTEMD_VERSION` in `Dockerfile` if needed.
 5. Update `TAG` file.
-
-## argo-rollouts
-
-![Regular Update](./regular_update.svg)
-
-1. Check [releases](https://github.com/argoproj/argo-rollouts/releases) for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-    - `https://github.com/argoproj/argo-rollouts/blob/vX.Y.Z/Dockerfile`
-3. Update version variables in `Dockerfile`.
-    - Update `ARGO_ROLLOUTS_VERSION`.
-4. Update `TAG` file.
-
-## argocd
-
-![Regular Update](./regular_update.svg)
-
-1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
-2. Check `hack/tool-versions.sh` for the tools versions.
-    - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh`
-3. Update tool versions in `Dockerfile`.
-    - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
-    - [Helm](https://github.com/helm/helm/releases)
-4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-    - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile`
-5. Update version variables in `Dockerfile`.
-    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
-6. Update `BRANCH` and `TAG` files.
-7. Update `ARGOCD_VERSION` in `admission/Makefile`.
-8. Follow maintenance instructions for [neco-admission](./admission/MAINTENANCE.md).
-
-> [!Note]
-> ArgoCD depends on dex,Redis,HAProxy.
-> So browse the following manifests and update [dex](#dex),[redis](#redis),[haproxy](#haproxy) images next.
-
-- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml`
-- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml`
-- `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
-
-> [!Note]
-> ArgoCD's Application objects are validated by [neco-admission](./admission/MAINTENANCE.md).
-> You need to update [neco-admission](./admission/MAINTENANCE.md) at least for its `Makefile`.
-
-## argocd-image-updater
-
-![Regular Update](./regular_update.svg)
-
-1. Check [releases](https://github.com/argoproj-labs/argocd-image-updater/releases) for changes.
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-    - `https://github.com/argoproj-labs/argocd-image-updater/blob/vX.Y.Z/Dockerfile`
-3. Update version variables in `Dockerfile`.
-    - Update `ARGOCD_IMAGE_UPDATER_VERSION`.
-4. Update `TAG` file.
 
 ## blackbox_exporter
 
@@ -262,23 +198,6 @@ This section applies to the following containers. These containers are maintaine
 > [!Note]
 > You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
 
-## dex
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
-> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
->
-> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml`
-
-1. Check the [release page](https://github.com/dexidp/dex/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/dexidp/dex/blob/vX.Y.Z/Dockerfile`
-3. Update `DEX_VERSION` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
 ## fluent-bit
 
 ![Regular Update](./regular_update.svg)
@@ -286,18 +205,6 @@ This section applies to the following containers. These containers are maintaine
 1. Check the [release page](https://github.com/fluent/fluent-bit/releases).
 2. Update `FLUENT_BIT_VERSION` in `Dockerfile`.
 3. Update `TAG`.
-
-## golang-all (golang for combinations of versions and platforms)
-
-![Regular Update](./regular_update.svg)
-
-Automated by `.github/workflows/update.yaml`.
-
-Manual update
-
-1. Check the [release history](https://golang.org/doc/devel/release.html).
-2. Update `GO_VERSION` in `Dockerfile`.
-3. Update `BRANCH` and `TAG`.
 
 ## grafana
 
@@ -327,21 +234,6 @@ Manual update
 > [!Note]
 > Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](./admission/MAINTENANCE.md).
 > You need to update [neco-admission](./admission/MAINTENANCE.md) at least for its `Makefile`.
-
-## haproxy
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
-> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
->
-> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
-
-1. Check the release notes in the [official site](https://www.haproxy.org/).
-   - v2.6.x: <https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile>
-2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in <http://www.haproxy.org/download>
-3. Update `BRANCH` and `TAG` files.
 
 ## local-pv-provisioner
 
@@ -399,40 +291,6 @@ Manual update
 2. Update `MEMCACHED_EXPORTER_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG` file.
 
-## meows-dctest-runner
-
-![Regular Update](./regular_update.svg)
-
-The directory is split into per-OS subdirectories (`meows-dctest-runner/ubuntu22.04/`, `meows-dctest-runner/ubuntu24.04/`). Repeat the following steps for each subdirectory.
-
-1. Check the [release page](https://github.com/cybozu-go/meows/releases) and [runner image release](https://github.com/cybozu-go/meows/pkgs/container/meows-runner).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile` (for `ubuntu22.04/`)
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu24.04/Dockerfile` (for `ubuntu24.04/`)
-3. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
-4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
-   - `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
-   - `PLACEMAT_VERSION`: <https://github.com/cybozu-go/placemat/releases/latest>
-5. Update `BRANCH` and `TAG` files.
-
-## meows-neco-runner
-
-![Regular Update](./regular_update.svg)
-
-The directory is split into per-OS subdirectories (`meows-neco-runner/ubuntu22.04/`, `meows-neco-runner/ubuntu24.04/`). Repeat the following steps for each subdirectory.
-
-1. Check the [release page](https://github.com/cybozu-go/meows/releases) and [runner image release](https://github.com/cybozu-go/meows/pkgs/container/meows-runner).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile` (for `ubuntu22.04/`)
-   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu24.04/Dockerfile` (for `ubuntu24.04/`)
-3. Update the `Dockerfile`.
-   - Update `GRPCURL_VERSION`, if there are any changes.
-   - Update `COMMON_PACKAGES` to match the packages installed in ubuntu-debug.
-     - <https://github.com/cybozu/ubuntu-base/blob/main/22.04/ubuntu-debug/Dockerfile#L6> (for `ubuntu22.04/`)
-     - <https://github.com/cybozu/ubuntu-base/blob/main/24.04/ubuntu-debug/Dockerfile#L6> (for `ubuntu24.04/`)
-4. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
-5. Update `BRANCH` and `TAG` files.
-
 ## opentelemetry-collector
 
 ![Regular Update](./regular_update.svg)
@@ -445,49 +303,6 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
    - `https://github.com/open-telemetry/opentelemetry-collector-releases/blob/vX.Y.Z/distributions/otelcol/manifest.yaml`
 3. Update `OTELCOL_VERSION` and/or `OTELCOL_CONTRIB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
-
-## pomerium
-
-![Regular Update](./regular_update.svg)
-
-1. Check the release page and upgrade guide.
-   - <https://github.com/pomerium/pomerium/releases>
-   - <https://www.pomerium.com/docs/core/upgrading>
-2. Check the diff of the Dockerfile.
-
-   ```bash
-   cd /path/to/pomerium
-   git switch --detach v${NewVersion}
-   git diff v${CurrentVersion} Dockerfile
-   ```
-
-3. Update `Dockerfile`.
-   - Pomerium version
-   - Golang version
-   - Node.js version
-4. Update `TAG` file.
-
-## pomerium-ingress-controller
-
-![Regular Update](./regular_update.svg)
-
-Update this together with [pomerium](#pomerium) and use the same version.
-
-1. Check the release page.
-   - <https://github.com/pomerium/ingress-controller/releases>
-2. Check the diff of the Dockerfile and the Makefile.
-
-   ```bash
-   cd /path/to/ingress-controller
-   git switch --detach v${NewVersion}
-   git diff v${CurrentVersion} Dockerfile Makefile .tool-versions
-   ```
-
-3. Update `Dockerfile`.
-   - `INGRESS_CONTROLLER_VERSION`, `INGRESS_CONTROLLER_CHECKSUM` and `INGRESS_CONTROLLER_COMMIT`
-   - Golang version
-   - Node.js version
-4. Update `TAG` file.
 
 ## prometheus-config-reloader
 
@@ -518,32 +333,6 @@ This is used as a sidecar of Alloy Pod now.
 1. Check the pyroscope [release page](https://github.com/grafana/pyroscope/releases).
 2. Check the pyroscope [Dockerfile](https://github.com/grafana/pyroscope/blob/main/cmd/pyroscope/Dockerfile) of the latest release version.
 3. Update `TAG` file.
-
-## redis
-
-![Regular Update](./regular_update.svg)
-
-> [!Note]
-> This image is used by [ArgoCD](#argocd). So browse the following manifest and check the required version.
-> If the manifest uses version _a.b.c_, we should use version _a.b.d_ where _d >= c_. Don't use a newer minor version.
->
-> - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml`
-
-1. Check the release notes in the [official site](https://redis.io/).
-2. Check the Dockerfile in docker-library. If there are any updates, update our `Dockerfile`.
-   - v7.0.x: <https://github.com/docker-library/redis/blob/master/7.0/Dockerfile>
-3. Update `REDIS_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-5. Update `README.md`, `COPYING` and the container LABEL in terms of license if necessary.
-
-## redis_exporter
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/oliver006/redis_exporter/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-3. Update `REDIS_EXPORTER_VERSION` and checksum of archive in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
 
 ## rook
 
@@ -576,17 +365,6 @@ This is used as a sidecar of Alloy Pod now.
 > You may choose the latest docker image for the build, regardless of the upstream go version.
 > The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file.
 > There is no need to use an older version of the image to match go.mod.
-
-## teleport-node
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/gravitational/teleport/releases).
-2. Run `make -C teleport-node/ check-teleport-update` and check the upstream `Makefile` and `version.mk`.
-3. Update tools version in `Dockerfile`.
-4. Update `Dockerfile` If there are any changes to the build method.
-5. Update `TELEPORT_VERSION` in `Dockerfile`.
-6. Update `TAG` files.
 
 ## tempo
 
