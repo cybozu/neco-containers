@@ -1,7 +1,7 @@
 # prometheus-adapter container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
 ARG PROMETHEUS_ADAPTER_COMMIT=17cef511b1854441490bceeca7a710a04ce091ad
