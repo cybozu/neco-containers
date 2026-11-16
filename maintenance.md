@@ -18,128 +18,44 @@ In case of components whose Go source code are in neco-containers, all dependent
 
 ---
 
-- [admission (neco-admission)](#admission-neco-admission)
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
 - [argo-rollouts](#argo-rollouts)
 - [argocd](#argocd)
 - [argocd-image-updater](#argocd-image-updater)
 - [blackbox\_exporter](#blackbox_exporter)
-- [bmc-log-collector](#bmc-log-collector)
-- [bmc-reverse-proxy](#bmc-reverse-proxy)
-- [cadvisor](#cadvisor)
 - [ceph](#ceph)
   - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
 - [ceph-csi-operator](#ceph-csi-operator)
 - [ceph-extra-exporter](#ceph-extra-exporter)
 - [cephcsi](#cephcsi)
-- [coredns](#coredns)
 - [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
 - [dex](#dex)
-- [etcd](#etcd)
-- [falco](#falco)
-- [falco-k8s-metacollector](#falco-k8s-metacollector)
-- [falco-operator](#falco-operator)
-- [falcosidekick](#falcosidekick)
 - [fluent-bit](#fluent-bit)
-- [gitleaks](#gitleaks)
 - [golang-all (golang for combinations of versions and platforms)](#golang-all-golang-for-combinations-of-versions-and-platforms)
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
 - [haproxy](#haproxy)
-- [kube-metrics-adapter](#kube-metrics-adapter)
-- [kube-state-metrics](#kube-state-metrics)
-- [kube-storage-version-migrator](#kube-storage-version-migrator)
-- [kubernetes](#kubernetes)
 - [local-pv-provisioner](#local-pv-provisioner)
 - [loki](#loki)
-- [machines-endpoints](#machines-endpoints)
 - [memcached](#memcached)
 - [memcached\_exporter](#memcached_exporter)
 - [meows-dctest-runner](#meows-dctest-runner)
 - [meows-neco-runner](#meows-neco-runner)
 - [opentelemetry-collector](#opentelemetry-collector)
-- [pause](#pause)
 - [pomerium](#pomerium)
 - [pomerium-ingress-controller](#pomerium-ingress-controller)
-- [prometheus-adapter](#prometheus-adapter)
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [pushgateway](#pushgateway)
 - [pyroscope](#pyroscope)
 - [redis](#redis)
-- [registry](#registry)
 - [rook](#rook)
-- [s3gw](#s3gw)
-- [sealed-secrets](#sealed-secrets)
-- [serf](#serf)
-- [spegel](#spegel)
 - [teleport-node](#teleport-node)
 - [tempo](#tempo)
-- [testhttpd](#testhttpd)
-- [vault](#vault)
 - [victoriametrics](#victoriametrics)
 - [victoriametrics-operator](#victoriametrics-operator)
 
 ---
-## admission (neco-admission)
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-In Kubernetes update:
-
-1. Update the following version variables in `Makefile`.
-   - `ENVTEST_K8S_VERSION`
-2. Update the following packages in `aqua.yaml`.
-   - `kubernetes-sigs/controller-tools/controller-gen`
-   - `kubernetes-sigs/controller-runtime/setup-envtest`
-3. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-4. Generate code and manifests.
-
-   ```bash
-   cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   make generate manifests
-   # Commit, if there are any updated files.
-   ```
-
-5. Confirm build and test are green.
-
-   ```bash
-   make build test
-   ```
-
-6. Update `TAG` file.
-
-![Regular Update](./regular_update.svg)
-
-In Regular update, do the following as part of the update of each CRD-providing product:
-
-1. Update the matching commit hash variables and comments from the following in `Makefile`.
-   - `CONTOUR_COMMIT_HASH`
-   - `ARGOCD_COMMIT_HASH`
-   - `GRAFANA_OPERATOR_COMMIT_HASH`
-2. Modify the code to match the new CRDs if CRDs are changed.
-   - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.
-   - And let's use `Unstructured` instead of use golang library. Take a look at [this PR](https://github.com/cybozu/neco-containers/pull/339/files).
-3. Generate code and manifests.
-
-   ```bash
-   cd $GOPATH/src/github.com/cybozu/neco-containers/admission
-   make clean
-   make generate manifests
-   # Commit, if there are any updated files.
-   ```
-
-4. Confirm build and test are green.
-
-   ```bash
-   make build test
-   ```
-
-5. Update `TAG` file.
-
-> [!Note]
-> Update `Makefile` even if you find no changes in CRDs.
-> Update `TAG` if you have changed mutation/validation code.
 
 ## alertmanager
 
@@ -199,7 +115,7 @@ The libsystemd version should be the same with the one running on [the stable Fl
     - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
 6. Update `BRANCH` and `TAG` files.
 7. Update `ARGOCD_VERSION` in `admission/Makefile`.
-8. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
+8. Follow maintenance instructions for [neco-admission](./admission/MAINTENANCE.md).
 
 > [!Note]
 > ArgoCD depends on dex,Redis,HAProxy.
@@ -210,8 +126,8 @@ The libsystemd version should be the same with the one running on [the stable Fl
 - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
 
 > [!Note]
-> ArgoCD's Application objects are validated by [neco-admission](#admission-neco-admission).
-> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
+> ArgoCD's Application objects are validated by [neco-admission](./admission/MAINTENANCE.md).
+> You need to update [neco-admission](./admission/MAINTENANCE.md) at least for its `Makefile`.
 
 ## argocd-image-updater
 
@@ -231,47 +147,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 1. Check the [release page](https://github.com/prometheus/blackbox_exporter/releases).
 2. Update `BLACKBOX_EXPORTER_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG` files.
-
-## bmc-log-collector
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Confirm test are pass.
-
-   ```bash
-   make setup
-   make test
-   ```
-
-3. Update `BRANCH` and `TAG` files.
-
-## bmc-reverse-proxy
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Confirm test are green.
-
-   ```bash
-   make test
-   ```
-
-3. Update image tag in `bmc-reverse-proxy.yaml`.
-4. Update `TAG` file.
-
-## cadvisor
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/google/cadvisor/releases).
-2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/google/cadvisor/blob/vX.Y.Z/Makefile`
-   - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/release.sh`
-   - `https://github.com/google/cadvisor/blob/vX.Y.Z/build/build.sh`
-   - `https://github.com/google/cadvisor/blob/vX.Y.Z/deploy/Dockerfile`
-3. Update `CADVISOR_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
-4. Update `TAG` file.
 
 ## ceph
 
@@ -351,17 +226,6 @@ gitGraph
 > [!Note]
 > Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
 
-## coredns
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/coredns/coredns/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/coredns/coredns/blob/vX.Y.Z/Dockerfile`
-3. Update `COREDNS_COMMIT` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
 ## csi sidecars/csi-addons-controller
 
 ![CSA Update](./csa_update.svg)
@@ -415,86 +279,12 @@ This section applies to the following containers. These containers are maintaine
 4. Update image tag in `README.md`.
 5. Update `BRANCH` and `TAG` files.
 
-## etcd
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/etcd-io/etcd/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/etcd-io/etcd/blob/vX.Y.Z/Dockerfile`
-3. Update `ETCD_COMMIT` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
-## falco
-
-![No Need Update](./no_need_update.svg)
-
-Used as a PoC, so regular updates are not required.
-
-1. Check the [release page](https://github.com/falcosecurity/falco/releases).
-2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/falcosecurity/falco/blob/X.Y.Z/docker/falco/Dockerfile`
-3. Update `FALCO_VERSION` and `FALCO_COMMIT` in `Dockerfile`. Update `BPFTOOL_COMMIT` if needed.
-4. Update `TAG` file.
-
-## falco-k8s-metacollector
-
-![No Need Update](./no_need_update.svg)
-
-Used as a PoC, so regular updates are not required.
-
-1. Check the [release page](https://github.com/falcosecurity/k8s-metacollector/releases).
-2. Update `K8S_METACOLLECTOR_COMMIT` in `Dockerfile`.
-3. Update `TAG` file.
-
-## falco-operator
-
-![No Need Update](./no_need_update.svg)
-
-Used as a PoC, so regular updates are not required.
-
-A single `Dockerfile` builds two images from the `falcosecurity/falco-operator` repository:
-
-- `falco-operator`: the instance operator (`./cmd/instance`), built on `scratch`.
-- `falco-artifact-operator`: the artifact operator (`./cmd/artifact`), built on `ubuntu`.
-
-The instance operator deploys the artifact operator, so the artifact operator image reference is baked into the instance operator binary via the `ArtifactOperatorImage` ldflag.
-
-1. Check the [release page](https://github.com/falcosecurity/falco-operator/releases).
-2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/build/Dockerfile`
-   - `https://github.com/falcosecurity/falco-operator/blob/vX.Y.Z/Makefile`
-3. Update `FALCO_OPERATOR_COMMIT` in `Dockerfile`.
-4. Update `ARTIFACT_OPERATOR_IMAGE` in `Dockerfile` to match the new `TAG`.
-5. Update `TAG` file.
-
-## falcosidekick
-
-![No Need Update](./no_need_update.svg)
-
-Used as a PoC, so regular updates are not required.
-
-1. Check the [release page](https://github.com/falcosecurity/falcosidekick/releases).
-2. Check the upstream Dockerfile and build files. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/falcosecurity/falcosidekick/blob/X.Y.Z/Dockerfile`
-3. Update `FALCOSIDEKICK_VERSION` and `FALCOSIDEKICK_COMMIT` in `Dockerfile`.
-4. Update `TAG` file.
-
 ## fluent-bit
 
 ![Regular Update](./regular_update.svg)
 
 1. Check the [release page](https://github.com/fluent/fluent-bit/releases).
 2. Update `FLUENT_BIT_VERSION` in `Dockerfile`.
-3. Update `TAG`.
-
-## gitleaks
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/gitleaks/gitleaks/releases).
-2. Update `GITLEAKSS_COMMIT` in `Dockerfile`.
 3. Update `TAG`.
 
 ## golang-all (golang for combinations of versions and platforms)
@@ -532,11 +322,11 @@ Manual update
 3. Update `VERSION` in `Dockerfile`.
 4. Update `TAG`.
 5. Update `GRAFANA_OPERATOR_VERSION` in `admission/Makefile`.
-6. Follow maintenance instructions for [neco-admission](./maintenance.md#admission-neco-admission).
+6. Follow maintenance instructions for [neco-admission](./admission/MAINTENANCE.md).
 
 > [!Note]
-> Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](#admission-neco-admission).
-> You need to update [neco-admission](#admission-neco-admission) at least for its `Makefile`.
+> Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](./admission/MAINTENANCE.md).
+> You need to update [neco-admission](./admission/MAINTENANCE.md) at least for its `Makefile`.
 
 ## haproxy
 
@@ -552,61 +342,6 @@ Manual update
    - v2.6.x: <https://github.com/docker-library/haproxy/blob/master/2.6/Dockerfile>
 2. Update `HAPROXY_SHA256` in `Dockerfile`, SHA256 hash in <http://www.haproxy.org/download>
 3. Update `BRANCH` and `TAG` files.
-
-## kube-metrics-adapter
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/zalando-incubator/kube-metrics-adapter/releases).
-2. Update `KMA_VERSION` and `KMA_COMMIT` in `Dockerfile`.
-3. Update `TAG` file.
-
-## kube-state-metrics
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the [release page](https://github.com/kubernetes/kube-state-metrics/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/kubernetes/kube-state-metrics/blob/vX.Y.Z/Dockerfile`
-3. Update `KUBE_STATE_METRICS_COMMIT` in `Dockerfile`.
-4. Update image tag in `README.md`.
-5. Update `TAG` files.
-
-## kube-storage-version-migrator
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/kubernetes-sigs/kube-storage-version-migrator/releases).
-2. Check the upstream build files. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/Makefile`
-   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/initializer/Dockerfile`
-   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/migrator/Dockerfile`
-   - `https://github.com/kubernetes-sigs/kube-storage-version-migrator/blob/vX.Y.Z/cmd/trigger/Dockerfile`
-3. Update `MIGRATOR_VERSION` and `MIGRATOR_COMMIT` in `Dockerfile`
-4. Update `TAG` file.
-
-## kubernetes
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-The kubernetes directory is split into per-minor-version subdirectories (e.g. `kubernetes/k8s-1.35/`).
-
-To update an existing minor version:
-
-1. Check the [release page](https://github.com/kubernetes/kubernetes/releases).
-2. Update `K8S_COMMIT` in `kubernetes/k8s-X.Y/Dockerfile`.
-3. Update image tag in `kubernetes/k8s-X.Y/README.md`.
-4. Update `BRANCH` and `TAG` files in `kubernetes/k8s-X.Y/`.
-
-To add a new minor version:
-
-1. Create a new directory `kubernetes/k8s-X.Y/`.
-2. Create `BRANCH` file containing `X.Y`.
-3. Create `TAG` file containing `X.Y.Z.1`.
-4. Create `Dockerfile` based on other versions as a reference.
-5. Create `README.md` following the same format as other versions.
-6. Add the new build job entry to `.github/workflows/main.yaml`.
-7. Remove the oldest minor version directory if more than 3 minor versions exist (keep only the latest 3).
 
 ## local-pv-provisioner
 
@@ -646,20 +381,6 @@ To add a new minor version:
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/grafana/loki/blob/vX.Y.Z/cmd/loki/Dockerfile`
 3. Update `LOKI_VERSION` in `Dockerfile`.
-4. Update `TAG` file.
-
-## machines-endpoints
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Confirm test is green.
-
-   ```bash
-   make test
-   ```
-
-3. Update image tag in `machines-endpoints.yaml`.
 4. Update `TAG` file.
 
 ## memcached
@@ -725,17 +446,6 @@ opentelemetry-collector container consists of three repositories: opentelemetry-
 3. Update `OTELCOL_VERSION` and/or `OTELCOL_CONTRIB_VERSION` in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## pause
-
-![Kubernetes Update](./kubernetes_update.svg)
-
-1. Check the changelog.
-   - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/CHANGELOG.md`
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/kubernetes/kubernetes/blob/vX.Y.Z/build/pause/Dockerfile`
-3. Update `K8S_COMMIT` and `PAUSE_VERSION` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## pomerium
 
 ![Regular Update](./regular_update.svg)
@@ -778,15 +488,6 @@ Update this together with [pomerium](#pomerium) and use the same version.
    - Golang version
    - Node.js version
 4. Update `TAG` file.
-
-## prometheus-adapter
-
-![Regular Update](./regular_update.svg)
-
-1. Check the release page.
-   - <https://github.com/kubernetes-sigs/prometheus-adapter/releases>
-2. Update `PROMETHEUS_ADAPTER_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
-3. Update `TAG` file.
 
 ## prometheus-config-reloader
 
@@ -844,16 +545,6 @@ This is used as a sidecar of Alloy Pod now.
 3. Update `REDIS_EXPORTER_VERSION` and checksum of archive in `Dockerfile`.
 4. Update `BRANCH` and `TAG` files.
 
-## registry
-
-![Regular Update](./regular_update.svg)
-
-1. Check the release notes in the [release page](https://github.com/distribution/distribution/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - <https://github.com/distribution/distribution/blob/main/Dockerfile>
-3. Update `REGISTRY_COMMIT` in `Dockerfile`.
-4. Update `BRANCH` and `TAG` files.
-
 ## rook
 
 ![CSA Update](./csa_update.svg)
@@ -886,44 +577,6 @@ This is used as a sidecar of Alloy Pod now.
 > The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file.
 > There is no need to use an older version of the image to match go.mod.
 
-## s3gw
-
-![Regular Update](./regular_update.svg)
-
-Only the base image and module dependency should be updated.
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update `TAG` by incrementing the patch revision, e.g. 1.0.1, 1.0.2, ...
-
-## sealed-secrets
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/bitnami-labs/sealed-secrets/releases).
-2. Check the upstream Dockerfile and compare with ours especially on the runtime stage. If there are any updates, update our `Dockerfile`.
-    - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/controller.Dockerfile`
-    - `https://github.com/bitnami-labs/sealed-secrets/blob/vX.Y.Z/docker/kubeseal.Dockerfile`
-3. Update `SEALED_SECRETS_VERSION` and `SEALED_SECRETS_COMMIT` in `Dockerfile`.
-4. Update `TAG` files.
-
-## serf
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/hashicorp/serf/releases).
-2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/hashicorp/serf/blob/vX.Y.Z/scripts/serf-builder/Dockerfile`
-3. Update `SERF_COMMIT` in `Dockerfile` with the commit hash of the new release tag.
-4. Update image tag in `README.md`.
-5. Update `BRANCH` and `TAG` files.
-
-## spegel
-
-![Regular Update](./regular_update.svg)
-1. Check the [release page](https://github.com/spegel-org/spegel/releases).
-2. Update `SPEGEL_COMMIT` in `Dockerfile`.
-3. Update `TAG` file.
-
 ## teleport-node
 
 ![Regular Update](./regular_update.svg)
@@ -945,24 +598,6 @@ Only the base image and module dependency should be updated.
    - `https://github.com/grafana/tempo/blob/vX.Y.Z/cmd/tempo/Dockerfile`
 3. Update `TEMPO_VERSION` in `Dockerfile`.
 4. Update `TAG` file.
-
-## testhttpd
-
-![Regular Update](./regular_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Update `BRANCH` and `TAG` files.
-
-## vault
-
-![Regular Update](./regular_update.svg)
-
-1. Check the [release page](https://github.com/hashicorp/vault/releases) and these notes:
-    - <https://www.vaultproject.io/docs/upgrading>
-    - <https://www.vaultproject.io/docs/release-notes>
-2. Update `VAULT_COMMIT` in `Dockerfile`.
-3. Update image tag in `README.md`.
-4. Update `BRANCH` and `TAG` files.
 
 ## victoriametrics
 
