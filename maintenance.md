@@ -21,16 +21,9 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [alertmanager](#alertmanager)
 - [alloy](#alloy)
 - [blackbox\_exporter](#blackbox_exporter)
-- [ceph](#ceph)
-  - [Create a patched image from the specific version](#create-a-patched-image-from-the-specific-version)
-- [ceph-csi-operator](#ceph-csi-operator)
-- [ceph-extra-exporter](#ceph-extra-exporter)
-- [cephcsi](#cephcsi)
-- [csi sidecars/csi-addons-controller](#csi-sidecarscsi-addons-controller)
 - [fluent-bit](#fluent-bit)
 - [grafana](#grafana)
 - [grafana-operator](#grafana-operator)
-- [local-pv-provisioner](#local-pv-provisioner)
 - [loki](#loki)
 - [memcached](#memcached)
 - [memcached\_exporter](#memcached_exporter)
@@ -38,7 +31,6 @@ In case of components whose Go source code are in neco-containers, all dependent
 - [prometheus-config-reloader](#prometheus-config-reloader)
 - [pushgateway](#pushgateway)
 - [pyroscope](#pyroscope)
-- [rook](#rook)
 - [tempo](#tempo)
 - [victoriametrics](#victoriametrics)
 - [victoriametrics-operator](#victoriametrics-operator)
@@ -84,120 +76,6 @@ The libsystemd version should be the same with the one running on [the stable Fl
 2. Update `BLACKBOX_EXPORTER_VERSION` in `Dockerfile`.
 3. Update `BRANCH` and `TAG` files.
 
-## ceph
-
-![CSA Update](./csa_update.svg)
-
-1. Check the [release page](https://docs.ceph.com/en/latest/releases/).
-2. Check the [build ceph](https://docs.ceph.com/en/latest/install/build-ceph/) document and [README.md](https://github.com/ceph/ceph/blob/main/README.md).
-   1. If other instructions are needed for `ceph/build.sh`, add the instructions.
-   2. If there are ceph runtime packages or required tool changes, update Dockerfile.
-3. Update `BRANCH` and `TAG` files.
-
-### Create a patched image from the specific version
-
-Occasionally, you may want to create an image patched against a past version of Ceph. A typical use case is when you've updated Ceph's version to use as a Rook base image, but that version contains a critical bug that causes problems when running Ceph daemons like OSDs.
-
-In this situation, you might encounter a security issue in the version currently used by Ceph daemons and wish to apply a patch. The procedure described in this section should be useful in such cases.
-
-When you want to create a new image with patches to the specific version of Ceph,
-follow these steps.
-
-1. Create a branch with the name `maintenance/ceph-vX.Y.Z` from the commit you want, and push it.
-   - You must follow the branch naming convention to activate the image build and push jobs.
-   - If the branch already exists, you can skip this step.
-2. Create a PR to the branch `maintenance/ceph-vX.Y.Z`, and merge it.
-3. Build a docker image for the branch `maintenance/ceph-vX.Y.Z` by running [`Build Ceph image for a past version`](https://github.com/cybozu/neco-containers/actions/workflows/ceph.yaml) workflow manually.
-
-```mermaid
-gitGraph
-   commit id: "commit a"
-   commit id: "commit b"
-   commit id: "support Ceph v18.2.4"
-   branch maintenance/ceph-v18.2.4
-   checkout maintenance/ceph-v18.2.4
-   branch bugfix-ceph-v18.2.4
-   checkout main
-   commit id: "commit c"
-   commit id: "support Ceph v19.2.1"
-   checkout bugfix-ceph-v18.2.4
-   commit id: "bugfix"
-   checkout maintenance/ceph-v18.2.4
-   merge bugfix-ceph-v18.2.4
-```
-
-## ceph-csi-operator
-
-![CSA Update](./csa_update.svg)
-
-1. See [Rook's Chart.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/Chart.yaml) and [ceph-csi-operator's values.yaml file](https://github.com/ceph/ceph-csi-operator/blob/main/deploy/charts/ceph-csi-operator/values.yaml) of the appropriate tags to check the version of ceph-csi-operator.
-2. Update `VERSION` in Dockerfile with the value which you checked in the previous step.
-3. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is [here](https://github.com/ceph/ceph-csi-operator/blob/main/Dockerfile).
-4. Update `BRANCH` and `TAG` files.
-
-## ceph-extra-exporter
-
-![CSA Update](./csa_update.svg)
-
-1. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-2. Upgrade base images in `Dockerfile`.
-3. Update the tool versions in `aqua.yaml` if necessary.
-4. Run `aqua update-checksum -prune` if `aqua.yaml` is updated.
-5. Update the `TAG` files accordingly.
-
-## cephcsi
-
-![CSA Update](./csa_update.svg)
-
-1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of cephcsi.
-2. Update `CSI_IMAGE_VERSION` in Dockerfile with the value which you checked in the previous step.
-3. Update `BASE_IMAGE` in Dockerfile if necessary.
-   - If `BASE_IMAGE` is too old, the build may fail.
-   - You should also check `BASE_IMAGE` in [the upstream build.env](https://github.com/ceph/ceph-csi/blob/devel/build.env) file of the appropriate tag.
-   - If you are going to update Rook later, you should also check `CEPH_VERSION` in [the Rook's upstream Makefile](https://github.com/rook/rook/blob/master/images/ceph/Makefile) file of the appropriate tag.
-   - If the desired version of ceph image does not exist in our container repository, build the ceph image first.
-4. See [the upstream Dockerfile](https://github.com/ceph/ceph-csi/blob/devel/deploy/cephcsi/image/Dockerfile) of the appropriate tag, and update our Dockerfile if necessary.
-5. Update `BRANCH` and `TAG` files.
-
-> [!Note]
-> Because cephcsi container is build based on the ceph container, build the ceph container first if necessary.
-
-## csi sidecars/csi-addons-controller
-
-![CSA Update](./csa_update.svg)
-
-This section applies to the following containers. These containers are maintained similarly.
-
-- csi-addons-controller
-- csi-addons-sidecar
-- csi-attacher
-- csi-node-driver-registrar
-- csi-provisioner
-- csi-resizer
-- csi-snapshotter
-
-1. See [Rook's values.yaml file](https://github.com/rook/rook/blob/master/deploy/charts/rook-ceph/values.yaml) of the appropriate tag and check the version of csi sidecars. The csi-addons-controller version should be the same as the csi-addons-sidecar version.
-2. Update `VERSION` in Dockerfile with the value which you checked in the previous step.
-3. See the upstream Dockerfile of the appropriate tag, and update our Dockerfile if necessary. The upstream Dockerfile is listed below.
-   - [csi-addons-controller](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/Dockerfile)
-   - [csi-addons-sidecar](https://github.com/csi-addons/kubernetes-csi-addons/blob/main/build/Containerfile.sidecar)
-   - [csi-attacher](https://github.com/kubernetes-csi/external-attacher/blob/master/Dockerfile)
-   - [csi-node-driver-registrar](https://github.com/kubernetes-csi/node-driver-registrar/blob/master/Dockerfile)
-   - [csi-provisioner](https://github.com/kubernetes-csi/external-provisioner/blob/master/Dockerfile)
-   - [csi-resizer](https://github.com/kubernetes-csi/external-resizer/blob/master/Dockerfile)
-   - [csi-snapshotter](https://github.com/kubernetes-csi/external-snapshotter/blob/master/cmd/csi-snapshotter/Dockerfile)
-4. update image tag in `Dockerfile` if necessary.
-5. Update `BRANCH` and `TAG` files.
-
-> [!Note]
-> You can choose the latest stable Ubuntu image for runtime. The upstream uses distroless as the base image for runtime, while Neco uses Ubuntu for easier debugging.
-> We have not decided to use Ubuntu for csi-addons-controller and csi-addons-sidecar yet, therefore, they use distroless as the base image.
-
-<br>
-
-> [!Note]
-> You may choose the latest docker image for the build, regardless of the upstream go version. The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file. There is no need to use an older version of the image to match go.mod. As a known issue, the upstream build script warns that `test-gofmt and test-vendor are known to be sensitive to the version of Go.`. However, we use the latest docker image unless the test fails.
-
 ## fluent-bit
 
 ![Regular Update](./regular_update.svg)
@@ -234,36 +112,6 @@ This section applies to the following containers. These containers are maintaine
 > [!Note]
 > Grafana Operator's GrafanaDashboard objects are validated by [neco-admission](./admission/MAINTENANCE.md).
 > You need to update [neco-admission](./admission/MAINTENANCE.md) at least for its `Makefile`.
-
-## local-pv-provisioner
-
-![CSA Update](./csa_update.svg)
-
-1. Update version variables in `Makefile` and `e2etest/Makefile`.
-   - `Makefile`: `CONTROLLER_TOOLS_VERSION` and `ENVTEST_K8S_VERSION`
-   - `e2etest/Makefile`: `KUBERNETES_VERSION` and `MINIKUBE_VERSION`
-2. Upgrade direct dependencies listed in `go.mod`. Use `go get` or your editor's function.
-   1. `go get -u`
-   1. `VERSION=0.x.y; go get k8s.io/api@v${VERSION} k8s.io/apimachinery@v${VERSION} k8s.io/client-go@v${VERSION}`
-   1. `VERSION=1.x.y; go get github.com/prometheus/client_golang@v${VERSION}`
-      - Use the same version as Kubernetes's go.mod (`https://github.com/kubernetes/kubernetes/blob/<upgrading Kubernetes release version>/go.mod`).
-   1. `VERSION=1.x.y; go mod tidy -go=${VERSION}`
-      - Use the same version as Kubernetes's go.mod (`https://github.com/kubernetes/kubernetes/blob/<upgrading Kubernetes release version>/go.mod`).
-3. Generate code and manifests.
-
-   ```bash
-   cd $GOPATH/src/github.com/cybozu/neco-containers/local-pv-provisioner
-   make generate manifests
-   # Commit, if there are any updated files.
-   ```
-
-4. Confirm build and test are green.
-
-   ```bash
-   make build test
-   ```
-
-5. Update `TAG` file.
 
 ## loki
 
@@ -333,38 +181,6 @@ This is used as a sidecar of Alloy Pod now.
 1. Check the pyroscope [release page](https://github.com/grafana/pyroscope/releases).
 2. Check the pyroscope [Dockerfile](https://github.com/grafana/pyroscope/blob/main/cmd/pyroscope/Dockerfile) of the latest release version.
 3. Update `TAG` file.
-
-## rook
-
-![CSA Update](./csa_update.svg)
-
-> [!Note]
-> A specific version of rook depends on specific versions of csi sidecar containers listed below. Update these containers at the same time.
-> 
-> - cephcsi
-> - ceph-csi-operator
-> - csi-attacher
-> - csi-node-driver-registrar
-> - csi-provisioner
-> - csi-resizer
-> - csi-snapshotter
-> - csi-addons-controller
-> - csi-addons-sidecar
-
-1. Check the [release page](https://github.com/rook/rook/releases).
-2. Check the `CEPH_VERSION` of the upstream Makefile. If the version is changed, update the base image version in our `Dockerfile`.
-   - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Makefile`
-   - If the desired version of ceph image does not exist in our container repository, build the ceph image first.
-3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
-   - `https://github.com/rook/rook/blob/vX.Y.Z/images/ceph/Dockerfile`
-4. Update build image tag in Dockerfile if necessary.
-5. Update `ROOK_VERSION` in `Dockerfile`.
-6. Update `BRANCH` and `TAG` files.
-
-> [!Note]
-> You may choose the latest docker image for the build, regardless of the upstream go version.
-> The current go compiler builds with the language version and toolchain version based on the go version specified in the go.mod file.
-> There is no need to use an older version of the image to match go.mod.
 
 ## tempo
 
