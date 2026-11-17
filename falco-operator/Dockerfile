@@ -1,8 +1,10 @@
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27-resolute AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-ARG FALCO_OPERATOR_COMMIT=ddf43f9fc0f115a34246f6267ca088f7e51b08de # v0.4.1
-ARG ARTIFACT_OPERATOR_IMAGE=ghcr.io/cybozu/falco-artifact-operator:0.4.1.3
+ARG FALCO_OPERATOR_COMMIT=eda94565d62986674bc63499dc313df5c9a16f82 # v0.5.0
+ARG IMAGE_REGISTRY=ghcr.io
+ARG IMAGE_NAMESPACE=cybozu
+ARG ARTIFACT_OPERATOR_TAG=0.5.0.1
 ARG PROJECT=github.com/falcosecurity/falco-operator
 
 WORKDIR /work/falco-operator
@@ -11,25 +13,28 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     tar -xzf /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz --strip-components=1 && \
     rm /tmp/falco-operator-${FALCO_OPERATOR_COMMIT}.tar.gz && \
     CGO_ENABLED=0 go build -ldflags \
-        "-s -w -X '${PROJECT}/internal/pkg/version.ArtifactOperatorImage=${ARTIFACT_OPERATOR_IMAGE}'" \
+        "-s -w \
+        -X '${PROJECT}/internal/pkg/image.Registry=${IMAGE_REGISTRY}' \
+        -X '${PROJECT}/internal/pkg/image.Namespace=${IMAGE_NAMESPACE}' \
+        -X '${PROJECT}/internal/pkg/version.ArtifactOperatorTag=${ARTIFACT_OPERATOR_TAG}'" \
         -o /usr/local/bin/falco-operator ./cmd/instance/main.go && \
-    CGO_ENABLED=0 go build -ldflags "-s -w" -o /usr/local/bin/falco-artifact-operator ./cmd/artifact/main.go
+    CGO_ENABLED=0 go build -ldflags "-s -w" -o /usr/local/bin/artifact-operator ./cmd/artifact/main.go
 
 FROM scratch AS falco-operator
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
+COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 COPY --from=build /usr/local/bin/falco-operator /usr/bin/manager
 COPY --from=build /work/falco-operator/LICENSE /usr/local/falco-operator/LICENSE
 
 USER 65532:65532
 ENTRYPOINT ["/usr/bin/manager"]
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b AS falco-artifact-operator
+FROM scratch AS artifact-operator
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
-COPY --from=build /usr/local/bin/falco-artifact-operator /usr/bin/manager
-COPY --from=build /work/falco-operator/LICENSE /usr/local/falco-artifact-operator/LICENSE
+COPY --from=build /usr/local/bin/artifact-operator /usr/bin/manager
+COPY --from=build /work/falco-operator/LICENSE /usr/local/artifact-operator/LICENSE
 
 USER 65532:65532
-
 ENTRYPOINT ["/usr/bin/manager"]

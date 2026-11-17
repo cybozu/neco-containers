@@ -3,8 +3,8 @@
   scan:
     enabled: true
     team: neco
-- container-image: "falco-artifact-operator"
-  target: "falco-artifact-operator"
+- container-image: "artifact-operator"
+  target: "artifact-operator"
   scan:
     enabled: true
     team: neco
