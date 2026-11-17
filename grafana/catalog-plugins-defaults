@@ -1,0 +1,13 @@
+# Catalog plugin IDs to bundle under data/plugins-bundled (one per line).
+# Optional pin: id:version.
+prometheus:13.2.5:d24df3eaff9ae61f00d7e857f508fc306912dcf50d657150d1e472e851799fc4
+loki:13.2.5:982cfb81977352db65404cec671952453454643bd9a6c883041c38be519a74ea
+tempo:13.4.2:2717de75a5b6a1a27d79603e3eedd728a5d824be4411cf81af0fe3fcc7a779b2
+grafana-pyroscope-datasource:13.0.10:2574c8be13d61d0efa4087ea2e213c7346ba8874462b0481dabcd3fa1c1f7ea7
+
+victoriametrics-metrics-datasource:0.25.2:c87bf38229a3e3d3426b6035726f56e80630957b15417c0163ab7b0bbd83bb25
+
+grafana-metricsdrilldown-app:2.2.0:34cb3868567540559b2d10c17064f390af5234721f040ede3b8050cde1db32e3
+grafana-lokiexplore-app:2.1.5:9f96d99cb060394714b998a055d617f45b29e4d73316c0221efc707e8cf8ddfe
+grafana-exploretraces-app:2.1.0:44a700f9ba14b5cc8b96299738f3e4b24477f0a80dd4b713ead5c6e6217ad632
+grafana-pyroscope-app:2.1.0:3f461139e7a28bad66b7591da162581f8f857317b10adccae3b1f481ba885f39
