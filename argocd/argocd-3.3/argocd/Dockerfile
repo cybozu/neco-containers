@@ -34,7 +34,7 @@ ARG ARGOCD_VERSION
 ADD --checksum=sha256:3694e46538e3b8e2292a1eb2134bdde4e506ecc17d7675d07b3269330145265f \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9 AS cybozu-ubuntu
+FROM ghcr.io/cybozu/ubuntu:24.04.20261113@sha256:74243e15b3f04c67d11f86a43092d1e54f73ee8a1049f3175ea8b87273abc723 AS cybozu-ubuntu
 
 # Stage1: Initial Stage which prepares build dependencies and CLI tooling we need for out final image
 FROM cybozu-ubuntu AS builder

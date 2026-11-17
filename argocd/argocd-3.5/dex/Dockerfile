@@ -20,7 +20,7 @@ ENV CGO_ENABLED=1
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     make release-binary VERSION=v${DEX_VERSION}
 
-FROM ghcr.io/cybozu/ubuntu:24.04.20261021@sha256:7bc89f8e6e4dfe609ca671526e3bbee91753422b8a766d90cef4de8b7c73a3b9
+FROM ghcr.io/cybozu/ubuntu:24.04.20261113@sha256:74243e15b3f04c67d11f86a43092d1e54f73ee8a1049f3175ea8b87273abc723
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /go/bin/dex /usr/local/bin/dex
