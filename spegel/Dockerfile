@@ -11,7 +11,13 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     go mod download
 RUN CGO_ENABLED=0 go build -installsuffix 'static' -o spegel .
 
-FROM scratch
+# - Spegel checks its runtime environment with a preflight check.
+#   Since v0.7.4, it fails to start unless it runs on a distroless image.
+#   https://github.com/spegel-org/spegel/pull/1448
+# - The upstream image uses `static:nonroot` but switches to root with `USER root:root`.
+#   We use `static:latest` instead, which runs as root by default.
+#   https://github.com/spegel-org/spegel/blob/v0.8.1/Dockerfile#L5
+FROM gcr.io/distroless/static:latest@sha256:1a64f46364620465ef9e9a8f5413757dfdf22695e050bbfd7303eeaf17a59383
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=builder /work/spegel /app/
