@@ -1,11 +1,11 @@
 # etcd container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.26.11.2_resolute@sha256:afc977f11e560a1997622db9ee7974a5788019ea56a19f6600b7ac7c52e28794 AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-# v3.6.11
-ARG ETCD_COMMIT=ec166e2292a58365c90e96fcd206b3b74938d49d
+# https://github.com/etcd-io/etcd/releases/tag/v3.6.17
+ARG ETCD_COMMIT=0689586e360e2c6b46f95ad5634c25d5fa1683db
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN curl -sSLf https://github.com/etcd-io/etcd/archive/${ETCD_COMMIT}.tar.gz | \
@@ -17,7 +17,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     ./scripts/build.sh
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261117@sha256:47ff7a519b04321a84301061371358e06e97f80f4ef0229e5e2ad2e7f71acb55
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/etcd/bin /usr/local/etcd/bin
