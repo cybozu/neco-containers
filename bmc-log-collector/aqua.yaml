@@ -4,10 +4,10 @@ checksum:
   require_checksum: true
 registries:
 - type: standard
-  ref: v4.542.0
+  ref: v4.581.0
 - name: local
   type: local
   path: aqua-registry.yaml
 packages:
-- name: github.com/onsi/ginkgo/v2/ginkgo@v2.32.0
+- name: github.com/onsi/ginkgo/v2/ginkgo@v2.34.0
   registry: local
