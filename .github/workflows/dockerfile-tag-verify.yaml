@@ -1,0 +1,19 @@
+name: Dockerfile tag and digest verification
+on:
+  pull_request:
+
+jobs:
+  verify-dockerfile-tags:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/aqua
+      - name: Install dockerfile-pin
+        run: aqua exec -- dockerfile-pin version
+      - name: Verify image tags and digests
+        run: bash .github/scripts/verify-dockerfile-tags

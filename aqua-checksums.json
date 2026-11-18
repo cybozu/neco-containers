@@ -1,6 +1,36 @@
 {
   "checksums": [
     {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_darwin_amd64.tar.gz",
+      "checksum": "3D022C8833F4F62D8FD6FD9DF13B84043E7931985DE8F233B1C3AF49496881A1",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_darwin_arm64.tar.gz",
+      "checksum": "A34D315738EFF10A2A8C4BD6DD49429ECEBF587AC4D4467DF6B0AEFCAB6CA237",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_linux_amd64.tar.gz",
+      "checksum": "413A6AF72B16C191C21D508C5B0F292F84A5D87E60B5D1ACE1BA689565D45131",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_linux_arm64.tar.gz",
+      "checksum": "ED3B708C4A8EDFF3915D20472F855FB986F5A22C03BD20CE112293115C59D7E6",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_windows_amd64.zip",
+      "checksum": "19B3E6E1BE533444A65751796FB198101CDC54BD4D15AD487DC140AFBA8BBE79",
+      "algorithm": "sha256"
+    },
+    {
+      "id": "github_release/github.com/azu/dockerfile-pin/v1.6.0/dockerfile-pin_windows_arm64.zip",
+      "checksum": "157C6FC12F7C09F569C23713A5DEF9D9CC74CC7D11D0C8ECA4291761C9A28771",
+      "algorithm": "sha256"
+    },
+    {
       "id": "github_release/github.com/golangci/golangci-lint/v2.15.0/golangci-lint-2.15.0-darwin-amd64.tar.gz",
       "checksum": "767B899A28285E88DED2823D5DCC4BC5EF681173EB2D80F029A7B17EE4ECE3B8",
       "algorithm": "sha256"

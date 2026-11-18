@@ -141,6 +141,20 @@ Without the npmrc secret, npm registry packages are fetched from Takumi Guard an
 
 ## GitHub Actions
 
+### Verifying Dockerfile image tags
+
+On pull requests, CI checks that pinned image tags in Dockerfile `FROM` and
+`COPY --from` instructions currently resolve to their digests, using
+`dockerfile-pin check --verify-tag`. Unpinned images are not required to have a
+digest. Registry or parsing errors fail the check rather than leaving an image
+unverified.
+
+Tags can move when upstream images are rebuilt, so an existing pin can become
+outdated even without a repository change. If the check fails, verify the
+upstream image and update the digest and container image version as needed.
+Only resolvable default Dockerfile build argument values are checked; build-time
+overrides and references using unresolved arguments are not verified.
+
 ### Updating action versions
 
 We use [pinact](https://github.com/suzuki-shunsuke/pinact) to update GitHub Actions versions and pin them to commit hashes.

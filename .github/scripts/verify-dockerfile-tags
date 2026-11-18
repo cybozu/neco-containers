@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+errors=$(mktemp)
+trap 'rm -f "$errors"' EXIT
+
+# dockerfile-pin reports file parsing errors on stderr without failing.
+if ! results=$(dockerfile-pin check --glob '**/Dockerfile' --verify-tag --format json --exit-code 0 2>"$errors") || [ -s "$errors" ]; then
+  cat "$errors" >&2
+  echo "dockerfile-pin failed or reported errors" >&2
+  exit 1
+fi
+
+jq -r '[.[] | select(
+  (.status == "fail" and .message != "missing digest") or
+  .status == "warn" or
+  (.status == "skip" and .message == "unresolved ARG variable" and (.original | contains("@")))
+)] | if length > 0 then
+  (.[] | "\(.file):\(.line): \(.original): \(.message)"), ("" | halt_error(1))
+else empty end' <<<"$results"
