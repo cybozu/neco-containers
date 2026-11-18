@@ -97,7 +97,7 @@ Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
 The update procedure of each container image is described in `MAINTENANCE.md` in its directory (e.g. [`alertmanager/MAINTENANCE.md`](./alertmanager/MAINTENANCE.md)).
 When you add a new container image, add a `MAINTENANCE.md` that describes how to update it.
 
-In case of components whose Go source code are in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
+For components whose Go source code is in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
 
 ## Takumi Guard
 
