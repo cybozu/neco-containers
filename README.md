@@ -92,6 +92,13 @@ In this example, the consistency check for branch `1.2` is performed as usual, w
 The ability to specify multiple branch names is provided only for limited use cases such as the `latest` tag.
 Do not add arbitrary or ad-hoc branch names to the `BRANCH` file.
 
+## Maintenance
+
+The update procedure of each container image is described in `MAINTENANCE.md` in its directory (e.g. [`alertmanager/MAINTENANCE.md`](./alertmanager/MAINTENANCE.md)).
+When you add a new container image, add a `MAINTENANCE.md` that describes how to update it.
+
+For components whose Go source code is in neco-containers, all dependent Go modules should be updated if there is no special reason. Kubernetes-related modules such as client-go may be newer than the Kubernetes to be updated. For example, it is acceptable that client-go is v0.30 and Kubernetes is v1.29.
+
 ## Takumi Guard
 
 Some Dockerfiles fetch Go modules via Takumi Guard ([setup-takumi-guard-golang](https://github.com/flatt-security/setup-takumi-guard-golang))
