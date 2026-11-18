@@ -1,7 +1,7 @@
 # Registry container image
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdccedc40a4b805d28f21f21d92faa2f7b071d2f1 AS build
 
 ARG REGISTRY_COMMIT=3220848f15d9279c66a41aa0a257469e6aede1e9 # v3.1.2
 
@@ -16,7 +16,7 @@ WORKDIR /go/src/github.com/distribution/distribution/
 RUN CGO_ENABLED=0 make clean binaries
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261117@sha256:47ff7a519b04321a84301061371358e06e97f80f4ef0229e5e2ad2e7f71acb55
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \

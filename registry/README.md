@@ -7,7 +7,7 @@
 ### Launch Registry
 
 ```console
-$ docker run --name=registry -p 5000:5000 ghcr.io/cybozu/registry:3.0
+$ docker run --name=registry -p 5000:5000 ghcr.io/cybozu/registry:3.1
 ```
 
 ## Docker images
