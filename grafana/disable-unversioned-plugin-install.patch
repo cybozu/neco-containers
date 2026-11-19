@@ -1,5 +1,5 @@
 diff --git a/pkg/services/pluginsintegration/plugininstaller/service.go b/pkg/services/pluginsintegration/plugininstaller/service.go
-index 32189b5bd6d..2ee7e56f09f 100644
+index 56c9db7..c37cd5b 100644
 --- a/pkg/services/pluginsintegration/plugininstaller/service.go
 +++ b/pkg/services/pluginsintegration/plugininstaller/service.go
 @@ -120,6 +120,9 @@ func (s *Service) installPlugins(ctx context.Context, pluginsToInstall []setting
@@ -13,10 +13,10 @@ index 32189b5bd6d..2ee7e56f09f 100644
  		ctx = repo.WithRequestOrigin(ctx, "preinstall")
  		compatOpts := plugins.NewAddOpts(s.cfg.BuildVersion, runtime.GOOS, runtime.GOARCH, installPlugin.URL)
 diff --git a/pkg/setting/setting_plugins.go b/pkg/setting/setting_plugins.go
-index fc967ec59c3..d164936a652 100644
+index fd77932..d164936 100644
 --- a/pkg/setting/setting_plugins.go
 +++ b/pkg/setting/setting_plugins.go
-@@ -32,27 +32,7 @@ func extractPluginSettings(sections []*ini.Section) config.PluginSettings {
+@@ -32,28 +32,7 @@ func extractPluginSettings(sections []*ini.Section) config.PluginSettings {
  }
  
  var (
@@ -37,6 +37,7 @@ index fc967ec59c3..d164936a652 100644
 -		"loki":                          {ID: "loki"},
 -		"mysql":                         {ID: "mysql"},
 -		"influxdb":                      {ID: "influxdb"},
+-		"cloudwatch":                    {ID: "cloudwatch"},
 -		"grafana-advisor-app":           {ID: "grafana-advisor-app"},
 -		"grafana-postgresql-datasource": {ID: "grafana-postgresql-datasource"},
 -		"grafana-pyroscope-datasource":  {ID: "grafana-pyroscope-datasource"},
