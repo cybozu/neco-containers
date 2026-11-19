@@ -1,7 +1,7 @@
 HUBBLE_UI_REPO ?= https://github.com/cilium/hubble-ui.git
 HUBBLE_UI_COMMIT_HASH ?= d6eb0dd9ff8e684a6a6bd6da7b6cb304497a2e26
 NGINX_REPO ?= https://github.com/nginx/docker-nginx-unprivileged.git
-NGINX_COMMIT_HASH ?= ecb807035c7963a87b2a88d339460b1e8eeaec2f
+NGINX_COMMIT_HASH ?= 95b8382efe669a2876f6736e9479667a1b509cee
 PNPM_DIR ?= $(CURDIR)/.pnpm-bin
 PNPM_BIN ?= $(CURDIR)/.pnpm-bin/pnpm
 TAKUMI_GUARD_REGISTRY ?= https://npm.flatt.tech/
