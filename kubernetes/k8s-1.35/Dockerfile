@@ -3,7 +3,7 @@
 # Stage1: build from source
 FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
-# v1.35.9
+# https://github.com/kubernetes/kubernetes/releases/tag/v1.35.9
 ARG K8S_COMMIT=329000efd0b26bd78155e51e4df449130f0fca00
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
