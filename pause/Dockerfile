@@ -1,11 +1,11 @@
 # pause container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/ubuntu-dev:24.04.20261021@sha256:96f5e68ff021457cf07c82510d5be3c3c69bf20c1109e32c604b0b516de7eec6 AS build
+FROM ghcr.io/cybozu/ubuntu-dev:26.04.20261117@sha256:d1fe8476ab613ca5a8320ba5c79cd5a50854832e89831014a3732a2816233e8f AS build
 
-# v1.35.3
-ARG K8S_COMMIT=6c1cd99aef09161ddb07b8ade6c9564e9b9bfe27
-ARG PAUSE_VERSION=3.10.1
+# https://github.com/kubernetes/kubernetes/releases/tag/v1.36.6
+ARG K8S_COMMIT=1b2171b110bb2a2542e1322035c6583ec86eb976
+ARG PAUSE_VERSION=3.10.2
 
 RUN mkdir /work
 
