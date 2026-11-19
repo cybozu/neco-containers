@@ -2,4 +2,4 @@
   scan:
     enabled: true
     team: neco
-    identifier: "ghcr.io/cybozu/kubernetes:1.33"
+    identifier: "ghcr.io/cybozu/kubernetes:1.36"

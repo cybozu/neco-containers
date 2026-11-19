@@ -1,9 +1,10 @@
 # kubernetes container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26.11.2_resolute@sha256:afc977f11e560a1997622db9ee7974a5788019ea56a19f6600b7ac7c52e28794 AS build
 
-ARG K8S_VERSION=1.33.7
+# https://github.com/kubernetes/kubernetes/releases/tag/v1.36.6
+ARG K8S_COMMIT=1b2171b110bb2a2542e1322035c6583ec86eb976
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 RUN apt-get update \
@@ -12,15 +13,18 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /go/src/k8s.io/ && \
-    curl -sSLf https://github.com/kubernetes/kubernetes/archive/v${K8S_VERSION}.tar.gz | \
+    curl -sSLf https://github.com/kubernetes/kubernetes/archive/${K8S_COMMIT}.tar.gz | \
     tar zxf - -C /go/src/k8s.io/ && \
-    mv /go/src/k8s.io/kubernetes-${K8S_VERSION} /go/src/k8s.io/kubernetes
+    mv /go/src/k8s.io/kubernetes-${K8S_COMMIT} /go/src/k8s.io/kubernetes
+
+COPY kubelet-fetch-active-container.diff /work/
 
 WORKDIR /go/src/k8s.io/kubernetes
+RUN patch -p1 < /work/kubelet-fetch-active-container.diff
 RUN make all WHAT="cmd/kube-apiserver cmd/kube-controller-manager cmd/kube-proxy cmd/kube-scheduler cmd/kubelet" GOLDFLAGS="-w -s"
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261117@sha256:47ff7a519b04321a84301061371358e06e97f80f4ef0229e5e2ad2e7f71acb55
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 RUN apt-get update \
