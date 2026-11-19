@@ -1,12 +1,12 @@
 ARG NODE_VERSION=24.22.1
 ARG NODE_SHA=6c172a9ab6718f7b801fb5a7bd486af2ee5e32758086a04b84fcce2aa77095e6
-ARG NGINX_VERSION=1.31.8
+ARG NGINX_VERSION=1.31.9
 ARG NJS_VERSION=1.0.2
 ARG PKG_RELEASE=1~resolute
 
 # ==================== backend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/backend/Dockerfile
-FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS backend-builder
+FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdccedc40a4b805d28f21f21d92faa2f7b071d2f1 AS backend-builder
 
 WORKDIR /app
 COPY src/hubble-ui .
@@ -22,7 +22,7 @@ ENTRYPOINT ["/backend"]
 
 # ==================== frontend-builder image ====================
 # https://github.com/cilium/hubble-ui/blob/master/Dockerfile
-FROM ghcr.io/cybozu/golang:1.27.3.2_resolute@sha256:2e42484cb145c45c51065e58a62420b3afa2164ed303062ceb2f7b82e978df20 AS frontend-builder
+FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdccedc40a4b805d28f21f21d92faa2f7b071d2f1 AS frontend-builder
 ARG NODE_VERSION
 ARG NODE_SHA
 
@@ -51,7 +51,7 @@ RUN pnpm run build
 
 # ==================== hubble-ui-frontend image ====================
 # https://github.com/nginx/docker-nginx-unprivileged/blob/main/Dockerfile-debian.template
-FROM ghcr.io/cybozu/ubuntu:26.04.20261021@sha256:4d40515de878b3276fa0b0fd6ee4818f7dc729d579d3a211dae0763bfad4ff02 AS frontend
+FROM ghcr.io/cybozu/ubuntu:26.04.20261117@sha256:47ff7a519b04321a84301061371358e06e97f80f4ef0229e5e2ad2e7f71acb55 AS frontend
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 ARG NGINX_VERSION
 ARG NJS_VERSION
