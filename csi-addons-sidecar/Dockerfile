@@ -1,6 +1,6 @@
 ARG SRC_DIR=/work/go/src/github.com/csi-addons/kubernetes-csi-addons
 # Build the sidecar binary
-FROM ghcr.io/cybozu/golang:1.25-noble AS builder
+FROM ghcr.io/cybozu/golang:1.26-noble AS builder
 
 ARG SRC_DIR
 ARG VERSION=0.14.0
