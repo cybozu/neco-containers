@@ -73,6 +73,7 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
             unzip \
             wget \
             xauth \
+            zip \
     && rm -rf /var/lib/apt/lists/*
 
 RUN --mount=type=bind,from=go-download,source=/go.tar.gz,target=/tmp/go.tar.gz,ro \
