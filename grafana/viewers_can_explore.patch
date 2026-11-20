@@ -1,8 +1,8 @@
 diff --git a/pkg/api/accesscontrol.go b/pkg/api/accesscontrol.go
-index 2b10380c..6306d3e5 100644
+index cf72cfb..c9de075 100644
 --- a/pkg/api/accesscontrol.go
 +++ b/pkg/api/accesscontrol.go
-@@ -90,6 +90,9 @@ func FixedRoleRegistrations(viewersCanEdit, dsPermissionsEnforced bool) []ac.Rol
+@@ -91,6 +91,9 @@ func FixedRoleRegistrations(viewersCanEdit, dsPermissionsEnforced bool) []ac.Rol
  		Grants: explorerGrants,
  	}
  
