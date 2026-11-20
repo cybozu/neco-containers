@@ -4,6 +4,7 @@
 2. Confirm test are green.
 
    ```bash
+   make setup
    make test
    ```
 
