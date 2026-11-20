@@ -1,5 +1,5 @@
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.25-noble AS build
+FROM ghcr.io/cybozu/golang:1.26-noble AS build
 
 ARG SRC_DIR=/work/go/src/github.com/kubernetes-csi/external-resizer
 ARG VERSION=2.1.0
