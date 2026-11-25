@@ -9,16 +9,17 @@ The procedures below apply to every `argocd-X.Y/` directory.
 1. Check [releases](https://github.com/argoproj/argo-cd/releases) for changes.
 2. Check `hack/tool-versions.sh` for the tools versions.
     - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/hack/tool-versions.sh`
-3. Update tool versions in `Dockerfile`.
-    - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
-    - [Helm](https://github.com/helm/helm/releases)
-4. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
+3. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
     - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/Dockerfile`
-5. Update version variables in `Dockerfile`.
-    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION` and `HELM_VERSION`.
-6. Update `BRANCH` and `TAG` files.
-7. Update `ARGOCD_VERSION` in `admission/Makefile`.
-8. Follow maintenance instructions for [neco-admission](../admission/MAINTENANCE.md).
+4. Update version variables in `Dockerfile` to the versions in `hack/tool-versions.sh`.
+    - Update `ARGOCD_VERSION`, `KUSTOMIZE_VERSION`, `HELM_VERSION` and `GIT_LFS_VERSION`.
+    - Update the `--checksum` of each download. Upstream keeps the checksums of the tools in `hack/installers/checksums/`.
+      Compare them with the ones published by each project.
+        - [Kustomize](https://github.com/kubernetes-sigs/kustomize/releases)
+        - [Helm](https://github.com/helm/helm/releases)
+        - [Git LFS](https://github.com/git-lfs/git-lfs/releases)
+    - Calculate the checksum of the Argo CD source archive with `sha256sum`.
+5. Update `BRANCH` and `TAG` files.
 
 > [!Note]
 > ArgoCD depends on dex,Redis,HAProxy.
@@ -27,10 +28,6 @@ The procedures below apply to every `argocd-X.Y/` directory.
 - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/dex/argocd-dex-server-deployment.yaml`
 - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/base/redis/argocd-redis-deployment.yaml`
 - `https://github.com/argoproj/argo-cd/blob/vX.Y.Z/manifests/ha/install.yaml`
-
-> [!Note]
-> ArgoCD's Application objects are validated by [neco-admission](../admission/MAINTENANCE.md).
-> You need to update [neco-admission](../admission/MAINTENANCE.md) at least for its `Makefile`.
 
 ## dex
 
