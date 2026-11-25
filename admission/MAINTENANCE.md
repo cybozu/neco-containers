@@ -30,7 +30,6 @@ Do the following as part of the update of each CRD-providing product:
 
 1. Update the matching commit hash variables and comments from the following in `Makefile`.
    - `CONTOUR_COMMIT_HASH`
-   - `ARGOCD_COMMIT_HASH`
    - `GRAFANA_OPERATOR_COMMIT_HASH`
 2. Modify the code to match the new CRDs if CRDs are changed.
    - The code which depended on the CRDs are in the [hook](https://github.com/cybozu/neco-containers/tree/main/admission/hooks) directory.

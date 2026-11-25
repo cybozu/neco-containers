@@ -1,30 +1,26 @@
 # syntax=docker/dockerfile:1
 # Argo CD container
 
-ARG ARGOCD_VERSION=3.5.4
-# Workaround: upstream uses Kustomize v5.8.1 which introduces breaking changes, so we use v5.7.1 which keeps backward compatibilities.
-#             See. https://github.com/kubernetes-sigs/kustomize/issues/6058
-ARG KUSTOMIZE_VERSION=5.7.1
-# Workaround: upstream uses Helm v4.2.1 which introduces breaking changes in conjunction with kustomize before v5.8.0, so we use v3.22.0 which keeps backward compatibilities.
-#             See. https://github.com/kubernetes-sigs/kustomize/issues/6013
-ARG HELM_VERSION=3.22.0
-ARG GIT_LFS_VERSION=3.7.1
+ARG ARGOCD_VERSION=3.5.9
+ARG KUSTOMIZE_VERSION=5.8.1
+ARG HELM_VERSION=4.2.1
+ARG GIT_LFS_VERSION=3.8.1
 ARG NODE_VERSION=24.22.1
 ARG PNPM_VERSION=10.34.6
 
 FROM scratch AS kustomize-download
 ARG KUSTOMIZE_VERSION
-ADD --checksum=sha256:ea375e7372f9aa029129d4b2d16c66b7750b7f1213c4f66f910d981c895818d8 \
+ADD --checksum=sha256:029a7f0f4e1932c52a0476cf02a0fd855c0bb85694b82c338fc648dcb53a819d \
     https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv${KUSTOMIZE_VERSION}/kustomize_v${KUSTOMIZE_VERSION}_linux_amd64.tar.gz /kustomize.tar.gz
 
 FROM scratch AS helm-download
 ARG HELM_VERSION
-ADD --checksum=sha256:1e4ab49e429626cf6c6958d914248b78c9730803c2751b87627e171dc800e7bb \
+ADD --checksum=sha256:479dca836e5b45e8bd222400c5591b0e3a647378f03ff96597180db97c17fdae \
     https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz /helm.tar.gz
 
 FROM scratch AS git-lfs-download
 ARG GIT_LFS_VERSION
-ADD --checksum=sha256:1c0b6ee5200ca708c5cebebb18fdeb0e1c98f1af5c1a9cba205a4c0ab5a5ec08 \
+ADD --checksum=sha256:e72cf723a4a660438862282e8aecf3885fc8123e88bfcad534cf6b941a354b75 \
     https://github.com/git-lfs/git-lfs/releases/download/v${GIT_LFS_VERSION}/git-lfs-linux-amd64-v${GIT_LFS_VERSION}.tar.gz /git-lfs.tar.gz
 
 FROM scratch AS node-download
@@ -34,7 +30,7 @@ ADD --checksum=sha256:eb6728e77c576a35162c122c45ccadf224d89ff00abc8dae46cc2897c6
 
 FROM scratch AS argocd-src
 ARG ARGOCD_VERSION
-ADD --checksum=sha256:3c346ebbc871ac5d22d1fea01b83bf26905594b85f6d93ebe6b1cf64def10826 \
+ADD --checksum=sha256:4e1d400761b52f03550bda2d14efecb122737e586a3a1eea8342a2e3984e3dcc \
     https://github.com/argoproj/argo-cd/archive/refs/tags/v${ARGOCD_VERSION}.tar.gz /src.tar.gz
 
 FROM scratch AS pnpm-download
