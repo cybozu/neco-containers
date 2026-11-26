@@ -1,10 +1,10 @@
 # vault container
 
 # Stage1: build from source
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
+FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdccedc40a4b805d28f21f21d92faa2f7b071d2f1 AS build
 ENV GOPROXY=https://golang.flatt.tech
 
-ARG VAULT_COMMIT=7193f9a48ff6093ca61b3b627a8671e770428ba6 # 2.0.3
+ARG VAULT_COMMIT=c56e7e670bd8c79104c27b6c10138226538a6db2 # v2.2.2
 
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     git clone --depth 1 https://github.com/hashicorp/vault . \
@@ -14,7 +14,7 @@ RUN --mount=type=secret,id=netrc,target=/root/.netrc \
     && make
 
 # Stage2: setup runtime container
-FROM ghcr.io/cybozu/ubuntu:24.04.20261105@sha256:d17e041d23ea4238026cc4fa1418681fd81ea0060b8b7e3ca063627d72912a2b
+FROM ghcr.io/cybozu/ubuntu:26.04.20261126@sha256:c9ec282d212c595558d8dbb1cc75a0dc9d82174979bcb724ca116f3695cc6022
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"
 
 COPY --from=build /work/bin /usr/local/vault/bin
