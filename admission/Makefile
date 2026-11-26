@@ -43,7 +43,7 @@ check-generated:
 # Build manager binary
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
+	CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" ./cmd
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests
