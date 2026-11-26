@@ -1,4 +1,4 @@
-FROM ghcr.io/cybozu/golang:1.26.8.1_noble@sha256:fcdd7870a523950129a6afc09e03c035796446ac7c1b2f84994e4a7920042879 AS build
+FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdccedc40a4b805d28f21f21d92faa2f7b071d2f1 AS build
 ENV GOPROXY=https://golang.flatt.tech
 COPY . /work
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
