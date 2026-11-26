@@ -3,7 +3,7 @@ CONTOUR_COMMIT_HASH := 81c4e28c38177ed1f3a3265389a86f8926c332cb
 # Grafana Operator v5.18.0
 GRAFANA_OPERATOR_COMMIT_HASH := de1156accb9c4529cbdb536a054b9c4bb5ee759d
 
-ENVTEST_K8S_VERSION := 1.35.0
+ENVTEST_K8S_VERSION := 1.36.2
 ENVTEST_USE := setup-envtest use -p env $(ENVTEST_K8S_VERSION)
 
 # Set the shell used to bash for better error handling.
@@ -35,8 +35,8 @@ simple-test: setup
 	staticcheck ./...
 	go vet ./...
 
-.PHONY: check-generate
-check-generate:
+.PHONY: check-generated
+check-generated:
 	$(MAKE) manifests
 	$(MAKE) generate
 	go mod tidy
