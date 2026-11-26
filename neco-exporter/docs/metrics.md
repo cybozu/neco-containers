@@ -13,6 +13,7 @@ Each collector's scope should match `--scope` to use.
 | [`kubelet`](#kubelet)                 | `node`    | Report kubelet's systemReserved cpu/memory |
 | [`networkfence`](#networkfence)       | `cluster` | Monitor NetworkFence resources      |
 | [`nicirq`](#nicirq)                   | `node`    | Report which CPU handles each NIC queue interrupt |
+| [`route`](#route)                     | `node`    | Watch default routes of the node   |
 | [`collector`](#collector)             | (both)    | neco-exporter and collectors status |
 
 ## bpf
@@ -215,6 +216,95 @@ Information about `NetworkFence` resources.
 | `driver`      | CSI driver name                              |
 | `fence_state` | Fence state (`Fenced`/`Unfenced`)            |
 | `result`      | Operation result (e.g. `Succeeded`/`Failed`) |
+
+## route
+
+The `route` collector watches the IPv4 default route (`0.0.0.0/0`) in the main routing table of the node.
+IPv6 routes are ignored.
+It keeps a copy of the IPv4 main table, taken by dumps of the table.
+It subscribes to route notifications of the kernel (rtnetlink), and dumps the table when they arrive:
+
+- within 100 milliseconds after a notification of a default route;
+- within 1 second after a notification of another route, so that frequent changes do not dump the table too often;
+- every 30 seconds without notifications, because Linux does not notify some removals, e.g. routes removed when their device goes down.
+
+The copy is not built from the notifications, because they are not versioned, and the ones received during a dump may be older than the dump.
+
+The Pod must run in the host network namespace (`hostNetwork: true`); otherwise it watches the routes of the Pod.
+No capability is needed.
+`collector_health` is `0` until the first dump succeeds.
+
+Counters are reset when the exporter restarts.
+
+Run this collector alone in a dedicated DaemonSet (`--collectors=route`).
+When the node loses its default route, it may also lose the route to the scraper, so scrapes fail until the routes come back.
+`route_default_present` has no samples during that time,
+but the logs below record the outage, and `route_changes_total` keeps counting in the process and reports the changes at the first scrape after it.
+This works only if the process keeps running without the network, so do not enable together with it:
+
+- collectors using the Kubernetes API, e.g. the cluster-scope collectors, whose leader election stops the process when the lease is lost;
+- collectors whose `Setup` or resource usage may stop or restart the Pod,
+  because a restart resets the counters.
+
+It also logs the changes of default routes,
+so that the time of an outage can be found in the logs after the routes come back:
+
+| Level  | Message                     | Attributes                             |
+| ------ | --------------------------- | -------------------------------------- |
+| `INFO` | `default route changed`     | `op`, `metric`, `protocol`, `nexthops` |
+| `WARN` | `default route is missing`  | `detected_by`, `not_before`            |
+| `INFO` | `default route is restored` | `detected_by`, `not_before`            |
+
+`default route changed` is logged for every notification of a default route, when it is received.
+`op` is the same as in [`route_changes_total`](#route_changes_total).
+`nexthops` lists the next hops in the notification, e.g. `via 10.69.1.193 ifindex 2`.
+Changes without notifications, e.g. next hops marked dead when their devices go down, are not logged.
+
+`default route is missing` and `default route is restored` are logged when the node loses all of its default routes and when one comes back.
+They are found by dumps.
+The change happened between `not_before` and the time of the log.
+
+- `detected_by` is `notification` if a notification of a default route triggered the dump.
+  `not_before` is the time of the first notification since the previous dump, so the change is logged within 100 milliseconds.
+- `detected_by` is `dump` if the dump was periodic or triggered by the other routes, e.g. when the kernel removed the route without a notification.
+  `not_before` is the time of the previous dump, up to 30 seconds earlier.
+
+`default route is missing` is also logged at the start if the node has no default route, without `not_before`.
+
+### `route_default_present`
+
+`1` if the main table has any default route, `0` otherwise.
+
+| Label    | Description                              |
+| -------- | ---------------------------------------- |
+| `node`   | Node name (from the `NODE_NAME` env var) |
+
+### `route_default_nexthops`
+
+Number of usable next hops of the default routes currently in the main table.
+A multipath route has one next hop for each `nexthop` line of `ip route`.
+Next hops marked `dead` or `linkdown` are not counted.
+The kernel keeps them in multipath routes, without notifications, while their devices are down,
+and keeps a single-path route with a `linkdown` next hop, whose value is `0`.
+The series disappears while the route is missing.
+It is updated by the dumps, like the other metrics of default routes.
+
+| Label      | Description                                                 |
+| ---------- | ----------------------------------------------------------- |
+| `node`     | Node name (from the `NODE_NAME` env var)                    |
+| `metric`   | Metric (priority) of the route, e.g. `32` for BIRD's routes |
+
+### `route_changes_total`
+
+Number of IPv4 route notifications for the main table.
+A steady rate of `op="delete"` with `protocol="bird"` means that BIRD deletes and adds the same routes repeatedly.
+
+| Label      | Description                                                                                  |
+| ---------- | -------------------------------------------------------------------------------------------- |
+| `node`     | Node name (from the `NODE_NAME` env var)                                                     |
+| `protocol` | Routing protocol of the route                                                                |
+| `op`       | `add`, `replace` (an existing route was replaced, e.g. its next hops changed), or `delete` |
+| `default`  | `true` for default routes, `false` for the other routes                                     |
 
 ## collector
 
