@@ -7,11 +7,12 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/cybozu/neco-containers/admission/hooks"
 	"github.com/spf13/cobra"
 	klog "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/yaml"
+
+	"github.com/cybozu/neco-containers/admission/hooks"
 )
 
 var config struct {

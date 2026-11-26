@@ -13,8 +13,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
-const annotationForDelete = annotatePrefix + "i-am-sure-to-delete"
-const labelDevelopment = "development"
+const (
+	annotationForDelete = annotatePrefix + "i-am-sure-to-delete"
+	labelDevelopment    = "development"
+)
 
 // +kubebuilder:webhook:path=/validate-delete,mutating=false,failurePolicy=fail,sideEffects=None,groups="",resources=namespaces;resourcequotas,verbs=delete,versions=v1,name=vdelete.kb.io,admissionReviewVersions={v1,v1beta1}
 

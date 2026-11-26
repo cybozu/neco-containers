@@ -87,7 +87,7 @@ func setHTTPProxyPolicyField(hp *unstructured.Unstructured, policy HTTPProxyPoli
 		return nil
 	}
 	for _, route := range routes {
-		ipPoliciesOrg, _, err := unstructured.NestedSlice(route.(map[string]interface{}), "ipAllowPolicy")
+		ipPoliciesOrg, _, err := unstructured.NestedSlice(route.(map[string]any), "ipAllowPolicy")
 		if err != nil {
 			return err
 		}
@@ -109,19 +109,19 @@ func setHTTPProxyPolicyField(hp *unstructured.Unstructured, policy HTTPProxyPoli
 		for _, v := range ipPolicies {
 			ipPoliciesMap[v] = struct{}{}
 		}
-		uniqIpPolicies := []interface{}{}
+		uniqIpPolicies := []any{}
 		for k := range ipPoliciesMap {
 			jsonStr, err := json.Marshal(k)
 			if err != nil {
 				return err
 			}
-			ipPolicy := map[string]interface{}{}
+			ipPolicy := map[string]any{}
 			if err := json.Unmarshal(jsonStr, &ipPolicy); err != nil {
 				return err
 			}
 			uniqIpPolicies = append(uniqIpPolicies, ipPolicy)
 		}
-		err = unstructured.SetNestedSlice(route.(map[string]interface{}), uniqIpPolicies, "ipAllowPolicy")
+		err = unstructured.SetNestedSlice(route.(map[string]any), uniqIpPolicies, "ipAllowPolicy")
 		if err != nil {
 			return err
 		}

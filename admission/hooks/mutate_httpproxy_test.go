@@ -8,24 +8,26 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-var IpPolicyName = "restricted"
-var httpproxyMutatorConfig = &HTTPProxyMutatorConfig{
-	Policies: []HTTPProxyPolicy{
-		{
-			Name: IpPolicyName,
-			IpAllowPolicy: []HTTPProxyIPFilterPolicy{
-				{
-					Source: "Peer",
-					Cidr:   "192.0.2.0",
+var (
+	IpPolicyName           = "restricted"
+	httpproxyMutatorConfig = &HTTPProxyMutatorConfig{
+		Policies: []HTTPProxyPolicy{
+			{
+				Name: IpPolicyName,
+				IpAllowPolicy: []HTTPProxyIPFilterPolicy{
+					{
+						Source: "Peer",
+						Cidr:   "192.0.2.0",
+					},
 				},
 			},
+			{
+				Name:          "updated",
+				IpAllowPolicy: []HTTPProxyIPFilterPolicy{},
+			},
 		},
-		{
-			Name:          "updated",
-			IpAllowPolicy: []HTTPProxyIPFilterPolicy{},
-		},
-	},
-}
+	}
+)
 
 func testHTTPProxy(name string, annotations map[string]string, ingressClassNameField *string, ipAllowPolicy []HTTPProxyIPFilterPolicy) *unstructured.Unstructured {
 	hp := &unstructured.Unstructured{}
@@ -37,15 +39,15 @@ func testHTTPProxy(name string, annotations map[string]string, ingressClassNameF
 	hp.SetName(name)
 	hp.SetNamespace("default")
 	hp.SetAnnotations(annotations)
-	hp.UnstructuredContent()["spec"] = map[string]interface{}{
-		"routes": []map[string]interface{}{
+	hp.UnstructuredContent()["spec"] = map[string]any{
+		"routes": []map[string]any{
 			{
-				"services": []interface{}{
-					map[string]interface{}{
+				"services": []any{
+					map[string]any{
 						"name": "dummy",
 						"port": 80,
 					},
-					map[string]interface{}{
+					map[string]any{
 						"name": "dummy",
 						"port": 443,
 					},
@@ -55,7 +57,7 @@ func testHTTPProxy(name string, annotations map[string]string, ingressClassNameF
 		},
 	}
 	if ingressClassNameField != nil {
-		unstructured.SetNestedField(hp.UnstructuredContent(), *ingressClassNameField, "spec", fieldIngressClassName)
+		Expect(unstructured.SetNestedField(hp.UnstructuredContent(), *ingressClassNameField, "spec", fieldIngressClassName)).To(Succeed())
 	}
 
 	err := k8sClient.Create(testCtx, hp)
@@ -82,7 +84,7 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 		hp := testHTTPProxy("mhp1", map[string]string{}, nil, nil)
 		name, ok, err := unstructured.NestedString(hp.UnstructuredContent(), "spec", fieldIngressClassName)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
+		Expect(ok).To(BeTrue())
 		Expect(name).To(Equal("secured"))
 	})
 
@@ -111,7 +113,7 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 		hp := testHTTPProxy("mhp4", map[string]string{}, &ingressClassName, nil)
 		name, ok, err := unstructured.NestedString(hp.UnstructuredContent(), "spec", fieldIngressClassName)
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
+		Expect(ok).To(BeTrue())
 		Expect(name).To(Equal("global"))
 		ann := hp.GetAnnotations()
 		Expect(ann).ToNot(HaveKey(annotationContourIngressClass))
@@ -128,12 +130,12 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 		hp := testHTTPProxy("mhp5", map[string]string{annotationIpPolicy: IpPolicyName}, nil, ipAllowPolicy)
 		routes, ok, err := unstructured.NestedSlice(hp.UnstructuredContent(), "spec", "routes")
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
+		Expect(ok).To(BeTrue())
 		for _, route := range routes {
-			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]interface{}), "ipAllowPolicy")
+			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]any), "ipAllowPolicy")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(Equal(true))
-			Expect(policies).To(ContainElements(map[string]interface{}{
+			Expect(ok).To(BeTrue())
+			Expect(policies).To(ContainElements(map[string]any{
 				"source": ipAllowPolicy[0].Source,
 				"cidr":   ipAllowPolicy[0].Cidr,
 			}))
@@ -144,13 +146,13 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 		hp := testHTTPProxy("mhp6", map[string]string{annotationIpPolicy: IpPolicyName}, nil, httpproxyMutatorConfig.Policies[0].IpAllowPolicy)
 		routes, ok, err := unstructured.NestedSlice(hp.UnstructuredContent(), "spec", "routes")
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
+		Expect(ok).To(BeTrue())
 		for _, route := range routes {
-			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]interface{}), "ipAllowPolicy")
+			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]any), "ipAllowPolicy")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(Equal(true))
-			Expect(policies).To(Equal([]interface{}{
-				map[string]interface{}{
+			Expect(ok).To(BeTrue())
+			Expect(policies).To(Equal([]any{
+				map[string]any{
 					"source": httpproxyMutatorConfig.Policies[0].IpAllowPolicy[0].Source,
 					"cidr":   httpproxyMutatorConfig.Policies[0].IpAllowPolicy[0].Cidr,
 				},
@@ -162,10 +164,10 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 		hp := testHTTPProxy("mhp7", map[string]string{annotationIpPolicy: IpPolicyName}, nil, nil)
 		routes, ok, err := unstructured.NestedSlice(hp.UnstructuredContent(), "spec", "routes")
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
-		newRoutes := []interface{}{}
+		Expect(ok).To(BeTrue())
+		newRoutes := []any{}
 		for _, route := range routes {
-			err := unstructured.SetNestedSlice(route.(map[string]interface{}), []interface{}{}, "ipAllowPolicy")
+			err := unstructured.SetNestedSlice(route.(map[string]any), []any{}, "ipAllowPolicy")
 			Expect(err).ShouldNot(HaveOccurred())
 			newRoutes = append(newRoutes, route)
 		}
@@ -186,12 +188,12 @@ var _ = Describe("mutate HTTPProxy webhook", func() {
 
 		routes, ok, err = unstructured.NestedSlice(ret.UnstructuredContent(), "spec", "routes")
 		Expect(err).ShouldNot(HaveOccurred())
-		Expect(ok).To(Equal(true))
+		Expect(ok).To(BeTrue())
 		for _, route := range routes {
-			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]interface{}), "ipAllowPolicy")
+			policies, ok, err := unstructured.NestedFieldCopy(route.(map[string]any), "ipAllowPolicy")
 			Expect(err).ShouldNot(HaveOccurred())
-			Expect(ok).To(Equal(true))
-			Expect(policies).To(ContainElements(map[string]interface{}{
+			Expect(ok).To(BeTrue())
+			Expect(policies).To(ContainElements(map[string]any{
 				"source": httpproxyMutatorConfig.Policies[0].IpAllowPolicy[0].Source,
 				"cidr":   httpproxyMutatorConfig.Policies[0].IpAllowPolicy[0].Cidr,
 			}))

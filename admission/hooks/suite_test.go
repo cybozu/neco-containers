@@ -48,12 +48,14 @@ var (
 	podCPURequestReduceWebhookPath                 = "/mutate-pod-cpu-request-reduce"
 )
 
-var scheme *runtime.Scheme
-var k8sConfig *rest.Config
-var k8sClient client.Client
-var testEnv *envtest.Environment
-var testCtx = context.Background()
-var testCancel context.CancelFunc
+var (
+	scheme     *runtime.Scheme
+	k8sConfig  *rest.Config
+	k8sClient  client.Client
+	testEnv    *envtest.Environment
+	testCtx    = context.Background()
+	testCancel context.CancelFunc
+)
 
 func TestAPIs(t *testing.T) {
 	RegisterFailHandler(Fail)
@@ -175,7 +177,6 @@ var _ = BeforeSuite(func() {
 		conn.Close()
 		return nil
 	}).Should(Succeed())
-
 })
 
 var _ = AfterSuite(func() {

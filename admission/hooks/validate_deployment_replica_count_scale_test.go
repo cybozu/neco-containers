@@ -78,7 +78,6 @@ var _ = Describe("validate deployment replica count scale webhook", func() {
 			} else {
 				Expect(err).To(HaveOccurred())
 			}
-
 		})
 	}
 })
