@@ -6,6 +6,7 @@ The directory is split into per-OS subdirectories (`meows-dctest-runner/ubuntu22
 2. Check the upstream Dockerfile. If there are any updates, update our `Dockerfile`.
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu22.04/Dockerfile` (for `ubuntu22.04/`)
    - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu24.04/Dockerfile` (for `ubuntu24.04/`)
+   - `https://github.com/cybozu-go/meows/blob/vX.Y.Z/runner-images/ubuntu26.04/Dockerfile` (for `ubuntu26.04/`)
 3. Update `MEOWS_RUNNER_TAG` in `Dockerfile`.
 4. Update `GO_VERSION` and `PLACEMAT_VERSION` in `Dockerfile`, if there are any updates.
    - `GO_VERSION`: <https://github.com/cybozu/neco-containers/blob/main/golang-all>
