@@ -38,4 +38,5 @@ func runTest() {
 	Context("cpupinning", testCPUPinningCollector)
 	Context("kubeletconfig", testKubeletConfigCollector)
 	Context("nicirq", testNICIRQCollector)
+	Context("route", testRouteCollector)
 }

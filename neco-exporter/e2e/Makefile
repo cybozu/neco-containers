@@ -73,6 +73,7 @@ install: install-pilot
 	$(KUBECTL) apply -f testdata/role.yaml
 	$(KUBECTL) apply -f testdata/rolebinding.yaml
 	$(KUBECTL) apply -f testdata/daemonset.yaml
+	$(KUBECTL) apply -f testdata/route-daemonset.yaml
 	$(KUBECTL) apply -f testdata/deployment.yaml
 	$(KUBECTL) apply -f testdata/service.yaml
 	$(MAKE) --no-print-directory wait-for-workloads

@@ -9,6 +9,7 @@ import (
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/cpupinning"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/kubeletconfig"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/nicirq"
+	"github.com/cybozu/neco-containers/neco-exporter/pkg/collector/node/route"
 	"github.com/cybozu/neco-containers/neco-exporter/pkg/exporter"
 )
 
@@ -28,6 +29,7 @@ func init() {
 		cpupinning.NewCollector(),
 		kubeletconfig.NewCollector(),
 		nicirq.NewCollector(),
+		route.NewCollector(),
 	}
 }
 
