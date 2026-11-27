@@ -2,7 +2,7 @@ FROM ghcr.io/cybozu/golang:1.27.4.2_resolute@sha256:0ddbebb97d9fefa0961dd10fdcce
 ENV GOPROXY=https://golang.flatt.tech
 COPY . /work
 RUN --mount=type=secret,id=netrc,target=/root/.netrc \
-    CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
+    CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" ./cmd
 
 FROM scratch
 LABEL org.opencontainers.image.source="https://github.com/cybozu/neco-containers"

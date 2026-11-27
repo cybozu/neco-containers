@@ -17,9 +17,9 @@ func fillHTTPProxy(name string, annotations map[string]string, ingressClassNameF
 	hp.SetName(name)
 	hp.SetNamespace("default")
 	hp.SetAnnotations(annotations)
-	hp.UnstructuredContent()["spec"] = map[string]interface{}{}
+	hp.UnstructuredContent()["spec"] = map[string]any{}
 	if ingressClassNameField != nil {
-		unstructured.SetNestedField(hp.UnstructuredContent(), *ingressClassNameField, "spec", fieldIngressClassName)
+		Expect(unstructured.SetNestedField(hp.UnstructuredContent(), *ingressClassNameField, "spec", fieldIngressClassName)).To(Succeed())
 	}
 	return hp
 }
@@ -85,7 +85,7 @@ var _ = Describe("validate HTTPProxy webhook with ", func() {
 		err := k8sClient.Create(testCtx, hp)
 		Expect(err).NotTo(HaveOccurred())
 
-		unstructured.SetNestedField(hp.UnstructuredContent(), "forest", "spec", fieldIngressClassName)
+		Expect(unstructured.SetNestedField(hp.UnstructuredContent(), "forest", "spec", fieldIngressClassName)).To(Succeed())
 		err = k8sClient.Update(testCtx, hp)
 		Expect(err).To(HaveOccurred())
 	})

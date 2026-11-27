@@ -21,7 +21,7 @@ crds:
 
 # Run tests, and set up envtest if not done already.
 .PHONY: test
-test: crds simple-test setup
+test: crds lint setup
 	source <($(ENVTEST_USE)) && \
 		ENABLE_PODCPUREQUESTREDUCE_MUTATION=true go test ./... -coverprofile cover.out
 	# TEST_PERMISSIVE test and NO_HTTPPROXY_MUTATION test can run at the same time
@@ -29,11 +29,9 @@ test: crds simple-test setup
 	source <($(ENVTEST_USE)) && \
 		TEST_PERMISSIVE=true NO_HTTPPROXY_MUTATION=true go test -v -count 1 ./...
 
-.PHONY: simple-test
-simple-test: setup
-	test -z "$$(gofmt -s -l . | tee /dev/stderr)"
-	staticcheck ./...
-	go vet ./...
+.PHONY: lint
+lint: setup
+	golangci-lint run
 
 .PHONY: check-generated
 check-generated:
@@ -45,7 +43,7 @@ check-generated:
 # Build manager binary
 .PHONY: build
 build:
-	CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" main.go
+	CGO_ENABLED=0 go build -o bin/neco-admission -ldflags="-w -s" ./cmd
 
 # Generate manifests e.g. CRD, RBAC etc.
 .PHONY: manifests

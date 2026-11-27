@@ -1,23 +1,23 @@
 {
   "checksums": [
     {
-      "id": "github_release/github.com/dominikh/go-tools/2026.2.2/staticcheck_darwin_amd64.tar.gz",
-      "checksum": "400CE48D6069432C632CC32E2E54D63000F6037413024310FDC20C930F1DF836",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.15.0/golangci-lint-2.15.0-darwin-amd64.tar.gz",
+      "checksum": "767B899A28285E88DED2823D5DCC4BC5EF681173EB2D80F029A7B17EE4ECE3B8",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dominikh/go-tools/2026.2.2/staticcheck_darwin_arm64.tar.gz",
-      "checksum": "C054BF7F561F5668175D31EC8770F6104B89CCB41F0F0B4CE92D423C34365417",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.15.0/golangci-lint-2.15.0-darwin-arm64.tar.gz",
+      "checksum": "D1E409481A8CA846C4BC97E781EB5CB1BD5C23353A0B3977A1CBDA1B1B6447D5",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dominikh/go-tools/2026.2.2/staticcheck_linux_amd64.tar.gz",
-      "checksum": "14C081E0F0D05B5A4D4C53FD3D357D4A5AF9D20501465FEFC9024EE828D3AA5C",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.15.0/golangci-lint-2.15.0-linux-amd64.tar.gz",
+      "checksum": "9B7FE6A6BF6334B98DECF8D86B11415EA7889AFDABDD1959FDCE23AF2A9EBCEA",
       "algorithm": "sha256"
     },
     {
-      "id": "github_release/github.com/dominikh/go-tools/2026.2.2/staticcheck_linux_arm64.tar.gz",
-      "checksum": "CCBDAAF81C37EB246A6063F811EE3B89E02FF042CB068CD1CA73A7377E2F7045",
+      "id": "github_release/github.com/golangci/golangci-lint/v2.15.0/golangci-lint-2.15.0-linux-arm64.tar.gz",
+      "checksum": "B4D8F17068B35EE6060CC2F69A16FB48740D706FBBA81661C318649C114A6998",
       "algorithm": "sha256"
     },
     {
