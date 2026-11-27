@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"slices"
 	"strconv"
 
+	"github.com/spf13/pflag"
 	klog "k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	"sigs.k8s.io/yaml"
@@ -21,7 +23,7 @@ var config struct {
 	certDir                    string
 	httpProxyDefaultClass      string
 	configPath                 string
-	validImagePrefixes         stringSlice
+	validImagePrefixes         []string
 	imagePermissive            bool
 	ephemeralStoragePermissive bool
 	cpuRequestReducerEnabled   bool
@@ -42,20 +44,26 @@ func parseConfig(configPath string) (*hooks.Config, error) {
 }
 
 func main() {
-	fs := flag.NewFlagSet("neco-admission", flag.ExitOnError)
+	fs := pflag.NewFlagSet("neco-admission", pflag.ExitOnError)
 	fs.StringVar(&config.metricsAddr, "metrics-addr", ":8080", "Listen address for metrics")
 	fs.StringVar(&config.probeAddr, "health-probe-addr", ":8081", "Listen address for health probes")
 	fs.StringVar(&config.webhookAddr, "webhook-addr", ":9443", "Listen address for the webhook endpoint")
 	fs.StringVar(&config.certDir, "cert-dir", "", "certificate directory")
 	fs.StringVar(&config.httpProxyDefaultClass, "httpproxy-default-class", "", "Default Ingress class of HTTPProxy")
 	fs.StringVar(&config.configPath, "config-path", "/etc/neco-admission/config.yaml", "Configuration for webhooks")
-	fs.Var(&config.validImagePrefixes, "valid-image-prefix", "Valid prefixes of container images (can be repeated or comma-separated)")
-	klog.InitFlags(fs)
-	config.zapOpts.BindFlags(fs)
+	fs.StringSliceVar(&config.validImagePrefixes, "valid-image-prefix", nil, "Valid prefixes of container images")
 
-	// The error is ignored because fs is created with flag.ExitOnError.
+	goflags := flag.NewFlagSet("klog", flag.ExitOnError)
+	klog.InitFlags(goflags)
+	config.zapOpts.BindFlags(goflags)
+	fs.AddGoFlagSet(goflags)
+
+	// The error is ignored because fs is created with pflag.ExitOnError.
 	// Parse never returns an error; it exits the process instead.
 	_ = fs.Parse(os.Args[1:])
+
+	// Drop empty prefixes such as the one in "a/,", because an empty prefix matches every image.
+	config.validImagePrefixes = slices.DeleteFunc(config.validImagePrefixes, func(p string) bool { return p == "" })
 
 	config.imagePermissive = os.Getenv("VPOD_IMAGE_PERMISSIVE") == "true"
 	config.ephemeralStoragePermissive = os.Getenv("VPOD_EPHEMERAL_STORAGE_PERMISSIVE") == "true"
