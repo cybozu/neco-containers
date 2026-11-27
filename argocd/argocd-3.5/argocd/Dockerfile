@@ -90,6 +90,11 @@ WORKDIR /go/src/github.com/argoproj/argo-cd
 RUN --mount=type=bind,from=argocd-src,source=/src.tar.gz,target=/tmp/src.tar.gz \
     tar xf /tmp/src.tar.gz --strip-components=1 -C .
 
+# Fail a sync operation without waiting for non-hook resources once a resource fails to apply.
+# Backport of https://github.com/argoproj/argo-cd/pull/29931
+COPY fail-sync-without-waiting-for-non-hooks.patch /tmp/
+RUN patch -p1 < /tmp/fail-sync-without-waiting-for-non-hooks.patch
+
 # UI stage
 WORKDIR /go/src/github.com/argoproj/argo-cd/ui
 RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
