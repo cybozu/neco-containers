@@ -1,6 +1,6 @@
-FROM ghcr.io/cybozu/golang:1.26-noble AS build
-ARG ALLOY_VERSION=1.20.1
-ARG SYSTEMD_VERSION=256
+FROM ghcr.io/cybozu/golang:1.27-noble AS build
+ARG ALLOY_VERSION=1.21.3
+ARG SYSTEMD_VERSION=260
 
 WORKDIR /work
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]

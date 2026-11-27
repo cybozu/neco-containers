@@ -1,5 +1,5 @@
 diff --git a/internal/component/loki/process/stages/cri.go b/internal/component/loki/process/stages/cri.go
-index 934031ed9..a3f5be2a6 100644
+index 68b4fac19..0ec67ddb7 100644
 --- a/internal/component/loki/process/stages/cri.go
 +++ b/internal/component/loki/process/stages/cri.go
 @@ -17,9 +17,10 @@ import (
@@ -34,85 +34,95 @@ index 934031ed9..a3f5be2a6 100644
  	return nil
  }
  
-@@ -111,7 +116,7 @@ const (
+@@ -60,6 +65,7 @@ func newCRIStage(cfg CRIConfig, opts stageOpts) *criStage {
+ 		partialLinesStriped: newPartialLinesStriped(cfg, logger, linesTruncated, linesFlushed),
+ 		linesFlushed:        linesFlushed,
+ 		linesTruncated:      linesTruncated,
++		done:                make(chan struct{}),
+ 	}
+ }
+ 
+@@ -80,6 +86,7 @@ func getLinesTruncatedMetric(registerer prometheus.Registerer) prometheus.Counte
+ }
+ 
+ var (
++	_ starter        = (*criStage)(nil)
+ 	_ stopper        = (*criStage)(nil)
+ 	_ entryProcessor = (*criStage)(nil)
  )
+@@ -93,6 +100,10 @@ type criStage struct {
  
- func (c *criStage) Run(in chan Entry) chan Entry {
--	return RunWithSkipOrSendMany(in, func(e Entry) ([]Entry, bool) {
-+	return RunWithSkipOrSendManyWithTick(in, func(e Entry) ([]Entry, bool) {
- 		parsed, ok := crip.ParseCRI(e.Line)
- 		if !ok {
- 			return []Entry{e}, false
-@@ -157,6 +162,23 @@ func (c *criStage) Run(in chan Entry) chan Entry {
- 		}
- 
- 		return []Entry{e}, false
-+	}, 10*time.Second, func() []Entry {
-+		// Send partial lines which are left unsent for a while.
-+		threshold := time.Now().Add(-c.cfg.MaxPartialLineAge)
+ 	linesFlushed   prometheus.Counter
+ 	linesTruncated prometheus.Counter
 +
-+		entries := make([]Entry, 0)
-+		fingerprints := make([]model.Fingerprint, 0)
-+		for k, v := range c.partialLines {
-+			if v.Timestamp.Before(threshold) {
-+				c.logger.Warn("msg", "cri stage: flushing partial line due to max age", "labels", v.Labels)
-+				entries = append(entries, v)
-+				fingerprints = append(fingerprints, k)
-+			}
-+		}
-+		for _, fp := range fingerprints {
-+			delete(c.partialLines, fp)
-+		}
-+		return entries
- 	})
++	done chan struct{}
++	once sync.Once
++	wg   sync.WaitGroup
  }
  
-diff --git a/internal/component/loki/process/stages/pipeline.go b/internal/component/loki/process/stages/pipeline.go
-index 30f1b3565..af48c57ea 100644
---- a/internal/component/loki/process/stages/pipeline.go
-+++ b/internal/component/loki/process/stages/pipeline.go
-@@ -5,6 +5,7 @@ import (
- 	"fmt"
- 	"log/slog"
- 	"sync"
-+	"time"
- 
- 	"github.com/prometheus/client_golang/prometheus"
- 
-@@ -191,3 +192,36 @@ func RunWithSkipOrSendMany(input chan Entry, process func(e Entry) ([]Entry, boo
- 
- 	return out
+ const (
+@@ -143,7 +154,38 @@ func (c *criStage) process(ctx context.Context, entries []Entry) error {
+ 	return c.next(ctx, out)
  }
+ 
++// criAgeCheckInterval is how often partial lines are checked against max_partial_line_age.
++const criAgeCheckInterval = 10 * time.Second
 +
-+// RunWithSkipOrSendManyWithTick same as RunWithSkipOrSendMany, except it can run `tick` function periodically.
-+func RunWithSkipOrSendManyWithTick(input chan Entry, process func(e Entry) ([]Entry, bool), interval time.Duration, tick func() []Entry) chan Entry {
-+	out := make(chan Entry)
-+	go func() {
-+		defer close(out)
-+		ticker := time.NewTicker(interval)
++func (c *criStage) start() {
++	c.wg.Go(func() {
++		ticker := time.NewTicker(criAgeCheckInterval)
 +		defer ticker.Stop()
++
 +		for {
 +			select {
-+			case e, ok := <-input:
-+				if !ok {
-+					return
-+				}
-+				results, skip := process(e)
-+				if skip {
++			case <-c.done:
++				return
++			case <-ticker.C:
++				// Send partial lines which are left unsent for a while.
++				expired := c.partialLinesStriped.FlushOlderThan(time.Now().Add(-c.cfg.MaxPartialLineAge))
++				if len(expired) == 0 {
 +					continue
 +				}
-+				for _, result := range results {
-+					out <- result
++				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
++				if err := c.next(ctx, expired); err != nil {
++					c.logger.Error("failed to flush partial lines due to max age", "err", err)
 +				}
-+			case <-ticker.C:
-+				results := tick()
-+				for _, result := range results {
-+					out <- result
-+				}
++				cancel()
 +			}
 +		}
-+	}()
-+
-+	return out
++	})
 +}
 +
+ func (c *criStage) stop() {
++	c.once.Do(func() { close(c.done) })
++	c.wg.Wait()
++
+ 	const flushTimeout = 5 * time.Second
+ 	ctx, cancel := context.WithTimeout(context.Background(), flushTimeout)
+ 	defer cancel()
+@@ -265,6 +307,25 @@ func (m *partialLinesStriped) FlushIfExceeded() []Entry {
+ 	return entries
+ }
+ 
++// FlushOlderThan removes and returns partial lines whose timestamp is before threshold.
++func (m *partialLinesStriped) FlushOlderThan(threshold time.Time) []Entry {
++	var entries []Entry
++	for i := range m.stripes {
++		s := &m.stripes[i]
++		s.mu.Lock()
++		for fp, v := range s.data {
++			if v.Timestamp.Before(threshold) {
++				m.logger.Warn("cri stage: flushing partial line due to max age", "labels", v.Labels)
++				entries = append(entries, v)
++				delete(s.data, fp)
++				m.size.Add(-1)
++			}
++		}
++		s.mu.Unlock()
++	}
++	return entries
++}
++
+ func (m *partialLinesStriped) stripe(fp model.Fingerprint) *partialLinesStripe {
+ 	return &m.stripes[fp&(stripeCount-1)]
+ }
