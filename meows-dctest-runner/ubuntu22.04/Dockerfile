@@ -45,24 +45,29 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
             bash-completion \
             bird2 \
             build-essential \
+            cloud-image-utils \
             cloud-utils \
             dbus \
             dnsmasq \
             fakeroot \
             freeipmi-tools \
+            gdisk \
             gh \
             git \
             iproute2 \
             iptables \
             jq \
             kmod \
+            kpartx \
             less \
             libgpgme11 \
             lldpd \
             lsb-release \
             openssh-client \
+            ovmf \
             picocom \
             qemu \
+            qemu-utils \
             qemu-kvm \
             socat \
             squid \
@@ -73,6 +78,7 @@ RUN curl -sSLf https://cli.github.com/packages/githubcli-archive-keyring.gpg -o 
             unzip \
             wget \
             xauth \
+            xorriso \
             zip \
     && rm -rf /var/lib/apt/lists/*
 
